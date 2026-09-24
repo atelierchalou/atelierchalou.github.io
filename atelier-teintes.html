@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atelier des teintes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #170F22;
+    --ink-soft: #241733;
+    --paper: #EDE3C8;
+    --paper-dim: #D9C9A6;
+    --brass: #C9A227;
+    --brass-bright: #E8C65A;
+    --blood: #7A2323;
+    --steel: #57626C;
+    --violet: #6B3FA0;
+    --line: rgba(232,198,90,0.16);
+    --bg: var(--ink);
+    --bg-panel: var(--ink-soft);
+    --fg: var(--paper);
+    --fg-dim: #B9AC9C;
+    --font-display: 'Cinzel', serif;
+    --font-body: 'Work Sans', sans-serif;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: var(--paper);
+      --bg-panel: #ffffff;
+      --fg: var(--ink);
+      --fg-dim: #6b6355;
+      --line: rgba(27,25,20,0.12);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: var(--ink);
+    --bg-panel: var(--ink-soft);
+    --fg: var(--paper);
+    --fg-dim: #B9AC9C;
+    --line: rgba(232,198,90,0.16);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -8%, rgba(107,63,160,0.28), transparent 60%),
+      radial-gradient(ellipse 700px 400px at 100% 10%, rgba(201,162,39,0.10), transparent 60%),
+      var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 20px 64px;
+  }
+  header.top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+  }
+  header.top .brushmark {
+    width: 46px; height: 46px; flex: none;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    font-size: clamp(2rem, 7vw, 2.7rem);
+    line-height: 1.05;
+    margin: 0;
+  }
+  .subtitle {
+    margin: 6px 0 0;
+    color: var(--fg-dim);
+    font-size: 0.98rem;
+    max-width: 46ch;
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 22px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 0 0 1px rgba(232,198,90,0.05);
+  }
+
+  /* capture area */
+  .capture {
+    text-align: center;
+    padding: 36px 20px;
+    border: 1.5px dashed var(--brass);
+    border-radius: 4px;
+    background: var(--bg-panel);
+  }
+  .capture svg { width: 40px; height: 40px; stroke: var(--brass-bright); margin-bottom: 10px; }
+  .capture p { margin: 0 0 18px; color: var(--fg-dim); font-size: 0.95rem; }
+  .btnrow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  button, .filebtn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 3px;
+    padding: 9px 15px;
+    cursor: pointer;
+    color: var(--ink);
+    background: var(--brass-bright);
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+  button:hover, .filebtn:hover { background: var(--brass); }
+  button:active, .filebtn:active { transform: scale(0.97); }
+  button.ghost {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--line);
+  }
+  button.ghost:hover { border-color: var(--brass); color: var(--brass-bright); }
+  input[type=file] { display: none; }
+
+  /* preview */
+  .preview-row {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .preview-img {
+    width: 128px;
+    height: 128px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    flex: none;
+  }
+  .palette-block { flex: 1; min-width: 220px; }
+  .eyebrow {
+    font-size: 0.8rem;
+    color: var(--fg-dim);
+    margin: 0 0 10px;
+  }
+  .swatch-grid {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .pot {
+    width: 52px;
+    text-align: center;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: var(--font-body);
+  }
+  .pot .lid {
+    width: 52px;
+    height: 52px;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    transition: border-color 0.12s ease, transform 0.12s ease;
+  }
+  .pot.selected .lid {
+    border-color: var(--brass-bright);
+    transform: translateY(-2px);
+  }
+  .pot .hex {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--fg-dim);
+    margin-top: 5px;
+    letter-spacing: 0.02em;
+  }
+
+  /* schemes */
+  .scheme {
+    margin-top: 22px;
+  }
+  .scheme h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+    margin: 0 0 3px;
+  }
+  .scheme .desc {
+    color: var(--fg-dim);
+    font-size: 0.88rem;
+    margin: 0 0 12px;
+  }
+  .scheme-body {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .mini-preview {
+    flex: none;
+    width: 84px;
+    background: #F4EFE3;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    padding: 6px 4px 4px;
+  }
+  .mini-preview svg { display: block; width: 100%; height: auto; }
+  .scheme-body .row { flex: 1; min-width: 180px; }
+
+  .row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    flex: 1;
+    min-width: 90px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    font-family: var(--font-body);
+  }
+  .chip .swab { height: 56px; }
+  .chip .lbl {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 9px;
+    font-size: 0.75rem;
+    color: var(--fg-dim);
+  }
+  .chip .lbl b { color: var(--fg); font-weight: 600; font-size: 0.78rem; }
+
+  .paint-btn {
+    margin-top: 16px;
+    width: 100%;
+  }
+  .paint-btn:disabled { opacity: 0.6; cursor: default; }
+  .paint-result {
+    margin-top: 14px;
+  }
+  .painted-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+
+  .painter {
+    margin-top: 14px;
+  }
+  .painter-canvas-wrap {
+    background: #F4EFE3;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    padding: 6px;
+    overflow: auto;
+    max-height: 56vh;
+  }
+  .painter-canvas-wrap canvas {
+    display: block;
+    touch-action: none;
+    cursor: crosshair;
+    border-radius: 2px;
+  }
+  .tool-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .tool-btn {
+    flex: 1;
+    background: transparent;
+    color: var(--fg-dim);
+    border: 1px solid var(--line);
+    padding: 6px 4px;
+    font-size: 0.74rem;
+  }
+  .tool-btn.active {
+    background: var(--brass-bright);
+    color: var(--ink);
+    border-color: var(--brass-bright);
+  }
+
+  .zoom-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .zoom-row button {
+    padding: 4px 11px;
+    font-size: 0.85rem;
+  }
+  .zoom-row span {
+    font-size: 0.72rem;
+    color: var(--fg-dim);
+    min-width: 3.2em;
+    text-align: center;
+  }
+  .swatch-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .swatch-group-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .swatch-group-title {
+    font-size: 0.68rem;
+    color: var(--fg-dim);
+    margin: 0;
+    padding-left: 2px;
+  }
+  .swatch-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px;
+    background: rgba(232,198,90,0.03);
+  }
+  .swatch-pick {
+    flex: none;
+    width: 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+  .swatch-pick .swatch-color {
+    display: block;
+    width: 34px;
+    height: 34px;
+    border-radius: 4px;
+    border: 2px solid var(--line);
+    transition: border-color 0.12s ease, transform 0.12s ease;
+  }
+  .swatch-pick.active .swatch-color {
+    border-color: var(--fg);
+    transform: scale(1.08);
+  }
+  .swatch-pick .swatch-label {
+    font-size: 0.62rem;
+    line-height: 1.15;
+    color: var(--fg-dim);
+    text-align: center;
+    word-break: break-word;
+  }
+  .tolerance-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    font-size: 0.82rem;
+    color: var(--fg-dim);
+  }
+  .tolerance-row input[type=range] {
+    flex: 1;
+  }
+  .painter-hint {
+    font-size: 0.82rem;
+    color: var(--fg-dim);
+    margin: 10px 0 0;
+  }
+
+  .palette-check-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px 14px;
+  }
+  .palette-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  .palette-check input { accent-color: var(--brass-bright); width: 16px; height: 16px; flex: none; }
+  .palette-check .swatch-mini {
+    display: inline-flex;
+    gap: 2px;
+    flex: none;
+  }
+  .palette-check .swatch-mini span {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    display: block;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%) translateY(12px);
+    background: var(--brass-bright);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 9px 16px;
+    border-radius: 3px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 20;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .tips {
+    font-size: 0.9rem;
+    color: var(--fg-dim);
+  }
+  .tips li { margin-bottom: 6px; }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 420px) {
+    .wrap { padding: 20px 14px 48px; }
+    .panel { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Atelier des teintes</h1>
+      <p class="subtitle">Prends en photo un dessin ou une figurine, et reçois des harmonies de couleurs prêtes à peindre.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+      <svg class="brushmark" viewBox="0 0 48 48" fill="none" stroke="currentColor" style="color:var(--brass)">
+        <path d="M34 6 L42 14 L20 36 L12 38 L14 30 Z" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M12 38 C9 41 6 41 5 43" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <button class="ghost" id="settingsBtn" type="button" style="font-size:0.72rem; padding:5px 9px;">⚙ Palettes</button>
+    </div>
+  </header>
+
+  <div id="settingsPanel" class="panel hidden">
+    <p class="eyebrow">Choisis les palettes que « Nouvelles propositions » peut piocher</p>
+    <div class="btnrow" style="margin-bottom:10px;">
+      <button class="ghost" id="selectAllBtn" type="button">Tout cocher</button>
+      <button class="ghost" id="selectNoneBtn" type="button">Tout décocher</button>
+    </div>
+    <div id="paletteCheckList" class="palette-check-list"></div>
+    <div class="btnrow" style="margin-top:14px;">
+      <button id="useSelectionBtn" type="button">Afficher les palettes cochées</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div id="captureZone" class="capture">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 8h3l2-3h6l2 3h3v11H4z"/>
+        <circle cx="12" cy="13" r="3.4"/>
+      </svg>
+      <p>Une photo nette, bien éclairée, donne les meilleures couleurs.</p>
+      <div class="btnrow">
+        <label class="filebtn" for="cameraInput">Prendre une photo</label>
+        <label class="filebtn ghost" for="fileInput">Choisir une image</label>
+      </div>
+      <div class="btnrow" style="margin-top:10px;">
+        <button class="ghost" id="demoBtn" type="button">Essayer avec un personnage d'exemple</button>
+      </div>
+      <input id="cameraInput" type="file" accept="image/*" capture="environment">
+      <input id="fileInput" type="file" accept="image/*">
+    </div>
+
+    <div id="previewZone" class="hidden">
+      <div class="preview-row">
+        <img id="previewImg" class="preview-img" alt="Photo importée">
+        <div class="palette-block">
+          <p class="eyebrow">Choisis une palette ci-dessous, puis peins ta photo toi-même, zone par zone.</p>
+          <p class="eyebrow" style="margin-top:10px;">Pour les boutons automatiques : type de photo</p>
+          <div class="tool-row" id="autoModeRow" style="margin-top:4px;">
+            <button class="tool-btn" id="modeLineBtn" type="button">Dessin (contours)</button>
+            <button class="tool-btn" id="modeVolumeBtn" type="button">Figurine / photo</button>
+          </div>
+        </div>
+      </div>
+      <div class="btnrow" style="margin-top:16px; justify-content:flex-start;">
+        <button class="ghost" id="resetBtn" type="button">Recommencer</button>
+        <button class="ghost" id="newProposalsBtn" type="button">Nouvelles propositions</button>
+        <button id="autoColorBtn" type="button">Aperçu rapide automatique</button>
+      </div>
+      <div id="autoColorResult" class="paint-result hidden"></div>
+    </div>
+  </div>
+
+  <div id="results" class="hidden"></div>
+
+  <div class="panel">
+    <p class="eyebrow">Repères pour peindre</p>
+    <ul class="tips">
+      <li>Sous-couche sombre pour des tons profonds et ombrés, sous-couche claire pour des couleurs vives et lumineuses.</li>
+      <li>Pose d'abord la couleur de base en couche fine, puis assombris les creux avant d'éclaircir les reliefs.</li>
+      <li>Une harmonie complémentaire (2 couleurs opposées) fait ressortir une seule zone forte : l'arme, le blason, les yeux.</li>
+      <li>Une harmonie analogue (couleurs voisines) donne un résultat cohérent sur toute la figurine, idéal pour l'armure.</li>
+    </ul>
+  </div>
+
+  <canvas id="workCanvas" class="hidden"></canvas>
+</div>
+
+<div id="toast" class="toast">Copié !</div>
+
+<script>
+(function(){
+  const cameraInput = document.getElementById('cameraInput');
+  const fileInput = document.getElementById('fileInput');
+  const captureZone = document.getElementById('captureZone');
+  const previewZone = document.getElementById('previewZone');
+  const previewImg = document.getElementById('previewImg');
+  const resultsEl = document.getElementById('results');
+  const resetBtn = document.getElementById('resetBtn');
+  const newProposalsBtn = document.getElementById('newProposalsBtn');
+  const autoColorBtn = document.getElementById('autoColorBtn');
+  const autoColorResult = document.getElementById('autoColorResult');
+  const modeLineBtn = document.getElementById('modeLineBtn');
+  const modeVolumeBtn = document.getElementById('modeVolumeBtn');
+  const workCanvas = document.getElementById('workCanvas');
+  const toast = document.getElementById('toast');
+
+  let currentPalette = [];
+  let sendToCombined = null;
+  let currentImg = null;
+  let looksLikePhoto = false; // grey/photographed miniature vs. flat line drawing — guides the "automatic" buttons
+
+  function setAutoMode(isPhoto){
+    looksLikePhoto = isPhoto;
+    modeLineBtn.classList.toggle('active', !isPhoto);
+    modeVolumeBtn.classList.toggle('active', isPhoto);
+  }
+  modeLineBtn.addEventListener('click', () => setAutoMode(false));
+  modeVolumeBtn.addEventListener('click', () => setAutoMode(true));
+
+  cameraInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  resetBtn.addEventListener('click', reset);
+  newProposalsBtn.addEventListener('click', () => renderSchemes(pickProposals(4)));
+
+  autoColorBtn.addEventListener('click', () => {
+    if (!currentImg) return;
+    autoColorBtn.disabled = true;
+    autoColorBtn.textContent = 'Aperçu en cours…';
+    setTimeout(() => {
+      const hexes = pickProposals(1)[0].hexes;
+      const canvas = looksLikePhoto
+        ? posterizeColorize(currentImg, currentPalette, hexes)
+        : floodFillColorize(currentImg, hexes);
+      canvas.className = 'painted-img';
+      autoColorResult.innerHTML = '';
+      autoColorResult.appendChild(canvas);
+      autoColorResult.appendChild(makeSaveButton(() => canvas, 'apercu-automatique.png'));
+      if (sendToCombined){
+        const toCombinedBtn = document.createElement('button');
+        toCombinedBtn.type = 'button';
+        toCombinedBtn.className = 'ghost';
+        toCombinedBtn.style.marginTop = '8px';
+        toCombinedBtn.textContent = 'Continuer avec toutes les teintes';
+        toCombinedBtn.addEventListener('click', () => sendToCombined(canvas));
+        autoColorResult.appendChild(toCombinedBtn);
+      }
+      autoColorResult.classList.remove('hidden');
+      autoColorBtn.disabled = false;
+      autoColorBtn.textContent = 'Un autre aperçu';
+    }, 10);
+  });
+
+  const STORAGE_KEY = 'atelier_teintes_photo';
+
+  const demoBtn = document.getElementById('demoBtn');
+  demoBtn.addEventListener('click', loadDemoCharacter);
+
+  // An original line-art character (not copied from anywhere) with clean,
+  // fully closed regions — a ready-made subject when the student has no photo.
+  function buildDemoCharacterSVG(){
+    const s = 'fill="#ffffff" stroke="#151313" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"';
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 580">
+      <rect width="360" height="580" fill="#ffffff"/>
+      <ellipse cx="180" cy="560" rx="95" ry="16" ${s}/>
+      <polygon points="118,225 65,270 60,520 130,500 130,225" ${s}/>
+      <polygon points="128,360 172,360 180,545 115,545" ${s}/>
+      <polygon points="188,360 232,360 245,545 180,545" ${s}/>
+      <rect x="120" y="345" width="120" height="20" rx="4" ${s}/>
+      <rect x="290" y="120" width="16" height="220" ${s}/>
+      <rect x="274" y="335" width="48" height="14" rx="3" ${s}/>
+      <rect x="292" y="349" width="14" height="26" rx="3" ${s}/>
+      <rect x="115" y="215" width="130" height="135" rx="14" ${s}/>
+      <polygon points="180,255 205,275 180,295 155,275" ${s}/>
+      <polygon points="95,235 118,235 108,400 78,400" ${s}/>
+      <circle cx="92" cy="412" r="18" ${s}/>
+      <polygon points="242,235 265,235 278,380 248,388" ${s}/>
+      <circle cx="262" cy="398" r="18" ${s}/>
+      <ellipse cx="102" cy="230" rx="34" ry="32" ${s}/>
+      <ellipse cx="258" cy="230" rx="34" ry="32" ${s}/>
+      <ellipse cx="180" cy="140" rx="46" ry="52" ${s}/>
+      <rect x="148" y="135" width="64" height="16" rx="6" ${s}/>
+      <polygon points="160,90 180,35 200,90" ${s}/>
+    </svg>`;
+  }
+
+  function loadDemoCharacter(){
+    const dataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(buildDemoCharacterSVG());
+    try { localStorage.setItem(STORAGE_KEY, dataUrl); } catch(e) {}
+    showImage(dataUrl);
+  }
+
+  function reset(){
+    previewZone.classList.add('hidden');
+    captureZone.classList.remove('hidden');
+    resultsEl.classList.add('hidden');
+    resultsEl.innerHTML = '';
+    cameraInput.value = '';
+    fileInput.value = '';
+    autoColorResult.innerHTML = '';
+    autoColorResult.classList.add('hidden');
+    autoColorBtn.disabled = false;
+    autoColorBtn.textContent = 'Aperçu rapide automatique';
+    setAutoMode(false);
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  }
+
+  function showImage(dataUrl){
+    const img = new Image();
+    img.onload = function(){
+      currentImg = img;
+      previewImg.src = dataUrl;
+      captureZone.classList.add('hidden');
+      previewZone.classList.remove('hidden');
+      const palette = extractPalette(img, 6);
+      currentPalette = palette; // used for the quick tonal preview and as a fallback, never shown as suggestions
+      renderSchemes(pickProposals(4));
+
+      const avgSat = palette.reduce((s, c) => s + c.hsl[1], 0) / palette.length;
+      setAutoMode(avgSat < 14);
+    };
+    img.src = dataUrl;
+  }
+
+  function handleFile(file){
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const dataUrl = ev.target.result;
+      try { localStorage.setItem(STORAGE_KEY, dataUrl); } catch(e) {}
+      showImage(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Restore state if the browser reloaded the page while the camera was open
+  (function restoreIfAny(){
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) showImage(saved);
+    } catch(e) {}
+  })();
+
+  // ---------- color extraction (k-means on downsampled pixels) ----------
+  function extractPalette(img, k){
+    const maxDim = 140;
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    workCanvas.width = w;
+    workCanvas.height = h;
+    const ctx = workCanvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    const data = ctx.getImageData(0, 0, w, h).data;
+
+    const pixels = [];
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i+3];
+      if (a < 128) continue;
+      pixels.push([data[i], data[i+1], data[i+2]]);
+    }
+    if (pixels.length === 0) pixels.push([128,128,128]);
+
+    // init centroids: evenly spaced samples
+    let centroids = [];
+    for (let c = 0; c < k; c++){
+      centroids.push(pixels[Math.floor(c * pixels.length / k)].slice());
+    }
+
+    let assignments = new Array(pixels.length).fill(0);
+    const iterations = 7;
+    for (let iter = 0; iter < iterations; iter++){
+      for (let p = 0; p < pixels.length; p++){
+        let best = 0, bestDist = Infinity;
+        for (let c = 0; c < centroids.length; c++){
+          const dr = pixels[p][0]-centroids[c][0];
+          const dg = pixels[p][1]-centroids[c][1];
+          const db = pixels[p][2]-centroids[c][2];
+          const dist = dr*dr + dg*dg + db*db;
+          if (dist < bestDist){ bestDist = dist; best = c; }
+        }
+        assignments[p] = best;
+      }
+      const sums = centroids.map(() => [0,0,0,0]);
+      for (let p = 0; p < pixels.length; p++){
+        const c = assignments[p];
+        sums[c][0] += pixels[p][0];
+        sums[c][1] += pixels[p][1];
+        sums[c][2] += pixels[p][2];
+        sums[c][3] += 1;
+      }
+      centroids = centroids.map((old, c) => {
+        if (sums[c][3] === 0) return old;
+        return [sums[c][0]/sums[c][3], sums[c][1]/sums[c][3], sums[c][2]/sums[c][3]];
+      });
+    }
+
+    const counts = new Array(k).fill(0);
+    assignments.forEach(a => counts[a]++);
+
+    let clusters = centroids.map((c, i) => ({
+      rgb: c.map(Math.round),
+      weight: counts[i]
+    })).filter(c => c.weight > 0);
+
+    clusters.sort((a,b) => b.weight - a.weight);
+
+    return clusters.map(c => ({
+      hex: rgbToHex(c.rgb),
+      rgb: c.rgb,
+      hsl: rgbToHsl(c.rgb)
+    }));
+  }
+
+  // ---------- color math ----------
+  function rgbToHex(rgb){
+    return '#' + rgb.map(v => Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('');
+  }
+  function rgbToHsl([r,g,b]){
+    r/=255; g/=255; b/=255;
+    const max = Math.max(r,g,b), min = Math.min(r,g,b);
+    let h, s, l = (max+min)/2;
+    if (max === min){ h = 0; s = 0; }
+    else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch(max){
+        case r: h = (g-b)/d + (g<b?6:0); break;
+        case g: h = (b-r)/d + 2; break;
+        default: h = (r-g)/d + 4;
+      }
+      h *= 60;
+    }
+    return [h, s*100, l*100];
+  }
+  function hslToHex(h, s, l){
+    h = ((h % 360)+360)%360;
+    s /= 100; l /= 100;
+    const c = (1 - Math.abs(2*l - 1)) * s;
+    const x = c * (1 - Math.abs((h/60)%2 - 1));
+    const m = l - c/2;
+    let r,g,b;
+    if (h < 60) [r,g,b]=[c,x,0];
+    else if (h < 120) [r,g,b]=[x,c,0];
+    else if (h < 180) [r,g,b]=[0,c,x];
+    else if (h < 240) [r,g,b]=[0,x,c];
+    else if (h < 300) [r,g,b]=[x,0,c];
+    else [r,g,b]=[c,0,x];
+    return rgbToHex([(r+m)*255,(g+m)*255,(b+m)*255]);
+  }
+
+  // ---------- rendering ----------
+  function makeChip(hex, label){
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip';
+    chip.title = hex;
+    chip.innerHTML = `<span class="swab" style="background:${hex}"></span><span class="lbl"><b>${label || 'Teinte'}</b></span>`;
+    chip.addEventListener('click', () => copyHex(hex));
+    return chip;
+  }
+
+  function downloadCanvas(canvas, filename){
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function makeSaveButton(getCanvas, filename){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ghost';
+    btn.style.marginTop = '8px';
+    btn.textContent = "Enregistrer l'image";
+    btn.addEventListener('click', () => downloadCanvas(getCanvas(), filename));
+    return btn;
+  }
+
+  function copyHex(hex){
+    const done = () => {
+      toast.textContent = `${hex} copié`;
+      toast.classList.add('show');
+      clearTimeout(copyHex._t);
+      copyHex._t = setTimeout(() => toast.classList.remove('show'), 1400);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(hex).then(done).catch(done);
+    } else {
+      done();
+    }
+  }
+
+  function buildMiniature(hexes){
+    const order = ['torso','legs','shoulder','helmet','weapon','detail','base'];
+    const color = {};
+    order.forEach((part, i) => { color[part] = hexes[i % hexes.length]; });
+    const stroke = 'stroke="#14120f" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"';
+    return `<svg viewBox="0 0 120 182" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="172" rx="30" ry="6" fill="${color.base}" ${stroke}/>
+      <polygon points="43,109 77,109 83,165 37,165" fill="${color.legs}" ${stroke}/>
+      <rect x="34" y="58" width="52" height="53" rx="9" fill="${color.torso}" ${stroke}/>
+      <circle cx="28" cy="65" r="15" fill="${color.shoulder}" ${stroke}/>
+      <polygon points="60,71 69,79 60,87 51,79" fill="${color.detail}" ${stroke}/>
+      <ellipse cx="60" cy="40" rx="17" ry="19" fill="${color.helmet}" ${stroke}/>
+      <rect x="50" y="37" width="20" height="5" rx="2" fill="#14120f"/>
+      <line x1="97" y1="169" x2="97" y2="45" stroke="#14120f" stroke-width="8.5" stroke-linecap="round"/>
+      <line x1="97" y1="169" x2="97" y2="45" stroke="${color.weapon}" stroke-width="5.5" stroke-linecap="round"/>
+      <polygon points="90,45 104,45 97,22" fill="${color.weapon}" ${stroke}/>
+    </svg>`;
+  }
+
+  function hexToRgb(hex){
+    const v = hex.replace('#','');
+    return [parseInt(v.slice(0,2),16), parseInt(v.slice(2,4),16), parseInt(v.slice(4,6),16)];
+  }
+
+  const CATEGORY_ORDER = ['Base', 'Peau', 'Métal', 'Cuir', 'Os', 'Accent', 'Ombre', 'Éclat', 'Détail'];
+  function categoryOf(label){
+    return (label || 'Teinte').split(/[\s(]/)[0];
+  }
+  function categoryRank(label){
+    const i = CATEGORY_ORDER.indexOf(categoryOf(label));
+    return i === -1 ? CATEGORY_ORDER.length : i;
+  }
+
+  // Fills the connected area around (sx,sy) whose color is close to the
+  // clicked pixel's color — a "magic wand" paint bucket the student aims themselves.
+  function magicFill(data, w, h, sx, sy, tolerance, target){
+    const start = sy * w + sx;
+    const i0 = start * 4;
+    const r0 = data[i0], g0 = data[i0+1], b0 = data[i0+2];
+    const tol2 = tolerance * tolerance;
+    const n = w * h;
+    const visited = new Uint8Array(n);
+    const stack = new Int32Array(n);
+    let sp = 0;
+    visited[start] = 1;
+    stack[sp++] = start;
+    while (sp > 0){
+      const p = stack[--sp];
+      const i = p * 4;
+      data[i] = target[0]; data[i+1] = target[1]; data[i+2] = target[2];
+      const x = p % w, y = (p / w) | 0;
+      const tryPush = (q) => {
+        if (visited[q]) return;
+        const qi = q * 4;
+        const dr = data[qi]-r0, dg = data[qi+1]-g0, db = data[qi+2]-b0;
+        if (dr*dr + dg*dg + db*db <= tol2){ visited[q] = 1; stack[sp++] = q; }
+      };
+      if (x > 0) tryPush(p-1);
+      if (x < w-1) tryPush(p+1);
+      if (y > 0) tryPush(p-w);
+      if (y < h-1) tryPush(p+w);
+    }
+  }
+
+  // Same color-similarity idea as magicFill, but limited to a circle around
+  // (cx,cy) instead of spreading through the whole connected region — a
+  // precise bucket for touching up small zones without repainting everything.
+  function boundedFillDab(data, w, h, cx, cy, radius, refColor, tol2, target){
+    const rSq = radius * radius;
+    const minX = Math.max(0, Math.floor(cx - radius)), maxX = Math.min(w - 1, Math.ceil(cx + radius));
+    const minY = Math.max(0, Math.floor(cy - radius)), maxY = Math.min(h - 1, Math.ceil(cy + radius));
+    for (let y = minY; y <= maxY; y++){
+      for (let x = minX; x <= maxX; x++){
+        const dx = x - cx, dy = y - cy;
+        if (dx*dx + dy*dy > rSq) continue;
+        const i = (y * w + x) * 4;
+        const dr = data[i]-refColor[0], dg = data[i+1]-refColor[1], db = data[i+2]-refColor[2];
+        if (dr*dr + dg*dg + db*db <= tol2){
+          data[i] = target[0]; data[i+1] = target[1]; data[i+2] = target[2];
+        }
+      }
+    }
+  }
+  function boundedFillLine(data, w, h, x0, y0, x1, y1, radius, refColor, tol2, target){
+    const dist = Math.hypot(x1 - x0, y1 - y0);
+    const step = Math.max(1, radius * 0.5);
+    const steps = Math.max(1, Math.ceil(dist / step));
+    for (let i = 0; i <= steps; i++){
+      const t = i / steps;
+      boundedFillDab(data, w, h, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, radius, refColor, tol2, target);
+    }
+  }
+
+  // Builds the interactive "tap a color, tap a zone" painter for one photo + palette.
+  function buildInteractivePainter(img, scheme, opts){
+    const wrap = document.createElement('div');
+    wrap.className = 'painter';
+
+    const canvasWrap = document.createElement('div');
+    canvasWrap.className = 'painter-canvas-wrap';
+    const canvas = document.createElement('canvas');
+    canvasWrap.appendChild(canvas);
+
+    const zoomRow = document.createElement('div');
+    zoomRow.className = 'zoom-row';
+    const zoomOutBtn = document.createElement('button');
+    zoomOutBtn.type = 'button'; zoomOutBtn.className = 'ghost'; zoomOutBtn.textContent = '−';
+    const zoomLabel = document.createElement('span');
+    zoomLabel.textContent = '100%';
+    const zoomInBtn = document.createElement('button');
+    zoomInBtn.type = 'button'; zoomInBtn.className = 'ghost'; zoomInBtn.textContent = '+';
+    zoomRow.appendChild(zoomOutBtn);
+    zoomRow.appendChild(zoomLabel);
+    zoomRow.appendChild(zoomInBtn);
+    wrap.appendChild(zoomRow);
+    wrap.appendChild(canvasWrap);
+
+    const toolRow = document.createElement('div');
+    toolRow.className = 'tool-row';
+    const tools = [
+      { id: 'fill', label: 'Pot' },
+      { id: 'smartbrush', label: 'Pot précis' },
+      { id: 'brush', label: 'Pinceau' },
+      { id: 'eraser', label: 'Gomme' },
+      { id: 'move', label: 'Déplacer' }
+    ];
+    const toolButtons = {};
+    tools.forEach(t => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tool-btn' + (t.id === 'fill' ? ' active' : '');
+      b.textContent = t.label;
+      b.addEventListener('click', () => setTool(t.id));
+      toolRow.appendChild(b);
+      toolButtons[t.id] = b;
+    });
+    wrap.appendChild(toolRow);
+
+    const swatchBar = document.createElement('div');
+    swatchBar.className = 'swatch-bar';
+    wrap.appendChild(swatchBar);
+
+    const toleranceRow = document.createElement('div');
+    toleranceRow.className = 'tolerance-row';
+    const toleranceLabel = document.createElement('span');
+    toleranceLabel.textContent = 'Précision';
+    const toleranceInput = document.createElement('input');
+    toleranceInput.type = 'range';
+    toleranceInput.min = '10'; toleranceInput.max = '75'; toleranceInput.value = '32';
+    toleranceRow.appendChild(toleranceLabel);
+    toleranceRow.appendChild(toleranceInput);
+    wrap.appendChild(toleranceRow);
+
+    const brushRow = document.createElement('div');
+    brushRow.className = 'tolerance-row';
+    brushRow.style.display = 'none';
+    const brushLabel = document.createElement('span');
+    brushLabel.textContent = 'Taille';
+    const brushInput = document.createElement('input');
+    brushInput.type = 'range';
+    brushInput.min = '1'; brushInput.max = '35'; brushInput.value = '6';
+    brushRow.appendChild(brushLabel);
+    brushRow.appendChild(brushInput);
+    wrap.appendChild(brushRow);
+
+    const hint = document.createElement('p');
+    hint.className = 'painter-hint';
+    wrap.appendChild(hint);
+    const hints = {
+      fill: "Touche une couleur, puis touche une zone (casque, peau, arme…) pour la remplir. « Précision » capte des zones plus ou moins larges.",
+      smartbrush: "Comme le pot, mais limité au cercle du curseur : pratique pour une petite zone sans repeindre tout autour. Il s'arrête aussi aux traits.",
+      brush: "Touche une couleur, puis dessine directement sur la photo pour peindre à main levée. « Taille » règle l'épaisseur du pinceau.",
+      eraser: "Dessine sur la photo pour effacer et retrouver l'image d'origine à cet endroit. « Taille » règle l'épaisseur de la gomme.",
+      move: "Glisse le doigt sur la photo pour te déplacer, sans peindre — pratique une fois zoomé."
+    };
+
+    const actionRow = document.createElement('div');
+    actionRow.className = 'btnrow';
+    actionRow.style.marginTop = '10px';
+    const undoStepBtn = document.createElement('button');
+    undoStepBtn.type = 'button';
+    undoStepBtn.className = 'ghost';
+    undoStepBtn.textContent = 'Retour en arrière';
+    undoStepBtn.disabled = true;
+    undoStepBtn.style.marginLeft = 'auto';
+    zoomRow.appendChild(undoStepBtn);
+    const resetPhotoBtn = document.createElement('button');
+    resetPhotoBtn.type = 'button';
+    resetPhotoBtn.className = 'ghost';
+    resetPhotoBtn.textContent = 'Effacer et repartir de la photo';
+    actionRow.appendChild(resetPhotoBtn);
+    wrap.appendChild(actionRow);
+
+    const saveBtn = makeSaveButton(() => canvas, 'ma-peinture.png');
+    saveBtn.style.width = '100%';
+    wrap.appendChild(saveBtn);
+
+    let sendAllBtn = null;
+    if (opts && opts.onSendAll){
+      sendAllBtn = document.createElement('button');
+      sendAllBtn.type = 'button';
+      sendAllBtn.className = 'ghost';
+      sendAllBtn.style.marginTop = '8px';
+      sendAllBtn.style.width = '100%';
+      sendAllBtn.textContent = 'Continuer avec toutes les teintes';
+      wrap.appendChild(sendAllBtn);
+    }
+
+    const maxDim = 460;
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+
+    const zoomLevels = [1, 1.5, 2, 3, 4, 6, 8, 10];
+    let zoomIndex = 0;
+    let baseWidthPx = null;
+    function applyZoom(){
+      if (zoomIndex === 0){
+        canvas.style.width = '100%';
+        canvas.style.imageRendering = 'auto';
+      } else {
+        if (baseWidthPx === null) baseWidthPx = canvasWrap.clientWidth - 12;
+        canvas.style.width = Math.round(baseWidthPx * zoomLevels[zoomIndex]) + 'px';
+        canvas.style.imageRendering = zoomLevels[zoomIndex] >= 4 ? 'pixelated' : 'auto';
+      }
+      zoomLabel.textContent = Math.round(zoomLevels[zoomIndex] * 100) + '%';
+      zoomOutBtn.disabled = zoomIndex === 0;
+      zoomInBtn.disabled = zoomIndex === zoomLevels.length - 1;
+    }
+    zoomOutBtn.addEventListener('click', () => { zoomIndex = Math.max(0, zoomIndex - 1); applyZoom(); });
+    zoomInBtn.addEventListener('click', () => { zoomIndex = Math.min(zoomLevels.length - 1, zoomIndex + 1); applyZoom(); });
+    applyZoom();
+
+    let imgData, data;
+    const MAX_HISTORY = 20;
+    let history = [];
+    function updateUndoState(){ undoStepBtn.disabled = history.length === 0; }
+    function pushHistory(){
+      history.push(new Uint8ClampedArray(data));
+      if (history.length > MAX_HISTORY) history.shift();
+      updateUndoState();
+    }
+    function undoStep(){
+      if (!history.length) return;
+      const prev = history.pop();
+      data.set(prev);
+      ctx.putImageData(imgData, 0, 0);
+      updateUndoState();
+    }
+    function loadOriginal(){
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      imgData = ctx.getImageData(0, 0, w, h);
+      data = imgData.data;
+      history = [];
+      updateUndoState();
+    }
+    loadOriginal();
+
+    let tool = 'fill';
+    function setTool(t){
+      tool = t;
+      Object.keys(toolButtons).forEach(id => toolButtons[id].classList.toggle('active', id === t));
+      toleranceRow.style.display = (t === 'fill' || t === 'smartbrush') ? 'flex' : 'none';
+      brushRow.style.display = (t === 'brush' || t === 'eraser' || t === 'smartbrush') ? 'flex' : 'none';
+      hint.textContent = hints[t];
+    }
+    setTool('fill');
+
+    const sortedHexes = scheme.hexes
+      .map((hex, i) => ({ hex, label: scheme.labels[i] || hex }))
+      .sort((a, b) => categoryRank(a.label) - categoryRank(b.label));
+
+    const swatchGroups = [];
+    sortedHexes.forEach(item => {
+      const last = swatchGroups[swatchGroups.length - 1];
+      if (last && last.label === item.label) last.items.push(item);
+      else swatchGroups.push({ label: item.label, items: [item] });
+    });
+
+    let activeColor = hexToRgb(sortedHexes[0].hex);
+    let activeHex = sortedHexes[0].hex;
+    let globalIndex = 0;
+    swatchGroups.forEach(group => {
+      const wrap2 = document.createElement('div');
+      wrap2.className = 'swatch-group-wrap';
+      const title = document.createElement('p');
+      title.className = 'swatch-group-title';
+      title.textContent = group.label;
+      wrap2.appendChild(title);
+
+      const groupEl = document.createElement('div');
+      groupEl.className = 'swatch-group';
+      group.items.forEach(({ hex, label }) => {
+        const sw = document.createElement('button');
+        sw.type = 'button';
+        sw.className = 'swatch-pick' + (globalIndex === 0 ? ' active' : '');
+        sw.title = label;
+        sw.innerHTML = `<span class="swatch-color" style="background:${hex}"></span>`;
+        sw.addEventListener('click', () => {
+          activeColor = hexToRgb(hex);
+          activeHex = hex;
+          swatchBar.querySelectorAll('.swatch-pick').forEach(b => b.classList.remove('active'));
+          sw.classList.add('active');
+        });
+        groupEl.appendChild(sw);
+        globalIndex++;
+      });
+      wrap2.appendChild(groupEl);
+      swatchBar.appendChild(wrap2);
+    });
+
+    let dragState = null;
+    let strokeActive = false, lastX = 0, lastY = 0;
+    let smartRef = null;
+    const DRAG_THRESHOLD = 8;
+
+    function toCanvasXY(ev){
+      const rect = canvas.getBoundingClientRect();
+      return [
+        Math.floor((ev.clientX - rect.left) * (canvas.width / rect.width)),
+        Math.floor((ev.clientY - rect.top) * (canvas.height / rect.height))
+      ];
+    }
+
+    function eraseStamp(x, y, radius){
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(img, 0, 0, w, h);
+      ctx.restore();
+    }
+    function eraseLine(x0, y0, x1, y1, radius){
+      const dist = Math.hypot(x1 - x0, y1 - y0);
+      const step = Math.max(1, radius * 0.5);
+      const steps = Math.max(1, Math.ceil(dist / step));
+      for (let i = 0; i <= steps; i++){
+        const t = i / steps;
+        eraseStamp(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, radius);
+      }
+    }
+
+    canvas.addEventListener('pointerdown', (ev) => {
+      canvas.setPointerCapture(ev.pointerId);
+      if (tool === 'move'){
+        dragState = { startX: ev.clientX, startY: ev.clientY, startScrollLeft: canvasWrap.scrollLeft, startScrollTop: canvasWrap.scrollTop };
+        return;
+      }
+      if (tool === 'brush' || tool === 'eraser'){
+        const [x, y] = toCanvasXY(ev);
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+        pushHistory();
+        strokeActive = true; lastX = x; lastY = y;
+        if (tool === 'brush'){
+          ctx.fillStyle = activeHex;
+          ctx.beginPath(); ctx.arc(x, y, Number(brushInput.value), 0, Math.PI * 2); ctx.fill();
+        } else {
+          eraseStamp(x, y, Number(brushInput.value));
+        }
+        return;
+      }
+      if (tool === 'smartbrush'){
+        const [x, y] = toCanvasXY(ev);
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+        pushHistory();
+        strokeActive = true; lastX = x; lastY = y;
+        const i0 = (y * w + x) * 4;
+        smartRef = [data[i0], data[i0+1], data[i0+2]];
+        boundedFillDab(data, w, h, x, y, Number(brushInput.value), smartRef, Number(toleranceInput.value) ** 2, activeColor);
+        ctx.putImageData(imgData, 0, 0);
+        return;
+      }
+      dragState = { startX: ev.clientX, startY: ev.clientY, startScrollLeft: canvasWrap.scrollLeft, startScrollTop: canvasWrap.scrollTop, moved: false };
+    });
+
+    canvas.addEventListener('pointermove', (ev) => {
+      if (tool === 'brush' || tool === 'eraser'){
+        if (!strokeActive) return;
+        const [x, y] = toCanvasXY(ev);
+        if (tool === 'brush'){
+          ctx.strokeStyle = activeHex;
+          ctx.lineWidth = Number(brushInput.value) * 2;
+          ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y); ctx.stroke();
+        } else {
+          eraseLine(lastX, lastY, x, y, Number(brushInput.value));
+        }
+        lastX = x; lastY = y;
+        return;
+      }
+      if (tool === 'smartbrush'){
+        if (!strokeActive) return;
+        const [x, y] = toCanvasXY(ev);
+        boundedFillLine(data, w, h, lastX, lastY, x, y, Number(brushInput.value), smartRef, Number(toleranceInput.value) ** 2, activeColor);
+        ctx.putImageData(imgData, 0, 0);
+        lastX = x; lastY = y;
+        return;
+      }
+      if (!dragState) return;
+      const dx = ev.clientX - dragState.startX, dy = ev.clientY - dragState.startY;
+      if (tool === 'move'){
+        canvasWrap.scrollLeft = dragState.startScrollLeft - dx;
+        canvasWrap.scrollTop = dragState.startScrollTop - dy;
+        return;
+      }
+      if (!dragState.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD) dragState.moved = true;
+      if (dragState.moved){
+        canvasWrap.scrollLeft = dragState.startScrollLeft - dx;
+        canvasWrap.scrollTop = dragState.startScrollTop - dy;
+      }
+    });
+
+    function finishPointer(ev){
+      if (tool === 'brush' || tool === 'eraser'){
+        if (strokeActive){
+          strokeActive = false;
+          imgData = ctx.getImageData(0, 0, w, h);
+          data = imgData.data;
+        }
+        return;
+      }
+      if (tool === 'smartbrush'){
+        strokeActive = false;
+        smartRef = null;
+        return;
+      }
+      if (tool === 'move'){ dragState = null; return; }
+      if (!dragState) return;
+      if (!dragState.moved){
+        const [x, y] = toCanvasXY(ev);
+        if (x >= 0 && x < w && y >= 0 && y < h){
+          pushHistory();
+          magicFill(data, w, h, x, y, Number(toleranceInput.value), activeColor);
+          ctx.putImageData(imgData, 0, 0);
+        }
+      }
+      dragState = null;
+    }
+    canvas.addEventListener('pointerup', finishPointer);
+    canvas.addEventListener('pointercancel', () => { dragState = null; strokeActive = false; });
+
+    undoStepBtn.addEventListener('click', undoStep);
+    resetPhotoBtn.addEventListener('click', loadOriginal);
+    if (sendAllBtn){
+      sendAllBtn.addEventListener('click', () => opts.onSendAll(canvas));
+    }
+
+    return wrap;
+  }
+
+  // Thickens the detected outline by a few pixels so small hand-drawn gaps so small hand-drawn gaps
+  // (an open neck line, an arm that doesn't quite touch the body) get closed,
+  // instead of leaking into the surrounding background.
+  function dilateMask(mask, w, h, iterations){
+    let src = mask;
+    for (let it = 0; it < iterations; it++){
+      const dst = new Uint8Array(src.length);
+      for (let y = 0; y < h; y++){
+        for (let x = 0; x < w; x++){
+          const idx = y*w + x;
+          if (src[idx]){ dst[idx] = 1; continue; }
+          let hit = 0;
+          for (let dy = -1; dy <= 1 && !hit; dy++){
+            const ny = y + dy;
+            if (ny < 0 || ny >= h) continue;
+            for (let dx = -1; dx <= 1; dx++){
+              const nx = x + dx;
+              if (nx < 0 || nx >= w) continue;
+              if (src[ny*w + nx]){ hit = 1; break; }
+            }
+          }
+          dst[idx] = hit;
+        }
+      }
+      src = dst;
+    }
+    return src;
+  }
+
+  // Recolors the whole photo by tonal cluster instead of closed regions —
+  // suited to a photographed miniature with shading rather than flat line art.
+  // The background (paper/backdrop, detected from the image border) is left untouched.
+  function posterizeColorize(img, clusters, hexes){
+    const maxDim = 460;
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+    const n = w * h;
+
+    const clusterIdx = new Int32Array(n);
+    for (let p = 0; p < n; p++){
+      const i = p * 4;
+      let best = 0, bestDist = Infinity;
+      for (let c = 0; c < clusters.length; c++){
+        const dr = data[i] - clusters[c].rgb[0];
+        const dg = data[i+1] - clusters[c].rgb[1];
+        const db = data[i+2] - clusters[c].rgb[2];
+        const dist = dr*dr + dg*dg + db*db;
+        if (dist < bestDist){ bestDist = dist; best = c; }
+      }
+      clusterIdx[p] = best;
+    }
+
+    // find the cluster that dominates the image border — that's the background
+    const votes = new Array(clusters.length).fill(0);
+    for (let x = 0; x < w; x++){ votes[clusterIdx[x]]++; votes[clusterIdx[(h-1)*w + x]]++; }
+    for (let y = 0; y < h; y++){ votes[clusterIdx[y*w]]++; votes[clusterIdx[y*w + (w-1)]]++; }
+    let bgCluster = 0;
+    for (let c = 1; c < votes.length; c++) if (votes[c] > votes[bgCluster]) bgCluster = c;
+
+    // flood fill from the border, staying within the background cluster,
+    // so a bright highlight elsewhere on the model (same cluster, but enclosed) still gets painted
+    const isBackground = new Uint8Array(n);
+    const stack = new Int32Array(n);
+    let sp = 0;
+    for (let x = 0; x < w; x++){
+      const top = x, bottom = (h-1)*w + x;
+      if (clusterIdx[top] === bgCluster && !isBackground[top]){ isBackground[top] = 1; stack[sp++] = top; }
+      if (clusterIdx[bottom] === bgCluster && !isBackground[bottom]){ isBackground[bottom] = 1; stack[sp++] = bottom; }
+    }
+    for (let y = 0; y < h; y++){
+      const left = y*w, right = y*w + (w-1);
+      if (clusterIdx[left] === bgCluster && !isBackground[left]){ isBackground[left] = 1; stack[sp++] = left; }
+      if (clusterIdx[right] === bgCluster && !isBackground[right]){ isBackground[right] = 1; stack[sp++] = right; }
+    }
+    while (sp > 0){
+      const p = stack[--sp];
+      const x = p % w, y = (p / w) | 0;
+      if (x > 0){ const q = p-1; if (!isBackground[q] && clusterIdx[q] === bgCluster){ isBackground[q] = 1; stack[sp++] = q; } }
+      if (x < w-1){ const q = p+1; if (!isBackground[q] && clusterIdx[q] === bgCluster){ isBackground[q] = 1; stack[sp++] = q; } }
+      if (y > 0){ const q = p-w; if (!isBackground[q] && clusterIdx[q] === bgCluster){ isBackground[q] = 1; stack[sp++] = q; } }
+      if (y < h-1){ const q = p+w; if (!isBackground[q] && clusterIdx[q] === bgCluster){ isBackground[q] = 1; stack[sp++] = q; } }
+    }
+
+    const targets = hexes.map(hexToRgb);
+    for (let p = 0; p < n; p++){
+      const i = p * 4;
+      if (data[i+3] < 16 || isBackground[p]) continue;
+      const target = targets[clusterIdx[p] % targets.length];
+      data[i] = target[0];
+      data[i+1] = target[1];
+      data[i+2] = target[2];
+    }
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  }
+
+  // Labels connected fillable (non-line) regions in a given line mask.
+  function labelRegions(lineMask, w, h){
+    const n = w * h;
+    const label = new Int32Array(n).fill(-1);
+    const regions = [];
+    const stack = new Int32Array(n);
+    for (let start = 0; start < n; start++){
+      if (lineMask[start] || label[start] !== -1) continue;
+      let sp = 0;
+      stack[sp++] = start;
+      label[start] = regions.length;
+      let count = 0, touchesBorder = false;
+      while (sp > 0){
+        const p = stack[--sp];
+        count++;
+        const x = p % w, y = (p / w) | 0;
+        if (x === 0 || x === w-1 || y === 0 || y === h-1) touchesBorder = true;
+        if (x > 0){ const q = p-1; if (!lineMask[q] && label[q] === -1){ label[q] = regions.length; stack[sp++] = q; } }
+        if (x < w-1){ const q = p+1; if (!lineMask[q] && label[q] === -1){ label[q] = regions.length; stack[sp++] = q; } }
+        if (y > 0){ const q = p-w; if (!lineMask[q] && label[q] === -1){ label[q] = regions.length; stack[sp++] = q; } }
+        if (y < h-1){ const q = p+w; if (!lineMask[q] && label[q] === -1){ label[q] = regions.length; stack[sp++] = q; } }
+      }
+      regions.push({ count, touchesBorder });
+    }
+    return { label, regions };
+  }
+
+  // Finds regions enclosed by dark outlines (flood fill) and fills each
+  // with a color from the chosen palette — like a paint-bucket coloring book.
+  function floodFillColorize(img, hexes){
+    const maxDim = 420;
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+    const n = w * h;
+
+    const lum = new Float32Array(n);
+    for (let p = 0; p < n; p++){
+      const i = p * 4;
+      lum[p] = 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
+    }
+
+    // estimate the paper/background brightness from the border pixels
+    let borderSum = 0, borderCount = 0;
+    for (let x = 0; x < w; x++){ borderSum += lum[x] + lum[(h-1)*w + x]; borderCount += 2; }
+    for (let y = 0; y < h; y++){ borderSum += lum[y*w] + lum[y*w + (w-1)]; borderCount += 2; }
+    const bgLum = borderCount ? borderSum / borderCount : 200;
+    const threshold = Math.max(60, Math.min(200, bgLum * 0.72));
+
+    const isLine = new Uint8Array(n);
+    for (let p = 0; p < n; p++) isLine[p] = lum[p] < threshold ? 1 : 0;
+
+    const minSize = Math.max(12, Math.floor(n * 0.0006));
+    let best = null;
+    for (const iters of [1, 2, 3, 4, 5]){
+      const mask = dilateMask(isLine, w, h, iters);
+      const { label, regions } = labelRegions(mask, w, h);
+      const colorable = regions
+        .map((r, id) => ({ id, count: r.count, touchesBorder: r.touchesBorder }))
+        .filter(r => !r.touchesBorder && r.count >= minSize)
+        .sort((a, b) => b.count - a.count);
+      if (!best || colorable.length > best.colorable.length){
+        best = { label, colorable };
+      }
+      if (colorable.length >= 3) break;
+    }
+
+    const colorForRegion = new Array(best.label.length).fill(null);
+    best.colorable.forEach((r, i) => { colorForRegion[r.id] = hexToRgb(hexes[i % hexes.length]); });
+
+    for (let p = 0; p < n; p++){
+      const rid = best.label[p];
+      if (rid === -1) continue;
+      const col = colorForRegion[rid];
+      if (!col) continue;
+      const i = p * 4;
+      data[i] = col[0]; data[i+1] = col[1]; data[i+2] = col[2];
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  }
+
+  // Palettes composées à la main, pensées comme de vraies recettes de peinture figurine :
+  // une couleur d'armure, un métal, un accent qui claque, une ombre et un éclat.
+  const PRESET_PALETTES = [
+    {
+      name: 'Bleu impérial et or',
+      desc: "Une armure bleu profond avec des liserés dorés : classique, lisible, imposant sur un gros volume.",
+      hexes: ['#1B3A6B', '#C9A227', '#0E1E38', '#EDE2C2'],
+      labels: ['Base', 'Métal (or)', 'Ombre', 'Éclat']
+    },
+    {
+      name: 'Rouge sang et laiton',
+      desc: "Un rouge intense rehaussé de laiton et de crème : très dynamique, fait ressortir les angles de l'armure.",
+      hexes: ['#7A1F1F', '#A9793B', '#2A0D0D', '#EFE0C4'],
+      labels: ['Base', 'Métal (laiton)', 'Ombre', 'Éclat']
+    },
+    {
+      name: 'Vert pourri et bronze',
+      desc: "Un vert malade et terne, du bronze oxydé, presque du poison : parfait pour une faction corrompue ou en décomposition.",
+      hexes: ['#5A6B32', '#7C6A3F', '#1C1E12', '#B7C48C'],
+      labels: ['Base', 'Métal (bronze)', 'Ombre', 'Éclat']
+    },
+    {
+      name: 'Gris glacial et acier',
+      desc: "Une armure gris-bleu froide avec des pièces d'acier poli : sobre, discipliné, effet « troupe d'élite ».",
+      hexes: ['#4A5560', '#9AA5AC', '#1A2024', '#E7EEF2'],
+      labels: ['Base', 'Métal (acier)', 'Ombre', 'Éclat']
+    },
+    {
+      name: 'Vert sombre et os',
+      desc: "Un vert presque noir avec des détails couleur os : discret et austère, très lisible en masse.",
+      hexes: ['#1F3327', '#D8CBA6', '#0A130E', '#8A9B84'],
+      labels: ['Base', 'Os', 'Ombre', 'Détail']
+    },
+    {
+      name: 'Noir et écarlate',
+      desc: "Noir profond, rouge écarlate et touches dorées : contraste fort, look menaçant et cérémoniel.",
+      hexes: ['#121012', '#B0242F', '#B8862E', '#5A1219'],
+      labels: ['Base', 'Accent', 'Métal (or)', 'Ombre']
+    },
+    {
+      name: 'Métal ancien et turquoise',
+      desc: "Un gunmetal patiné et des accents turquoise oxydés : effet mécanique antique, un peu inquiétant.",
+      hexes: ['#3D4247', '#3F8F86', '#0D0F10', '#8FC7BE'],
+      labels: ['Base (métal)', 'Accent', 'Ombre', 'Éclat']
+    },
+    {
+      name: 'Kaki et cuir',
+      desc: "Kaki militaire, cuir brun et beige poussiéreux : ambiance troupe de terrain, tenue de combat usée.",
+      hexes: ['#6B6A3E', '#5A3E28', '#C9B98A', '#2E2C1C'],
+      labels: ['Base', 'Cuir', 'Détail clair', 'Ombre']
+    },
+    {
+      name: 'Violet et rose toxique',
+      desc: "Une carapace violette sombre avec des veines rose vif : organique, étrange, presque bioluminescent.",
+      hexes: ['#3B1F4D', '#E0479E', '#150A1C', '#B98BD1'],
+      labels: ['Base', 'Accent (veines)', 'Ombre', 'Éclat']
+    },
+    {
+      name: 'Vert éclatant et cuir',
+      desc: "Une peau vert vif avec des sangles en cuir brun et du métal grossier : brutal, tribal, plein d'énergie.",
+      hexes: ['#5F9B2D', '#5A3E28', '#8C8F87', '#274315'],
+      labels: ['Peau', 'Cuir', 'Métal', 'Ombre']
+    },
+    {
+      name: 'Blanc sacré et rouge',
+      desc: "Blanc cassé, rouge sang et or : robes cérémonielles, très lumineux, contraste net pour les drapés.",
+      hexes: ['#EDE7DC', '#8B1E1E', '#C9A227', '#B8AF9E'],
+      labels: ['Base', 'Accent', 'Métal (or)', 'Ombre douce']
+    },
+    {
+      name: 'Bronze antique et cyan',
+      desc: "Bronze patiné et cyan lumineux : effet ancien mêlé à une énergie presque magique.",
+      hexes: ['#8C6239', '#2FB6C4', '#241708', '#D8C79A'],
+      labels: ['Métal (bronze)', 'Accent (énergie)', 'Ombre', 'Détail']
+    },
+    {
+      name: 'Feu et cendres',
+      desc: "Un orange incandescent qui tranche sur un noir cendré, avec une pointe d'ambre : effet forge ou faction infernale.",
+      hexes: ['#C9531E', '#171310', '#E8A93C', '#7A1B0E'],
+      labels: ['Base', 'Ombre', 'Éclat', 'Accent']
+    },
+    {
+      name: 'Glace et argent',
+      desc: "Un bleu pâle glacé rehaussé d'argent poli, sur une ombre bleu nuit profond : ambiance hivernale ou spectrale.",
+      hexes: ['#AFD4E8', '#C7CDD1', '#16263A', '#F2FAFF'],
+      labels: ['Base', 'Métal (argent)', 'Ombre', 'Éclat']
+    },
+    {
+      name: 'Pourpre royal et argent',
+      desc: "Un violet profond et noble avec des liserés d'argent brillant : effet héraldique, pour une faction de haut rang.",
+      hexes: ['#4B1D6B', '#C7CDD1', '#170B22', '#B98BD1'],
+      labels: ['Base', 'Métal (argent)', 'Ombre', 'Éclat']
+    }
+  ];
+
+  function shuffled(arr){
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const PALETTE_PREFS_KEY = 'atelier_teintes_active_palettes';
+  let activePaletteNames = new Set(PRESET_PALETTES.map(p => p.name));
+  try {
+    const saved = JSON.parse(localStorage.getItem(PALETTE_PREFS_KEY) || 'null');
+    if (Array.isArray(saved) && saved.length){
+      activePaletteNames = new Set(saved.filter(n => PRESET_PALETTES.some(p => p.name === n)));
+    }
+  } catch(e) {}
+
+  function savePalettePrefs(){
+    try { localStorage.setItem(PALETTE_PREFS_KEY, JSON.stringify([...activePaletteNames])); } catch(e) {}
+  }
+
+  function pickProposals(n){
+    const pool = PRESET_PALETTES.filter(p => activePaletteNames.has(p.name));
+    const source = pool.length ? pool : PRESET_PALETTES;
+    return shuffled(source).slice(0, n);
+  }
+
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const paletteCheckList = document.getElementById('paletteCheckList');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  const selectNoneBtn = document.getElementById('selectNoneBtn');
+  const useSelectionBtn = document.getElementById('useSelectionBtn');
+  useSelectionBtn.addEventListener('click', () => {
+    const chosen = PRESET_PALETTES.filter(p => activePaletteNames.has(p.name));
+    if (!chosen.length) return;
+    renderSchemes(chosen);
+    settingsPanel.classList.add('hidden');
+    resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function renderPaletteCheckList(){
+    paletteCheckList.innerHTML = '';
+    PRESET_PALETTES.forEach(p => {
+      const row = document.createElement('label');
+      row.className = 'palette-check';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = activePaletteNames.has(p.name);
+      cb.addEventListener('change', () => {
+        if (cb.checked) activePaletteNames.add(p.name);
+        else activePaletteNames.delete(p.name);
+        savePalettePrefs();
+      });
+      const swatchMini = document.createElement('span');
+      swatchMini.className = 'swatch-mini';
+      swatchMini.innerHTML = p.hexes.map(hex => `<span style="background:${hex}"></span>`).join('');
+      const text = document.createElement('span');
+      text.textContent = p.name;
+      row.appendChild(cb);
+      row.appendChild(swatchMini);
+      row.appendChild(text);
+      paletteCheckList.appendChild(row);
+    });
+  }
+  renderPaletteCheckList();
+
+  settingsBtn.addEventListener('click', () => {
+    settingsPanel.classList.toggle('hidden');
+  });
+  selectAllBtn.addEventListener('click', () => {
+    activePaletteNames = new Set(PRESET_PALETTES.map(p => p.name));
+    savePalettePrefs();
+    renderPaletteCheckList();
+  });
+  selectNoneBtn.addEventListener('click', () => {
+    activePaletteNames = new Set();
+    savePalettePrefs();
+    renderPaletteCheckList();
+  });
+
+  function renderSchemes(schemes){
+    resultsEl.innerHTML = '';
+
+    // Palette combinée + son atelier, construits avant les cartes pour qu'elles
+    // puissent lui transmettre leur travail en cours.
+    const seen = new Set();
+    const allHexes = [], allLabels = [];
+    schemes.forEach(scheme => {
+      scheme.hexes.forEach((hex, i) => {
+        if (seen.has(hex)) return;
+        seen.add(hex);
+        allHexes.push(hex);
+        allLabels.push(scheme.name);
+      });
+    });
+    const combined = { hexes: allHexes, labels: allLabels };
+
+    const summary = document.createElement('div');
+    summary.className = 'panel';
+    summary.innerHTML = '<p class="eyebrow">Toutes les teintes proposées</p>';
+
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.className = 'ghost';
+    allBtn.style.marginTop = '4px';
+    allBtn.textContent = 'Peindre avec toutes ces teintes';
+    const allResult = document.createElement('div');
+    allResult.className = 'paint-result hidden';
+
+    function openCombinedPainter(baseSource){
+      allResult.innerHTML = '';
+      allResult.appendChild(buildInteractivePainter(baseSource, combined));
+      allResult.classList.remove('hidden');
+      allBtn.textContent = 'Recommencer cette peinture';
+      allResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    sendToCombined = openCombinedPainter;
+    allBtn.addEventListener('click', () => openCombinedPainter(currentImg));
+
+    schemes.forEach(scheme => {
+      const block = document.createElement('div');
+      block.className = 'panel scheme';
+
+      const heading = document.createElement('div');
+      heading.innerHTML = `<h2>${scheme.name}</h2><p class="desc">${scheme.desc}</p>`;
+      block.appendChild(heading);
+
+      const body = document.createElement('div');
+      body.className = 'scheme-body';
+
+      const mini = document.createElement('div');
+      mini.className = 'mini-preview';
+      mini.innerHTML = buildMiniature(scheme.hexes);
+      body.appendChild(mini);
+
+      const row = document.createElement('div');
+      row.className = 'row';
+      scheme.hexes.forEach((hex, i) => row.appendChild(makeChip(hex, scheme.labels[i] || '')));
+      body.appendChild(row);
+
+      block.appendChild(body);
+
+      if (currentImg){
+        const btnPair = document.createElement('div');
+        btnPair.className = 'btnrow';
+        btnPair.style.marginTop = '16px';
+
+        const autoBtn = document.createElement('button');
+        autoBtn.type = 'button';
+        autoBtn.className = 'ghost';
+        autoBtn.textContent = 'Peindre automatiquement';
+
+        const manualBtn = document.createElement('button');
+        manualBtn.type = 'button';
+        manualBtn.className = 'ghost';
+        manualBtn.textContent = 'Peindre moi-même, zone par zone';
+
+        btnPair.appendChild(autoBtn);
+        btnPair.appendChild(manualBtn);
+        block.appendChild(btnPair);
+
+        const paintResult = document.createElement('div');
+        paintResult.className = 'paint-result hidden';
+        block.appendChild(paintResult);
+
+        let autoCanvas = null;
+
+        autoBtn.addEventListener('click', () => {
+          autoBtn.disabled = true;
+          autoBtn.textContent = 'Peinture en cours…';
+          setTimeout(() => {
+            paintResult.innerHTML = '';
+            const canvas = looksLikePhoto
+              ? posterizeColorize(currentImg, currentPalette, scheme.hexes)
+              : floodFillColorize(currentImg, scheme.hexes);
+            canvas.className = 'painted-img';
+            autoCanvas = canvas;
+            paintResult.appendChild(canvas);
+            paintResult.appendChild(makeSaveButton(() => canvas, `peinture-${scheme.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`));
+            paintResult.classList.remove('hidden');
+            autoBtn.disabled = false;
+            autoBtn.textContent = 'Repeindre automatiquement';
+            manualBtn.textContent = 'Continuer à la main à partir de là';
+          }, 10);
+        });
+
+        manualBtn.addEventListener('click', () => {
+          paintResult.innerHTML = '';
+          paintResult.appendChild(buildInteractivePainter(autoCanvas || currentImg, scheme, {
+            onSendAll: (canvas) => openCombinedPainter(canvas)
+          }));
+          paintResult.classList.remove('hidden');
+          manualBtn.textContent = 'Recommencer cette peinture';
+        });
+      }
+
+      resultsEl.appendChild(block);
+    });
+
+    if (currentImg){
+      summary.appendChild(allBtn);
+      summary.appendChild(allResult);
+    }
+    resultsEl.appendChild(summary);
+
+    resultsEl.classList.remove('hidden');
+  }
+})();
+</script>
+</body>
+</html>

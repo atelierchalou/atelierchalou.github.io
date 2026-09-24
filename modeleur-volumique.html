@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modeleur Volumique</title>
+<style>
+  :root{
+    --bg: #0b0f14;
+    --bg-panel: #10161d;
+    --bg-panel-2: #141c25;
+    --line: #24313d;
+    --line-soft: #1b2530;
+    --cyan: #4fd8e8;
+    --cyan-dim: #2a6a73;
+    --amber: #ffb020;
+    --text: #d9e4ea;
+    --text-dim: #7c8ea0;
+    --text-faint: #4a5c6b;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; height:100%; width:100%; overflow:hidden;
+    background: var(--bg); color: var(--text);
+    font-family: var(--sans);
+  }
+  #app{ position:relative; width:100vw; height:100vh; height:100dvh; }
+  canvas{ display:block; touch-action:none; }
+
+  /* ---------- top bar ---------- */
+  #topbar{
+    position:absolute; top:0; left:0; right:0; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 20px;
+    pointer-events:none;
+  }
+  #brand{ display:flex; flex-direction:column; gap:2px; }
+  #brand .title{
+    font-family: var(--sans); font-weight:800; font-size:14px;
+    letter-spacing:3px; color:var(--text);
+  }
+  #brand .sub{
+    font-family: var(--mono); font-size:10px; letter-spacing:2px;
+    color: var(--text-faint); text-transform:uppercase;
+  }
+  #hint{
+    font-family: var(--mono); font-size:10.5px; letter-spacing:0.5px;
+    color: var(--text-faint); text-align:right; line-height:1.6;
+    pointer-events:none;
+  }
+  #topActions{
+    display:flex; gap:6px; pointer-events:auto;
+  }
+  .icon-btn{
+    width:34px; height:34px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(16,22,29,0.82);
+    border:1px solid var(--line); border-radius:8px;
+    color: var(--text-dim); cursor:pointer;
+    backdrop-filter: blur(8px);
+  }
+  .icon-btn svg{ width:17px; height:17px; }
+  .icon-btn:hover{ border-color: var(--cyan-dim); color: var(--cyan); }
+  .icon-btn.active{ border-color: var(--amber); color: var(--amber); }
+
+  /* ---------- left toolbar ---------- */
+  #toolbar{
+    position:absolute; top:64px; left:16px; z-index:10;
+    display:flex; flex-direction:column; gap:6px;
+    background: rgba(16,22,29,0.82);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:8px;
+    backdrop-filter: blur(8px);
+  }
+  .tool-btn{
+    width:52px; height:52px;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--bg-panel-2);
+    border:1px solid var(--line-soft);
+    border-radius:8px;
+    cursor:pointer;
+    color: var(--text-dim);
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .tool-btn svg{ width:26px; height:26px; }
+  .tool-btn:hover{ border-color: var(--cyan-dim); color: var(--cyan); background:#16202a; }
+  .tool-btn:active{ transform: scale(0.95); }
+  .tool-btn.active{ border-color: var(--amber); color: var(--amber); background:#241c0e; }
+  .tool-divider{ height:1px; background: var(--line-soft); margin:4px 2px; }
+  .tool-btn.danger:hover{ border-color:#7a3232; color:#ff6b6b; }
+
+  /* ---------- boolean ops panel ---------- */
+  #boolPanel{
+    position:absolute; top:64px; left:50%; transform: translateX(-50%);
+    z-index:12; display:none;
+    background: rgba(16,22,29,0.92);
+    border:1px solid var(--amber);
+    border-radius:10px;
+    padding:12px 14px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  }
+  #boolPanel.show{ display:block; }
+  #boolPanel .bp-title{
+    font-family: var(--mono); font-size:11px; color: var(--text-dim);
+    display:flex; align-items:center; gap:6px; margin-bottom:10px; white-space:nowrap;
+  }
+  #boolPanel .bp-title .a{ color: var(--amber); font-size:9px; }
+  #boolPanel .bp-title .b{ color: var(--cyan); font-size:9px; }
+  #boolPanel .bp-title .plus{ color: var(--text-faint); }
+  #boolPanel .bp-actions{ display:flex; gap:8px; }
+  #boolPanel button{
+    display:flex; align-items:center; gap:6px;
+    font-family: var(--mono); font-size:10.5px; letter-spacing:0.5px;
+    padding:8px 12px; border-radius:7px; cursor:pointer;
+    background: var(--bg-panel-2); border:1px solid var(--line-soft); color: var(--text-dim);
+    white-space:nowrap;
+  }
+  #boolPanel button svg{ width:15px; height:15px; flex-shrink:0; }
+  #boolPanel button:hover{ border-color: var(--cyan-dim); color: var(--cyan); }
+  #boolPanel #cancelBoolBtn{ padding:8px 10px; }
+  #boolPanel #cancelBoolBtn:hover{ border-color:#7a3232; color:#ff6b6b; }
+
+  /* ---------- sketch/extrude panel ---------- */
+  #sketchPanel{
+    position:absolute; top:64px; left:50%; transform: translateX(-50%);
+    z-index:12; display:none;
+    background: rgba(16,22,29,0.92);
+    border:1px solid var(--cyan);
+    border-radius:10px;
+    padding:12px 14px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  }
+  #sketchPanel.show{ display:block; }
+  #sketchPanel .bp-title{
+    font-family: var(--mono); font-size:11px; color: var(--cyan);
+    margin-bottom:10px; white-space:nowrap;
+  }
+  #sketchPanel .bp-actions{ display:flex; gap:8px; }
+  #sketchPanel button{
+    display:flex; align-items:center; gap:6px;
+    font-family: var(--mono); font-size:10.5px; letter-spacing:0.5px;
+    padding:8px 12px; border-radius:7px; cursor:pointer;
+    background: var(--bg-panel-2); border:1px solid var(--line-soft); color: var(--text-dim);
+    white-space:nowrap;
+  }
+  #sketchPanel button svg{ width:15px; height:15px; flex-shrink:0; }
+  #sketchPanel button:hover{ border-color: var(--cyan-dim); color: var(--cyan); }
+  #sketchPanel #extrudeBtn:disabled{ opacity:0.4; cursor:default; }
+  #sketchPanel #extrudeBtn:disabled:hover{ border-color: var(--line-soft); color: var(--text-dim); }
+  #sketchPanel #cancelSketchBtn{ padding:8px 10px; }
+  #sketchPanel #cancelSketchBtn:hover{ border-color:#7a3232; color:#ff6b6b; }
+  #sketchPanel button.active{ border-color: var(--amber); color: var(--amber); background:#241c0e; }
+
+  /* ---------- grid settings panel ---------- */
+  #gridPanel{
+    position:absolute; bottom:18px; right:16px; z-index:11; display:none;
+    background: rgba(16,22,29,0.9);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    backdrop-filter: blur(8px);
+  }
+  #gridPanel.show{ display:block; }
+  #gridPanel .bp-title{
+    font-family: var(--mono); font-size:9.5px; letter-spacing:2px;
+    color: var(--text-faint); margin-bottom:10px;
+  }
+  #gridPanel .row{ margin-bottom:8px; gap:10px; }
+  #gridPanel .row:last-child{ margin-bottom:0; }
+  #gridPanel .axis{ width:auto !important; color: var(--text-dim); }
+
+  /* ---------- objects list ---------- */
+  #objlist{
+    position:absolute; top:64px; left:88px; z-index:10;
+    width:170px; max-height: 46vh; overflow-y:auto;
+    background: rgba(16,22,29,0.82);
+    border:1px solid var(--line);
+    border-radius:10px;
+    backdrop-filter: blur(8px);
+  }
+  #objlist .hdr{
+    font-family: var(--mono); font-size:9.5px; letter-spacing:2px;
+    color: var(--text-faint); padding:9px 12px 6px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  #objlist .empty{
+    font-family: var(--mono); font-size:10.5px; color: var(--text-faint);
+    padding:14px 12px; line-height:1.5;
+  }
+  .obj-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 12px; cursor:pointer;
+    border-bottom:1px solid var(--line-soft);
+    font-family: var(--mono); font-size:11px;
+  }
+  .obj-row:last-child{ border-bottom:none; }
+  .obj-row:hover{ background: rgba(79,216,232,0.06); }
+  .obj-row.active{ background: rgba(255,176,32,0.08); }
+  .obj-row .dot{
+    width:7px; height:7px; border-radius:50%; margin-right:8px; flex-shrink:0;
+    box-shadow: 0 0 4px currentColor;
+  }
+  .obj-row .name{ color: var(--text-dim); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .obj-row.active .name{ color: var(--amber); }
+  .obj-row .vol{ color: var(--text-faint); font-size:9.5px; margin-left:6px; }
+
+  /* ---------- inspector ---------- */
+  #inspector{
+    position:absolute; top:64px; right:16px; z-index:10;
+    width:230px;
+    background: rgba(16,22,29,0.88);
+    border:1px solid var(--line);
+    border-radius:10px;
+    backdrop-filter: blur(8px);
+    padding:14px 14px 16px;
+    display:none;
+  }
+  #inspector.show{ display:block; }
+  #inspector .hdr{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  #inspector .hdr .name{
+    font-family: var(--mono); font-size:12px; letter-spacing:1px; color: var(--amber);
+    background:transparent; border:none; border-bottom:1px dashed var(--line-soft);
+    outline:none; width:100%; padding:2px 0;
+  }
+  .group-label{
+    font-family: var(--mono); font-size:9px; letter-spacing:2px;
+    color: var(--text-faint); margin: 12px 0 6px;
+  }
+  .row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .row .axis{
+    font-family: var(--mono); font-size:10px; width:11px; color: var(--text-faint);
+  }
+  .row input[type=range]{
+    flex:1; min-width:0; -webkit-appearance:none; height:3px; background: var(--line);
+    border-radius:2px; outline:none;
+  }
+  .row input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:11px; height:11px; border-radius:50%;
+    background: var(--cyan); cursor:pointer; box-shadow: 0 0 5px var(--cyan);
+  }
+  .row .val{
+    font-family: var(--mono); font-size:9.5px; color: var(--text-dim);
+    width:34px; text-align:right;
+  }
+  .row .val-input{
+    box-sizing: border-box;
+    font-family: var(--mono); font-size:10px; color: var(--cyan);
+    width:52px; text-align:right; flex-shrink:0;
+    background: var(--bg-panel-2); border:1px solid var(--line-soft); border-radius:5px;
+    padding:3px 4px; -moz-appearance:textfield;
+  }
+  .row .val-input::-webkit-inner-spin-button,
+  .row .val-input::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  .row .val-input:focus{ outline:none; border-color: var(--cyan-dim); }
+  #app.mobile .row .val-input{ width:58px; padding:6px 5px; font-size:12px; }
+  #colorRow{ display:flex; align-items:center; gap:10px; margin-top:12px; }
+  #colorRow input[type=color]{
+    width:30px; height:30px; border:1px solid var(--line-soft); border-radius:6px;
+    background:none; cursor:pointer; padding:0;
+  }
+  #colorRow .lbl{ font-family: var(--mono); font-size:9px; letter-spacing:2px; color: var(--text-faint); }
+  #obj-vol{
+    font-family: var(--mono); font-size:10.5px; color: var(--cyan); margin-top:10px;
+  }
+  .actions{ display:flex; gap:8px; margin-top:14px; }
+  .actions button{
+    flex:1; font-family: var(--mono); font-size:10px; letter-spacing:1px;
+    padding:8px 0; border-radius:6px; cursor:pointer;
+    background: var(--bg-panel-2); border:1px solid var(--line-soft); color: var(--text-dim);
+  }
+  .actions button:hover{ border-color: var(--cyan-dim); color: var(--cyan); }
+  .actions button.del:hover{ border-color:#7a3232; color:#ff6b6b; }
+
+  /* ---------- volume gauge ---------- */
+  #gauge{
+    position:absolute; bottom:18px; left:16px; z-index:10;
+    background: rgba(16,22,29,0.88);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 18px;
+    backdrop-filter: blur(8px);
+  }
+  #gauge .label{
+    font-family: var(--mono); font-size:9px; letter-spacing:3px;
+    color: var(--text-faint); margin-bottom:4px;
+  }
+  #gauge .digits{
+    font-family: var(--mono); font-size:26px; font-weight:600;
+    color: var(--cyan);
+    text-shadow: 0 0 10px rgba(79,216,232,0.55);
+    letter-spacing:1px;
+    display:flex; align-items:baseline; gap:6px;
+  }
+  #gauge .digits .unit{ font-size:12px; color: var(--cyan-dim); font-weight:400; }
+  #gauge .sub{
+    font-family: var(--mono); font-size:9.5px; color: var(--text-faint); margin-top:5px;
+  }
+  #gauge .bar{
+    margin-top:8px; width:170px; height:3px; background: var(--line); border-radius:2px; overflow:hidden;
+  }
+  #gauge .bar-fill{
+    height:100%; background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+    width:0%; transition: width .25s;
+  }
+
+  #objlist::-webkit-scrollbar{ width:6px; }
+  #objlist::-webkit-scrollbar-thumb{ background: var(--line-soft); border-radius:3px; }
+
+  /* ================= MODE TÉLÉPHONE ================= */
+  #app.mobile #hint{ display:none; }
+  #app.mobile #brand .title{ font-size:12px; letter-spacing:2px; }
+  #app.mobile #brand .sub{ display:none; }
+
+  #app.mobile #toolbar{
+    top:auto; left:0; right:0; bottom:0;
+    flex-direction:row; justify-content:center;
+    width:100%; border-radius:0; border-left:none; border-right:none; border-bottom:none;
+    padding: 10px max(10px, env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom));
+    gap:8px;
+    z-index:20;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.35);
+  }
+  #app.mobile #toolbar .tool-divider{ width:1px; height:36px; margin:0 2px; }
+  #app.mobile .tool-btn{ width:46px; height:46px; }
+
+  #app.mobile #objlist{
+    top:56px; left:8px; right:8px; width:auto; max-height:38vh;
+    transform: translateY(-8px); opacity:0; pointer-events:none;
+    transition: transform .18s ease, opacity .18s ease;
+  }
+  #app.mobile #objlist.open{
+    transform: translateY(0); opacity:1; pointer-events:auto;
+  }
+
+  #app.mobile #gauge{
+    left:auto; right:8px; bottom:auto; top:56px;
+    padding:9px 13px;
+  }
+  #app.mobile #gauge .digits{ font-size:19px; }
+  #app.mobile #gauge .bar{ width:110px; }
+
+  #app.mobile #inspector{
+    top:auto; right:0; left:0; bottom:0;
+    width:100%; max-width:none;
+    border-radius:16px 16px 0 0;
+    border-left:none; border-right:none; border-bottom:none;
+    padding: 10px 18px calc(84px + env(safe-area-inset-bottom));
+    max-height:62vh; overflow-y:auto;
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.4);
+  }
+  #app.mobile #inspector::before{
+    content:""; display:block; width:36px; height:4px; border-radius:2px;
+    background: var(--line-soft); margin: 0 auto 12px;
+  }
+  #app.mobile .row{ margin-bottom:12px; }
+  #app.mobile .row input[type=range]{ height:5px; }
+  #app.mobile .row input[type=range]::-webkit-slider-thumb{ width:20px; height:20px; }
+  #app.mobile .actions button{ padding:12px 0; }
+  #app.mobile #colorRow input[type=color]{ width:38px; height:38px; }
+
+  #app.mobile #boolPanel{
+    top:auto; bottom:74px; left:8px; right:8px; transform:none; width:auto;
+  }
+  #app.mobile #boolPanel .bp-actions{ flex-wrap:wrap; }
+  #app.mobile #boolPanel button{ flex:1 1 40%; justify-content:center; padding:11px 8px; }
+
+  #app.mobile #sketchPanel{
+    top:auto; bottom:74px; left:8px; right:8px; transform:none; width:auto;
+  }
+  #app.mobile #sketchPanel .bp-actions{ flex-wrap:wrap; }
+  #app.mobile #sketchPanel button{ flex:1 1 28%; justify-content:center; padding:11px 8px; }
+
+  #app.mobile #gridPanel{
+    top:56px; bottom:auto; right:8px; left:auto;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="topbar">
+    <div id="brand">
+      <div class="title">MODELEUR VOLUMIQUE</div>
+      <div class="sub">Atelier 3D · mini éditeur <span style="opacity:0.55; font-size:0.85em;">— Atelier Chalou</span></div>
+    </div>
+    <div id="hint">
+      GLISSER LA PIÈCE — déplacer&nbsp;&nbsp;·&nbsp;&nbsp;GLISSER LE VIDE — orbiter<br>
+      MOLETTE / PINCEMENT — zoomer&nbsp;&nbsp;·&nbsp;&nbsp;🔗 — additionner / soustraire
+    </div>
+    <div id="topActions">
+      <button id="gridToggle" class="icon-btn" title="Régler la grille de sol">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 3.5v17M14.5 3.5v17"/></svg>
+      </button>
+      <button id="layersToggle" class="icon-btn" title="Calques">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+      </button>
+      <button id="modeToggle" class="icon-btn" title="Mode téléphone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.2h2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="gridPanel">
+    <div class="bp-title">GRILLE DE SOL</div>
+    <div class="row">
+      <span class="axis" style="width:auto;">X (mm)</span>
+      <input type="number" id="gridWidthInput" class="val-input" style="width:64px;" min="50" max="3000" step="10" value="400">
+    </div>
+    <div class="row">
+      <span class="axis" style="width:auto;">Y (mm)</span>
+      <input type="number" id="gridDepthInput" class="val-input" style="width:64px;" min="50" max="3000" step="10" value="400">
+    </div>
+  </div>
+
+  <div id="toolbar">
+    <div class="tool-btn" data-type="cube" title="Ajouter un cube">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3L4 7v10l8 4 8-4V7l-8-4z"/><path d="M4 7l8 4 8-4"/><path d="M12 11v10"/></svg>
+    </div>
+    <div class="tool-btn" data-type="sphere" title="Ajouter une sphère">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><path d="M12 3v18"/></svg>
+    </div>
+    <div class="tool-btn" data-type="cylinder" title="Ajouter un cylindre">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12a7 3 0 0 0 14 0V6"/></svg>
+    </div>
+    <div class="tool-btn" data-type="cone" title="Ajouter un cône">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><ellipse cx="12" cy="18" rx="7" ry="3"/><path d="M12 3l6.2 15"/><path d="M12 3L5.8 18"/></svg>
+    </div>
+    <div class="tool-btn" data-type="torus" title="Ajouter un tore">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><ellipse cx="12" cy="12" rx="9" ry="5.4"/><ellipse cx="12" cy="12" rx="3.6" ry="2.1"/></svg>
+    </div>
+    <div class="tool-divider"></div>
+    <div class="tool-btn" id="sketchBtn" title="Dessiner une forme au sol puis l'extruder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 19l3-1 10-10-2-2L5 16l-1 3z"/><path d="M14 6l2 2"/><path d="M4 19h5" stroke-dasharray="1.5 1.5"/></svg>
+    </div>
+    <div class="tool-btn" id="combineBtn" title="Choisir un second objet à combiner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9.5" cy="12" r="6.5"/><circle cx="14.5" cy="12" r="6.5"/></svg>
+    </div>
+    <div class="tool-btn danger" id="clearBtn" title="Vider la scène">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>
+    </div>
+  </div>
+
+  <div id="sketchPanel">
+    <div class="bp-title" id="sketchStatus">Tracé : 0 point</div>
+    <div class="row" style="margin-bottom:10px;">
+      <span class="axis" style="width:auto;">Hauteur</span>
+      <input type="range" id="extrudeHeight" min="0.2" max="5" step="0.1" value="1">
+      <span class="val" id="extrudeHeightV" style="width:44px;">×1.00</span>
+    </div>
+    <div class="bp-actions">
+      <button id="curveToggleBtn" title="Passer le tracé en contour lissé (courbe) au lieu de segments droits">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 18c4 0 4-12 8-12s4 12 8 12"/></svg>
+        Courbe
+      </button>
+      <button id="extrudeBtn" title="Fermer le tracé et l'extruder en volume">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 16l6-3V4l-6 3v9z"/><path d="M10 13l10 5"/><path d="M20 6l-10 5v7"/><path d="M20 6l-6 3"/></svg>
+        Extruder
+      </button>
+      <button id="undoPointBtn" title="Annuler le dernier point">↩ Point</button>
+      <button id="cancelSketchBtn" title="Annuler tout le tracé">✕</button>
+    </div>
+  </div>
+
+  <div id="boolPanel">
+    <div class="bp-title">
+      <span class="a">●</span><span id="bpNameA"></span>
+      <span class="plus">+</span>
+      <span class="b">●</span><span id="bpNameB"></span>
+    </div>
+    <div class="bp-actions">
+      <button id="unionBtn" title="Fusionner A et B en un seul volume">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="12" r="6.5"/><circle cx="15" cy="12" r="6.5"/></svg>
+        Additionner
+      </button>
+      <button id="subtractBtn" title="Creuser B dans A (A − B)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="12" r="6.5"/><circle cx="15" cy="12" r="6.5" stroke-dasharray="2 2"/></svg>
+        Soustraire A−B
+      </button>
+      <button id="cancelBoolBtn" title="Annuler la sélection du second objet">✕</button>
+    </div>
+  </div>
+
+  <div id="objlist">
+    <div class="hdr">SCÈNE</div>
+    <div id="objlist-body"><div class="empty">Aucun volume.<br>Ajoutez une forme depuis la barre d'outils.</div></div>
+  </div>
+
+  <div id="inspector">
+    <div class="hdr">
+      <input class="name" id="inspName" spellcheck="false">
+    </div>
+
+    <div class="group-label">POSITION (mm)</div>
+    <div class="row"><span class="axis">X</span><input type="range" id="posX" min="-400" max="400" step="5"><input type="number" class="val-input" id="posXv" step="1"></div>
+    <div class="row"><span class="axis">Y</span><input type="range" id="posY" min="-400" max="400" step="5"><input type="number" class="val-input" id="posYv" step="1"></div>
+    <div class="row"><span class="axis">Z</span><input type="range" id="posZ" min="-300" max="300" step="5"><input type="number" class="val-input" id="posZv" step="1"></div>
+
+    <div class="group-label" style="display:flex; align-items:center; justify-content:space-between;">
+      <span>ÉCHELLE</span>
+      <label style="display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:8.5px; letter-spacing:1px; color:var(--text-faint); cursor:pointer; text-transform:none;">
+        <input type="checkbox" id="scaleLock" style="accent-color:var(--cyan); width:12px; height:12px; cursor:pointer;">
+        Proportions
+      </label>
+    </div>
+    <div class="row"><span class="axis">X</span><input type="range" id="scaX" min="0.2" max="3" step="0.02"><input type="number" class="val-input" id="scaXv" step="0.02"></div>
+    <div class="row"><span class="axis">Y</span><input type="range" id="scaY" min="0.2" max="3" step="0.02"><input type="number" class="val-input" id="scaYv" step="0.02"></div>
+    <div class="row"><span class="axis">Z</span><input type="range" id="scaZ" min="0.2" max="3" step="0.02"><input type="number" class="val-input" id="scaZv" step="0.02"></div>
+
+    <div class="group-label">ROTATION</div>
+    <div class="row"><span class="axis">X</span><input type="range" id="rotX" min="0" max="360" step="1"><input type="number" class="val-input" id="rotXv" step="1"></div>
+    <div class="row"><span class="axis">Y</span><input type="range" id="rotY" min="0" max="360" step="1"><input type="number" class="val-input" id="rotYv" step="1"></div>
+    <div class="row"><span class="axis">Z</span><input type="range" id="rotZ" min="0" max="360" step="1"><input type="number" class="val-input" id="rotZv" step="1"></div>
+
+    <div id="colorRow">
+      <input type="color" id="colorPick">
+      <span class="lbl">COULEUR</span>
+    </div>
+
+    <div id="obj-vol">Volume : —</div>
+
+    <div class="actions">
+      <button id="dupBtn">Dupliquer</button>
+      <button id="delBtn" class="del">Supprimer</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- constants ----------------
+  var UNIT_CM = 10;                 // 1 three.js unit = 10 cm
+  var CM3_PER_UNIT3 = UNIT_CM ** 3;
+  var COLORS = ["#4fd8e8","#ffb020","#7ee787","#ff6b8a","#c792ea","#f2c14e","#5eead4","#f97316"];
+  var TYPE_LABEL = {cube:"Cube", sphere:"Sphère", cylinder:"Cylindre", cone:"Cône", torus:"Tore", solid:"Solide"};
+
+  // ---------------- three.js setup ----------------
+  var container = document.getElementById("app");
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b0f14);
+  scene.fog = new THREE.Fog(0x0b0f14, 14, 30);
+
+  var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+
+  var renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  container.insertBefore(renderer.domElement, container.firstChild);
+
+  var hemi = new THREE.HemisphereLight(0x8fd8ff, 0x0a0e12, 0.55);
+  scene.add(hemi);
+  var dir = new THREE.DirectionalLight(0xffffff, 0.9);
+  dir.position.set(5, 8, 4);
+  scene.add(dir);
+  var dir2 = new THREE.DirectionalLight(0x4fd8e8, 0.25);
+  dir2.position.set(-6, 3, -4);
+  scene.add(dir2);
+
+  // ---------------- grille de sol réglable (en mm) ----------------
+  var MM_PER_UNIT = 100;   // 1 unité Three.js = 100 mm (cohérent avec UNIT_CM = 10 cm)
+  var gridLines = null, gridBorder = null;
+  var gridWidthMM = 400, gridDepthMM = 400;
+
+  function buildGroundGrid(widthMM, depthMM){
+    if(gridLines){ scene.remove(gridLines); gridLines.geometry.dispose(); gridLines.material.dispose(); }
+    if(gridBorder){ scene.remove(gridBorder); gridBorder.geometry.dispose(); gridBorder.material.dispose(); }
+
+    gridWidthMM = widthMM; gridDepthMM = depthMM;
+    var w = widthMM / MM_PER_UNIT, d = depthMM / MM_PER_UNIT;
+    var hw = w/2, hd = d/2;
+    var CELL_MM = 50;   // taille d'une case de grille
+    var nx = Math.max(1, Math.round(widthMM / CELL_MM));
+    var nz = Math.max(1, Math.round(depthMM / CELL_MM));
+
+    var pts = [];
+    for(var i=0;i<=nx;i++){
+      var x = -hw + (w*i/nx);
+      pts.push(x,0,-hd, x,0,hd);
+    }
+    for(var j=0;j<=nz;j++){
+      var z = -hd + (d*j/nz);
+      pts.push(-hw,0,z, hw,0,z);
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    gridLines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x24313d }));
+    gridLines.position.y = -0.001;
+    scene.add(gridLines);
+
+    var borderPts = [-hw,0,-hd, hw,0,-hd, hw,0,-hd, hw,0,hd, hw,0,hd, -hw,0,hd, -hw,0,hd, -hw,0,-hd];
+    var borderGeo = new THREE.BufferGeometry();
+    borderGeo.setAttribute("position", new THREE.Float32BufferAttribute(borderPts, 3));
+    gridBorder = new THREE.LineSegments(borderGeo, new THREE.LineBasicMaterial({ color: 0x2a6a73 }));
+    gridBorder.position.y = -0.001;
+    scene.add(gridBorder);
+  }
+  buildGroundGrid(gridWidthMM, gridDepthMM);
+
+  // ---------------- repère d'axes — petit gizmo fixe en bas à gauche ----------------
+  // Convention affichée : X = rouge, Y = vert (profondeur), Z = bleu (hauteur, axe Y de Three.js)
+  // Rendu dans sa propre mini-scène/caméra, dans un coin de l'écran (comme dans un logiciel de CAO),
+  // pour rester petit et lisible quel que soit le zoom de la scène principale.
+  var gizmoScene = new THREE.Scene();
+  gizmoScene.background = new THREE.Color(0x0b0f14);
+  var gizmoCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 10);
+  var GIZMO_SIZE = 78, GIZMO_MARGIN_X = 96, GIZMO_MARGIN_Y = 14;
+
+  (function buildAxesGizmo(){
+    var AXIS_LEN = 0.85;
+    var axes = [
+      { dir: new THREE.Vector3(1,0,0), color: 0xff5d6c, label: "X" },
+      { dir: new THREE.Vector3(0,0,1), color: 0x5dd67c, label: "Y" },
+      { dir: new THREE.Vector3(0,1,0), color: 0x4fb8ff, label: "Z" }
+    ];
+    function makeLabelSprite(text, colorHex){
+      var size = 64;
+      var canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+      var ctx = canvas.getContext("2d");
+      ctx.font = "bold 40px ui-monospace, monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#" + colorHex.toString(16).padStart(6,"0");
+      ctx.shadowColor = "rgba(0,0,0,0.9)";
+      ctx.shadowBlur = 6;
+      ctx.fillText(text, size/2, size/2 + 2);
+      var tex = new THREE.CanvasTexture(canvas);
+      var mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+      var sprite = new THREE.Sprite(mat);
+      sprite.scale.set(0.3, 0.3, 0.3);
+      sprite.renderOrder = 999;
+      return sprite;
+    }
+    axes.forEach(function(a){
+      var tip = a.dir.clone().multiplyScalar(AXIS_LEN);
+      var lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), tip]);
+      var line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: a.color }));
+      gizmoScene.add(line);
+
+      var arrow = new THREE.Mesh(
+        new THREE.ConeGeometry(0.045, 0.15, 10),
+        new THREE.MeshBasicMaterial({ color: a.color })
+      );
+      arrow.position.copy(tip);
+      arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), a.dir);
+      gizmoScene.add(arrow);
+
+      var label = makeLabelSprite(a.label, a.color);
+      label.position.copy(tip).addScaledVector(a.dir, 0.34);
+      gizmoScene.add(label);
+    });
+  })();
+
+  function renderAxesGizmo(){
+    var dir = camera.position.clone().sub(target);
+    if(dir.lengthSq() < 1e-6) dir.set(0,0,1);
+    dir.normalize();
+    gizmoCamera.position.copy(dir).multiplyScalar(2.6);
+    gizmoCamera.up.copy(camera.up);
+    gizmoCamera.lookAt(0,0,0);
+
+    renderer.setScissorTest(true);
+    renderer.setViewport(GIZMO_MARGIN_X, GIZMO_MARGIN_Y, GIZMO_SIZE, GIZMO_SIZE);
+    renderer.setScissor(GIZMO_MARGIN_X, GIZMO_MARGIN_Y, GIZMO_SIZE, GIZMO_SIZE);
+    renderer.render(gizmoScene, gizmoCamera);
+    renderer.setScissorTest(false);
+    renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+  }
+
+  // ---------------- orbit (manual, no addon) ----------------
+  var target = new THREE.Vector3(0,0.4,0);
+  var radius = 9, theta = Math.PI/4, phi = Math.PI/3.1;
+  function updateCamera(){
+    phi = Math.max(0.18, Math.min(Math.PI-0.15, phi));
+    radius = Math.max(3, Math.min(22, radius));
+    camera.position.set(
+      target.x + radius*Math.sin(phi)*Math.sin(theta),
+      target.y + radius*Math.cos(phi),
+      target.z + radius*Math.sin(phi)*Math.cos(theta)
+    );
+    camera.lookAt(target);
+  }
+  updateCamera();
+
+  var isDragging = false, dragMoved = false, lastX=0, lastY=0, downX=0, downY=0;
+  var activePointers = new Map();   // pointerId -> {x,y}
+  var lastPinchDist = null;
+
+  // ---- déplacement direct d'une pièce au doigt/souris ----
+  var translating = false;
+  var translatePointerId = null;
+  var dragPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+  var dragOffset = new THREE.Vector3();
+  var POS_LIMIT = 4;
+
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  function pickObjectAt(clientX, clientY){
+    var rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((clientX-rect.left)/rect.width)*2 - 1;
+    mouse.y = -((clientY-rect.top)/rect.height)*2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    var meshes = objects.map(function(o){ return o.mesh; });
+    var hits = raycaster.intersectObjects(meshes, false);
+    if(!hits.length) return null;
+    return objects.find(function(o){ return o.mesh === hits[0].object; }) || null;
+  }
+  function pickPlanePoint(clientX, clientY, plane){
+    var rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((clientX-rect.left)/rect.width)*2 - 1;
+    mouse.y = -((clientY-rect.top)/rect.height)*2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    var pt = new THREE.Vector3();
+    return raycaster.ray.intersectPlane(plane, pt) ? pt : null;
+  }
+
+  function pinchDistance(){
+    var pts = Array.from(activePointers.values());
+    if(pts.length < 2) return null;
+    var dx = pts[0].x - pts[1].x, dy = pts[0].y - pts[1].y;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+
+  renderer.domElement.addEventListener("pointerdown", function(e){
+    activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(activePointers.size === 1){
+      isDragging = true; dragMoved = false;
+      lastX = downX = e.clientX; lastY = downY = e.clientY;
+
+      // toucher directement une pièce : on la sélectionne et on prépare son déplacement
+      if(!combinePicking && !sketching){
+        var hit = pickObjectAt(e.clientX, e.clientY);
+        if(hit){
+          if(hit.id !== selectedId) selectObject(hit.id);
+          translating = true;
+          translatePointerId = e.pointerId;
+          isDragging = false;
+          dragPlane.constant = -hit.mesh.position.y;   // plan horizontal à la hauteur de la pièce
+          var grab = pickPlanePoint(e.clientX, e.clientY, dragPlane);
+          dragOffset.copy(hit.mesh.position);
+          if(grab) dragOffset.sub(grab);
+        }
+      }
+    } else if(activePointers.size === 2){
+      isDragging = false; dragMoved = true; // cancel tap/orbit while pinching
+      translating = false;                  // deux doigts = zoom, pas déplacement
+      lastPinchDist = pinchDistance();
+    }
+  });
+
+  window.addEventListener("pointermove", function(e){
+    if(!activePointers.has(e.pointerId)) {
+      if(!isDragging && !translating) return;
+    } else {
+      activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    }
+
+    if(translating && e.pointerId === translatePointerId){
+      var o = findObj(selectedId);
+      if(!o){ translating = false; return; }
+      var pt = pickPlanePoint(e.clientX, e.clientY, dragPlane);
+      if(pt){
+        var target = pt.add(dragOffset);
+        o.mesh.position.x = clamp(target.x, -POS_LIMIT, POS_LIMIT);
+        o.mesh.position.z = clamp(target.z, -POS_LIMIT, POS_LIMIT);
+        if(selectedId === o.id) syncInspector();
+      }
+      return;
+    }
+
+    if(activePointers.size >= 2){
+      var dist = pinchDistance();
+      if(lastPinchDist !== null && dist !== null){
+        var delta = dist - lastPinchDist;
+        radius -= delta * 0.018;
+        updateCamera();
+      }
+      lastPinchDist = dist;
+      return;
+    }
+
+    if(!isDragging) return;
+    var dx = e.clientX - lastX, dy = e.clientY - lastY;
+    if(Math.abs(e.clientX-downX) > 4 || Math.abs(e.clientY-downY) > 4) dragMoved = true;
+    if(dragMoved){
+      theta -= dx * 0.006;
+      phi   -= dy * 0.006;
+      updateCamera();
+    }
+    lastX = e.clientX; lastY = e.clientY;
+  });
+
+  function endPointer(e){
+    if(translating && e.pointerId === translatePointerId){
+      translating = false;
+      translatePointerId = null;
+      activePointers.delete(e.pointerId);
+      return;
+    }
+    var wasTwoFinger = activePointers.size >= 2;
+    activePointers.delete(e.pointerId);
+
+    if(activePointers.size === 0){
+      lastPinchDist = null;
+      if(isDragging && !dragMoved && !wasTwoFinger){ handleClick(e); }
+      isDragging = false;
+    } else if(activePointers.size === 1){
+      // transitioning from pinch back to a single finger: resume orbit without a jump
+      lastPinchDist = null;
+      var remaining = Array.from(activePointers.values())[0];
+      isDragging = true; dragMoved = true;
+      lastX = remaining.x; lastY = remaining.y;
+    }
+  }
+  window.addEventListener("pointerup", endPointer);
+  window.addEventListener("pointercancel", endPointer);
+
+  renderer.domElement.addEventListener("wheel", function(e){
+    e.preventDefault();
+    radius += e.deltaY * 0.01;
+    updateCamera();
+  }, {passive:false});
+
+
+  // ---------------- CSG engine (BSP tree, additions/soustractions) ----------------
+  // Petit moteur de géométrie constructive : convertit un maillage en "soupe" de
+  // polygones, construit un arbre BSP pour chaque solide, puis découpe/combine
+  // ces polygones pour produire une union (addition) ou une différence (soustraction).
+  var CSG = (function(){
+    function Vtx(pos, nrm){ this.pos = pos.clone(); this.nrm = nrm.clone(); }
+    Vtx.prototype.clone = function(){ return new Vtx(this.pos, this.nrm); };
+    Vtx.prototype.flip = function(){ this.nrm.multiplyScalar(-1); };
+    Vtx.prototype.lerpTo = function(o, t){ return new Vtx(this.pos.clone().lerp(o.pos, t), this.nrm.clone().lerp(o.nrm, t)); };
+
+    function Pln(n, w){ this.n = n; this.w = w; }
+    Pln.fromPoints = function(a,b,c){
+      var n = new THREE.Vector3().subVectors(b,a).cross(new THREE.Vector3().subVectors(c,a)).normalize();
+      return new Pln(n, n.dot(a));
+    };
+    Pln.prototype.flip = function(){ this.n.multiplyScalar(-1); this.w = -this.w; };
+    var EPS = 1e-5, COPLANAR=0, FRONT=1, BACK=2, SPANNING=3;
+    Pln.prototype.split = function(poly, cpFront, cpBack, front, back){
+      var polyType = 0, types = [];
+      for(var i=0;i<poly.v.length;i++){
+        var t = this.n.dot(poly.v[i].pos) - this.w;
+        var type = t < -EPS ? BACK : t > EPS ? FRONT : COPLANAR;
+        polyType |= type; types.push(type);
+      }
+      switch(polyType){
+        case COPLANAR: (this.n.dot(poly.plane.n) > 0 ? cpFront : cpBack).push(poly); break;
+        case FRONT: front.push(poly); break;
+        case BACK: back.push(poly); break;
+        case SPANNING:
+          var f=[], b=[];
+          for(var j=0;j<poly.v.length;j++){
+            var k=(j+1)%poly.v.length;
+            var tj=types[j], tk=types[k];
+            var vj=poly.v[j], vk=poly.v[k];
+            if(tj!==BACK) f.push(vj);
+            if(tj!==FRONT) b.push(tj!==BACK ? vj.clone() : vj);
+            if((tj|tk)===SPANNING){
+              var tt=(this.w - this.n.dot(vj.pos)) / this.n.dot(new THREE.Vector3().subVectors(vk.pos,vj.pos));
+              var nv = vj.lerpTo(vk, tt);
+              f.push(nv); b.push(nv.clone());
+            }
+          }
+          dedupe(f); dedupe(b);
+          if(f.length>=3){ var pf=new Poly(f); if(isValidPoly(pf)) front.push(pf); }
+          if(b.length>=3){ var pb=new Poly(b); if(isValidPoly(pb)) back.push(pb); }
+          break;
+      }
+    };
+
+    // Les découpes exactement alignées sur les axes (cas fréquent avec des cubes)
+    // produisent souvent des sommets quasi dupliqués aux bords de coupe ; on les
+    // fusionne pour garder des polygones propres.
+    function dedupe(verts){
+      for(var i=verts.length-1; i>0; i--){
+        if(verts[i].pos.distanceToSquared(verts[i-1].pos) < 1e-12) verts.splice(i,1);
+      }
+      if(verts.length>1 && verts[0].pos.distanceToSquared(verts[verts.length-1].pos) < 1e-12) verts.pop();
+    }
+
+    // Plan du polygone via la méthode de Newell : robuste même si les 3 premiers
+    // sommets sont quasi alignés/dupliqués (contrairement à un simple produit
+    // vectoriel sur 3 points), car elle moyenne la contribution de tous les bords.
+    function newellNormal(verts){
+      var n = new THREE.Vector3();
+      for(var i=0;i<verts.length;i++){
+        var a = verts[i].pos, b = verts[(i+1)%verts.length].pos;
+        n.x += (a.y-b.y)*(a.z+b.z);
+        n.y += (a.z-b.z)*(a.x+b.x);
+        n.z += (a.x-b.x)*(a.y+b.y);
+      }
+      return n;
+    }
+
+    function Poly(v){
+      this.v = v;
+      var raw = newellNormal(v);
+      this._rawLenSq = raw.lengthSq();
+      var n = raw.clone().normalize();
+      this.plane = new Pln(n, n.dot(v[0].pos));
+    }
+    Poly.prototype.clone = function(){ return new Poly(this.v.map(function(x){return x.clone();})); };
+    Poly.prototype.flip = function(){ this.v.reverse(); this.v.forEach(function(x){x.flip();}); this.plane.flip(); };
+    function isValidPoly(poly){
+      // écarte les polygones dégénérés (aire quasi nulle) qui peuvent apparaître
+      // aux bords des découpes flottantes et casseraient l'arbre BSP (plan nul).
+      return poly.v.length >= 3 && poly._rawLenSq > 1e-10;
+    }
+
+    function Node(polys){ this.plane=null; this.front=null; this.back=null; this.polys=[]; if(polys) this.build(polys); }
+    Node.prototype.invert = function(){
+      for(var i=0;i<this.polys.length;i++) this.polys[i].flip();
+      if(this.plane) this.plane.flip();
+      if(this.front) this.front.invert();
+      if(this.back) this.back.invert();
+      var tmp=this.front; this.front=this.back; this.back=tmp;
+    };
+    Node.prototype.clipPolys = function(polys){
+      if(!this.plane) return polys.slice();
+      var front=[], back=[];
+      for(var i=0;i<polys.length;i++) this.plane.split(polys[i], front, back, front, back);
+      if(this.front) front = this.front.clipPolys(front);
+      back = this.back ? this.back.clipPolys(back) : [];
+      return front.concat(back);
+    };
+    Node.prototype.clipTo = function(bsp){
+      this.polys = bsp.clipPolys(this.polys);
+      if(this.front) this.front.clipTo(bsp);
+      if(this.back) this.back.clipTo(bsp);
+    };
+    Node.prototype.allPolys = function(){
+      var r = this.polys.slice();
+      if(this.front) r = r.concat(this.front.allPolys());
+      if(this.back) r = r.concat(this.back.allPolys());
+      return r;
+    };
+    Node.prototype.build = function(polys){
+      polys = polys.filter(isValidPoly);
+      if(!polys.length) return;
+      if(!this.plane) this.plane = new Pln(polys[0].plane.n.clone(), polys[0].plane.w);
+      var front=[], back=[];
+      this.polys.push(polys[0]);
+      for(var i=1;i<polys.length;i++) this.plane.split(polys[i], this.polys, this.polys, front, back);
+      if(front.length){ if(!this.front) this.front = new Node(); this.front.build(front); }
+      if(back.length){ if(!this.back) this.back = new Node(); this.back.build(back); }
+    };
+
+    function meshToPolys(mesh){
+      mesh.updateMatrixWorld(true);
+      var geo = mesh.geometry;
+      var pos = geo.attributes.position, nrm = geo.attributes.normal;
+      var idx = geo.index ? geo.index.array : null;
+      var count = idx ? idx.length : pos.count;
+      var nm = new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld);
+      var polys = [];
+      for(var i=0;i<count;i+=3){
+        var i0 = idx ? idx[i] : i, i1 = idx ? idx[i+1] : i+1, i2 = idx ? idx[i+2] : i+2;
+        var verts = [i0,i1,i2].map(function(ix){
+          var p = new THREE.Vector3(pos.getX(ix), pos.getY(ix), pos.getZ(ix)).applyMatrix4(mesh.matrixWorld);
+          var n = new THREE.Vector3(nrm.getX(ix), nrm.getY(ix), nrm.getZ(ix)).applyMatrix3(nm).normalize();
+          return new Vtx(p, n);
+        });
+        polys.push(new Poly(verts));
+      }
+      return polys;
+    }
+
+    function polysToGeometry(polys){
+      var positions = [], normals = [];
+      polys.forEach(function(poly){
+        for(var i=2;i<poly.v.length;i++){       // triangulation en éventail
+          [poly.v[0], poly.v[i-1], poly.v[i]].forEach(function(v){
+            positions.push(v.pos.x, v.pos.y, v.pos.z);
+            normals.push(poly.plane.n.x, poly.plane.n.y, poly.plane.n.z); // ombrage à facettes
+          });
+        }
+      });
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      geo.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+      return geo;
+    }
+
+    function volumeOfGeometry(geo){
+      var pos = geo.attributes.position;
+      var v = 0;
+      for(var i=0;i<pos.count;i+=3){
+        var p1 = new THREE.Vector3(pos.getX(i),   pos.getY(i),   pos.getZ(i));
+        var p2 = new THREE.Vector3(pos.getX(i+1), pos.getY(i+1), pos.getZ(i+1));
+        var p3 = new THREE.Vector3(pos.getX(i+2), pos.getY(i+2), pos.getZ(i+2));
+        v += p1.dot(p2.clone().cross(p3)) / 6;
+      }
+      return Math.abs(v);
+    }
+
+    function union(meshA, meshB){
+      var a = new Node(meshToPolys(meshA)), b = new Node(meshToPolys(meshB));
+      a.clipTo(b); b.clipTo(a); b.invert(); b.clipTo(a); b.invert();
+      a.build(b.allPolys());
+      return polysToGeometry(a.allPolys());
+    }
+    function subtract(meshA, meshB){
+      var a = new Node(meshToPolys(meshA)), b = new Node(meshToPolys(meshB));
+      a.invert(); a.clipTo(b); b.clipTo(a); b.invert(); b.clipTo(a); b.invert();
+      a.build(b.allPolys()); a.invert();
+      return polysToGeometry(a.allPolys());
+    }
+    return { union: union, subtract: subtract, volumeOfGeometry: volumeOfGeometry };
+  })();
+
+  // ---------------- object management ----------------
+  var objects = [];         // {id, type, mesh, outline, colorHex, baseVolume?}
+  var counters = {};
+  var selectedId = null;
+  var secondaryId = null;
+  var combinePicking = false;
+  var nextId = 1;
+
+  function makeGeometry(type){
+    switch(type){
+      case "cube": return new THREE.BoxGeometry(1,1,1);
+      case "sphere": return new THREE.SphereGeometry(0.5, 28, 18);
+      case "cylinder": return new THREE.CylinderGeometry(0.5,0.5,1,28);
+      case "cone": return new THREE.ConeGeometry(0.5,1,28);
+      case "torus": return new THREE.TorusGeometry(0.35,0.15,14,28);
+    }
+  }
+
+  function addObject(type){
+    counters[type] = (counters[type]||0) + 1;
+    var color = COLORS[(nextId-1) % COLORS.length];
+    var geo = makeGeometry(type);
+    var mat = new THREE.MeshStandardMaterial({color: color, roughness:0.45, metalness:0.15});
+    var mesh = new THREE.Mesh(geo, mat);
+
+    var offset = (objects.length % 5) - 2;
+    mesh.position.set(offset*1.1, (type==="cube"?0.5:0.5), 0);
+    scene.add(mesh);
+
+    var edgesGeo = new THREE.EdgesGeometry(geo, 20);
+    var outline = new THREE.LineSegments(edgesGeo, new THREE.LineBasicMaterial({color:0xffb020, transparent:true, opacity:0}));
+    mesh.add(outline);
+
+    var obj = {
+      id: nextId++,
+      type: type,
+      name: TYPE_LABEL[type] + " " + counters[type],
+      mesh: mesh,
+      outline: outline,
+      colorHex: color
+    };
+    objects.push(obj);
+    selectObject(obj.id);
+    refreshList();
+    refreshGauge();
+  }
+
+  function findObj(id){ return objects.find(function(o){ return o.id === id; }); }
+
+  function updateOutlines(){
+    objects.forEach(function(o){
+      if(o.id === selectedId){ o.outline.material.color.set(0xffb020); o.outline.material.opacity = 1; }
+      else if(o.id === secondaryId){ o.outline.material.color.set(0x4fd8e8); o.outline.material.opacity = 1; }
+      else { o.outline.material.opacity = 0; }
+    });
+  }
+
+  function selectObject(id){
+    selectedId = id;
+    secondaryId = null;                 // choisir un nouvel objet primaire annule la combinaison en cours
+    combinePicking = false;
+    document.getElementById("combineBtn").classList.remove("active");
+    updateOutlines();
+    updateBoolPanel();
+    var inspector = document.getElementById("inspector");
+    if(id === null){ inspector.classList.remove("show"); refreshList(); return; }
+    inspector.classList.add("show");
+    syncInspector();
+    refreshList();
+  }
+
+  function setSecondary(id){
+    if(id === selectedId) return;
+    secondaryId = id;
+    combinePicking = false;
+    document.getElementById("combineBtn").classList.remove("active");
+    updateOutlines();
+    updateBoolPanel();
+  }
+
+  function clearSecondary(){
+    secondaryId = null;
+    updateOutlines();
+    updateBoolPanel();
+  }
+
+  function updateBoolPanel(){
+    var panel = document.getElementById("boolPanel");
+    var a = findObj(selectedId), b = findObj(secondaryId);
+    if(a && b){
+      document.getElementById("bpNameA").textContent = a.name;
+      document.getElementById("bpNameB").textContent = b.name;
+      panel.classList.add("show");
+    } else {
+      panel.classList.remove("show");
+    }
+  }
+
+  function deleteObject(id){
+    var o = findObj(id);
+    if(!o) return;
+    scene.remove(o.mesh);
+    o.mesh.geometry.dispose();
+    o.mesh.material.dispose();
+    objects = objects.filter(function(x){ return x.id !== id; });
+    if(secondaryId === id) secondaryId = null;
+    if(selectedId === id) selectObject(objects.length ? objects[objects.length-1].id : null);
+    else updateBoolPanel();
+    refreshList();
+    refreshGauge();
+  }
+
+  function duplicateObject(id){
+    var o = findObj(id);
+    if(!o) return;
+    counters[o.type] = (counters[o.type]||0) + 1;
+    var geo = o.type === "solid" ? o.mesh.geometry.clone() : makeGeometry(o.type);
+    var mat = o.mesh.material.clone();
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(o.mesh.position).add(new THREE.Vector3(0.6,0,0.6));
+    mesh.rotation.copy(o.mesh.rotation);
+    mesh.scale.copy(o.mesh.scale);
+    scene.add(mesh);
+    var edgesGeo = new THREE.EdgesGeometry(geo, 20);
+    var outline = new THREE.LineSegments(edgesGeo, new THREE.LineBasicMaterial({color:0xffb020, transparent:true, opacity:0}));
+    mesh.add(outline);
+    var newObj = {
+      id: nextId++, type:o.type, name: TYPE_LABEL[o.type] + " " + counters[o.type],
+      mesh:mesh, outline:outline, colorHex: "#"+mat.color.getHexString(),
+      baseVolume: o.baseVolume
+    };
+    objects.push(newObj);
+    selectObject(newObj.id);
+    refreshList();
+    refreshGauge();
+  }
+
+  // ---------------- opérations booléennes (additionner / soustraire) ----------------
+  function booleanOp(kind){
+    var a = findObj(selectedId), b = findObj(secondaryId);
+    if(!a || !b) return;
+
+    var resultGeo = kind === "union" ? CSG.union(a.mesh, b.mesh) : CSG.subtract(a.mesh, b.mesh);
+    var baseVol = CSG.volumeOfGeometry(resultGeo);
+
+    // la géométrie sort du CSG en coordonnées monde ; on la recentre sur son propre
+    // centre pour que l'objet tourne sur lui-même plutôt qu'autour de l'origine.
+    resultGeo.computeBoundingBox();
+    var center = resultGeo.boundingBox.getCenter(new THREE.Vector3());
+    resultGeo.translate(-center.x, -center.y, -center.z);
+
+    var mat = new THREE.MeshStandardMaterial({color: a.colorHex, roughness:0.45, metalness:0.15});
+    var mesh = new THREE.Mesh(resultGeo, mat);
+    mesh.position.copy(center);
+    scene.add(mesh);
+    var edgesGeo = new THREE.EdgesGeometry(resultGeo, 25);
+    var outline = new THREE.LineSegments(edgesGeo, new THREE.LineBasicMaterial({color:0xffb020, transparent:true, opacity:0}));
+    mesh.add(outline);
+
+    counters.solid = (counters.solid||0) + 1;
+    var label = kind === "union" ? (a.name + " + " + b.name) : (a.name + " − " + b.name);
+    var newObj = {
+      id: nextId++, type:"solid", name: "Solide " + counters.solid + " (" + label + ")",
+      mesh: mesh, outline: outline, colorHex: a.colorHex, baseVolume: baseVol
+    };
+
+    // retirer les deux sources
+    [a, b].forEach(function(o){
+      scene.remove(o.mesh);
+      o.mesh.geometry.dispose();
+      o.mesh.material.dispose();
+    });
+    objects = objects.filter(function(o){ return o.id !== a.id && o.id !== b.id; });
+
+    objects.push(newObj);
+    selectObject(newObj.id);
+    refreshList();
+    refreshGauge();
+  }
+
+  // ---------------- volume math ----------------
+  function rawVolume(o){
+    var s = o.mesh.scale;
+    switch(o.type){
+      case "cube": return s.x*s.y*s.z;
+      case "sphere": return (4/3)*Math.PI*(0.5*s.x)*(0.5*s.y)*(0.5*s.z);
+      case "cylinder": return Math.PI*(0.5*s.x)*(0.5*s.z)*s.y;
+      case "cone": return (1/3)*Math.PI*(0.5*s.x)*(0.5*s.z)*s.y;
+      case "torus": {
+        var R = 0.35 * ((s.x+s.z)/2);
+        var r = 0.15 * s.y;
+        return 2*Math.PI*Math.PI*R*r*r;
+      }
+      case "solid": return (o.baseVolume||0) * s.x*s.y*s.z;
+    }
+    return 0;
+  }
+  function volumeCm3(o){ return rawVolume(o) * CM3_PER_UNIT3; }
+  function fmt(n){
+    return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u2009");
+  }
+
+  // ---------------- dessiner une forme au sol puis l'extruder ----------------
+  var sketching = false;
+  var smoothCurve = false;            // false = contour droit, true = contour lissé (courbe)
+  var sketchPoints = [];              // {x,z} en coordonnées monde (sol, Three.js y=0)
+  var groundPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+  var sketchGroup = new THREE.Group();
+  scene.add(sketchGroup);
+  var EXTRUDE_HEIGHT = 1;
+  var CURVE_SEGMENTS_PER_POINT = 10;  // finesse de l'échantillonnage de la courbe
+
+  // Échantillonne une boucle fermée passant par tous les points (spline de Catmull-Rom)
+  // en une fine polyligne — utilisée aussi bien pour l'aperçu que pour le contour extrudé.
+  function sampleClosedCurve(points){
+    var pts3 = points.map(function(p){ return new THREE.Vector3(p.x, 0, p.z); });
+    var curve = new THREE.CatmullRomCurve3(pts3, true, "catmullrom", 0.5);
+    var segments = Math.max(24, points.length * CURVE_SEGMENTS_PER_POINT);
+    var sampled = curve.getPoints(segments);
+    sampled.pop();   // le dernier point d'une courbe fermée redouble le premier
+    return sampled.map(function(v){ return { x: v.x, z: v.z }; });
+  }
+
+  function clearSketchVisual(){
+    while(sketchGroup.children.length){
+      var c = sketchGroup.children.pop();
+      c.geometry && c.geometry.dispose();
+      c.material && c.material.dispose();
+    }
+  }
+
+  function rebuildSketchVisual(){
+    clearSketchVisual();
+    if(!sketchPoints.length) return;
+    var linePts = sketchPoints;
+    if(smoothCurve && sketchPoints.length >= 3) linePts = sampleClosedCurve(sketchPoints);
+    var pts3 = linePts.map(function(p){ return new THREE.Vector3(p.x, 0.02, p.z); });
+    if(sketchPoints.length >= 2){
+      var loopPts = pts3.concat(sketchPoints.length >= 3 ? [pts3[0]] : []);
+      var lineGeo = new THREE.BufferGeometry().setFromPoints(loopPts);
+      sketchGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0x4fd8e8 })));
+    }
+    // les points cliqués eux-mêmes restent marqués (même en aperçu lissé), pour pouvoir les ajuster
+    sketchPoints.forEach(function(p, i){
+      var dot = new THREE.Mesh(
+        new THREE.SphereGeometry(i===0 ? 0.075 : 0.055, 12, 8),
+        new THREE.MeshBasicMaterial({ color: i===0 ? 0xffb020 : 0x4fd8e8 })
+      );
+      dot.position.set(p.x, 0.02, p.z);
+      sketchGroup.add(dot);
+    });
+  }
+
+  function updateSketchPanel(){
+    var n = sketchPoints.length;
+    document.getElementById("sketchStatus").textContent =
+      "Tracé : " + n + (n>1 ? " points" : " point") + (n<3 ? " (3 minimum)" : "") +
+      (smoothCurve ? " · courbe" : "");
+    document.getElementById("extrudeBtn").disabled = n < 3;
+    document.getElementById("curveToggleBtn").classList.toggle("active", smoothCurve);
+    document.getElementById("sketchPanel").classList.toggle("show", sketching);
+  }
+
+  function startSketch(){
+    // le dessin et la combinaison de volumes sont mutuellement exclusifs
+    combinePicking = false; secondaryId = null;
+    document.getElementById("combineBtn").classList.remove("active");
+    updateBoolPanel();
+    selectObject(null);
+    sketching = true;
+    sketchPoints = [];
+    document.getElementById("sketchBtn").classList.add("active");
+    rebuildSketchVisual();
+    updateSketchPanel();
+  }
+  function cancelSketch(){
+    sketching = false;
+    sketchPoints = [];
+    clearSketchVisual();
+    document.getElementById("sketchBtn").classList.remove("active");
+    updateSketchPanel();
+  }
+  function addSketchPoint(e){
+    var pt = pickPlanePoint(e.clientX, e.clientY, groundPlane);
+    if(!pt) return;
+    sketchPoints.push({ x: clamp(pt.x, -POS_LIMIT, POS_LIMIT), z: clamp(pt.z, -POS_LIMIT, POS_LIMIT) });
+    rebuildSketchVisual();
+    updateSketchPanel();
+  }
+  function undoSketchPoint(){
+    sketchPoints.pop();
+    rebuildSketchVisual();
+    updateSketchPanel();
+  }
+  function toggleCurveMode(){
+    smoothCurve = !smoothCurve;
+    rebuildSketchVisual();
+    updateSketchPanel();
+  }
+
+  function extrudeSketch(){
+    if(sketchPoints.length < 3) return;
+    // contour au sol (X, Z monde) : segments droits, ou boucle lissée si le mode courbe est actif
+    var contour = smoothCurve ? sampleClosedCurve(sketchPoints) : sketchPoints;
+
+    // tracé au sol -> forme 2D locale, extrudée le long de Z local, puis mise debout
+    // (rotateX -90°) pour que l'extrusion pointe vers le haut (Y de Three.js)
+    var shape = new THREE.Shape();
+    shape.moveTo(contour[0].x, -contour[0].z);
+    for(var i=1;i<contour.length;i++) shape.lineTo(contour[i].x, -contour[i].z);
+
+    var height = parseFloat(document.getElementById("extrudeHeight").value) || 1;
+    var geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled:false, curveSegments:1 });
+    geo.rotateX(-Math.PI/2);
+
+    var baseVol = CSG.volumeOfGeometry(geo);
+    if(baseVol < 1e-6){ cancelSketch(); return; }   // tracé dégénéré (aire ~nulle) : on abandonne proprement
+
+    // recentre la géométrie sur son propre centre : l'objet tourne alors sur
+    // lui-même au lieu de pivoter autour de l'origine du monde.
+    geo.computeBoundingBox();
+    var center = geo.boundingBox.getCenter(new THREE.Vector3());
+    geo.translate(-center.x, -center.y, -center.z);
+
+    var color = COLORS[(nextId-1) % COLORS.length];
+    var mat = new THREE.MeshStandardMaterial({ color: color, roughness:0.45, metalness:0.15 });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(center);
+    scene.add(mesh);
+    var edgesGeo = new THREE.EdgesGeometry(geo, 25);
+    var outline = new THREE.LineSegments(edgesGeo, new THREE.LineBasicMaterial({ color:0xffb020, transparent:true, opacity:0 }));
+    mesh.add(outline);
+
+    counters.solid = (counters.solid||0) + 1;
+    var newObj = {
+      id: nextId++, type:"solid", name: "Forme extrudée " + counters.solid + (smoothCurve ? " (courbe)" : ""),
+      mesh: mesh, outline: outline, colorHex: color, baseVolume: baseVol
+    };
+    objects.push(newObj);
+
+    sketching = false;
+    sketchPoints = [];
+    clearSketchVisual();
+    document.getElementById("sketchBtn").classList.remove("active");
+    updateSketchPanel();
+
+    selectObject(newObj.id);
+    refreshList();
+    refreshGauge();
+  }
+
+  // ---------------- raycast click ----------------
+  var raycaster = new THREE.Raycaster();
+  var mouse = new THREE.Vector2();
+  function handleClick(e){
+    if(sketching){ addSketchPoint(e); return; }
+    var rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX-rect.left)/rect.width)*2 - 1;
+    mouse.y = -((e.clientY-rect.top)/rect.height)*2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    var meshes = objects.map(function(o){ return o.mesh; });
+    var hits = raycaster.intersectObjects(meshes, false);
+    var found = null;
+    if(hits.length){
+      var hitMesh = hits[0].object;
+      found = objects.find(function(o){ return o.mesh === hitMesh; });
+    }
+    if(combinePicking){
+      if(found && found.id !== selectedId) setSecondary(found.id);
+      else { combinePicking = false; document.getElementById("combineBtn").classList.remove("active"); }
+      return;
+    }
+    if(found) selectObject(found.id);
+    else selectObject(null);
+  }
+
+  // ---------------- UI: object list ----------------
+  function refreshList(){
+    var body = document.getElementById("objlist-body");
+    if(!objects.length){
+      body.innerHTML = '<div class="empty">Aucun volume.<br>Ajoutez une forme depuis la barre d\'outils.</div>';
+      return;
+    }
+    body.innerHTML = "";
+    objects.forEach(function(o){
+      var row = document.createElement("div");
+      row.className = "obj-row" + (o.id===selectedId ? " active" : "");
+      row.innerHTML =
+        '<span class="dot" style="color:'+o.colorHex+';background:'+o.colorHex+'"></span>' +
+        '<span class="name">'+o.name+'</span>' +
+        '<span class="vol">'+fmt(volumeCm3(o))+'</span>';
+      row.addEventListener("click", function(){ selectObject(o.id); });
+      body.appendChild(row);
+    });
+  }
+
+  // ---------------- UI: gauge ----------------
+  // Le panneau « volume total » a été retiré de l'interface ; le volume de
+  // chaque pièce reste visible dans l'inspecteur et la liste des calques.
+  function refreshGauge(){}
+
+  // ---------------- UI: inspector ----------------
+  var sliderIds = ["posX","posY","posZ","scaX","scaY","scaZ","rotX","rotY","rotZ"];
+  function syncInspector(){
+    var o = findObj(selectedId);
+    if(!o) return;
+    document.getElementById("inspName").value = o.name;
+    document.getElementById("posX").value = o.mesh.position.x * MM_PER_UNIT;
+    document.getElementById("posY").value = o.mesh.position.z * MM_PER_UNIT;   // "Y" = profondeur (axe Z de Three.js)
+    document.getElementById("posZ").value = o.mesh.position.y * MM_PER_UNIT;   // "Z" = hauteur (axe Y de Three.js, vers le haut)
+    document.getElementById("scaX").value = o.mesh.scale.x;
+    document.getElementById("scaY").value = o.mesh.scale.z;
+    document.getElementById("scaZ").value = o.mesh.scale.y;
+    document.getElementById("rotX").value = THREE.MathUtils.radToDeg(o.mesh.rotation.x);
+    document.getElementById("rotY").value = THREE.MathUtils.radToDeg(o.mesh.rotation.z);
+    document.getElementById("rotZ").value = THREE.MathUtils.radToDeg(o.mesh.rotation.y);
+    document.getElementById("colorPick").value = o.colorHex;
+    updateSliderLabels();
+    document.getElementById("obj-vol").textContent = "Volume : " + fmt(volumeCm3(o)) + " cm³";
+  }
+  function updateSliderLabels(){
+    sliderIds.forEach(function(id){
+      var slider = document.getElementById(id);
+      var input = document.getElementById(id+"v");
+      var v = parseFloat(slider.value);
+      var decimals = id.slice(0,3) === "sca" ? 2 : 0;   // position (mm) et rotation (°) en entiers
+      input.value = decimals === 0 ? Math.round(v) : Number(v.toFixed(decimals));
+    });
+  }
+
+  var SCALE_AXIS = { scaX:"x", scaY:"z", scaZ:"y" };   // correspondance slider -> composante Three.js
+
+  function applyAxisValue(id, v){
+    var o = findObj(selectedId);
+    if(!o || isNaN(v)) return;
+    var slider = document.getElementById(id);
+    var lo = parseFloat(slider.min), hi = parseFloat(slider.max);
+    v = clamp(v, lo, hi);
+
+    if(id==="posX") o.mesh.position.x = v / MM_PER_UNIT;
+    if(id==="posY") o.mesh.position.z = v / MM_PER_UNIT;   // "Y" = profondeur (axe Z de Three.js), curseur en mm
+    if(id==="posZ") o.mesh.position.y = v / MM_PER_UNIT;   // "Z" = hauteur (axe Y de Three.js), curseur en mm
+    if(SCALE_AXIS[id]){
+      var comp = SCALE_AXIS[id];
+      var oldVal = Math.max(0.0001, o.mesh.scale[comp]);
+      o.mesh.scale[comp] = v;
+      if(document.getElementById("scaleLock").checked){
+        var ratio = v / oldVal;
+        Object.keys(SCALE_AXIS).forEach(function(otherId){
+          if(otherId===id) return;
+          var c = SCALE_AXIS[otherId];
+          o.mesh.scale[c] = clamp(o.mesh.scale[c]*ratio, 0.2, 3);
+        });
+      }
+      // reflète l'état réel (verrouillé ou non) sur les trois curseurs
+      document.getElementById("scaX").value = o.mesh.scale.x;
+      document.getElementById("scaY").value = o.mesh.scale.z;
+      document.getElementById("scaZ").value = o.mesh.scale.y;
+    }
+    if(id==="rotX") o.mesh.rotation.x=THREE.MathUtils.degToRad(v);
+    if(id==="rotY") o.mesh.rotation.z=THREE.MathUtils.degToRad(v);
+    if(id==="rotZ") o.mesh.rotation.y=THREE.MathUtils.degToRad(v);
+
+    slider.value = v;   // resynchronise le curseur si la valeur vient du champ saisi au clavier
+    updateSliderLabels();
+    document.getElementById("obj-vol").textContent = "Volume : " + fmt(volumeCm3(o)) + " cm³";
+    refreshGauge();
+    refreshListVolumesOnly();
+  }
+
+  sliderIds.forEach(function(id){
+    document.getElementById(id).addEventListener("input", function(){
+      applyAxisValue(id, parseFloat(this.value));
+    });
+    document.getElementById(id+"v").addEventListener("input", function(){
+      applyAxisValue(id, parseFloat(this.value));
+    });
+    document.getElementById(id+"v").addEventListener("blur", function(){
+      updateSliderLabels();   // si le champ est vide/invalide, on le resynchronise avec la valeur actuelle
+    });
+  });
+
+  function refreshListVolumesOnly(){
+    var rows = document.querySelectorAll("#objlist-body .obj-row");
+    rows.forEach(function(row, i){
+      var o = objects[i];
+      if(!o) return;
+      var volSpan = row.querySelector(".vol");
+      if(volSpan) volSpan.textContent = fmt(volumeCm3(o));
+    });
+  }
+
+  document.getElementById("inspName").addEventListener("input", function(){
+    var o = findObj(selectedId);
+    if(!o) return;
+    o.name = this.value || o.name;
+    refreshList();
+  });
+
+  document.getElementById("colorPick").addEventListener("input", function(){
+    var o = findObj(selectedId);
+    if(!o) return;
+    o.colorHex = this.value;
+    o.mesh.material.color.set(this.value);
+    refreshList();
+  });
+
+  document.getElementById("delBtn").addEventListener("click", function(){
+    if(selectedId!==null) deleteObject(selectedId);
+  });
+  document.getElementById("dupBtn").addEventListener("click", function(){
+    if(selectedId!==null) duplicateObject(selectedId);
+  });
+
+  var combineBtn = document.getElementById("combineBtn");
+  combineBtn.addEventListener("click", function(){
+    if(selectedId===null) return;               // il faut d'abord un objet primaire
+    if(sketching) cancelSketch();                // dessin et combinaison sont exclusifs
+    combinePicking = !combinePicking;
+    combineBtn.classList.toggle("active", combinePicking);
+  });
+  document.getElementById("unionBtn").addEventListener("click", function(){ booleanOp("union"); });
+  document.getElementById("subtractBtn").addEventListener("click", function(){ booleanOp("subtract"); });
+  document.getElementById("cancelBoolBtn").addEventListener("click", clearSecondary);
+
+  document.getElementById("sketchBtn").addEventListener("click", function(){
+    if(sketching) cancelSketch();
+    else startSketch();
+  });
+  document.getElementById("extrudeBtn").addEventListener("click", extrudeSketch);
+  document.getElementById("undoPointBtn").addEventListener("click", undoSketchPoint);
+  document.getElementById("cancelSketchBtn").addEventListener("click", cancelSketch);
+  document.getElementById("curveToggleBtn").addEventListener("click", toggleCurveMode);
+  document.getElementById("extrudeHeight").addEventListener("input", function(){
+    document.getElementById("extrudeHeightV").textContent = "×" + parseFloat(this.value).toFixed(2);
+  });
+
+  window.addEventListener("keydown", function(e){
+    if((e.key==="Delete" || e.key==="Backspace") && selectedId!==null){
+      var tag = document.activeElement.tagName;
+      if(tag==="INPUT") return;
+      deleteObject(selectedId);
+    }
+    if(e.key==="Escape"){
+      if(sketching){ cancelSketch(); }
+      else if(combinePicking){ combinePicking=false; combineBtn.classList.remove("active"); }
+      else if(secondaryId!==null){ clearSecondary(); }
+      else { selectObject(null); }
+    }
+  });
+
+  document.querySelectorAll(".tool-btn[data-type]").forEach(function(btn){
+    btn.addEventListener("click", function(){ addObject(btn.getAttribute("data-type")); });
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", function(){
+    objects.slice().forEach(function(o){ deleteObject(o.id); });
+  });
+
+  // ---------------- mode téléphone ----------------
+  var appEl = document.getElementById("app");
+  var modeBtn = document.getElementById("modeToggle");
+  var layersBtn = document.getElementById("layersToggle");
+  var objlistEl = document.getElementById("objlist");
+
+  function setMobile(on){
+    appEl.classList.toggle("mobile", on);
+    modeBtn.classList.toggle("active", on);
+    if(!on) objlistEl.classList.remove("open");
+  }
+  modeBtn.addEventListener("click", function(){
+    setMobile(!appEl.classList.contains("mobile"));
+  });
+  layersBtn.addEventListener("click", function(){
+    objlistEl.classList.toggle("open");
+  });
+
+  var gridToggleBtn = document.getElementById("gridToggle");
+  var gridPanelEl = document.getElementById("gridPanel");
+  gridToggleBtn.addEventListener("click", function(){
+    gridPanelEl.classList.toggle("show");
+    gridToggleBtn.classList.toggle("active", gridPanelEl.classList.contains("show"));
+  });
+  function applyGridSize(){
+    var w = clamp(parseFloat(document.getElementById("gridWidthInput").value) || 400, 50, 3000);
+    var d = clamp(parseFloat(document.getElementById("gridDepthInput").value) || 400, 50, 3000);
+    buildGroundGrid(w, d);
+  }
+  document.getElementById("gridWidthInput").addEventListener("input", applyGridSize);
+  document.getElementById("gridDepthInput").addEventListener("input", applyGridSize);
+
+  // fermer le panneau calques après sélection en mode téléphone
+  var _origSelect = selectObject;
+  selectObject = function(id){
+    _origSelect(id);
+    if(appEl.classList.contains("mobile")) objlistEl.classList.remove("open");
+  };
+  // détection automatique sur petit écran / tactile
+  if(window.matchMedia("(max-width: 700px)").matches || (navigator.maxTouchPoints > 0 && window.innerWidth < 900)){
+    setMobile(true);
+  }
+
+  // ---------------- resize ----------------
+  window.addEventListener("resize", function(){
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // ---------------- boot: a couple of starter shapes ----------------
+  addObject("cube");
+  addObject("sphere");
+  selectObject(objects[0].id);
+
+  // ---------------- render loop ----------------
+  (function loop(){
+    requestAnimationFrame(loop);
+    renderer.render(scene, camera);
+    renderAxesGizmo();
+  })();
+
+})();
+</script>
+</body>
+</html>

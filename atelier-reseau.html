@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atelier Réseau — Câble ton réseau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a1120;
+    --grid-line:#132345;
+    --panel:#0f1b30;
+    --panel-2:#13233d;
+    --border:#22385c;
+    --border-soft:#1a2c4a;
+    --text:#e7edf7;
+    --muted:#8093b4;
+    --amber:#f3a94a;
+    --amber-soft:#4a3820;
+    --green:#4ddc9a;
+    --green-soft:#123b2c;
+    --red:#f56a6a;
+    --red-soft:#3d1c1e;
+    --cyan:#5fd0e8;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 20% -10%, #14264a 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; margin:0;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  header{
+    padding:14px 22px;
+    border-bottom:1px solid var(--border-soft);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    background:linear-gradient(180deg, rgba(19,35,69,0.6), transparent);
+  }
+  header .title-block{display:flex; align-items:center; gap:12px;}
+  header .badge{
+    width:38px;height:38px;border-radius:8px;
+    background:var(--panel-2); border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--amber);
+  }
+  header h1{font-size:19px; letter-spacing:0.3px;}
+  header p{margin:2px 0 0; color:var(--muted); font-size:12.5px;}
+  header .actions{display:flex; gap:8px; flex-wrap:wrap;}
+
+  button.btn{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:8px 13px;
+    border-radius:7px;
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    transition:border-color .15s, background .15s, transform .05s;
+  }
+  button.btn:hover{border-color:var(--cyan); background:#152740;}
+  button.btn:active{transform:translateY(1px);}
+  button.btn.active{background:var(--amber-soft); border-color:var(--amber); color:var(--amber);}
+  button.btn.ghost{background:transparent;}
+  button.btn.danger:hover{border-color:var(--red); color:var(--red);}
+
+  .layout{
+    flex:1;
+    display:flex;
+    min-height:0;
+  }
+
+  /* PALETTE */
+  .palette{
+    width:172px;
+    flex-shrink:0;
+    border-right:1px solid var(--border-soft);
+    padding:16px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    background:linear-gradient(180deg, rgba(15,27,48,0.4), transparent);
+  }
+  .palette h3{font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); margin-bottom:2px;}
+  .palette-item{
+    border:1px solid var(--border);
+    background:var(--panel);
+    border-radius:9px;
+    padding:10px 8px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    color:var(--cyan);
+    transition:border-color .15s, background .15s;
+  }
+  .palette-item svg{width:30px;height:30px;}
+  .palette-item span{font-size:11.5px; color:var(--text); font-weight:500;}
+  .palette-item .pi-row{display:flex; align-items:center; gap:5px;}
+  .palette-item .info-btn{background:var(--panel); }
+  .palette-item:hover{border-color:var(--cyan);}
+  .palette-item.active{border-color:var(--amber); background:var(--amber-soft); color:var(--amber);}
+  .palette-hint{font-size:11.5px; color:var(--muted); line-height:1.5; margin-top:4px; padding:8px; border:1px dashed var(--border-soft); border-radius:8px;}
+
+  /* CANVAS */
+  .canvas-col{flex:1; display:flex; flex-direction:column; min-width:0;}
+  .toolbar{
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    padding:10px 16px; border-bottom:1px solid var(--border-soft);
+  }
+  .toolbar .spacer{flex:1;}
+  .canvas-wrap{
+    flex:1;
+    position:relative;
+    overflow:auto;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  #canvas{
+    position:relative;
+    width:1400px;
+    height:900px;
+  }
+  svg#cableLayer{position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:visible;}
+  svg#cableLayer path.hit{pointer-events:stroke; cursor:pointer;}
+
+  .device{
+    position:absolute;
+    width:96px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+  }
+  .device.selected .device-icon{border-color:var(--amber); box-shadow:0 0 0 3px var(--amber-soft);}
+  .device.cabling-pick .device-icon{border-color:var(--cyan); box-shadow:0 0 0 3px rgba(95,208,232,0.2);}
+  .device-icon{
+    width:64px;height:64px;
+    border-radius:12px;
+    background:var(--panel);
+    border:1.5px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--cyan);
+    position:relative;
+  }
+  .device-icon svg{width:40px;height:40px;}
+  .device-name{font-size:12px; font-weight:600; margin-top:6px; text-align:center; max-width:96px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .device-ip{font-size:10.5px; color:var(--muted); margin-top:1px;}
+  .device-ip.unset{color:#5a6f92; font-style:italic;}
+  .led{
+    position:absolute; top:-4px; right:-4px;
+    width:11px;height:11px;border-radius:50%;
+    background:#33415f; border:2px solid var(--bg);
+  }
+  .led.ok{background:var(--green);}
+  .led.fail{background:var(--red);}
+  .port{
+    position:absolute; bottom:-7px;
+    width:16px;height:16px;border-radius:50%;
+    background:var(--panel-2); border:1.5px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:var(--muted); font-family:'IBM Plex Mono',monospace;
+    cursor:pointer;
+  }
+  .port:hover{border-color:var(--cyan); color:var(--cyan);}
+  .port.p1{left:6px;}
+  .port.p2{right:6px;}
+  .port.occupied{border-color:var(--amber); color:var(--amber);}
+
+  .statusbar{
+    padding:9px 16px; font-size:12.5px; color:var(--muted);
+    border-top:1px solid var(--border-soft);
+    display:flex; gap:10px; align-items:center;
+  }
+  .statusbar .msg{color:var(--text);}
+  .statusbar .dot{width:7px;height:7px;border-radius:50%; background:var(--amber); flex-shrink:0;}
+
+  .result-banner{
+    margin:0 16px 10px; padding:10px 14px; border-radius:8px; font-size:13px;
+    border:1px solid var(--border); display:none; line-height:1.5;
+  }
+  .result-banner.show{display:block;}
+  .result-banner.ok{background:var(--green-soft); border-color:var(--green); color:#c8ffe4;}
+  .result-banner.fail{background:var(--red-soft); border-color:var(--red); color:#ffd7d7;}
+  .result-banner.warn{background:var(--amber-soft); border-color:var(--amber); color:#ffe6c2;}
+
+  /* CONFIG PANEL */
+  .config-panel{
+    width:290px; flex-shrink:0;
+    border-left:1px solid var(--border-soft);
+    padding:18px;
+    overflow-y:auto;
+    background:linear-gradient(180deg, rgba(15,27,48,0.5), transparent);
+  }
+  .config-panel h3{font-size:14px; margin-bottom:2px;}
+  .config-panel .subtitle{font-size:11.5px; color:var(--muted); margin-bottom:16px;}
+  .empty-config{color:var(--muted); font-size:13px; line-height:1.6; padding-top:30px; text-align:center;}
+  .field{margin-bottom:14px;}
+  .field label{display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); margin-bottom:5px; font-weight:500;}
+  .info-btn{
+    width:16px; height:16px; border-radius:50%; flex-shrink:0; padding:0;
+    border:1px solid var(--border); background:var(--panel-2); color:var(--muted);
+    font-family:'IBM Plex Mono',monospace; font-size:10px; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .info-btn:hover{border-color:var(--cyan); color:var(--cyan);}
+  .def-popover{
+    position:fixed; display:none; width:250px; z-index:90;
+    background:var(--panel); border:1px solid var(--border); border-radius:9px;
+    padding:11px 13px; box-shadow:0 10px 28px rgba(0,0,0,0.45);
+  }
+  .def-popover .def-title{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--amber); margin-bottom:5px;}
+  .def-popover .def-body{font-size:12.5px; color:var(--text); line-height:1.55;}
+  .field input[type=text]{
+    width:100%; padding:8px 10px; border-radius:6px;
+    border:1px solid var(--border); background:var(--panel);
+    color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:13px;
+  }
+  .field input[type=text].name-input{font-family:'Inter',sans-serif;}
+  .field input:focus{outline:none; border-color:var(--cyan);}
+  .field input.invalid{border-color:var(--red);}
+  .checkbox-field{display:flex; align-items:flex-start; gap:8px; margin-bottom:14px; font-size:12.5px; color:var(--text); line-height:1.5;}
+  .checkbox-field input{margin-top:2px;}
+  .iface-group{border:1px solid var(--border-soft); border-radius:8px; padding:10px; margin-bottom:12px;}
+  .iface-group h4{font-size:12px; color:var(--cyan); margin-bottom:8px;}
+  .note-box{font-size:12px; color:var(--muted); line-height:1.6; background:var(--panel-2); border:1px solid var(--border-soft); border-radius:8px; padding:10px; margin-bottom:14px;}
+  .delete-btn{width:100%; justify-content:center; margin-top:6px;}
+
+  /* MODALS */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(4,8,16,0.72);
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    max-width:560px; width:100%; max-height:82vh; overflow-y:auto; padding:24px;
+  }
+  .modal h2{font-size:18px; margin-bottom:4px;}
+  .modal .modal-sub{color:var(--muted); font-size:12.5px; margin-bottom:18px;}
+  .modal-close{
+    float:right; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;
+  }
+  .modal-close:hover{color:var(--text);}
+  .tuto-step{display:flex; gap:12px; margin-bottom:16px;}
+  .tuto-num{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%; background:var(--amber-soft); color:var(--amber);
+    display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600;
+  }
+  .tuto-step p{margin:0; font-size:13.5px; line-height:1.6; color:var(--text);}
+  .tuto-step b{color:var(--cyan);}
+  dl.glossary dt{font-family:'Space Grotesk',sans-serif; font-size:14px; color:var(--amber); margin-top:14px;}
+  dl.glossary dd{margin:4px 0 0; font-size:13px; color:var(--text); line-height:1.6;}
+
+  .case-brief{font-size:13.5px; line-height:1.65; color:var(--text); background:var(--panel-2); border:1px solid var(--border-soft); border-radius:8px; padding:12px; margin-bottom:18px;}
+  .case-section{margin-bottom:20px;}
+  .case-section h3{font-size:13px; color:var(--cyan); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;}
+  table.case-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  table.case-table th, table.case-table td{border:1px solid var(--border-soft); padding:6px 8px; text-align:left;}
+  table.case-table th{background:var(--panel-2); color:var(--muted); font-weight:500;}
+  table.case-table td.mono{font-family:'IBM Plex Mono',monospace;}
+  .log-line{display:flex; gap:10px; font-size:12.5px; padding:7px 0; border-bottom:1px dashed var(--border-soft);}
+  .log-line:last-child{border-bottom:none;}
+  .log-time{font-family:'IBM Plex Mono',monospace; color:var(--amber); flex-shrink:0; width:46px;}
+  .log-ip{font-family:'IBM Plex Mono',monospace; color:var(--cyan); flex-shrink:0; width:100px;}
+  .suspect-list{display:flex; flex-direction:column; gap:8px; margin-bottom:16px;}
+  .suspect-option{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px;
+    border:1px solid var(--border); background:var(--panel); cursor:pointer; font-size:13.5px;
+  }
+  .suspect-option:hover{border-color:var(--cyan);}
+  .suspect-option.picked{border-color:var(--amber); background:var(--amber-soft);}
+  .suspect-option input{accent-color:var(--amber);}
+  .verdict-banner{margin-top:14px; padding:12px 14px; border-radius:8px; font-size:13.5px; line-height:1.6; display:none; border:1px solid var(--border);}
+  .verdict-banner.show{display:block;}
+  .verdict-banner.ok{background:var(--green-soft); border-color:var(--green); color:#c8ffe4;}
+  .verdict-banner.fail{background:var(--red-soft); border-color:var(--red); color:#ffd7d7;}
+  .verdict-banner.warn{background:var(--amber-soft); border-color:var(--amber); color:#ffe6c2;}
+
+  @media (max-width: 880px){
+    .layout{flex-direction:column;}
+    .palette{width:auto; flex-direction:row; overflow-x:auto; border-right:none; border-bottom:1px solid var(--border-soft);}
+    .palette-hint{display:none;}
+    .config-panel{width:auto; border-left:none; border-top:1px solid var(--border-soft);}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <div class="badge">
+      <svg width="20" height="20" viewBox="0 0 48 48"><rect x="6" y="18" width="36" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><path d="M14 18 L14 10 M34 18 L34 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="14" cy="26" r="2" fill="currentColor"/><circle cx="34" cy="26" r="2" fill="currentColor"/></svg>
+    </div>
+    <div>
+      <h1>Atelier Réseau</h1>
+      <p>Câble un réseau, configure les adresses IP, teste la connectivité.</p>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="btnTuto">📘 Tutoriel</button>
+    <button class="btn" id="btnGloss">📖 Glossaire</button>
+    <button class="btn" id="btnEnquete">🕵️ Mode Enquête</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside class="palette">
+    <h3>Éléments</h3>
+    <div class="palette-item" data-type="pc">
+      <svg viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="20" y1="32" x2="20" y2="38" stroke="currentColor" stroke-width="2.5"/><line x1="28" y1="32" x2="28" y2="38" stroke="currentColor" stroke-width="2.5"/><line x1="14" y1="40" x2="34" y2="40" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <div class="pi-row"><span>PC</span><button type="button" class="info-btn" data-def="pc" title="Définition">?</button></div>
+    </div>
+    <div class="palette-item" data-type="serveur">
+      <svg viewBox="0 0 48 48"><rect x="8" y="6" width="32" height="36" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="8" y1="18" x2="40" y2="18" stroke="currentColor" stroke-width="2"/><line x1="8" y1="30" x2="40" y2="30" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="12" r="1.6" fill="currentColor"/><circle cx="14" cy="24" r="1.6" fill="currentColor"/><circle cx="14" cy="36" r="1.6" fill="currentColor"/></svg>
+      <div class="pi-row"><span>Serveur</span><button type="button" class="info-btn" data-def="serveur" title="Définition">?</button></div>
+    </div>
+    <div class="palette-item" data-type="switch">
+      <svg viewBox="0 0 48 48"><rect x="4" y="16" width="40" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><rect x="9" y="21" width="4" height="6" fill="currentColor"/><rect x="17" y="21" width="4" height="6" fill="currentColor"/><rect x="25" y="21" width="4" height="6" fill="currentColor"/><rect x="33" y="21" width="4" height="6" fill="currentColor"/></svg>
+      <div class="pi-row"><span>Commutateur</span><button type="button" class="info-btn" data-def="switch" title="Définition">?</button></div>
+    </div>
+    <div class="palette-item" data-type="routeur">
+      <svg viewBox="0 0 48 48"><rect x="6" y="18" width="36" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M14 18 L14 10 M34 18 L34 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M10 8 Q14 4 18 8 M30 8 Q34 4 38 8" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="14" cy="26" r="1.6" fill="currentColor"/><circle cx="34" cy="26" r="1.6" fill="currentColor"/></svg>
+      <div class="pi-row"><span>Routeur</span><button type="button" class="info-btn" data-def="routeur" title="Définition">?</button></div>
+    </div>
+    <div class="palette-hint">Clique sur un élément puis clique dans le plan de travail pour le déposer. Fais-le glisser pour le repositionner.</div>
+  </aside>
+
+  <div class="canvas-col">
+    <div class="toolbar">
+      <button class="btn" id="btnCable">🔌 Mode câblage</button>
+      <button class="btn" id="btnTest">🧪 Tester une connexion</button>
+      <button class="btn" id="btnDossier" style="display:none;">📂 Dossier d'enquête</button>
+      <button class="btn" id="btnAccuse" style="display:none;">🚔 Accuser un suspect</button>
+      <div class="spacer"></div>
+      <button class="btn danger ghost" id="btnReset">🗑️ Réinitialiser</button>
+    </div>
+    <div class="result-banner" id="resultBanner"></div>
+    <div class="canvas-wrap" id="canvasWrap">
+      <div id="canvas">
+        <svg id="cableLayer"></svg>
+        <div id="devicesLayer"></div>
+      </div>
+    </div>
+    <div class="statusbar">
+      <span class="dot" id="statusDot"></span>
+      <span class="msg" id="statusMsg">Choisis un élément dans la palette pour commencer.</span>
+    </div>
+  </div>
+
+  <aside class="config-panel" id="configPanel">
+    <div class="empty-config">Sélectionne un élément du plan de travail pour le configurer (nom, adresse IP, masque, passerelle...).</div>
+  </aside>
+
+</div>
+
+<div class="def-popover" id="defPopover">
+  <div class="def-title" id="defTitle"></div>
+  <div class="def-body" id="defBody"></div>
+</div>
+
+<!-- TUTORIAL MODAL -->
+<div class="modal-overlay" id="tutoOverlay">
+  <div class="modal">
+    <button class="modal-close" data-close="tutoOverlay">✕</button>
+    <h2>Tutoriel</h2>
+    <p class="modal-sub">Comment construire et tester ton réseau</p>
+    <div class="tuto-step"><div class="tuto-num">1</div><p>Dans la palette à gauche, clique sur un élément (<b>PC</b>, <b>Serveur</b>, <b>Commutateur</b>, <b>Routeur</b>) puis clique dans le plan de travail pour le déposer.</p></div>
+    <div class="tuto-step"><div class="tuto-num">2</div><p>Clique sur un élément déjà déposé pour ouvrir son <b>panneau de configuration</b> à droite : renomme-le, saisis son adresse IP, son masque de sous-réseau et sa passerelle.</p></div>
+    <div class="tuto-step"><div class="tuto-num">3</div><p>Active <b>Mode câblage</b>, puis clique sur deux éléments l'un après l'autre pour les relier avec un câble, comme si tu branchais un câble RJ45.</p></div>
+    <div class="tuto-step"><div class="tuto-num">4</div><p>Un <b>routeur</b> possède deux interfaces (petits ports numérotés 1 et 2) car il relie deux réseaux différents. Branche chaque câble sur le bon port et configure une IP différente sur chaque interface.</p></div>
+    <div class="tuto-step"><div class="tuto-num">5</div><p>Active <b>Tester une connexion</b>, puis clique sur deux éléments pour simuler un ping. Le résultat t'indique si ça fonctionne, et pourquoi si ce n'est pas le cas (câble manquant, passerelle mal configurée, sous-réseaux différents...).</p></div>
+    <div class="tuto-step"><div class="tuto-num">6</div><p>Un PC peut aussi être réglé en <b>DHCP</b> pour recevoir automatiquement son adresse IP d'un serveur DHCP relié au même réseau : lance simplement un test, l'attribution se fait toute seule.</p></div>
+  </div>
+</div>
+
+<!-- GLOSSARY MODAL -->
+<div class="modal-overlay" id="glossOverlay">
+  <div class="modal">
+    <button class="modal-close" data-close="glossOverlay">✕</button>
+    <h2>Glossaire</h2>
+    <p class="modal-sub">Les notions clés du réseau</p>
+    <dl class="glossary">
+      <dt>Adresse IP</dt><dd>Identifiant numérique (ex. 192.168.1.10) attribué à un appareil pour qu'il puisse être reconnu et joint sur un réseau.</dd>
+      <dt>Masque de sous-réseau</dt><dd>Valeur (ex. 255.255.255.0) qui indique quelle partie de l'adresse IP désigne le réseau, et quelle partie désigne l'appareil (l'hôte).</dd>
+      <dt>Sous-réseau</dt><dd>Groupe d'appareils qui partagent la même partie "réseau" de leur adresse IP et peuvent communiquer directement entre eux.</dd>
+      <dt>Passerelle (gateway)</dt><dd>Adresse IP du routeur à contacter lorsqu'un appareil veut envoyer des données vers un autre sous-réseau.</dd>
+      <dt>Commutateur (switch)</dt><dd>Appareil qui relie plusieurs postes d'un même réseau local et transmet les données entre eux, sans avoir besoin d'adresse IP.</dd>
+      <dt>Routeur</dt><dd>Appareil qui relie deux réseaux différents (ou plus) et achemine les données de l'un vers l'autre grâce à ses différentes interfaces.</dd>
+      <dt>DHCP</dt><dd>Service qui attribue automatiquement une adresse IP, un masque et une passerelle à un appareil qui se connecte au réseau.</dd>
+      <dt>Câble réseau (Ethernet)</dt><dd>Liaison physique qui relie deux appareils et permet la circulation des données entre eux.</dd>
+      <dt>Ping</dt><dd>Test qui vérifie si un appareil peut effectivement joindre un autre appareil sur le réseau.</dd>
+    </dl>
+  </div>
+</div>
+
+<!-- CASE FILE MODAL -->
+<div class="modal-overlay" id="dossierOverlay">
+  <div class="modal">
+    <button class="modal-close" data-close="dossierOverlay">✕</button>
+    <h2 id="caseTitle">Dossier d'enquête</h2>
+    <p class="modal-sub">Pièces à conviction — reconstruis le réseau pour résoudre l'affaire</p>
+    <div id="dossierContent"></div>
+  </div>
+</div>
+
+<!-- ACCUSATION MODAL -->
+<div class="modal-overlay" id="accuseOverlay">
+  <div class="modal">
+    <button class="modal-close" data-close="accuseOverlay">✕</button>
+    <h2>Accuser un suspect</h2>
+    <p class="modal-sub">D'après le réseau que tu as reconstruit, qui a accédé au dossier confidentiel à 14h32 ?</p>
+    <div class="suspect-list" id="suspectList"></div>
+    <button class="btn" id="btnValidateAccuse" style="width:100%; justify-content:center;">🔎 Valider l'accusation</button>
+    <div class="verdict-banner" id="verdictBanner"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- STATE ----------
+  let devices = [];
+  let cables = [];
+  let idSeq = 1;
+  let selectedId = null;
+  let placingType = null;
+  let cablingMode = false;
+  let cablingFirst = null; // {deviceId, iface}
+  let testMode = false;
+  let testFirst = null;
+  let highlightCables = new Set();
+  let highlightColor = null;
+
+  const DEV_W = 96, DEV_H = 98, ICON_CY = 32; // approx centers
+
+  const devicesLayer = document.getElementById('devicesLayer');
+  const cableLayer = document.getElementById('cableLayer');
+  const canvas = document.getElementById('canvas');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const configPanel = document.getElementById('configPanel');
+  const statusMsg = document.getElementById('statusMsg');
+  const statusDot = document.getElementById('statusDot');
+  const resultBanner = document.getElementById('resultBanner');
+
+  const ICONS = {
+    pc: `<svg viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="20" y1="32" x2="20" y2="38" stroke="currentColor" stroke-width="2.5"/><line x1="28" y1="32" x2="28" y2="38" stroke="currentColor" stroke-width="2.5"/><line x1="14" y1="40" x2="34" y2="40" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    serveur: `<svg viewBox="0 0 48 48"><rect x="8" y="6" width="32" height="36" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="8" y1="18" x2="40" y2="18" stroke="currentColor" stroke-width="2"/><line x1="8" y1="30" x2="40" y2="30" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="12" r="1.6" fill="currentColor"/><circle cx="14" cy="24" r="1.6" fill="currentColor"/><circle cx="14" cy="36" r="1.6" fill="currentColor"/></svg>`,
+    switch: `<svg viewBox="0 0 48 48"><rect x="4" y="16" width="40" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><rect x="9" y="21" width="4" height="6" fill="currentColor"/><rect x="17" y="21" width="4" height="6" fill="currentColor"/><rect x="25" y="21" width="4" height="6" fill="currentColor"/><rect x="33" y="21" width="4" height="6" fill="currentColor"/></svg>`,
+    routeur: `<svg viewBox="0 0 48 48"><rect x="6" y="18" width="36" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M14 18 L14 10 M34 18 L34 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M10 8 Q14 4 18 8 M30 8 Q34 4 38 8" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="14" cy="26" r="1.6" fill="currentColor"/><circle cx="34" cy="26" r="1.6" fill="currentColor"/></svg>`
+  };
+  const TYPE_LABEL = {pc:'PC', serveur:'Serveur', switch:'Commutateur', routeur:'Routeur'};
+
+  // ---------- DEFINITIONS (info buttons) ----------
+  const DEFS = {
+    pc: {title:'PC', body:"Un ordinateur relié au réseau. C'est un appareil terminal : il envoie et reçoit des données, et a besoin d'une adresse IP pour être identifié."},
+    serveur: {title:'Serveur', body:"Un ordinateur qui fournit un service aux autres appareils du réseau : partage de fichiers, pages web, ou distribution automatique d'adresses IP (DHCP)."},
+    switch: {title:'Commutateur (switch)', body:"Relie plusieurs appareils d'un même réseau local et transmet les données entre eux. Il travaille au niveau 2 et n'a pas besoin d'adresse IP."},
+    routeur: {title:'Routeur', body:"Relie deux réseaux différents (ou plus) et achemine les données de l'un vers l'autre grâce à ses interfaces, chacune reliée à un sous-réseau distinct."},
+    ip: {title:'Adresse IP', body:"Identifiant numérique (ex. 192.168.1.10) attribué à un appareil pour qu'il puisse être reconnu et joint sur le réseau, un peu comme une adresse postale."},
+    mask: {title:'Masque de sous-réseau', body:"Valeur (ex. 255.255.255.0) qui indique quelle partie de l'adresse IP désigne le réseau, et quelle partie désigne l'appareil (l'hôte)."},
+    gateway: {title:'Passerelle (gateway)', body:"Adresse IP du routeur à contacter lorsqu'un appareil veut envoyer des données vers un autre sous-réseau."},
+    dhcp: {title:'DHCP', body:"Service qui attribue automatiquement une adresse IP, un masque et une passerelle à un appareil qui se connecte au réseau, sans configuration manuelle."}
+  };
+  function infoBtn(key){
+    return `<button type="button" class="info-btn" data-def="${key}" title="Définition">?</button>`;
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function setStatus(msg){ statusMsg.textContent = msg; }
+
+  // ---------- INVESTIGATION MODE ("Mode Enquête") ----------
+  let enqueteMode = false;
+  let dossierOpenedOnce = false;
+  let pickedSuspect = null;
+
+  const CASE = {
+    title: "Fuite de documents confidentiels — NetCorp",
+    briefing: "Le 14 mars, des documents confidentiels du service Comptabilité (le fichier « Bilan_2026.xlsx ») ont été consultés sur le serveur de fichiers de l'entreprise puis copiés sur une clé USB, à 14h32. Ta mission : reconstruis le réseau de NetCorp à partir du plan des locaux et de la charte IP ci-dessous, configure chaque poste, puis utilise l'outil « Tester une connexion » pour identifier quelle adresse IP a réellement pu accéder au serveur à l'heure des faits. Accuse ensuite le bon suspect, en justifiant ta réponse par l'adresse IP.",
+    plan: [
+      {zone:'Comptabilité', type:'Serveur', name:'Serveur-Fichiers', occupant:'—'},
+      {zone:'Comptabilité', type:'PC', name:'PC-Julie', occupant:'Julie Morel (comptable)'},
+      {zone:'Comptabilité', type:'PC', name:'PC-Karim', occupant:'Karim Haddad (comptable)'},
+      {zone:'Direction', type:'PC', name:'PC-Sophie', occupant:'Sophie Laurent (directrice)'},
+      {zone:'Réseau', type:'Routeur', name:'Routeur-Central', occupant:'relie Comptabilité et Direction'}
+    ],
+    charte: [
+      {zone:'Comptabilité', network:'192.168.1.0', mask:'255.255.255.0', gateway:'192.168.1.254 (interface 1 du routeur)'},
+      {zone:'Direction', network:'192.168.2.0', mask:'255.255.255.0', gateway:'192.168.2.254 (interface 2 du routeur)'}
+    ],
+    log: [
+      {time:'09:14', ip:'192.168.1.10', action:"Connexion normale au serveur de fichiers (poste habituel de Julie Morel)"},
+      {time:'11:02', ip:'192.168.1.11', action:"Connexion normale au serveur de fichiers (poste habituel de Karim Haddad)"},
+      {time:'14:32', ip:'192.168.2.10', action:'Accès au dossier confidentiel « Bilan_2026.xlsx », puis copie sur périphérique USB'}
+    ],
+    suspects: ['Julie Morel', 'Karim Haddad', 'Sophie Laurent'],
+    suspectDevice: {'Julie Morel':'PC-Julie', 'Karim Haddad':'PC-Karim', 'Sophie Laurent':'PC-Sophie'},
+    culprit: 'Sophie Laurent',
+    culpritIp: '192.168.2.10'
+  };
+
+  function renderDossier(){
+    document.getElementById('caseTitle').textContent = CASE.title;
+    let html = `<div class="case-brief">${escapeHtml(CASE.briefing)}</div>`;
+
+    html += `<div class="case-section"><h3>Plan des locaux</h3><table class="case-table"><tr><th>Zone</th><th>Élément</th><th>Nom à donner</th><th>Occupant</th></tr>`;
+    CASE.plan.forEach(p=>{
+      html += `<tr><td>${escapeHtml(p.zone)}</td><td>${escapeHtml(p.type)}</td><td class="mono">${escapeHtml(p.name)}</td><td>${escapeHtml(p.occupant)}</td></tr>`;
+    });
+    html += `</table></div>`;
+
+    html += `<div class="case-section"><h3>Charte IP de l'entreprise</h3><table class="case-table"><tr><th>Zone</th><th>Réseau</th><th>Masque</th><th>Passerelle</th></tr>`;
+    CASE.charte.forEach(c=>{
+      html += `<tr><td>${escapeHtml(c.zone)}</td><td class="mono">${escapeHtml(c.network)}</td><td class="mono">${escapeHtml(c.mask)}</td><td class="mono">${escapeHtml(c.gateway)}</td></tr>`;
+    });
+    html += `</table></div>`;
+
+    html += `<div class="case-section"><h3>Extrait du journal du serveur de fichiers</h3>`;
+    CASE.log.forEach(l=>{
+      html += `<div class="log-line"><span class="log-time">${escapeHtml(l.time)}</span><span class="log-ip">${escapeHtml(l.ip)}</span><span>${escapeHtml(l.action)}</span></div>`;
+    });
+    html += `</div>`;
+
+    html += `<div class="case-section"><h3>Suspects</h3><p style="font-size:13px; color:var(--muted); line-height:1.6;">${CASE.suspects.map(escapeHtml).join(', ')} — tous les trois avaient un poste sur le réseau de l'entreprise ce jour-là.</p></div>`;
+
+    document.getElementById('dossierContent').innerHTML = html;
+  }
+
+  function renderSuspectList(){
+    const list = document.getElementById('suspectList');
+    list.innerHTML = CASE.suspects.map(s => `
+      <label class="suspect-option${pickedSuspect===s?' picked':''}" data-suspect="${escapeHtml(s)}">
+        <input type="radio" name="suspectPick" value="${escapeHtml(s)}" ${pickedSuspect===s?'checked':''}>
+        <span>${escapeHtml(s)}</span>
+      </label>`).join('');
+    list.querySelectorAll('.suspect-option').forEach(opt=>{
+      opt.addEventListener('click', ()=>{
+        pickedSuspect = opt.dataset.suspect;
+        renderSuspectList();
+      });
+    });
+  }
+
+  function showVerdict(kind, html){
+    const el = document.getElementById('verdictBanner');
+    el.className = 'verdict-banner show ' + kind;
+    el.innerHTML = html;
+  }
+
+  function validateAccusation(){
+    if(!pickedSuspect){
+      showVerdict('warn', 'Choisis d\'abord un suspect dans la liste.');
+      return;
+    }
+    const expectedDeviceName = CASE.suspectDevice[pickedSuspect];
+    const dev = devices.find(d => d.type==='pc' && d.name.trim().toLowerCase() === expectedDeviceName.toLowerCase());
+
+    if(!dev){
+      showVerdict('warn', `Je ne trouve aucun poste nommé <b>${escapeHtml(expectedDeviceName)}</b> sur ton plan. Vérifie que tu as bien placé et renommé tous les postes selon le plan des locaux avant d'accuser quelqu'un.`);
+      return;
+    }
+    if(!validIp(dev.ip)){
+      showVerdict('warn', `Le poste <b>${escapeHtml(expectedDeviceName)}</b> n'a pas encore d'adresse IP valide configurée. Termine la configuration du réseau avant de conclure.`);
+      return;
+    }
+
+    const isRightPerson = pickedSuspect === CASE.culprit;
+    const ipMatches = dev.ip === CASE.culpritIp;
+
+    if(isRightPerson && ipMatches){
+      showVerdict('ok', `✅ <b>Affaire résolue !</b> L'adresse <span class="mono">${dev.ip}</span> relevée dans le journal à 14h32 correspond bien au poste de <b>${escapeHtml(pickedSuspect)}</b>. Le réseau que tu as construit confirme l'accusation.`);
+    } else if(isRightPerson && !ipMatches){
+      showVerdict('warn', `Bonne intuition sur le suspect, mais l'adresse IP de <b>${escapeHtml(expectedDeviceName)}</b> (<span class="mono">${dev.ip||'non configurée'}</span>) ne correspond pas encore à celle du journal (<span class="mono">${CASE.culpritIp}</span>). Revérifie la charte IP.`);
+    } else if(ipMatches){
+      showVerdict('fail', `L'adresse <span class="mono">${dev.ip}</span> correspond bien au journal, mais ce n'est pas le poste de <b>${escapeHtml(pickedSuspect)}</b> d'après ton plan — relis attentivement le plan des locaux et la charte IP avant d'accuser à nouveau.`);
+    } else {
+      showVerdict('fail', `❌ Ce n'est pas la bonne personne. Relis le journal du serveur : quelle adresse IP a accédé au dossier confidentiel à 14h32 ? À quelle zone (et donc quel poste) correspond-elle d'après la charte IP ?`);
+    }
+  }
+
+  function newDevice(type, x, y){
+    const count = devices.filter(d=>d.type===type).length + 1;
+    return {
+      id: 'd'+(idSeq++),
+      type, x, y,
+      name: TYPE_LABEL[type] + ' ' + count,
+      ip:'', mask: type==='switch' ? '' : '255.255.255.0', gateway:'',
+      dhcpClient: type==='pc' ? false : undefined,
+      dhcpServer: type==='serveur' ? false : undefined,
+      ip2:'', mask2: type==='routeur' ? '255.255.255.0' : undefined, // interface 2 for router
+      ledState: null,
+      autoAssigned:false
+    };
+  }
+
+  function getDevice(id){ return devices.find(d=>d.id===id); }
+
+  // ---------- PALETTE ----------
+  document.querySelectorAll('.palette-item').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(placingType === el.dataset.type){
+        placingType = null;
+        el.classList.remove('active');
+        setStatus('Choisis un élément dans la palette pour commencer.');
+        return;
+      }
+      document.querySelectorAll('.palette-item').forEach(p=>p.classList.remove('active'));
+      placingType = el.dataset.type;
+      el.classList.add('active');
+      cablingMode = false; testMode = false; cablingFirst=null; testFirst=null;
+      document.getElementById('btnCable').classList.remove('active');
+      document.getElementById('btnTest').classList.remove('active');
+      setStatus('Clique dans le plan de travail pour déposer un(e) ' + TYPE_LABEL[el.dataset.type].toLowerCase() + '.');
+    });
+  });
+
+  canvas.addEventListener('click', (e)=>{
+    if(e.target !== canvas && e.target.id !== 'devicesLayer') return;
+    if(!placingType) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.max(4, e.clientX - rect.left - DEV_W/2 + canvasWrap.scrollLeft*0);
+    const y = Math.max(4, e.clientY - rect.top - 20);
+    devices.push(newDevice(placingType, x, y));
+    render();
+    setStatus('Élément déposé. Clique dessus pour le configurer, ou dépose-en un autre.');
+  });
+
+  // ---------- RENDER ----------
+  function nodeKey(deviceId, iface){ return iface ? deviceId+'#'+iface : deviceId; }
+
+  function deviceCenter(dev, iface){
+    if(dev.type==='routeur' && iface){
+      return { x: dev.x + (iface===1 ? 22 : DEV_W-22), y: dev.y + 70 };
+    }
+    return { x: dev.x + DEV_W/2, y: dev.y + ICON_CY };
+  }
+
+  function portCapacity(dev, iface){
+    if(dev.type==='switch') return 8;
+    if(dev.type==='routeur') return 1;
+    return 1; // pc / serveur
+  }
+
+  function cablesForPort(deviceId, iface){
+    return cables.filter(c =>
+      (c.a.deviceId===deviceId && (c.a.iface||null)===(iface||null)) ||
+      (c.b.deviceId===deviceId && (c.b.iface||null)===(iface||null))
+    );
+  }
+
+  function render(){
+    devicesLayer.innerHTML = '';
+    devices.forEach(dev=>{
+      const el = document.createElement('div');
+      el.className = 'device' + (dev.id===selectedId ? ' selected':'') +
+        ((cablingMode && cablingFirst && cablingFirst.deviceId===dev.id && !cablingFirst.iface) ? ' cabling-pick':'') +
+        ((testMode && testFirst===dev.id) ? ' cabling-pick':'');
+      el.style.left = dev.x+'px';
+      el.style.top = dev.y+'px';
+      el.dataset.id = dev.id;
+
+      const ipLine = dev.type==='switch'
+        ? 'Niveau 2'
+        : (dev.type==='routeur'
+            ? ((dev.ip||'--')+' / '+(dev.ip2||'--'))
+            : (dev.ip || (dev.dhcpClient ? 'DHCP…' : 'non configuré')));
+
+      el.innerHTML = `
+        <div class="device-icon">${ICONS[dev.type]}<div class="led ${dev.ledState==='ok'?'ok':(dev.ledState==='fail'?'fail':'')}"></div></div>
+        <div class="device-name">${escapeHtml(dev.name)}</div>
+        <div class="device-ip ${ (dev.type!=='switch' && !dev.ip) ? 'unset':''}">${escapeHtml(ipLine)}</div>
+      `;
+
+      if(dev.type==='routeur'){
+        const p1occupied = cablesForPort(dev.id,1).length>0;
+        const p2occupied = cablesForPort(dev.id,2).length>0;
+        const p1 = document.createElement('div');
+        p1.className = 'port p1'+(p1occupied?' occupied':'');
+        p1.textContent='1';
+        p1.addEventListener('pointerdown', e=>e.stopPropagation());
+        p1.addEventListener('click', e=>{ e.stopPropagation(); onDevicePortClick(dev.id, 1); });
+        el.appendChild(p1);
+        const p2 = document.createElement('div');
+        p2.className = 'port p2'+(p2occupied?' occupied':'');
+        p2.textContent='2';
+        p2.addEventListener('pointerdown', e=>e.stopPropagation());
+        p2.addEventListener('click', e=>{ e.stopPropagation(); onDevicePortClick(dev.id, 2); });
+        el.appendChild(p2);
+      }
+
+      attachDrag(el, dev);
+      devicesLayer.appendChild(el);
+    });
+
+    renderCables();
+    renderConfigPanel();
+  }
+
+  function renderCables(){
+    cableLayer.innerHTML = '';
+    cables.forEach(c=>{
+      const da = getDevice(c.a.deviceId), db = getDevice(c.b.deviceId);
+      if(!da || !db) return;
+      const p1 = deviceCenter(da, c.a.iface);
+      const p2 = deviceCenter(db, c.b.iface);
+      const midX = (p1.x+p2.x)/2, midY = (p1.y+p2.y)/2 + 34;
+      const d = `M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`;
+
+      let stroke = '#f3a94a', width=3, dash='';
+      if(highlightCables.has(c.id)){
+        stroke = highlightColor==='ok' ? '#4ddc9a' : (highlightColor==='fail' ? '#f56a6a' : '#f3a94a');
+        width = 4;
+      }
+      const ns = 'http://www.w3.org/2000/svg';
+      const path = document.createElementNS(ns,'path');
+      path.setAttribute('d', d);
+      path.setAttribute('stroke', stroke);
+      path.setAttribute('stroke-width', width);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-linecap','round');
+      cableLayer.appendChild(path);
+
+      const hit = document.createElementNS(ns,'path');
+      hit.setAttribute('d', d);
+      hit.setAttribute('stroke', 'transparent');
+      hit.setAttribute('stroke-width', 16);
+      hit.setAttribute('fill', 'none');
+      hit.setAttribute('class','hit');
+      hit.style.pointerEvents = 'stroke';
+      hit.addEventListener('click', ()=>{
+        if(confirm('Débrancher ce câble ?')){
+          cables = cables.filter(cc=>cc.id!==c.id);
+          render();
+        }
+      });
+      cableLayer.appendChild(hit);
+    });
+  }
+
+  // ---------- DRAG / SELECT ----------
+  function attachDrag(el, dev){
+    let drag = null;
+    el.addEventListener('pointerdown', e=>{
+      drag = {startX:e.clientX, startY:e.clientY, ox:dev.x, oy:dev.y, moved:false};
+      try{ el.setPointerCapture(e.pointerId); }catch(err){}
+    });
+    el.addEventListener('pointermove', e=>{
+      if(!drag) return;
+      const dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+      if(Math.abs(dx)>4 || Math.abs(dy)>4) drag.moved = true;
+      if(drag.moved){
+        dev.x = Math.max(0, drag.ox+dx);
+        dev.y = Math.max(0, drag.oy+dy);
+        render();
+      }
+    });
+    el.addEventListener('pointerup', e=>{
+      if(drag && !drag.moved){
+        onDeviceClick(dev.id, null);
+      }
+      drag = null;
+    });
+  }
+
+  function onDeviceClick(id, iface){
+    if(cablingMode){ handleCablingClick(id, iface); return; }
+    if(testMode){ handleTestClick(id); return; }
+    selectedId = id;
+    render();
+  }
+  function onDevicePortClick(id, iface){
+    if(cablingMode){ handleCablingClick(id, iface); return; }
+    if(testMode){ /* ports not needed for test target */ handleTestClick(id); return; }
+    selectedId = id;
+    render();
+  }
+
+  // ---------- CABLING ----------
+  document.getElementById('btnCable').addEventListener('click', ()=>{
+    cablingMode = !cablingMode;
+    testMode = false; cablingFirst = null; testFirst = null;
+    placingType = null;
+    document.querySelectorAll('.palette-item').forEach(p=>p.classList.remove('active'));
+    document.getElementById('btnCable').classList.toggle('active', cablingMode);
+    document.getElementById('btnTest').classList.remove('active');
+    hideResult();
+    setStatus(cablingMode ? 'Mode câblage actif : clique sur un premier élément, puis sur le second pour les relier.' : 'Mode câblage désactivé.');
+    render();
+  });
+
+  function handleCablingClick(id, iface){
+    const dev = getDevice(id);
+    if(dev.type==='routeur' && !iface){
+      setStatus('Ce routeur a deux interfaces : clique précisément sur le port 1 ou le port 2.');
+      return;
+    }
+    const cap = portCapacity(dev, iface);
+    const existing = cablesForPort(id, iface).length;
+
+    if(!cablingFirst){
+      if(existing >= cap){ setStatus('Ce port est déjà occupé au maximum de sa capacité.'); return; }
+      cablingFirst = {deviceId:id, iface: iface||null};
+      setStatus('Premier point sélectionné : '+dev.name+(iface?(' (interface '+iface+')'):'')+'. Clique sur le second élément à relier.');
+      render();
+      return;
+    }
+    if(cablingFirst.deviceId===id && (cablingFirst.iface||null)===(iface||null)){
+      cablingFirst = null;
+      setStatus('Sélection annulée. Clique sur un premier élément pour recommencer.');
+      render();
+      return;
+    }
+    if(existing >= cap){ setStatus('Ce port est déjà occupé au maximum de sa capacité.'); return; }
+    cables.push({ id:'c'+(idSeq++), a: cablingFirst, b:{deviceId:id, iface: iface||null} });
+    cablingFirst = null;
+    setStatus('Câble branché ✔ Continue à câbler ou désactive le mode câblage.');
+    render();
+  }
+
+  // ---------- TEST MODE ----------
+  document.getElementById('btnTest').addEventListener('click', ()=>{
+    testMode = !testMode;
+    cablingMode = false; cablingFirst = null; testFirst = null;
+    placingType = null;
+    document.querySelectorAll('.palette-item').forEach(p=>p.classList.remove('active'));
+    document.getElementById('btnTest').classList.toggle('active', testMode);
+    document.getElementById('btnCable').classList.remove('active');
+    hideResult();
+    setStatus(testMode ? 'Mode test actif : clique sur deux éléments (PC, serveur ou routeur) pour simuler un ping entre eux.' : 'Mode test désactivé.');
+    render();
+  });
+
+  function handleTestClick(id){
+    if(!testFirst){
+      testFirst = id;
+      setStatus('Premier appareil sélectionné : '+getDevice(id).name+'. Clique sur le second à tester.');
+      render();
+      return;
+    }
+    if(testFirst===id){ testFirst=null; setStatus('Sélection annulée.'); render(); return; }
+    runTest(testFirst, id);
+    testFirst = null;
+    render();
+  }
+
+  // ---------- IP HELPERS ----------
+  function validIp(ip){
+    if(!ip) return false;
+    const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip.trim());
+    if(!m) return false;
+    return m.slice(1,5).every(p=> Number(p)>=0 && Number(p)<=255);
+  }
+  function ipToInt(ip){
+    const p = ip.trim().split('.').map(Number);
+    return ((p[0]<<24) | (p[1]<<16) | (p[2]<<8) | p[3]) >>> 0;
+  }
+  function intToIp(n){
+    return [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.');
+  }
+  function subnetOf(ip, mask){ return (ipToInt(ip) & ipToInt(mask)) >>> 0; }
+
+  // BFS over physical cable graph. Router interfaces are distinct nodes (not bridged internally).
+  function bfsPath(startKey, endKey){
+    if(startKey===endKey) return [];
+    const adj = {};
+    function addEdge(k1,k2,cid){
+      (adj[k1] = adj[k1]||[]).push({to:k2, cid});
+      (adj[k2] = adj[k2]||[]).push({to:k1, cid});
+    }
+    cables.forEach(c=>{
+      const k1 = nodeKey(c.a.deviceId, c.a.iface);
+      const k2 = nodeKey(c.b.deviceId, c.b.iface);
+      addEdge(k1,k2,c.id);
+    });
+    const visited = new Set([startKey]);
+    const queue = [{key:startKey, path:[]}];
+    while(queue.length){
+      const cur = queue.shift();
+      const neighbors = adj[cur.key] || [];
+      for(const n of neighbors){
+        if(visited.has(n.to)) continue;
+        const newPath = cur.path.concat([n.cid]);
+        if(n.to === endKey) return newPath;
+        visited.add(n.to);
+        queue.push({key:n.to, path:newPath});
+      }
+    }
+    return null;
+  }
+
+  function applyDhcp(){
+    const servers = devices.filter(d=>d.type==='serveur' && d.dhcpServer && validIp(d.ip) && validIp(d.mask));
+    devices.filter(d=>d.type==='pc' && d.dhcpClient).forEach(pc=>{
+      let assigned = false;
+      for(const srv of servers){
+        const path = bfsPath(nodeKey(pc.id,null), nodeKey(srv.id,null));
+        if(path){
+          const base = subnetOf(srv.ip, srv.mask);
+          const used = new Set(devices.filter(d=>d.ip).map(d=>d.ip));
+          used.add(srv.ip);
+          for(let host=10; host<250; host++){
+            const candidate = intToIp(base | host);
+            if(!used.has(candidate)){
+              pc.ip = candidate;
+              pc.mask = srv.mask;
+              pc.gateway = srv.gateway || '';
+              pc.autoAssigned = true;
+              assigned = true;
+              break;
+            }
+          }
+        }
+        if(assigned) break;
+      }
+    });
+  }
+
+  function showResult(kind, html, cableIds){
+    resultBanner.className = 'result-banner show ' + kind;
+    resultBanner.innerHTML = html;
+    highlightCables = new Set(cableIds||[]);
+    highlightColor = kind==='ok' ? 'ok' : (kind==='fail' ? 'fail' : 'warn');
+  }
+  function hideResult(){
+    resultBanner.className = 'result-banner';
+    resultBanner.innerHTML = '';
+    highlightCables = new Set();
+    highlightColor = null;
+  }
+
+  function markLeds(aId, bId, state){
+    devices.forEach(d=> d.ledState = null);
+    getDevice(aId).ledState = state;
+    getDevice(bId).ledState = state;
+  }
+
+  function runTest(aId, bId){
+    applyDhcp();
+    const A = getDevice(aId), B = getDevice(bId);
+
+    if(A.type==='switch' || B.type==='switch'){
+      showResult('warn', 'Un <b>commutateur</b> fonctionne au niveau 2 : il n\'a pas d\'adresse IP à tester. Choisis plutôt deux PC, serveurs ou routeurs.', []);
+      render();
+      return;
+    }
+    if(A.type==='routeur' || B.type==='routeur'){
+      showResult('warn', 'Teste la connexion entre deux appareils <b>terminaux</b> (PC ou serveur) : le routeur intervient automatiquement comme relais si besoin.', []);
+      render();
+      return;
+    }
+    if(!validIp(A.ip) || !validIp(A.mask)){
+      showResult('fail', 'Configure d\'abord une adresse IP et un masque valides sur <b>'+escapeHtml(A.name)+'</b>.', []);
+      render(); return;
+    }
+    if(!validIp(B.ip) || !validIp(B.mask)){
+      showResult('fail', 'Configure d\'abord une adresse IP et un masque valides sur <b>'+escapeHtml(B.name)+'</b>.', []);
+      render(); return;
+    }
+
+    const subA = subnetOf(A.ip, A.mask);
+    const subB = subnetOf(B.ip, B.mask);
+
+    if(subA === subB){
+      const path = bfsPath(nodeKey(A.id,null), nodeKey(B.id,null));
+      if(path){
+        markLeds(A.id,B.id,'ok');
+        showResult('ok', '✅ <b>Ping réussi</b> : '+escapeHtml(A.name)+' ('+A.ip+') et '+escapeHtml(B.name)+' ('+B.ip+') sont dans le même sous-réseau et bien reliés par câble.', path);
+      } else {
+        markLeds(A.id,B.id,'fail');
+        showResult('fail', '❌ <b>Échec</b> : '+escapeHtml(A.name)+' et '+escapeHtml(B.name)+' sont dans le même sous-réseau, mais aucun câble ne les relie physiquement (directement ou via un commutateur).', []);
+      }
+      render();
+      return;
+    }
+
+    // different subnets: need a router bridging both
+    const routers = devices.filter(d=>d.type==='routeur');
+    let best = null; // {kind, message, path}
+    for(const r of routers){
+      const r1ok = validIp(r.ip) && validIp(r.mask);
+      const r2ok = validIp(r.ip2) && validIp(r.mask2);
+      if(!r1ok || !r2ok) continue;
+      const rSub1 = subnetOf(r.ip, r.mask);
+      const rSub2 = subnetOf(r.ip2, r.mask2);
+
+      let ifaceForA=null, ifaceForB=null, gwA=null, gwB=null;
+      if(rSub1===subA && rSub2===subB){ ifaceForA=1; ifaceForB=2; gwA=r.ip; gwB=r.ip2; }
+      else if(rSub2===subA && rSub1===subB){ ifaceForA=2; ifaceForB=1; gwA=r.ip2; gwB=r.ip; }
+      else continue;
+
+      const pathA = bfsPath(nodeKey(A.id,null), nodeKey(r.id, ifaceForA));
+      const pathB = bfsPath(nodeKey(r.id, ifaceForB), nodeKey(B.id,null));
+
+      if(!pathA || !pathB){
+        if(!best || best.kind==='norouter') best = {kind:'nopath', message:'Le routeur <b>'+escapeHtml(r.name)+'</b> relie bien ces deux sous-réseaux, mais il manque un câble entre celui-ci et '+ (!pathA?escapeHtml(A.name):escapeHtml(B.name)) +'.', path:[]};
+        continue;
+      }
+      const gwAOk = A.gateway && A.gateway.trim()===gwA;
+      const gwBOk = B.gateway && B.gateway.trim()===gwB;
+      if(gwAOk && gwBOk){
+        best = {kind:'ok', message:'✅ <b>Ping réussi</b> : '+escapeHtml(A.name)+' ('+A.ip+') joint '+escapeHtml(B.name)+' ('+B.ip+') en passant par le routeur <b>'+escapeHtml(r.name)+'</b>, qui relie leurs deux sous-réseaux.', path: pathA.concat(pathB)};
+        break;
+      } else {
+        let missing = [];
+        if(!gwAOk) missing.push(escapeHtml(A.name)+' devrait avoir la passerelle <span class="mono">'+gwA+'</span> (actuellement '+(A.gateway||'non configurée')+')');
+        if(!gwBOk) missing.push(escapeHtml(B.name)+' devrait avoir la passerelle <span class="mono">'+gwB+'</span> (actuellement '+(B.gateway||'non configurée')+')');
+        if(!best || best.kind!=='ok') best = {kind:'gwfail', message:'⚠️ Câblage correct via <b>'+escapeHtml(r.name)+'</b>, mais la passerelle est mal configurée : '+missing.join(' ; ')+'.', path: pathA.concat(pathB)};
+      }
+    }
+
+    if(best && best.kind==='ok'){
+      markLeds(A.id,B.id,'ok');
+      showResult('ok', best.message, best.path);
+    } else if(best && (best.kind==='gwfail' || best.kind==='nopath')){
+      markLeds(A.id,B.id,'fail');
+      showResult('warn', best.message, best.path);
+    } else {
+      markLeds(A.id,B.id,'fail');
+      showResult('fail', '❌ <b>Échec</b> : '+escapeHtml(A.name)+' et '+escapeHtml(B.name)+' sont sur des sous-réseaux différents, et aucun routeur configuré ne relie ces deux sous-réseaux. Vérifie les adresses IP des interfaces du routeur.', []);
+    }
+    render();
+  }
+
+  // ---------- CONFIG PANEL ----------
+  function renderConfigPanel(){
+    if(!selectedId || !getDevice(selectedId)){
+      configPanel.innerHTML = '<div class="empty-config">Sélectionne un élément du plan de travail pour le configurer (nom, adresse IP, masque, passerelle...).</div>';
+      return;
+    }
+    const dev = getDevice(selectedId);
+    let html = `<h3>${escapeHtml(dev.name)}</h3><div class="subtitle">${TYPE_LABEL[dev.type]}</div>`;
+
+    html += `<div class="field"><label>Nom</label><input type="text" class="name-input" id="cfgName" value="${escapeHtml(dev.name)}"></div>`;
+
+    if(dev.type==='switch'){
+      html += `<div class="note-box">Un commutateur travaille au niveau 2 : il transmet les trames entre les appareils d'un même réseau local sans avoir besoin d'adresse IP.</div>`;
+    }
+
+    if(dev.type==='pc'){
+      html += `<div class="checkbox-field"><input type="checkbox" id="cfgDhcpClient" ${dev.dhcpClient?'checked':''}><span>Obtenir une adresse IP automatiquement (DHCP) ${infoBtn('dhcp')}</span></div>`;
+      html += `<div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" id="cfgIp" placeholder="192.168.1.10" value="${escapeHtml(dev.ip)}" ${dev.dhcpClient?'disabled':''}></div>`;
+      html += `<div class="field"><label>Masque de sous-réseau ${infoBtn('mask')}</label><input type="text" id="cfgMask" placeholder="255.255.255.0" value="${escapeHtml(dev.mask)}" ${dev.dhcpClient?'disabled':''}></div>`;
+      html += `<div class="field"><label>Passerelle ${infoBtn('gateway')}</label><input type="text" id="cfgGw" placeholder="192.168.1.1" value="${escapeHtml(dev.gateway)}" ${dev.dhcpClient?'disabled':''}></div>`;
+      if(dev.dhcpClient) html += `<div class="note-box">L'adresse sera attribuée automatiquement lors du prochain test, si un serveur DHCP est relié sur ce réseau.</div>`;
+    }
+
+    if(dev.type==='serveur'){
+      html += `<div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" id="cfgIp" placeholder="192.168.1.1" value="${escapeHtml(dev.ip)}"></div>`;
+      html += `<div class="field"><label>Masque de sous-réseau ${infoBtn('mask')}</label><input type="text" id="cfgMask" placeholder="255.255.255.0" value="${escapeHtml(dev.mask)}"></div>`;
+      html += `<div class="field"><label>Passerelle ${infoBtn('gateway')}</label><input type="text" id="cfgGw" placeholder="192.168.1.1" value="${escapeHtml(dev.gateway)}"></div>`;
+      html += `<div class="checkbox-field"><input type="checkbox" id="cfgDhcpServer" ${dev.dhcpServer?'checked':''}><span>Ce serveur distribue des adresses IP (DHCP) aux PC réglés en DHCP sur le même réseau ${infoBtn('dhcp')}</span></div>`;
+    }
+
+    if(dev.type==='routeur'){
+      html += `<div class="iface-group"><h4>Interface 1</h4>
+        <div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" id="cfgIp1" placeholder="192.168.1.1" value="${escapeHtml(dev.ip)}"></div>
+        <div class="field"><label>Masque ${infoBtn('mask')}</label><input type="text" id="cfgMask1" placeholder="255.255.255.0" value="${escapeHtml(dev.mask)}"></div>
+      </div>`;
+      html += `<div class="iface-group"><h4>Interface 2</h4>
+        <div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" id="cfgIp2" placeholder="192.168.2.1" value="${escapeHtml(dev.ip2)}"></div>
+        <div class="field"><label>Masque ${infoBtn('mask')}</label><input type="text" id="cfgMask2" placeholder="255.255.255.0" value="${escapeHtml(dev.mask2)}"></div>
+      </div>`;
+      html += `<div class="note-box">Le routeur relie les deux réseaux branchés sur ses ports 1 et 2. Chaque interface doit avoir une adresse dans un sous-réseau différent.</div>`;
+    }
+
+    html += `<button class="btn danger delete-btn" id="cfgDelete">🗑️ Supprimer cet élément</button>`;
+
+    configPanel.innerHTML = html;
+
+    const bind = (id, prop, transform)=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('input', ()=>{
+        dev[prop] = transform ? transform(el.value) : el.value;
+        if(prop==='name'){
+          const label = devicesLayer.querySelector(`.device[data-id="${dev.id}"] .device-name`);
+          if(label) label.textContent = dev.name;
+        } else {
+          render_soft_ip_update();
+        }
+      });
+    };
+    function render_soft_ip_update(){
+      const el = devicesLayer.querySelector(`.device[data-id="${dev.id}"] .device-ip`);
+      if(!el) return;
+      const ipLine = dev.type==='switch' ? 'Niveau 2' :
+        (dev.type==='routeur' ? ((dev.ip||'--')+' / '+(dev.ip2||'--')) : (dev.ip || (dev.dhcpClient?'DHCP…':'non configuré')));
+      el.textContent = ipLine;
+      el.className = 'device-ip' + ((dev.type!=='switch' && !dev.ip) ? ' unset':'');
+    }
+
+    bind('cfgName','name');
+    bind('cfgIp','ip');
+    bind('cfgMask','mask');
+    bind('cfgGw','gateway');
+    bind('cfgIp1','ip');
+    bind('cfgMask1','mask');
+    bind('cfgIp2','ip2');
+    bind('cfgMask2','mask2');
+
+    const dhcpClientEl = document.getElementById('cfgDhcpClient');
+    if(dhcpClientEl) dhcpClientEl.addEventListener('change', ()=>{
+      dev.dhcpClient = dhcpClientEl.checked;
+      if(dev.dhcpClient){ dev.ip=''; dev.autoAssigned=false; }
+      renderConfigPanel(); render_soft_ip_update();
+    });
+    const dhcpServerEl = document.getElementById('cfgDhcpServer');
+    if(dhcpServerEl) dhcpServerEl.addEventListener('change', ()=>{
+      dev.dhcpServer = dhcpServerEl.checked;
+    });
+    const delBtn = document.getElementById('cfgDelete');
+    if(delBtn) delBtn.addEventListener('click', ()=>{
+      if(!confirm('Supprimer '+dev.name+' et ses câbles ?')) return;
+      cables = cables.filter(c=>c.a.deviceId!==dev.id && c.b.deviceId!==dev.id);
+      devices = devices.filter(d=>d.id!==dev.id);
+      selectedId = null;
+      render();
+    });
+  }
+
+  // ---------- RESET ----------
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    if(!confirm('Effacer tout le plan de travail ?')) return;
+    devices = []; cables = []; selectedId = null; placingType=null;
+    cablingMode=false; testMode=false; cablingFirst=null; testFirst=null;
+    document.getElementById('btnCable').classList.remove('active');
+    document.getElementById('btnTest').classList.remove('active');
+    hideResult();
+    setStatus('Plan de travail réinitialisé. Choisis un élément dans la palette pour commencer.');
+    render();
+  });
+
+  // ---------- MODALS ----------
+  document.getElementById('btnTuto').addEventListener('click', ()=> document.getElementById('tutoOverlay').classList.add('show'));
+  document.getElementById('btnGloss').addEventListener('click', ()=> document.getElementById('glossOverlay').classList.add('show'));
+
+  document.getElementById('btnEnquete').addEventListener('click', ()=>{
+    enqueteMode = !enqueteMode;
+    document.getElementById('btnEnquete').classList.toggle('active', enqueteMode);
+    document.getElementById('btnDossier').style.display = enqueteMode ? 'flex' : 'none';
+    document.getElementById('btnAccuse').style.display = enqueteMode ? 'flex' : 'none';
+    if(enqueteMode){
+      renderDossier();
+      if(!dossierOpenedOnce){
+        document.getElementById('dossierOverlay').classList.add('show');
+        dossierOpenedOnce = true;
+      }
+      setStatus("Mode Enquête activé : consulte le dossier, reconstruis le réseau de NetCorp, puis accuse le coupable.");
+    } else {
+      setStatus("Mode Enquête désactivé. Retour au plan de travail libre.");
+    }
+  });
+  document.getElementById('btnDossier').addEventListener('click', ()=>{
+    renderDossier();
+    document.getElementById('dossierOverlay').classList.add('show');
+  });
+  document.getElementById('btnAccuse').addEventListener('click', ()=>{
+    renderSuspectList();
+    document.getElementById('verdictBanner').className = 'verdict-banner';
+    document.getElementById('verdictBanner').innerHTML = '';
+    document.getElementById('accuseOverlay').classList.add('show');
+  });
+  document.getElementById('btnValidateAccuse').addEventListener('click', validateAccusation);
+  document.querySelectorAll('[data-close]').forEach(btn=>{
+    btn.addEventListener('click', ()=> document.getElementById(btn.dataset.close).classList.remove('show'));
+  });
+  document.querySelectorAll('.modal-overlay').forEach(ov=>{
+    ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('show'); });
+  });
+
+  // ---------- DEFINITION POPOVER ----------
+  const defPopover = document.getElementById('defPopover');
+  const defTitle = document.getElementById('defTitle');
+  const defBody = document.getElementById('defBody');
+  let openDefBtn = null;
+
+  function showDefPopover(btn, key){
+    const def = DEFS[key];
+    if(!def) return;
+    defTitle.textContent = def.title;
+    defBody.textContent = def.body;
+    defPopover.style.display = 'block';
+    const r = btn.getBoundingClientRect();
+    const popW = 250;
+    let left = r.left;
+    if(left + popW + 12 > window.innerWidth) left = window.innerWidth - popW - 12;
+    if(left < 8) left = 8;
+    let top = r.bottom + 8;
+    defPopover.style.left = left + 'px';
+    defPopover.style.top = top + 'px';
+    const popRect = defPopover.getBoundingClientRect();
+    if(popRect.bottom > window.innerHeight - 8){
+      defPopover.style.top = (r.top - popRect.height - 8) + 'px';
+    }
+    openDefBtn = btn;
+  }
+  function hideDefPopover(){
+    defPopover.style.display = 'none';
+    openDefBtn = null;
+  }
+
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.info-btn');
+    if(btn){
+      e.stopPropagation();
+      e.preventDefault();
+      const key = btn.dataset.def;
+      if(openDefBtn === btn){ hideDefPopover(); }
+      else { showDefPopover(btn, key); }
+      return;
+    }
+    if(!e.target.closest('.def-popover')) hideDefPopover();
+  }, true);
+  window.addEventListener('scroll', hideDefPopover, true);
+  window.addEventListener('resize', hideDefPopover);
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hideDefPopover(); });
+
+  render();
+})();
+</script>
+</body>
+</html>

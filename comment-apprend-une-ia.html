@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comment apprend un réseau de neurones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12101E;
+    --bg-deep:#0C0A16;
+    --panel:#1C1830;
+    --panel-line: rgba(241,237,251,0.08);
+    --text:#F1EDFB;
+    --muted:#A79FC4;
+    --mint:#6EE7B7;
+    --coral:#FB7185;
+    --amber:#FBBF24;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(120% 140% at 50% -10%, #201A38 0%, var(--bg) 45%, var(--bg-deep) 100%);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    padding: 28px 16px 60px;
+  }
+  .wrap{ max-width: 960px; margin: 0 auto; }
+
+  header{ margin-bottom: 22px; }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin: 0 0 10px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: clamp(26px, 5vw, 40px);
+    line-height: 1.08;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  h1 span{ color: var(--mint); }
+  .intro{
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  .stage{
+    margin-top: 26px;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 18px;
+    padding: 18px 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stage::before{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(600px 300px at 15% 0%, rgba(110,231,183,0.06), transparent 60%);
+    pointer-events:none;
+  }
+
+  .top-row{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap: 12px; margin-bottom: 6px; flex-wrap: wrap;
+  }
+  .example-card{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .example-card .example-icon{ flex: none; }
+  .example-card .example-text{ flex: 1; }
+  .example-card b{ color: var(--text); font-weight:600; }
+
+  .animal-picker{
+    display:flex; align-items:center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .picker-label{
+    font-size: 12.5px; color: var(--muted);
+  }
+  .animal-btn{
+    font-family:'Inter', sans-serif;
+    font-size: 13.5px; font-weight:600;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .animal-btn:hover{ color: var(--text); }
+  .animal-btn.active{
+    background: rgba(110,231,183,0.14);
+    border-color: rgba(110,231,183,0.5);
+    color: var(--text);
+  }
+  .theme-btn{
+    font-family:'Inter', sans-serif;
+    font-size: 13px; font-weight:600;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    padding: 6px 13px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .theme-btn:hover{ color: var(--text); }
+  .theme-btn.active{
+    background: rgba(251,191,36,0.14);
+    border-color: rgba(251,191,36,0.5);
+    color: var(--text);
+  }
+  .hidden{ display:none !important; }
+  .readouts{
+    display:flex; gap: 18px;
+    font-family:'JetBrains Mono', monospace;
+  }
+  .readout .label{ font-size:10.5px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase;}
+  .readout .value{ font-size:22px; font-weight:600; color:var(--amber); }
+  .readout .value.loss{ color: var(--coral); }
+
+  canvas#net{
+    width:100%; height:auto; display:block; margin-top: 6px;
+    border-radius: 12px;
+  }
+
+  .caption-box{
+    margin-top: 8px;
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--panel-line);
+    border-radius: 12px;
+    min-height: 58px;
+    display:flex; align-items:center;
+  }
+  .caption-box p{ margin:0; font-size: 15px; line-height:1.6; }
+  .caption-box.flash-once{
+    animation: mistakeShake 0.5s ease, mistakeGlow 1.6s ease;
+    border-color: rgba(251,113,133,0.5);
+  }
+  @keyframes mistakeShake{
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+  }
+  @keyframes mistakeGlow{
+    0% { box-shadow: 0 0 0 rgba(251,113,133,0); }
+    15% { box-shadow: 0 0 24px rgba(251,113,133,0.45); }
+    100% { box-shadow: 0 0 0 rgba(251,113,133,0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .caption-box.flash-once{ animation: none; border-color: rgba(251,113,133,0.5); }
+  }
+  .caption-box .phase-tag{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600; color: var(--mint); margin-right: 6px;
+  }
+
+  .phases{
+    display:flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .phase-dot{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    padding: 5px 11px;
+    display:flex; align-items:center; gap:6px;
+    opacity: 0.55;
+    transition: opacity .25s ease, border-color .25s ease, color .25s ease;
+  }
+  .phase-dot .n{
+    width:6px; height:6px; border-radius:50%;
+    background: var(--muted);
+  }
+  .phase-dot.active{
+    opacity: 1;
+    color: var(--text);
+    border-color: rgba(110,231,183,0.4);
+  }
+  .phase-dot.active .n{ background: var(--mint); }
+
+  .controls{
+    display:flex; align-items:center; gap: 10px; margin-top: 18px; flex-wrap: wrap;
+  }
+  button{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600; font-size: 14px;
+    background: var(--mint);
+    color: #0C0A16;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    cursor:pointer;
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  button:hover{ transform: translateY(-1px); }
+  button:active{ transform: translateY(0); }
+  button.secondary{
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--panel-line);
+  }
+  button:focus-visible{ outline: 2px solid var(--amber); outline-offset: 2px; }
+
+  .legend{
+    display:flex; gap: 16px; margin-left: auto;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px; color: var(--muted);
+    align-items:center; flex-wrap: wrap;
+  }
+  .legend span{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width:14px; height:3px; border-radius:2px; display:inline-block; }
+
+  footer{
+    margin-top: 18px; color: var(--muted); font-size: 12.5px; line-height:1.6;
+  }
+
+  @media (max-width: 620px){
+    .readouts{ gap: 12px; }
+    .legend{ margin-left:0; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    button{ transition:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Comment apprend une IA ?</p>
+    <h1>Un <span>réseau de neurones</span> qui apprend à <span id="themeTitle">reconnaître un chat</span></h1>
+    <p class="intro">
+      Au départ, l'IA ne connaît aucune règle : elle devine au hasard, comme un élève
+      qui débute. Regarde-la <span id="themeIntro">deviner « chat » ou « chien » à partir de deux indices</span>,
+      se faire corriger, et s'améliorer petit à petit — encore, et encore.
+    </p>
+  </header>
+
+  <div class="stage">
+    <div class="animal-picker">
+      <span class="picker-label">Choisis le domaine :</span>
+      <button class="theme-btn active" data-theme="chat">🐱 Chat vs Chien</button>
+      <button class="theme-btn" data-theme="poumons">🫁 Radio des poumons</button>
+      <button class="theme-btn" data-theme="peau">🔬 Grain de beauté</button>
+      <button class="theme-btn" data-theme="os">🦴 Radio d'un os</button>
+    </div>
+    <div class="animal-picker">
+      <span class="picker-label">Choisis la carte à montrer :</span>
+      <button class="animal-btn active" id="btnPositif" data-case="positif">🐱 Chat</button>
+      <button class="animal-btn" id="btnNormal" data-case="normal">🐶 Chien</button>
+    </div>
+    <div class="top-row">
+      <div class="example-card">
+        <svg class="example-icon" id="iconCatPos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M 22 38 L 14 10 L 42 30 Z" fill="rgba(110,231,183,0.12)" stroke="#6EE7B7" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M 78 38 L 86 10 L 58 30 Z" fill="rgba(110,231,183,0.12)" stroke="#6EE7B7" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M 24 32 L 20 18 L 34 28 Z" fill="none" stroke="#FB7185" stroke-width="1.6" stroke-linejoin="round" opacity="0.7"/>
+          <path d="M 76 32 L 80 18 L 66 28 Z" fill="none" stroke="#FB7185" stroke-width="1.6" stroke-linejoin="round" opacity="0.7"/>
+          <ellipse cx="50" cy="58" rx="34" ry="30" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
+          <g stroke="#6EE7B7" stroke-width="1.4" opacity="0.55" stroke-linecap="round">
+            <path d="M30 34 l-3 -6"/><path d="M38 30 l-2 -7"/><path d="M50 28 l0 -7"/><path d="M62 30 l2 -7"/><path d="M70 34 l3 -6"/>
+          </g>
+          <ellipse cx="38" cy="55" rx="4.5" ry="6" fill="#12101E"/>
+          <ellipse cx="62" cy="55" rx="4.5" ry="6" fill="#12101E"/>
+          <circle cx="39.5" cy="52" r="1.3" fill="#F1EDFB"/>
+          <circle cx="63.5" cy="52" r="1.3" fill="#F1EDFB"/>
+          <path d="M46 66 L54 66 L50 71 Z" fill="#FBBF24"/>
+          <path d="M50 71 L50 75 M50 75 Q44 80 38 76 M50 75 Q56 80 62 76" stroke="#6EE7B7" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <g stroke="#A79FC4" stroke-width="1.3" stroke-linecap="round" opacity="0.7">
+            <path d="M20 62 L2 58"/><path d="M20 68 L2 68"/><path d="M20 74 L3 78"/>
+            <path d="M80 62 L98 58"/><path d="M80 68 L98 68"/><path d="M80 74 L97 78"/>
+          </g>
+        </svg>
+        <svg class="example-icon hidden" id="iconCatNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M20 40 Q4 56 13 80 Q22 84 31 70 Z" fill="rgba(110,231,183,0.12)" stroke="#6EE7B7" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M80 40 Q96 56 87 80 Q78 84 69 70 Z" fill="rgba(110,231,183,0.12)" stroke="#6EE7B7" stroke-width="2.5" stroke-linejoin="round"/>
+          <ellipse cx="50" cy="54" rx="32" ry="28" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
+          <ellipse cx="50" cy="71" rx="17" ry="13" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2"/>
+          <ellipse cx="38" cy="49" rx="4" ry="5.5" fill="#12101E"/>
+          <ellipse cx="62" cy="49" rx="4" ry="5.5" fill="#12101E"/>
+          <circle cx="39.3" cy="46.5" r="1.2" fill="#F1EDFB"/>
+          <circle cx="63.3" cy="46.5" r="1.2" fill="#F1EDFB"/>
+          <ellipse cx="50" cy="68" rx="5.5" ry="4" fill="#FBBF24"/>
+          <path d="M50 72 L50 75 M50 75 Q43 79 39 76 M50 75 Q57 79 61 76" stroke="#6EE7B7" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <path d="M40 82 Q50 87 60 82" stroke="#A79FC4" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.7"/>
+        </svg>
+        <svg class="example-icon hidden" id="iconLungsPos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M50 10 L50 26" stroke="#6EE7B7" stroke-width="3" stroke-linecap="round"/>
+          <path d="M50 22 L38 30 M50 22 L62 30" stroke="#6EE7B7" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+          <path d="M48 26 C 34 26, 14 38, 12 58 C 10 76, 22 92, 36 84 C 46 79, 45 58, 47 45 C 47.5 39, 48 32, 48 26 Z" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
+          <path d="M52 26 C 66 26, 86 38, 88 58 C 90 76, 78 92, 64 84 C 54 79, 55 58, 53 45 C 52.5 39, 52 32, 52 26 Z" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
+          <circle cx="68" cy="63" r="15" fill="rgba(251,113,133,0.26)"/>
+          <circle cx="68" cy="63" r="10" fill="rgba(251,113,133,0.34)"/>
+          <circle cx="65" cy="59" r="6" fill="rgba(251,113,133,0.42)"/>
+        </svg>
+        <svg class="example-icon hidden" id="iconLungsNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M50 10 L50 26" stroke="#6EE7B7" stroke-width="3" stroke-linecap="round"/>
+          <path d="M50 22 L38 30 M50 22 L62 30" stroke="#6EE7B7" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+          <path d="M48 26 C 34 26, 14 38, 12 58 C 10 76, 22 92, 36 84 C 46 79, 45 58, 47 45 C 47.5 39, 48 32, 48 26 Z" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
+          <path d="M52 26 C 66 26, 86 38, 88 58 C 90 76, 78 92, 64 84 C 54 79, 55 58, 53 45 C 52.5 39, 52 32, 52 26 Z" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
+        </svg>
+        <svg class="example-icon hidden" id="iconMolePos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M50 20 C62 18, 75 28, 78 42 C82 55, 75 68, 62 75 C50 81, 35 78, 28 66 C20 54, 24 38, 34 28 C40 22, 45 21, 50 20 Z"
+                fill="rgba(251,113,133,0.22)" stroke="#FB7185" stroke-width="2.3" stroke-linejoin="round"/>
+          <circle cx="46" cy="48" r="10" fill="rgba(18,16,30,0.55)"/>
+          <circle cx="60" cy="56" r="7" fill="rgba(251,191,36,0.4)"/>
+        </svg>
+        <svg class="example-icon hidden" id="iconMoleNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="50" cy="50" r="27" fill="rgba(110,231,183,0.10)" stroke="#6EE7B7" stroke-width="2.3"/>
+        </svg>
+        <svg class="example-icon hidden" id="iconBonePos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="26" y="45" width="48" height="10" rx="5" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <circle cx="24" cy="42" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <circle cx="24" cy="58" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <circle cx="76" cy="42" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <circle cx="76" cy="58" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <path d="M46 42 L52 50 L45 50 L54 60" stroke="#FB7185" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <svg class="example-icon hidden" id="iconBoneNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="26" y="45" width="48" height="10" rx="5" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <circle cx="24" cy="42" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <circle cx="24" cy="58" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <circle cx="76" cy="42" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <circle cx="76" cy="58" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+        </svg>
+        <div class="example-text">
+          Carte montrée à l'IA : <b id="exampleTraits">oreilles pointues, poils courts</b><br>
+          Vraie réponse (donnée par le prof) : <b id="exampleTrueLabel" style="color:var(--mint)">Chat</b>
+        </div>
+      </div>
+      <div class="readouts">
+        <div class="readout">
+          <div class="label">Essai n°</div>
+          <div class="value" id="epochVal">0</div>
+        </div>
+        <div class="readout">
+          <div class="label">Erreur</div>
+          <div class="value loss" id="lossVal">–</div>
+        </div>
+      </div>
+    </div>
+
+    <canvas id="net" width="900" height="460" aria-label="Animation du réseau de neurones en cours d'apprentissage" role="img"></canvas>
+
+    <div class="caption-box">
+      <p><span class="phase-tag" id="phaseTag">00</span><span id="phaseText">Au tout début, le réseau n'a jamais vu d'exemple. Chaque connexion affiche déjà son poids (le petit chiffre sur chaque trait) : ce sont ces poids-là qui vont être ajustés au fil de l'entraînement. Le rôle de chaque neurone caché est indiqué juste en dessous de lui.</span></p>
+    </div>
+
+    <div class="phases" id="phaseDots"></div>
+
+    <div class="controls">
+      <button id="nextBtn">Étape suivante →</button>
+      <button id="resetBtn" class="secondary">Recommencer</button>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--mint)"></i>« oui, cet indice compte »</span>
+        <span><i class="swatch" style="background:var(--coral)"></i>« non, pas important »</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Version simplifiée : une vraie IA regarde des milliers d'exemples différents et compte
+    des milliards de « neurones », mais le principe est exactement celui-ci : deviner, se faire
+    corriger, s'ajuster — encore et encore.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('net');
+  const ctx = canvas.getContext('2d');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- Layout ----------
+  const LOGICAL_W = 900, LOGICAL_H = 460;
+  let scale = 1;
+
+  function resize(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = LOGICAL_W * dpr;
+    canvas.height = LOGICAL_H * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', resize);
+
+  const themes = {
+    chat: {
+      inputLabels: ['Oreilles pointues','Poils courts'],
+      outputLabels: ['Chat','Chien'],
+      titleText: 'reconnaître un chat',
+      introText: 'deviner « chat » ou « chien » à partir de deux indices',
+      cases: {
+        positif: { inputs:[0.92,0.70], trueIdx:0, traitText:'oreilles pointues, poils courts', icon:'iconCatPos', label:'🐱 Chat' },
+        normal:  { inputs:[0.15,0.80], trueIdx:1, traitText:'oreilles tombantes, poils courts', icon:'iconCatNeg', label:'🐶 Chien' },
+      },
+      trueLabelWho: 'donnée par le prof',
+    },
+    poumons: {
+      inputLabels: ['Opacité visible','Étendue de la zone'],
+      outputLabels: ['Pneumonie','Sain'],
+      titleText: 'repérer une pneumonie',
+      introText: 'deviner « pneumonie » ou « poumons sains » à partir de deux indices visuels sur une radio',
+      cases: {
+        positif: { inputs:[0.88,0.75], trueIdx:0, traitText:'opacité marquée, zone étendue', icon:'iconLungsPos', label:'🫁 Pneumonie' },
+        normal:  { inputs:[0.10,0.15], trueIdx:1, traitText:'poumons clairs, pas d\u2019opacité', icon:'iconLungsNeg', label:'🫁 Sain' },
+      },
+      trueLabelWho: 'confirmée par le médecin',
+    },
+    peau: {
+      inputLabels: ['Bord irrégulier','Couleur non uniforme'],
+      outputLabels: ['À surveiller','Normal'],
+      titleText: 'repérer un grain de beauté suspect',
+      introText: 'deviner si un grain de beauté est « à surveiller » ou « normal » à partir de deux indices visuels',
+      cases: {
+        positif: { inputs:[0.85,0.80], trueIdx:0, traitText:'bords irréguliers, couleur non uniforme', icon:'iconMolePos', label:'🔬 À surveiller' },
+        normal:  { inputs:[0.10,0.12], trueIdx:1, traitText:'bords réguliers, couleur uniforme', icon:'iconMoleNeg', label:'🔬 Normal' },
+      },
+      trueLabelWho: 'confirmée par le dermatologue',
+    },
+    os: {
+      inputLabels: ['Ligne visible','Os déplacé'],
+      outputLabels: ['Fracture','Normal'],
+      titleText: 'repérer une fracture',
+      introText: 'deviner « fracture » ou « normal » à partir de deux indices visuels sur une radio',
+      cases: {
+        positif: { inputs:[0.90,0.70], trueIdx:0, traitText:'ligne de fracture visible, os déplacé', icon:'iconBonePos', label:'🦴 Fracture' },
+        normal:  { inputs:[0.08,0.05], trueIdx:1, traitText:'os intact, bien aligné', icon:'iconBoneNeg', label:'🦴 Normal' },
+      },
+      trueLabelWho: 'confirmée par le médecin',
+    },
+  };
+
+  let currentTheme = 'chat';
+  let currentCase = 'positif';
+  let inputLabels = themes.chat.inputLabels;
+  let outputLabels = themes.chat.outputLabels;
+  let trueIdx = themes.chat.cases.positif.trueIdx;
+  let inputs = themes.chat.cases.positif.inputs;
+
+  function verticalPositions(n, spread){
+    if(n<=1) return [LOGICAL_H/2];
+    const arr = [];
+    for(let i=0;i<n;i++){ arr.push(LOGICAL_H/2 + (i-(n-1)/2) * spread); }
+    return arr;
+  }
+
+  function layout(){
+    const inX = 90, hidX = LOGICAL_W/2, outX = LOGICAL_W-90;
+    const inY = verticalPositions(inputLabels.length, 150);
+    const hidY = verticalPositions(3, 130);
+    const outY = verticalPositions(outputLabels.length, 140);
+    const inputNodes = inputLabels.map((l,i)=>({ x: inX, y: inY[i], label:l }));
+    const hiddenNodes = hidY.map((y)=>({ x: hidX, y }));
+    const outputNodes = outputLabels.map((l,i)=>({ x: outX, y: outY[i], label:l }));
+    return {inputNodes, hiddenNodes, outputNodes};
+  }
+  let {inputNodes, hiddenNodes, outputNodes} = layout();
+
+  // ---------- Model state ----------
+  let w1, w2, w1Before, w2Before, hiddenAct, outputProbs, loss, dOut, dHidden, epoch;
+  let firstMistakeShown = false;
+  let currentMistake = false;
+
+  function rand(){ return (Math.random()*2 - 1); }
+
+  function initModel(){
+    // w1[i][j] = poids de l'entrée i vers le neurone caché j.
+    // Réglé pour que les 3 neurones aient chacun un rôle net et lisible dès le départ :
+    // neurone 0 → "opacité visible" fort, neurone 1 → "étendue de la zone" fort, neurone 2 → "les deux" forts.
+    const jitter = ()=> (Math.random()-0.5)*0.1;
+    w1 = [
+      [1.2+jitter(), 0.05+jitter(), 1.1+jitter()], // opacité visible    -> h0, h1, h2
+      [0.05+jitter(), 1.2+jitter(), 1.1+jitter()]  // étendue de la zone -> h0, h1, h2
+    ];
+    // Le réseau démarre volontairement très confiant... et dans le mauvais sens,
+    // pour que la toute première erreur soit spectaculaire et bien visible.
+    w2 = hiddenNodes.map(()=> [ -(1.6 + Math.random()*0.4), (1.6 + Math.random()*0.4) ]);
+    hiddenAct = hiddenNodes.map(()=>0);
+    outputProbs = outputLabels.map(()=>0.5);
+    loss = null;
+    epoch = 0;
+    lossHistory = [];
+    firstMistakeShown = false;
+    currentMistake = false;
+    w1Before = null;
+    w2Before = null;
+  }
+
+  function sigmoid(x){ return 1/(1+Math.exp(-x)); }
+
+  function forwardAndGrad(){
+    // forward
+    hiddenAct = hiddenNodes.map((_,j)=>{
+      let s = 0;
+      inputs.forEach((v,i)=> s += v * w1[i][j]);
+      return sigmoid(s);
+    });
+    const raw = outputLabels.map((_,k)=>{
+      let s = 0;
+      hiddenAct.forEach((h,j)=> s += h * w2[j][k]);
+      return s;
+    });
+    const maxRaw = Math.max(...raw);
+    const exps = raw.map(r=> Math.exp(r-maxRaw));
+    const sumExp = exps.reduce((a,b)=>a+b,0);
+    outputProbs = exps.map(e=> e/sumExp);
+    loss = -Math.log(Math.max(outputProbs[trueIdx], 1e-6));
+
+    // gradients (softmax + cross-entropy, then sigmoid backprop)
+    dOut = outputProbs.map((p,k)=> p - (k===trueIdx?1:0));
+    dHidden = hiddenNodes.map((_,j)=>{
+      let s = 0;
+      dOut.forEach((d,k)=> s += d * w2[j][k]);
+      return s * hiddenAct[j] * (1-hiddenAct[j]);
+    });
+  }
+
+  function cloneMatrix(m){ return m.map(row=> row.slice()); }
+
+  function applyUpdate(){
+    w1Before = cloneMatrix(w1);
+    w2Before = cloneMatrix(w2);
+    const lr = 0.6;
+    for(let j=0;j<hiddenNodes.length;j++){
+      for(let k=0;k<outputLabels.length;k++){
+        w2[j][k] -= lr * hiddenAct[j] * dOut[k];
+      }
+    }
+    for(let i=0;i<inputLabels.length;i++){
+      for(let j=0;j<hiddenNodes.length;j++){
+        w1[i][j] -= lr * inputs[i] * dHidden[j];
+      }
+    }
+  }
+
+  function lerpMatrix(before, after, t){
+    return before.map((row,i)=> row.map((v,j)=> v + (after[i][j]-v)*t));
+  }
+
+  function topDeltas(before, after, tag, count){
+    const items = [];
+    before.forEach((row,i)=> row.forEach((v,j)=>{
+      items.push({ tag, i, j, delta: after[i][j]-v });
+    }));
+    items.sort((a,b)=> Math.abs(b.delta)-Math.abs(a.delta));
+    return items.slice(0, count);
+  }
+
+  let lossHistory = [];
+
+  // ---------- Phase machine ----------
+  const PHASES = [
+    { key:'init', tag:'00', label:'Au tout début, le réseau n\u2019a jamais vu d\u2019exemple. Chaque connexion affiche déjà son poids (le petit chiffre sur chaque trait) : ce sont ces poids-là qui vont être ajustés au fil de l\u2019entraînement. Le rôle de chaque neurone caché est indiqué juste en dessous de lui.', dur: 1800 },
+    { key:'forward', tag:'01', label:'Il regarde la carte choisie : chaque indice est multiplié par l\u2019importance que le neurone caché lui donne, additionné, puis transmis jusqu\u2019à la réponse finale.', dur: 1500 },
+    { key:'error', tag:'02', label:'Il annonce un pourcentage de chances pour chaque réponse possible. La vraie réponse est alors révélée : l\u2019écart entre les deux donne un chiffre, l\u2019erreur — plus il était sûr de lui et faux, plus l\u2019erreur est grande.', dur: 1300 },
+    { key:'backward', tag:'03', label:'Il remonte l\u2019enquête à l\u2019envers : pour chaque neurone caché, il se demande « est-ce toi qui m\u2019as fait me tromper, et à quel point ? ». Il refait ce calcul jusqu\u2019aux 2 indices de départ, pour savoir lequel a le plus pesé dans l\u2019erreur.', dur: 1500 },
+    { key:'update', tag:'04', label:'Il corrige ses réglages : si un indice l\u2019a bien aidé, il augmente son importance ; s\u2019il l\u2019a trompé, il la diminue. Ce petit ajustement, répété à chaque carte, rend le réseau un peu meilleur.', dur: 1000 },
+  ];
+  const phaseDotsData = [
+    {tag:'00', short:'Elle devine'},
+    {tag:'01', short:'Elle regarde'},
+    {tag:'02', short:'On corrige'},
+    {tag:'03', short:'Elle cherche pourquoi'},
+    {tag:'04', short:'Elle s\u2019ajuste'},
+  ];
+
+  const dotsWrap = document.getElementById('phaseDots');
+  phaseDotsData.forEach((p)=>{
+    const d = document.createElement('div');
+    d.className = 'phase-dot';
+    d.id = 'dot-'+p.tag;
+    d.innerHTML = '<span class="n"></span>'+p.tag+' · '+p.short;
+    dotsWrap.appendChild(d);
+  });
+
+  let phaseIdx = 0;
+  let phaseStart = 0;
+  let playing = true;
+  let firstCycle = true;
+
+  const epochVal = document.getElementById('epochVal');
+  const lossVal = document.getElementById('lossVal');
+  const phaseTag = document.getElementById('phaseTag');
+  const phaseText = document.getElementById('phaseText');
+  const captionBox = document.querySelector('.caption-box');
+
+  function setActiveDot(tag){
+    document.querySelectorAll('.phase-dot').forEach(el=> el.classList.remove('active'));
+    const el = document.getElementById('dot-'+tag);
+    if(el) el.classList.add('active');
+  }
+
+  function enterPhase(idx, now){
+    phaseIdx = idx;
+    phaseStart = now;
+    const ph = PHASES[idx];
+    setActiveDot(ph.tag);
+
+    if(ph.key === 'forward'){
+      forwardAndGrad();
+    }
+
+    let showFirstMistakeBanner = false;
+    if(ph.key === 'error'){
+      const predicted = outputProbs[0] > outputProbs[1] ? 0 : 1;
+      currentMistake = (predicted !== trueIdx);
+      if(currentMistake && !firstMistakeShown){
+        firstMistakeShown = true;
+        showFirstMistakeBanner = true;
+      }
+    }
+
+    if(ph.key === 'update'){
+      applyUpdate();
+      lossHistory.push(loss);
+      if(lossHistory.length>40) lossHistory.shift();
+    }
+
+    phaseTag.textContent = ph.tag;
+    if(showFirstMistakeBanner){
+      phaseText.innerHTML = '<strong style="color:var(--coral)">❌ Première erreur : elle s\u2019est trompée !</strong> ' + ph.label;
+      captionBox.classList.remove('flash-once');
+      void captionBox.offsetWidth; // restart animation
+      captionBox.classList.add('flash-once');
+    } else {
+      phaseText.textContent = ph.label;
+    }
+
+    updateNextButtonLabel();
+  }
+
+  function updateNextButtonLabel(){
+    let next = phaseIdx + 1;
+    if(next >= PHASES.length) next = 1;
+    const nextData = phaseDotsData[next];
+    nextBtn.textContent = 'Étape suivante : ' + nextData.short + ' →';
+  }
+
+  function advancePhase(now){
+    let next = phaseIdx + 1;
+    if(next >= PHASES.length){
+      next = 1; // loop forward->error->backward->update, skip init after first time
+      epoch += 1;
+      epochVal.textContent = epoch;
+    }
+    if(firstCycle && next===1){ firstCycle = false; }
+    enterPhase(next, now);
+  }
+
+  function easeInOut(t){ return t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+
+  // ---------- Drawing ----------
+  function edgeColor(weight, alpha){
+    const w = Math.max(-1, Math.min(1, weight));
+    const mag = Math.sqrt(Math.abs(w));
+    if(w>=0){
+      const a = Math.min(0.85, 0.14 + mag*0.68) * alpha;
+      return `rgba(110,231,183,${a})`;
+    } else {
+      const a = Math.min(0.85, 0.14 + mag*0.68) * alpha;
+      return `rgba(251,113,133,${a})`;
+    }
+  }
+
+  function drawNodeGlow(x,y,r,intensity,color){
+    const grd = ctx.createRadialGradient(x,y,0,x,y,r*2.6);
+    grd.addColorStop(0, color.replace('ALPHA', 0.55*intensity+0.08));
+    grd.addColorStop(1, color.replace('ALPHA', 0));
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(x,y,r*2.6,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawNode(x,y,r,fillAlpha,strokeColor,label,labelSide, valueText){
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(28,24,48,${0.9})`;
+    ctx.fill();
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = strokeColor;
+    ctx.stroke();
+
+    ctx.fillStyle = `rgba(241,237,251,${0.85})`;
+    ctx.font = '600 12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if(valueText !== undefined){
+      ctx.fillText(valueText, x, y+1);
+    }
+
+    if(label){
+      ctx.font = '500 12.5px "Inter", sans-serif';
+      ctx.fillStyle = 'rgba(241,237,251,0.9)';
+      if(labelSide==='left'){
+        ctx.textAlign = 'right';
+        ctx.fillText(label, x-r-12, y);
+      } else if(labelSide==='right'){
+        ctx.textAlign = 'left';
+        ctx.fillText(label, x+r+12, y);
+      }
+    }
+  }
+
+  function drawEdges(pairs, weightMatrix, glowProgress, direction){
+    // direction: 'fwd' (from->to) or 'bwd'
+    pairs.forEach(({from, to, wi, wj})=>{
+      const w = weightMatrix[wi][wj];
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.lineWidth = 0.8 + Math.sqrt(Math.abs(w))*2.6;
+      ctx.strokeStyle = edgeColor(w, 1);
+      ctx.stroke();
+
+      if(glowProgress !== null){
+        const t = easeInOut(Math.max(0, Math.min(1, glowProgress)));
+        const px = from.x + (to.x-from.x)*t;
+        const py = from.y + (to.y-from.y)*t;
+        const color = direction==='fwd' ? '110,231,183' : '251,113,133';
+        ctx.beginPath();
+        ctx.arc(px,py, 4.2, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(${color},0.95)`;
+        ctx.shadowColor = `rgba(${color},0.9)`;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    });
+  }
+
+  function allInHiddenPairs(){
+    const arr = [];
+    inputNodes.forEach((from,i)=> hiddenNodes.forEach((to,j)=> arr.push({from,to,wi:i,wj:j})));
+    return arr;
+  }
+  function allHiddenOutPairs(){
+    const arr = [];
+    hiddenNodes.forEach((from,j)=> outputNodes.forEach((to,k)=> arr.push({from,to,wi:j,wj:k})));
+    return arr;
+  }
+
+  function drawSparkline(){
+    const x0 = LOGICAL_W-230, y0 = 34, w = 200, h = 46;
+    ctx.save();
+    ctx.font = '500 10.5px "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(167,159,196,0.9)';
+    ctx.textAlign = 'left';
+    ctx.fillText('COURBE D\u2019ERREUR', x0, y0-10);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x0, y0, w, h);
+
+    if(lossHistory.length>1){
+      const maxL = Math.max(...lossHistory, 0.6);
+      ctx.beginPath();
+      lossHistory.forEach((l,i)=>{
+        const px = x0 + (i/(Math.max(lossHistory.length-1,1)))*w;
+        const py = y0 + h - (l/maxL)*h;
+        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      });
+      ctx.strokeStyle = '#FBBF24';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function hiddenRoleLabel(wA, wB){
+    // wA = poids du 1er indice, wB = poids du 2e indice, pour ce neurone
+    const th = 0.15;
+    const aPos = wA > th, bPos = wB > th, aNeg = wA < -th, bNeg = wB < -th;
+    const nameA = inputLabels[0], nameB = inputLabels[1];
+    if(aPos && bPos){
+      if(Math.abs(wA-wB) < 0.25) return 'Combine les deux indices';
+      return wA > wB ? ('Réagit surtout à « ' + nameA + ' »') : ('Réagit surtout à « ' + nameB + ' »');
+    }
+    if(aPos && !bPos) return 'Réagit surtout à « ' + nameA + ' »';
+    if(bPos && !aPos) return 'Réagit surtout à « ' + nameB + ' »';
+    if(aNeg && bNeg) return 'S\u2019active si les 2 indices sont absents';
+    return 'Rôle encore incertain';
+  }
+
+  function drawRoleLabel(x, y, text){
+    ctx.save();
+    ctx.font = '500 10px "Inter", sans-serif';
+    const tw = ctx.measureText(text).width;
+    ctx.fillStyle = 'rgba(28,24,48,0.85)';
+    ctx.fillRect(x-tw/2-7, y-9, tw+14, 18);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x-tw/2-7, y-9, tw+14, 18);
+    ctx.fillStyle = 'rgba(167,159,196,0.95)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y+1);
+    ctx.restore();
+  }
+
+  function drawWeightLabel(from, to, t, weight){
+    const x = from.x + (to.x-from.x)*t;
+    const y = from.y + (to.y-from.y)*t;
+    const txt = (weight>=0?'+':'') + weight.toFixed(2);
+    const color = weight>=0 ? '110,231,183' : '251,113,133';
+    ctx.save();
+    ctx.font = '600 9.5px "JetBrains Mono", monospace';
+    const tw = ctx.measureText(txt).width;
+    ctx.fillStyle = 'rgba(12,10,22,0.75)';
+    ctx.fillRect(x-tw/2-4, y-7.5, tw+8, 14);
+    ctx.fillStyle = `rgba(${color},0.95)`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(txt, x, y+0.5);
+    ctx.restore();
+  }
+
+  function drawDeltaLabels(progress){
+    const d1 = topDeltas(w1Before, w1, 'w1', 2); // oreilles/poils -> neurones cachés
+    const d2 = topDeltas(w2Before, w2, 'w2', 2); // neurones cachés -> sortie
+    const all = d1.concat(d2);
+    const pairs1 = allInHiddenPairs();
+    const pairs2 = allHiddenOutPairs();
+    const fadeIn = Math.min(1, progress/0.35);
+
+    all.forEach(item=>{
+      const edge = item.tag==='w1'
+        ? pairs1.find(p=> p.wi===item.i && p.wj===item.j)
+        : pairs2.find(p=> p.wi===item.i && p.wj===item.j);
+      if(!edge || Math.abs(item.delta) < 0.003) return;
+
+      const mx = (edge.from.x+edge.to.x)/2;
+      const my = (edge.from.y+edge.to.y)/2;
+      const txt = (item.delta>=0?'+':'') + item.delta.toFixed(2);
+      const color = item.delta>=0 ? '110,231,183' : '251,113,133';
+
+      ctx.save();
+      ctx.globalAlpha = fadeIn;
+      ctx.font = '700 12px "JetBrains Mono", monospace';
+      const tw = ctx.measureText(txt).width;
+      ctx.fillStyle = 'rgba(12,10,22,0.88)';
+      ctx.fillRect(mx-tw/2-6, my-19, tw+12, 17);
+      ctx.strokeStyle = `rgba(${color},0.5)`;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(mx-tw/2-6, my-19, tw+12, 17);
+      ctx.fillStyle = `rgba(${color},1)`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(txt, mx, my-10.5);
+      ctx.restore();
+    });
+  }
+
+  function render(now){
+    ctx.clearRect(0,0,LOGICAL_W,LOGICAL_H);
+
+    // section labels
+    ctx.font = '600 11.5px "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(167,159,196,0.8)';
+    ctx.textAlign = 'center';
+    ctx.fillText('ENTRÉES', inputNodes[0].x, 20);
+    ctx.fillText('COUCHE CACHÉE', hiddenNodes[0].x, 20);
+    ctx.fillText('SORTIE', outputNodes[0].x, 20);
+
+    const ph = PHASES[phaseIdx];
+    const elapsed = now - phaseStart;
+    const progress = reducedMotion ? 1 : Math.max(0, Math.min(1, elapsed / ph.dur));
+
+    let fwdGlow = null, bwdGlow = null, phase1Half = null;
+
+    if(ph.key === 'forward'){
+      if(progress < 0.5){ fwdGlow = progress/0.5; phase1Half = 1; }
+      else { fwdGlow = (progress-0.5)/0.5; phase1Half = 2; }
+    }
+    if(ph.key === 'backward'){
+      if(progress < 0.5){ bwdGlow = progress/0.5; phase1Half = 1; }
+      else { bwdGlow = (progress-0.5)/0.5; phase1Half = 2; }
+    }
+
+    // Interpolate weights from their pre-update values so coefficients visibly move
+    let w1Disp = w1, w2Disp = w2;
+    if(ph.key === 'update' && w1Before && w2Before){
+      const updateT = easeInOut(progress);
+      w1Disp = lerpMatrix(w1Before, w1, updateT);
+      w2Disp = lerpMatrix(w2Before, w2, updateT);
+    }
+
+    // Edges input->hidden
+    drawEdges(allInHiddenPairs(), w1Disp,
+      (ph.key==='forward' && phase1Half===1) ? fwdGlow : ((ph.key==='backward' && phase1Half===2) ? bwdGlow : null),
+      (ph.key==='forward') ? 'fwd' : 'bwd'
+    );
+    // Edges hidden->output
+    drawEdges(allHiddenOutPairs(), w2Disp,
+      (ph.key==='forward' && phase1Half===2) ? fwdGlow : ((ph.key==='backward' && phase1Half===1) ? bwdGlow : null),
+      (ph.key==='forward') ? 'fwd' : 'bwd'
+    );
+
+    // Always show the actual weight value on every connection, from the very first frame
+    allInHiddenPairs().forEach(edge=> drawWeightLabel(edge.from, edge.to, 0.30, w1Disp[edge.wi][edge.wj]));
+    allHiddenOutPairs().forEach(edge=> drawWeightLabel(edge.from, edge.to, 0.70, w2Disp[edge.wi][edge.wj]));
+
+    if(ph.key === 'update' && w1Before && w2Before){
+      drawDeltaLabels(progress);
+    }
+
+    // Node intensities depending on phase
+    let inputInt = 1;
+    let hiddenInt = hiddenAct.map(()=>0.15);
+    let outputInt = outputProbs.map(()=>0.15);
+
+    if(ph.key==='init'){
+      hiddenInt = hiddenNodes.map(()=>0.1);
+      outputInt = outputNodes.map(()=>0.1);
+    } else if(ph.key==='forward'){
+      if(phase1Half===1){ hiddenInt = hiddenAct.map((v)=> 0.15 + v*fwdGlow*0.85); }
+      else { hiddenInt = hiddenAct.map((v)=> v); outputInt = outputProbs.map((p)=> 0.15 + p*fwdGlow*0.85); }
+    } else if(ph.key==='error'){
+      hiddenInt = hiddenAct.map((v)=>v);
+      outputInt = outputProbs.map((p)=>p);
+    } else if(ph.key==='backward'){
+      hiddenInt = hiddenAct.map((v)=>v);
+      outputInt = outputProbs.map((p)=>p);
+    } else if(ph.key==='update'){
+      hiddenInt = hiddenAct.map((v)=>v*0.6);
+      outputInt = outputProbs.map((p)=>p*0.6);
+    }
+
+    // glows
+    inputNodes.forEach((n)=> drawNodeGlow(n.x,n.y,16,1,'rgba(110,231,183,ALPHA)'));
+    hiddenNodes.forEach((n,j)=> drawNodeGlow(n.x,n.y,15,hiddenInt[j],'rgba(110,231,183,ALPHA)'));
+    outputNodes.forEach((n,k)=>{
+      const isTrue = k===trueIdx;
+      drawNodeGlow(n.x,n.y,17,outputInt[k], isTrue ? 'rgba(110,231,183,ALPHA)' : 'rgba(251,113,133,ALPHA)');
+    });
+
+    // nodes
+    inputNodes.forEach((n,i)=> drawNode(n.x,n.y,16,1,'rgba(110,231,183,0.8)', inputLabels[i], 'left', inputs[i].toFixed(2)));
+    hiddenNodes.forEach((n,j)=> drawNode(n.x,n.y,13,1,'rgba(241,237,251,0.35)', null, null, ph.key==='init'? '' : hiddenAct[j].toFixed(2)));
+    outputNodes.forEach((n,k)=>{
+      const isTrue = k===trueIdx;
+      const highlightErr = (ph.key==='error'||ph.key==='backward'||ph.key==='update') && !isTrue;
+      const stroke = isTrue ? 'rgba(110,231,183,0.9)' : (highlightErr ? 'rgba(251,113,133,0.9)' : 'rgba(241,237,251,0.35)');
+      drawNode(n.x,n.y,17,1, stroke, outputLabels[k], 'right', ph.key==='init' ? '' : (outputProbs[k]*100).toFixed(0)+'%');
+    });
+
+    // what each hidden neuron currently "pays attention to"
+    const w1ForRoles = (ph.key==='update') ? w1Disp : w1;
+    hiddenNodes.forEach((n,j)=>{
+      const role = hiddenRoleLabel(w1ForRoles[0][j], w1ForRoles[1][j]);
+      drawRoleLabel(n.x, n.y + 30, role);
+    });
+
+    // how much influence each input currently carries (this DOES move with training,
+    // unlike the fixed 0,92 / 0,70 value shown on the node itself)
+    inputNodes.forEach((n,i)=>{
+      const importance = w1ForRoles[i].reduce((s,v)=> s + Math.abs(v), 0);
+      drawRoleLabel(n.x, n.y + 30, 'Force actuelle : ' + importance.toFixed(2));
+    });
+
+    // true label marker
+    if(ph.key!=='init'){
+      const tn = outputNodes[trueIdx];
+      ctx.beginPath();
+      ctx.arc(tn.x, tn.y, 24, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(110,231,183,0.55)';
+      ctx.setLineDash([3,4]);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(110,231,183,0.85)';
+      ctx.textAlign='center';
+      ctx.fillText('la bonne réponse', tn.x, tn.y+38);
+    }
+
+    drawSparkline();
+
+    // HUD text updates
+    lossVal.textContent = loss===null ? '–' : loss.toFixed(3);
+  }
+
+  // ---------- Loop ----------
+  function loop(now){
+    render(now);
+    requestAnimationFrame(loop);
+  }
+
+  function start(){
+    resize();
+    initModel();
+    refreshCardUI();
+    enterPhase(0, performance.now());
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- Controls ----------
+  const nextBtn = document.getElementById('nextBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const themeTitleEl = document.getElementById('themeTitle');
+  const themeIntroEl = document.getElementById('themeIntro');
+  const allIconIds = ['iconCatPos','iconCatNeg','iconLungsPos','iconLungsNeg','iconMolePos','iconMoleNeg','iconBonePos','iconBoneNeg'];
+
+  function refreshCardUI(){
+    const theme = themes[currentTheme];
+    const c = theme.cases[currentCase];
+
+    allIconIds.forEach(id=>{
+      document.getElementById(id).classList.toggle('hidden', id !== c.icon);
+    });
+    document.querySelector('.example-text').innerHTML =
+      'Carte montrée à l\'IA : <b>' + c.traitText + '</b><br>' +
+      'Vraie réponse (' + theme.trueLabelWho + ') : <b style="color:var(--mint)">' + outputLabels[trueIdx] + '</b>';
+
+    document.querySelectorAll('.theme-btn').forEach(b=> b.classList.toggle('active', b.dataset.theme === currentTheme));
+    const btnPositif = document.getElementById('btnPositif');
+    const btnNormal = document.getElementById('btnNormal');
+    btnPositif.textContent = theme.cases.positif.label;
+    btnNormal.textContent = theme.cases.normal.label;
+    document.querySelectorAll('#btnPositif, #btnNormal').forEach(b=>{
+      b.classList.toggle('active', b.dataset.case === currentCase);
+    });
+
+    themeTitleEl.textContent = theme.titleText;
+    themeIntroEl.textContent = theme.introText;
+  }
+
+  function setCase(caseName){
+    currentCase = caseName;
+    const c = themes[currentTheme].cases[caseName];
+    inputs = c.inputs;
+    trueIdx = c.trueIdx;
+    refreshCardUI();
+  }
+
+  function setTheme(themeName){
+    currentTheme = themeName;
+    currentCase = 'positif';
+    const theme = themes[themeName];
+    inputLabels = theme.inputLabels;
+    outputLabels = theme.outputLabels;
+    inputs = theme.cases.positif.inputs;
+    trueIdx = theme.cases.positif.trueIdx;
+
+    // Nouveau domaine = nouveau réseau : les anciens poids n'ont plus de sens ici.
+    initModel();
+    firstCycle = true;
+    refreshCardUI();
+    enterPhase(0, performance.now());
+  }
+
+  document.querySelectorAll('.theme-btn').forEach(b=>{
+    b.addEventListener('click', ()=> setTheme(b.dataset.theme));
+  });
+  document.querySelectorAll('#btnPositif, #btnNormal').forEach(b=>{
+    b.addEventListener('click', ()=> setCase(b.dataset.case));
+  });
+
+  nextBtn.addEventListener('click', ()=>{
+    advancePhase(performance.now());
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    initModel();
+    firstCycle = true;
+    enterPhase(0, performance.now());
+  });
+
+  start();
+})();
+</script>
+</body>
+</html>
