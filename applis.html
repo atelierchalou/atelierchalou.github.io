@@ -22,8 +22,7 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:center;
-    gap:28px;
+    gap:12px;
     padding:40px 20px;
     background:var(--bg);
     color:var(--chalk);
@@ -40,14 +39,33 @@
     text-decoration:none;
     font-size:.9rem;
     margin-top:-14px;
+    margin-bottom:14px;
   }
   .back:hover{color:var(--accent);}
+  section.category{
+    width:100%;
+    max-width:640px;
+    margin-top:28px;
+  }
+  section.category h2{
+    font-family:'Kalam',cursive;
+    font-size:1.3rem;
+    margin:0 0 14px;
+    color:var(--accent);
+  }
   .grid{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
     gap:18px;
     width:100%;
-    max-width:640px;
+  }
+  .empty-cat{
+    color:var(--chalk-dim);
+    font-size:.9rem;
+    font-style:italic;
+    border:1px dashed rgba(244,240,228,.2);
+    border-radius:14px;
+    padding:20px;
   }
   a.card{
     display:flex;
@@ -87,17 +105,26 @@
   </a>
   <a class="back" href="index.html">← Retour à l'accueil</a>
   <h1>🧩 Mes applis</h1>
-  <div class="grid">
-    <a class="card" href="ardoise-du-prof.html" target="_blank" rel="noopener">
-      <span class="emoji">🖍️</span>
-      <span class="name">Ardoise du Prof</span>
-      <span class="desc">Consignes au tableau, minuteur, tour de rôle, diffusion en direct.</span>
-    </a>
-    <a class="card" href="tableau-classe-standalone.html" target="_blank" rel="noopener">
-      <span class="emoji">📋</span>
-      <span class="name">Tableau de classe</span>
-      <span class="desc">Diffusion en direct vers les téléphones des élèves.</span>
-    </a>
-  </div>
+
+  <section class="category">
+    <h2>Les outils du prof</h2>
+    <div class="grid">
+      <a class="card" href="ardoise-du-prof.html" target="_blank" rel="noopener">
+        <span class="emoji">🖍️</span>
+        <span class="name">Ardoise du Prof</span>
+        <span class="desc">Consignes au tableau, minuteur, tour de rôle, diffusion en direct.</span>
+      </a>
+      <a class="card" href="tableau-classe-standalone.html" target="_blank" rel="noopener">
+        <span class="emoji">📋</span>
+        <span class="name">Tableau de classe</span>
+        <span class="desc">Diffusion en direct vers les téléphones des élèves.</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="category">
+    <h2>Vidéo et image</h2>
+    <div class="empty-cat">Rien pour le moment — à venir.</div>
+  </section>
 </body>
 </html>
