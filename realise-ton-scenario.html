@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scénariste</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Karla:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Special+Elite&display=swap">
+<style>
+  :root {
+    --paper: #F1EBD8;
+    --paper-raised: #FBF8EE;
+    --paper-sunken: #E6DEC3;
+    --ink: #201C13;
+    --ink-soft: #6E6650;
+    --ink-faint: #9C927A;
+    --rule: #D2C8A8;
+    --rule-strong: #B6AA82;
+    --accent: #1E6B63;
+    --accent-strong: #123F3A;
+    --accent-soft: #DCEAE6;
+    --accent-ink: #0D2E2B;
+    --marigold: #9C6A10;
+    --marigold-soft: #F1E0B4;
+    --danger: #A23B33;
+    --danger-soft: #F3DEDA;
+    --danger-ink: #5C1E19;
+    --good: #3F7D4A;
+    --board: #17180F;
+    --board-stripe: #4A4636;
+    --board-ink: #F1EBD8;
+    --font-display: 'Big Shoulders Display', system-ui, sans-serif;
+    --font-ui: 'Karla', system-ui, -apple-system, sans-serif;
+    --font-script: 'Special Elite', 'Courier New', ui-monospace, monospace;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #17180F;
+      --paper-raised: #212216;
+      --paper-sunken: #101107;
+      --ink: #ECE6D2;
+      --ink-soft: #B0A88C;
+      --ink-faint: #7C7560;
+      --rule: #3B3B27;
+      --rule-strong: #52512F;
+      --accent: #57C2B4;
+      --accent-strong: #8FDDD1;
+      --accent-soft: #1D3C38;
+      --accent-ink: #DFF6F1;
+      --marigold: #E3AE4C;
+      --marigold-soft: #3E2E10;
+      --danger: #E2776B;
+      --danger-soft: #3E211B;
+      --danger-ink: #FBDAD5;
+      --good: #86CE8E;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #17180F;
+    --paper-raised: #212216;
+    --paper-sunken: #101107;
+    --ink: #ECE6D2;
+    --ink-soft: #B0A88C;
+    --ink-faint: #7C7560;
+    --rule: #3B3B27;
+    --rule-strong: #52512F;
+    --accent: #57C2B4;
+    --accent-strong: #8FDDD1;
+    --accent-soft: #1D3C38;
+    --accent-ink: #DFF6F1;
+    --marigold: #E3AE4C;
+    --marigold-soft: #3E2E10;
+    --danger: #E2776B;
+    --danger-soft: #3E211B;
+    --danger-ink: #FBDAD5;
+    --good: #86CE8E;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    margin: 0;
+    padding-inline: max(16px, calc((100vw - 1180px) / 2));
+    padding-block: 28px 60px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+  button { font-family: inherit; }
+  input, select, textarea { font-family: inherit; }
+
+  a, button, input, select, textarea, [tabindex] {
+    outline-offset: 2px;
+  }
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  /* ---- header / slate ---- */
+  .slate {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding-block: 4px 22px;
+    border-bottom: 3px solid var(--ink);
+    margin-bottom: 22px;
+  }
+  .slate__mark {
+    width: 46px; height: 46px; flex: none;
+    border-radius: 9px;
+    background: var(--board);
+    display: grid; place-items: center;
+  }
+  .slate__mark svg { width: 26px; height: 26px; }
+  .slate__title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(28px, 4.2vw, 40px);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    line-height: 0.95;
+  }
+  .slate__sub {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+  }
+  .slate__project {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+  .slate__project-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: 0.01em;
+  }
+  .slate__saved {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    transition: color 0.2s ease;
+  }
+  .slate__saved.just-saved { color: var(--good); }
+  #saveBtn.is-saving { opacity: 0.7; }
+
+  /* ---- shell ---- */
+  .shell {
+    display: flex;
+    gap: 26px;
+    align-items: flex-start;
+  }
+  @media (max-width: 780px) {
+    .shell { flex-direction: column; }
+  }
+
+  .rail {
+    width: 250px;
+    flex: none;
+    position: sticky;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  @media (max-width: 780px) {
+    .rail { width: 100%; position: static; }
+  }
+
+  .panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .project-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .project-item {
+    display: flex; align-items: center; gap: 8px;
+    border-radius: 9px;
+    border: 1px solid transparent;
+  }
+  .project-item button.select {
+    flex: 1;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--ink);
+    padding: 8px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .project-item.is-active { background: var(--accent-soft); border-color: var(--accent); }
+  .project-item.is-active button.select { color: var(--accent-ink); }
+  .project-item button.select:hover { background: var(--paper-sunken); }
+  .project-item.is-active button.select:hover { background: var(--accent-soft); }
+
+  .icon-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--ink-faint);
+    width: 26px; height: 26px; border-radius: 7px;
+    display: grid; place-items: center; flex: none;
+  }
+  .icon-btn:hover { background: var(--paper-sunken); color: var(--danger); }
+  .icon-btn svg { width: 14px; height: 14px; }
+
+  .btn {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 13.5px;
+    border-radius: 9px;
+    padding: 9px 14px;
+    border: 1px solid var(--rule-strong);
+    background: var(--paper-raised);
+    color: var(--ink);
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--paper-sunken); }
+  .btn-block { width: 100%; justify-content: center; }
+  .btn-primary { background: var(--accent); border-color: var(--accent-strong); color: #fff; }
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-ghost { background: none; border-color: transparent; padding-inline: 8px; }
+  .btn-ghost:hover { background: var(--paper-sunken); }
+  .btn-danger { color: var(--danger-ink); border-color: var(--danger); background: var(--danger-soft); }
+  .btn-danger:hover { filter: brightness(0.96); }
+  .btn-sm { padding: 6px 10px; font-size: 12.5px; }
+  .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .field label { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+  .field input[type="text"], .field select, .field textarea {
+    background: var(--paper-sunken);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 9px 11px;
+    color: var(--ink);
+    font-size: 14.5px;
+    width: 100%;
+    resize: vertical;
+  }
+  .field textarea { min-height: 72px; line-height: 1.5; }
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .field-row > .field { flex: 1; min-width: 160px; }
+  .hint { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
+  .form-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+  /* ---- tabs ---- */
+  .tabs {
+    display: flex; gap: 4px; border-bottom: 2px solid var(--rule);
+    margin-bottom: 22px; flex-wrap: wrap;
+  }
+  .tab {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    background: none; border: none; cursor: pointer;
+    color: var(--ink-faint);
+    padding: 9px 4px;
+    margin-bottom: -2px;
+    border-bottom: 3px solid transparent;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.is-active { color: var(--ink); border-bottom-color: var(--marigold); }
+  .tab .count {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 11px;
+    background: var(--paper-sunken);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 1px 7px;
+    margin-left: 6px;
+  }
+
+  main.content { min-width: 0; flex: 1; }
+
+  /* ---- empty state ---- */
+  .empty {
+    border: 1.5px dashed var(--rule-strong);
+    border-radius: 14px;
+    padding: 34px 22px;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+  .empty h3 { font-family: var(--font-display); font-size: 20px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink); margin-bottom: 6px; }
+  .empty p { max-width: 46ch; margin: 0 auto 14px; font-size: 14.5px; }
+
+  /* ---- cards grid (personnages / lieux) ---- */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .card__top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .card__name { font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: 0.01em; }
+  .card__actions { display: flex; gap: 2px; flex: none; }
+  .badge {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent-ink);
+    width: fit-content;
+  }
+  .badge.marigold { background: var(--marigold-soft); color: var(--marigold); }
+  .card__desc { font-size: 13.5px; color: var(--ink-soft); white-space: pre-wrap; }
+
+  /* ---- scenario / scenes ---- */
+  .scene {
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    background: var(--paper-raised);
+  }
+  .scene__head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: repeating-linear-gradient(
+      -45deg, var(--board) 0px, var(--board) 14px, var(--board-stripe) 14px, var(--board-stripe) 16px
+    );
+    background-color: var(--board);
+    color: var(--board-ink);
+    cursor: pointer;
+  }
+  .scene__num {
+    font-family: var(--font-display); font-weight: 800; font-size: 22px;
+    background: var(--marigold); color: #221800;
+    border-radius: 8px; min-width: 40px; text-align: center; padding: 2px 6px;
+    flex: none;
+  }
+  .scene__heading { flex: 1; min-width: 0; }
+  .scene__slug {
+    font-family: var(--font-script);
+    font-size: 14.5px;
+    letter-spacing: 0.02em;
+    color: var(--board-ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .scene__meta { font-size: 12px; color: #d9d4c0; margin-top: 2px; }
+  .scene__toggle { flex: none; color: #fff; }
+  .scene__toggle svg { width: 16px; height: 16px; transition: transform 0.15s ease; }
+  .scene.is-open .scene__toggle svg { transform: rotate(180deg); }
+  .scene__actions { display: flex; gap: 2px; flex: none; }
+  .scene__actions .icon-btn { color: #e8e3cf; }
+  .scene__actions .icon-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+  .scene__body { padding: 16px; display: none; }
+  .scene.is-open .scene__body { display: block; }
+  .scene__summary { font-size: 14px; color: var(--ink-soft); margin-bottom: 12px; white-space: pre-wrap; }
+  .scene__cast { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+
+  .plan {
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 12px 13px;
+    margin-bottom: 10px;
+    background: var(--paper);
+  }
+  .plan__top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .plan__num { font-family: var(--font-display); font-weight: 700; color: var(--ink-faint); font-size: 14px; flex: none; }
+  .plan__type { font-weight: 700; font-size: 13px; color: var(--accent-ink); background: var(--accent-soft); border-radius: 6px; padding: 2px 8px; }
+  .plan__actions { margin-left: auto; display: flex; gap: 0px; }
+  .plan__desc { font-family: var(--font-script); font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: var(--ink); }
+  .plan__dialogues { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .dialogue-line { max-width: 65%; margin-inline: auto; text-align: center; }
+  @media (max-width: 560px) { .dialogue-line { max-width: 100%; } }
+  .dialogue-line__name { font-family: var(--font-script); font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--marigold); }
+  .dialogue-line__text { font-family: var(--font-script); font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; }
+
+  .add-plan-row { display: flex; justify-content: center; margin-top: 4px; }
+
+  /* ---- inline edit forms ---- */
+  .inline-form {
+    border: 1.5px dashed var(--rule-strong);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 16px;
+    background: var(--paper-sunken);
+  }
+  .inline-form__title { font-family: var(--font-display); font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin-bottom: 10px; }
+
+  .chip-select { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    border: 1px solid var(--rule-strong);
+    background: var(--paper-raised);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--ink-soft);
+  }
+  .chip.is-selected { background: var(--accent); border-color: var(--accent-strong); color: #fff; }
+  .chip:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ---- modal ---- */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(10, 9, 4, 0.55);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 40;
+  }
+  .modal {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 20px;
+    max-width: 420px;
+    width: 100%;
+  }
+  .modal h3 { font-family: var(--font-display); text-transform: uppercase; font-size: 19px; margin-bottom: 8px; }
+  .modal p { font-size: 14px; color: var(--ink-soft); margin-bottom: 16px; }
+  .modal__actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  .backup-modal { max-width: 560px; }
+  .backup-modal textarea {
+    width: 100%; min-height: 180px; font-family: 'Courier New', monospace; font-size: 12px;
+    background: var(--paper-sunken); border: 1px solid var(--rule); border-radius: 8px; padding: 10px; color: var(--ink);
+  }
+  .backup-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+
+  .toast {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--paper);
+    padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    z-index: 60; box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+  }
+
+  /* ---- apercu / print ---- */
+  .apercu-page {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: clamp(18px, 5vw, 48px);
+    font-family: var(--font-script);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 720px;
+  }
+  .apercu-title { text-align: center; text-transform: uppercase; font-size: 20px; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .apercu-byline { text-align: center; font-size: 12px; color: var(--ink-soft); margin-bottom: 30px; }
+  .apercu-slug { font-weight: 700; text-transform: uppercase; margin-top: 26px; margin-bottom: 8px; }
+  .apercu-summary { color: var(--ink-soft); margin-bottom: 10px; white-space: pre-wrap; }
+  .apercu-plan { margin-bottom: 10px; }
+  .apercu-plan-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); }
+  .apercu-desc { white-space: pre-wrap; }
+  .apercu-dialogue { max-width: 60%; margin: 6px auto; text-align: center; }
+  .apercu-dialogue .name { text-transform: uppercase; font-size: 12px; color: var(--marigold); }
+  @media print {
+    body * { visibility: hidden; }
+    .apercu-page, .apercu-page * { visibility: visible; }
+    .apercu-page { position: absolute; top: 0; left: 0; border: none; max-width: 100%; padding: 0; }
+  }
+
+  .empty-icon { color: var(--rule-strong); margin-bottom: 10px; }
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="slate">
+  <div class="slate__mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M3 9.5 20.5 6l.7 3.4L3.7 12.9 3 9.5Z" fill="#F1EBD8"/><path d="M3.7 12.9 21.2 9.4 21.6 18a1.4 1.4 0 0 1-1.4 1.4H4.8A1.4 1.4 0 0 1 3.4 18l.3-5.1Z" fill="#F1EBD8" fill-opacity="0.55"/><path d="m6.3 8.7 3 2M11 7.7l3 2M15.6 6.8l3 2" stroke="#17180F" stroke-width="1.3"/></svg>
+  </div>
+  <div>
+    <div class="slate__title">Scénariste</div>
+    <div class="slate__sub">Personnages, lieux, scènes et plans — l'atelier du scénariste</div>
+  </div>
+  <div class="slate__project" id="projectPill">
+    <div>
+      <div class="slate__project-name" id="activeProjectName">—</div>
+      <div class="slate__saved" id="savedIndicator">Non enregistré</div>
+    </div>
+    <button class="btn btn-sm" id="openBtn" title="Ouvrir un fichier .json">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      Ouvrir
+    </button>
+    <button class="btn btn-primary btn-sm" id="saveBtn" title="Enregistrer (Ctrl+S)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h11l3 3v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 4v5h8V4M8 20v-6h8v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      Enregistrer
+    </button>
+    <input type="file" id="openFileInput" accept="application/json,.json" style="display:none;">
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="panel">
+      <div class="eyebrow">Projets</div>
+      <ul class="project-list" id="projectList"></ul>
+      <button class="btn btn-block" id="newProjectBtn" style="margin-top:10px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        Nouveau projet
+      </button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Sections du projet">
+      <button class="tab" data-tab="personnages" role="tab">Personnages<span class="count" id="countPersonnages">0</span></button>
+      <button class="tab" data-tab="lieux" role="tab">Lieux<span class="count" id="countLieux">0</span></button>
+      <button class="tab" data-tab="scenario" role="tab">Scénario<span class="count" id="countScenes">0</span></button>
+      <button class="tab" data-tab="apercu" role="tab">Aperçu</button>
+    </nav>
+    <div id="tabPanel"></div>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------------- */
+  /* Vocabulaire cinéma                                                */
+  /* ---------------------------------------------------------------- */
+  var SHOT_TYPES = [
+    { code: "PE",  label: "Plan d'ensemble",     hint: "Situe le décor en entier ; les personnages y paraissent petits." },
+    { code: "PL",  label: "Plan large",           hint: "Montre le décor et toute l'action qui s'y déroule." },
+    { code: "PM",  label: "Plan moyen",           hint: "Cadre le personnage en pied ou à mi-cuisses." },
+    { code: "PA",  label: "Plan américain",       hint: "Cadré à mi-cuisses ; laisse voir les armes ou les mains." },
+    { code: "PR",  label: "Plan rapproché",       hint: "Cadré à la poitrine ; crée une proximité avec le personnage." },
+    { code: "GP",  label: "Gros plan",            hint: "Cadre un visage ou un détail expressif." },
+    { code: "TGP", label: "Très gros plan",       hint: "Isole un détail (regard, objet) pour une forte intensité." },
+    { code: "PLO", label: "Plongée",              hint: "Caméra placée au-dessus du sujet, qui paraît dominé." },
+    { code: "CPL", label: "Contre-plongée",       hint: "Caméra placée en dessous du sujet, qui paraît puissant." },
+    { code: "TRAV", label: "Travelling",          hint: "La caméra se déplace en suivant l'action." },
+    { code: "PANO", label: "Panoramique",         hint: "La caméra pivote sur son axe, sans se déplacer." },
+    { code: "ZOOM", label: "Zoom / dézoom",       hint: "Rapproche ou éloigne le sujet sans déplacer la caméra." }
+  ];
+  var MOMENTS = ["Jour", "Nuit", "Aube", "Crépuscule"];
+  var LIEU_KINDS = { int: "Intérieur", ext: "Extérieur", both: "Intérieur / Extérieur" };
+  var LIEU_ABBR = { int: "INT.", ext: "EXT.", both: "INT./EXT." };
+
+  var STORAGE_KEY = "decoupage.projects.v2";
+  var STORAGE_ACTIVE = "decoupage.active.v2";
+
+  /* ---------------------------------------------------------------- */
+  /* Utils                                                             */
+  /* ---------------------------------------------------------------- */
+  function uid(prefix) {
+    return prefix + "_" + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+  }
+  function esc(str) {
+    return String(str == null ? "" : str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function nl2br(str) { return esc(str).replace(/\n/g, "<br>"); }
+  function byId(id) { return document.getElementById(id); }
+  function shotType(code) {
+    for (var i = 0; i < SHOT_TYPES.length; i++) if (SHOT_TYPES[i].code === code) return SHOT_TYPES[i];
+    return SHOT_TYPES[0];
+  }
+  function nowStamp() {
+    var d = new Date();
+    return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Données d'exemple                                                 */
+  /* ---------------------------------------------------------------- */
+  function exampleProject() {
+    var idMax = uid("pers"), idClem = uid("pers");
+    var idGrenier = uid("lieu"), idJardin = uid("lieu");
+    var sceneId = uid("scene"), scene2Id = uid("scene");
+    return {
+      id: uid("proj"),
+      name: "Exemple — L'Échelle du grenier",
+      example: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      characters: [
+        { id: idMax, name: "Max", role: "Protagoniste, 12 ans", description: "Curieux et un peu maladroit. Porte toujours une casquette trop grande." },
+        { id: idClem, name: "Clémence", role: "Meilleure amie de Max", description: "Sceptique et pragmatique. Adore les listes et les plans détaillés." }
+      ],
+      places: [
+        { id: idGrenier, kind: "int", name: "Le grenier de la maison Dutilleul", description: "Poussiéreux, encombré de malles. Une seule lucarne laisse passer la lumière." },
+        { id: idJardin, kind: "ext", name: "Le jardin derrière la maison", description: "Herbe haute, vieux pommier, cabane à outils au fond." }
+      ],
+      scenes: [
+        {
+          id: sceneId,
+          placeId: idGrenier,
+          moment: "Jour",
+          characterIds: [idMax, idClem],
+          summary: "Max entraîne Clémence dans le grenier après avoir entendu un bruit étrange la veille.",
+          plans: [
+            { id: uid("plan"), shotType: "PE", description: "Le grenier plongé dans la pénombre. Une lucarne unique découpe un rayon de poussière dorée.", dialogues: [] },
+            { id: uid("plan"), shotType: "PM", description: "Max pousse la trappe et grimpe, suivi de Clémence qui hésite sur l'échelle.", dialogues: [
+              { characterId: idClem, text: "Tu es sûr que c'est solide, cette échelle ?" },
+              { characterId: idMax, text: "Mais oui ! Enfin... presque sûr." }
+            ] },
+            { id: uid("plan"), shotType: "GP", description: "Le regard de Max s'arrête sur une malle cadenassée, couverte de toiles d'araignées.", dialogues: [] }
+          ]
+        },
+        {
+          id: scene2Id,
+          placeId: idJardin,
+          moment: "Crépuscule",
+          characterIds: [idMax, idClem],
+          summary: "Les deux amis ressortent dans le jardin avec la malle, décidés à l'ouvrir avant la tombée de la nuit.",
+          plans: [
+            { id: uid("plan"), shotType: "PL", description: "Ils posent la malle dans l'herbe haute, sous le vieux pommier. Le ciel vire à l'orange.", dialogues: [] },
+            { id: uid("plan"), shotType: "TGP", description: "Le cadenas rouillé cède enfin sous le tournevis de Clémence.", dialogues: [
+              { characterId: idClem, text: "Ça y est... trois, deux, un." }
+            ] }
+          ]
+        }
+      ]
+    };
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* État                                                               */
+  /* ---------------------------------------------------------------- */
+  var state = { projects: [], activeId: null };
+  var ui = { tab: "personnages", openScenes: {}, savedAt: null };
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) state.projects = JSON.parse(raw);
+    } catch (e) { state.projects = []; }
+    if (!Array.isArray(state.projects)) state.projects = [];
+    if (state.projects.length === 0) {
+      state.projects.push(exampleProject());
+    }
+    var active = null;
+    try { active = localStorage.getItem(STORAGE_ACTIVE); } catch (e) {}
+    state.activeId = (active && findProject(active)) ? active : state.projects[0].id;
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.projects));
+      localStorage.setItem(STORAGE_ACTIVE, state.activeId);
+      ui.savedAt = nowStamp();
+    } catch (e) {
+      ui.savedAt = null;
+      showToast("Impossible d'enregistrer — le stockage local est peut-être plein ou bloqué.");
+    }
+  }
+
+  function findProject(id) {
+    for (var i = 0; i < state.projects.length; i++) if (state.projects[i].id === id) return state.projects[i];
+    return null;
+  }
+  function activeProject() { return findProject(state.activeId); }
+
+  function touch(project) { project.updatedAt = Date.now(); }
+
+  function save(rerender) {
+    persist();
+    if (rerender !== false) render(); else renderSavedIndicator();
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Toast + modal                                                     */
+  /* ---------------------------------------------------------------- */
+  var toastTimer = null;
+  function showToast(msg) {
+    var root = byId("toastRoot");
+    root.innerHTML = '<div class="toast" role="status">' + esc(msg) + "</div>";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { root.innerHTML = ""; }, 2600);
+  }
+
+  function closeModal() { byId("modalRoot").innerHTML = ""; }
+
+  function confirmModal(opts) {
+    var root = byId("modalRoot");
+    root.innerHTML =
+      '<div class="modal-backdrop" id="mbBackdrop">' +
+        '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mbTitle">' +
+          '<h3 id="mbTitle">' + esc(opts.title) + "</h3>" +
+          "<p>" + esc(opts.message) + "</p>" +
+          '<div class="modal__actions">' +
+            '<button class="btn" id="mbCancel">Annuler</button>' +
+            '<button class="btn btn-danger" id="mbConfirm">' + esc(opts.confirmLabel || "Supprimer") + "</button>" +
+          "</div>" +
+        "</div>" +
+      "</div>";
+    byId("mbCancel").addEventListener("click", closeModal);
+    byId("mbBackdrop").addEventListener("click", function (e) { if (e.target.id === "mbBackdrop") closeModal(); });
+    byId("mbConfirm").addEventListener("click", function () { closeModal(); opts.onConfirm(); });
+  }
+
+  function promptModal(opts) {
+    var root = byId("modalRoot");
+    root.innerHTML =
+      '<div class="modal-backdrop" id="pmBackdrop">' +
+        '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="pmTitle">' +
+          '<h3 id="pmTitle">' + esc(opts.title) + "</h3>" +
+          '<div class="field"><label for="pmInput">' + esc(opts.label) + '</label>' +
+          '<input type="text" id="pmInput" value="' + esc(opts.value || "") + '"></div>' +
+          '<div class="modal__actions">' +
+            '<button class="btn" id="pmCancel">Annuler</button>' +
+            '<button class="btn btn-primary" id="pmOk">' + esc(opts.okLabel || "Valider") + "</button>" +
+          "</div>" +
+        "</div>" +
+      "</div>";
+    var input = byId("pmInput");
+    input.focus();
+    input.select();
+    function submit() {
+      var v = input.value.trim();
+      if (!v) { input.focus(); return; }
+      closeModal();
+      opts.onConfirm(v);
+    }
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); if (e.key === "Escape") closeModal(); });
+    byId("pmCancel").addEventListener("click", closeModal);
+    byId("pmBackdrop").addEventListener("click", function (e) { if (e.target.id === "pmBackdrop") closeModal(); });
+    byId("pmOk").addEventListener("click", submit);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Projets                                                            */
+  /* ---------------------------------------------------------------- */
+  function newProject() {
+    promptModal({
+      title: "Nouveau projet",
+      label: "Titre du scénario",
+      value: "",
+      okLabel: "Créer",
+      onConfirm: function (name) {
+        var p = { id: uid("proj"), name: name, example: false, createdAt: Date.now(), updatedAt: Date.now(), characters: [], places: [], scenes: [] };
+        state.projects.push(p);
+        state.activeId = p.id;
+        ui.tab = "personnages";
+        save();
+        showToast("Projet « " + name + " » créé.");
+      }
+    });
+  }
+
+  function renameProject(id) {
+    var p = findProject(id);
+    if (!p) return;
+    promptModal({
+      title: "Renommer le projet",
+      label: "Nouveau titre",
+      value: p.name,
+      okLabel: "Renommer",
+      onConfirm: function (name) { p.name = name; p.example = false; touch(p); save(); }
+    });
+  }
+
+  function deleteProject(id) {
+    var p = findProject(id);
+    if (!p) return;
+    confirmModal({
+      title: "Supprimer ce projet ?",
+      message: "« " + p.name + " » sera définitivement supprimé, avec tous ses personnages, lieux et scènes.",
+      onConfirm: function () {
+        state.projects = state.projects.filter(function (x) { return x.id !== id; });
+        if (state.projects.length === 0) state.projects.push(exampleProject());
+        if (state.activeId === id) state.activeId = state.projects[0].id;
+        save();
+        showToast("Projet supprimé.");
+      }
+    });
+  }
+
+  function switchProject(id) {
+    state.activeId = id;
+    ui.tab = "personnages";
+    ui.openScenes = {};
+    save();
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Personnages                                                       */
+  /* ---------------------------------------------------------------- */
+  var editingCharacterId = null; // "new" | id | null
+  function characterForm(project, existing) {
+    var isNew = !existing;
+    var c = existing || { name: "", role: "", description: "" };
+    var wrap = document.createElement("div");
+    wrap.className = "inline-form";
+    wrap.innerHTML =
+      '<div class="inline-form__title">' + (isNew ? "Nouveau personnage" : "Modifier le personnage") + '</div>' +
+      '<div class="field"><label for="cfName">Nom</label><input type="text" id="cfName" value="' + esc(c.name) + '" placeholder="Ex. Max"></div>' +
+      '<div class="field"><label for="cfRole">Rôle (facultatif)</label><input type="text" id="cfRole" value="' + esc(c.role) + '" placeholder="Ex. protagoniste, antagoniste, personnage secondaire…"></div>' +
+      '<div class="field"><label for="cfDesc">Description</label><textarea id="cfDesc" placeholder="Apparence, caractère, ce qui le rend reconnaissable…">' + esc(c.description) + '</textarea></div>' +
+      '<div class="form-actions">' +
+        '<button class="btn btn-primary" id="cfSave">Enregistrer</button>' +
+        '<button class="btn" id="cfCancel">Annuler</button>' +
+      "</div>";
+    wrap.querySelector("#cfCancel").addEventListener("click", function () { editingCharacterId = null; render(); });
+    wrap.querySelector("#cfSave").addEventListener("click", function () {
+      var name = wrap.querySelector("#cfName").value.trim();
+      if (!name) { wrap.querySelector("#cfName").focus(); return; }
+      var role = wrap.querySelector("#cfRole").value.trim();
+      var desc = wrap.querySelector("#cfDesc").value.trim();
+      if (isNew) {
+        project.characters.push({ id: uid("pers"), name: name, role: role, description: desc });
+      } else {
+        existing.name = name; existing.role = role; existing.description = desc;
+      }
+      project.example = false;
+      touch(project);
+      editingCharacterId = null;
+      save();
+    });
+    return wrap;
+  }
+
+  function renderPersonnages(project, container) {
+    var toolbar = document.createElement("div");
+    toolbar.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;";
+    toolbar.innerHTML = '<div class="eyebrow">' + project.characters.length + " personnage" + (project.characters.length === 1 ? "" : "s") + "</div>";
+    var addBtn = document.createElement("button");
+    addBtn.className = "btn btn-primary btn-sm";
+    addBtn.innerHTML = "+ Ajouter un personnage";
+    addBtn.addEventListener("click", function () { editingCharacterId = "new"; render(); });
+    if (editingCharacterId === null) toolbar.appendChild(addBtn);
+    container.appendChild(toolbar);
+
+    if (editingCharacterId === "new") {
+      container.appendChild(characterForm(project, null));
+    }
+
+    if (project.characters.length === 0 && editingCharacterId !== "new") {
+      container.appendChild(emptyState(
+        "Aucun personnage pour l'instant",
+        "Listez ici qui apparaît dans votre histoire : leur nom, leur rôle, ce qui les caractérise.",
+        "+ Créer le premier personnage",
+        function () { editingCharacterId = "new"; render(); }
+      ));
+      return;
+    }
+
+    var grid = document.createElement("div");
+    grid.className = "card-grid";
+    project.characters.forEach(function (c) {
+      if (editingCharacterId === c.id) {
+        container.appendChild(characterForm(project, c));
+        return;
+      }
+      var card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML =
+        '<div class="card__top"><div><div class="card__name">' + esc(c.name) + '</div>' +
+        (c.role ? '<div class="badge" style="margin-top:5px;">' + esc(c.role) + "</div>" : "") +
+        '</div><div class="card__actions"></div></div>' +
+        (c.description ? '<div class="card__desc">' + esc(c.description) + "</div>" : "");
+      var actions = card.querySelector(".card__actions");
+      actions.appendChild(iconButton("edit", "Modifier " + c.name, function () { editingCharacterId = c.id; render(); }));
+      actions.appendChild(iconButton("trash", "Supprimer " + c.name, function () {
+        confirmModal({
+          title: "Supprimer ce personnage ?",
+          message: "« " + c.name + " » sera retiré du projet et des scènes qui le mentionnent.",
+          onConfirm: function () {
+            project.characters = project.characters.filter(function (x) { return x.id !== c.id; });
+            project.scenes.forEach(function (s) {
+              s.characterIds = s.characterIds.filter(function (id) { return id !== c.id; });
+              s.plans.forEach(function (p) { p.dialogues = p.dialogues.filter(function (d) { return d.characterId !== c.id; }); });
+            });
+            touch(project);
+            save();
+          }
+        });
+      }));
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Lieux                                                              */
+  /* ---------------------------------------------------------------- */
+  var editingPlaceId = null;
+  function placeForm(project, existing) {
+    var isNew = !existing;
+    var p = existing || { name: "", kind: "int", description: "" };
+    var wrap = document.createElement("div");
+    wrap.className = "inline-form";
+    wrap.innerHTML =
+      '<div class="inline-form__title">' + (isNew ? "Nouveau lieu" : "Modifier le lieu") + '</div>' +
+      '<div class="field"><label for="lfName">Nom du lieu</label><input type="text" id="lfName" value="' + esc(p.name) + '" placeholder="Ex. La cuisine des Martin"></div>' +
+      '<div class="field"><label for="lfKind">Type</label><select id="lfKind">' +
+        Object.keys(LIEU_KINDS).map(function (k) { return '<option value="' + k + '"' + (p.kind === k ? " selected" : "") + ">" + LIEU_KINDS[k] + "</option>"; }).join("") +
+      "</select></div>" +
+      '<div class="field"><label for="lfDesc">Description</label><textarea id="lfDesc" placeholder="Ambiance, détails visuels, ce qui s\'y passe…">' + esc(p.description) + '</textarea></div>' +
+      '<div class="form-actions">' +
+        '<button class="btn btn-primary" id="lfSave">Enregistrer</button>' +
+        '<button class="btn" id="lfCancel">Annuler</button>' +
+      "</div>";
+    wrap.querySelector("#lfCancel").addEventListener("click", function () { editingPlaceId = null; render(); });
+    wrap.querySelector("#lfSave").addEventListener("click", function () {
+      var name = wrap.querySelector("#lfName").value.trim();
+      if (!name) { wrap.querySelector("#lfName").focus(); return; }
+      var kind = wrap.querySelector("#lfKind").value;
+      var desc = wrap.querySelector("#lfDesc").value.trim();
+      if (isNew) {
+        project.places.push({ id: uid("lieu"), name: name, kind: kind, description: desc });
+      } else {
+        existing.name = name; existing.kind = kind; existing.description = desc;
+      }
+      project.example = false;
+      touch(project);
+      editingPlaceId = null;
+      save();
+    });
+    return wrap;
+  }
+
+  function renderLieux(project, container) {
+    var toolbar = document.createElement("div");
+    toolbar.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;";
+    toolbar.innerHTML = '<div class="eyebrow">' + project.places.length + " lieu" + (project.places.length === 1 ? "" : "x") + "</div>";
+    var addBtn = document.createElement("button");
+    addBtn.className = "btn btn-primary btn-sm";
+    addBtn.innerHTML = "+ Ajouter un lieu";
+    addBtn.addEventListener("click", function () { editingPlaceId = "new"; render(); });
+    if (editingPlaceId === null) toolbar.appendChild(addBtn);
+    container.appendChild(toolbar);
+
+    if (editingPlaceId === "new") container.appendChild(placeForm(project, null));
+
+    if (project.places.length === 0 && editingPlaceId !== "new") {
+      container.appendChild(emptyState(
+        "Aucun lieu pour l'instant",
+        "Listez les décors de votre histoire : une maison, une rue, une planète… Vous les choisirez ensuite pour chaque scène.",
+        "+ Créer le premier lieu",
+        function () { editingPlaceId = "new"; render(); }
+      ));
+      return;
+    }
+
+    var grid = document.createElement("div");
+    grid.className = "card-grid";
+    project.places.forEach(function (p) {
+      if (editingPlaceId === p.id) { container.appendChild(placeForm(project, p)); return; }
+      var card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML =
+        '<div class="card__top"><div><div class="card__name">' + esc(p.name) + '</div>' +
+        '<div class="badge marigold" style="margin-top:5px;">' + LIEU_KINDS[p.kind] + "</div>" +
+        '</div><div class="card__actions"></div></div>' +
+        (p.description ? '<div class="card__desc">' + esc(p.description) + "</div>" : "");
+      var actions = card.querySelector(".card__actions");
+      actions.appendChild(iconButton("edit", "Modifier " + p.name, function () { editingPlaceId = p.id; render(); }));
+      actions.appendChild(iconButton("trash", "Supprimer " + p.name, function () {
+        confirmModal({
+          title: "Supprimer ce lieu ?",
+          message: "« " + p.name + " » sera retiré du projet. Les scènes qui l'utilisent devront choisir un autre lieu.",
+          onConfirm: function () {
+            project.places = project.places.filter(function (x) { return x.id !== p.id; });
+            project.scenes.forEach(function (s) { if (s.placeId === p.id) s.placeId = null; });
+            touch(project);
+            save();
+          }
+        });
+      }));
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Icônes                                                             */
+  /* ---------------------------------------------------------------- */
+  var ICONS = {
+    edit: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16v4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    up: '<svg viewBox="0 0 24 24" fill="none"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    chevron: '<svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+  function iconButton(icon, label, onClick, extraClass) {
+    var b = document.createElement("button");
+    b.className = "icon-btn" + (extraClass ? " " + extraClass : "");
+    b.innerHTML = ICONS[icon];
+    b.setAttribute("aria-label", label);
+    b.setAttribute("title", label);
+    b.addEventListener("click", function (e) { e.stopPropagation(); onClick(); });
+    return b;
+  }
+
+  function emptyState(title, text, ctaLabel, onCta) {
+    var el = document.createElement("div");
+    el.className = "empty";
+    el.innerHTML =
+      '<div class="empty-icon" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>' +
+      "<h3>" + esc(title) + "</h3><p>" + esc(text) + "</p>";
+    if (ctaLabel) {
+      var btn = document.createElement("button");
+      btn.className = "btn btn-primary";
+      btn.textContent = ctaLabel;
+      btn.addEventListener("click", onCta);
+      el.appendChild(btn);
+    }
+    return el;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Scénario : scènes et plans                                        */
+  /* ---------------------------------------------------------------- */
+  var editingSceneId = null; // "new" | id | null
+  var editingPlan = null; // { sceneId, planId|"new" } | null
+
+  function sceneSlug(project, scene) {
+    var place = scene.placeId ? project.places.filter(function (p) { return p.id === scene.placeId; })[0] : null;
+    var abbr = place ? LIEU_ABBR[place.kind] : "INT./EXT.";
+    var name = place ? place.name.toUpperCase() : "LIEU À DÉFINIR";
+    return abbr + " " + name + " — " + (scene.moment || "JOUR").toUpperCase();
+  }
+
+  function sceneForm(project, existing) {
+    var isNew = !existing;
+    var s = existing || { placeId: project.places[0] ? project.places[0].id : null, moment: "Jour", characterIds: [], summary: "" };
+    var wrap = document.createElement("div");
+    wrap.className = "inline-form";
+    var title = document.createElement("div");
+    title.className = "inline-form__title";
+    title.textContent = isNew ? "Nouvelle scène" : "Modifier la scène";
+    wrap.appendChild(title);
+
+    if (project.places.length === 0) {
+      var warn = document.createElement("p");
+      warn.className = "hint";
+      warn.style.marginBottom = "10px";
+      warn.textContent = "Astuce : créez d'abord un lieu dans l'onglet « Lieux » pour pouvoir l'associer à cette scène.";
+      wrap.appendChild(warn);
+    }
+
+    var row = document.createElement("div");
+    row.className = "field-row";
+    var placeField = document.createElement("div");
+    placeField.className = "field";
+    placeField.innerHTML = '<label for="sfPlace">Lieu</label><select id="sfPlace"><option value="">— Choisir un lieu —</option>' +
+      project.places.map(function (p) { return '<option value="' + p.id + '"' + (s.placeId === p.id ? " selected" : "") + ">" + esc(p.name) + " (" + LIEU_KINDS[p.kind] + ")</option>"; }).join("") + "</select>";
+    var momentField = document.createElement("div");
+    momentField.className = "field";
+    momentField.innerHTML = '<label for="sfMoment">Moment</label><select id="sfMoment">' +
+      MOMENTS.map(function (m) { return '<option value="' + m + '"' + (s.moment === m ? " selected" : "") + ">" + m + "</option>"; }).join("") + "</select>";
+    row.appendChild(placeField);
+    row.appendChild(momentField);
+    wrap.appendChild(row);
+
+    var castField = document.createElement("div");
+    castField.className = "field";
+    castField.innerHTML = '<label>Personnages présents</label>';
+    var chipWrap = document.createElement("div");
+    chipWrap.className = "chip-select";
+    var selectedCast = s.characterIds.slice();
+    if (project.characters.length === 0) {
+      var p2 = document.createElement("p");
+      p2.className = "hint";
+      p2.textContent = "Créez des personnages dans l'onglet « Personnages » pour pouvoir les ajouter ici.";
+      chipWrap.appendChild(p2);
+    }
+    project.characters.forEach(function (c) {
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip" + (selectedCast.indexOf(c.id) > -1 ? " is-selected" : "");
+      chip.textContent = c.name;
+      chip.addEventListener("click", function () {
+        var i = selectedCast.indexOf(c.id);
+        if (i > -1) selectedCast.splice(i, 1); else selectedCast.push(c.id);
+        chip.classList.toggle("is-selected");
+      });
+      chipWrap.appendChild(chip);
+    });
+    castField.appendChild(chipWrap);
+    wrap.appendChild(castField);
+
+    var summaryField = document.createElement("div");
+    summaryField.className = "field";
+    summaryField.innerHTML = '<label for="sfSummary">Résumé de la scène</label><textarea id="sfSummary" placeholder="Que se passe-t-il dans cette scène ?">' + esc(s.summary) + "</textarea>";
+    wrap.appendChild(summaryField);
+
+    var actions = document.createElement("div");
+    actions.className = "form-actions";
+    var saveBtn = document.createElement("button");
+    saveBtn.className = "btn btn-primary";
+    saveBtn.textContent = "Enregistrer";
+    var cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn";
+    cancelBtn.textContent = "Annuler";
+    cancelBtn.addEventListener("click", function () { editingSceneId = null; render(); });
+    saveBtn.addEventListener("click", function () {
+      var placeId = wrap.querySelector("#sfPlace").value || null;
+      var moment = wrap.querySelector("#sfMoment").value;
+      var summary = wrap.querySelector("#sfSummary").value.trim();
+      if (isNew) {
+        var scene = { id: uid("scene"), placeId: placeId, moment: moment, characterIds: selectedCast, summary: summary, plans: [] };
+        project.scenes.push(scene);
+        ui.openScenes[scene.id] = true;
+      } else {
+        existing.placeId = placeId; existing.moment = moment; existing.summary = summary; existing.characterIds = selectedCast;
+      }
+      project.example = false;
+      touch(project);
+      editingSceneId = null;
+      save();
+    });
+    actions.appendChild(saveBtn);
+    actions.appendChild(cancelBtn);
+    wrap.appendChild(actions);
+    return wrap;
+  }
+
+  function planForm(project, scene, existing) {
+    var isNew = !existing;
+    var pl = existing || { shotType: "PL", description: "", dialogues: [] };
+    var wrap = document.createElement("div");
+    wrap.className = "inline-form";
+    var title = document.createElement("div");
+    title.className = "inline-form__title";
+    title.textContent = isNew ? "Nouveau plan" : "Modifier le plan";
+    wrap.appendChild(title);
+
+    var typeField = document.createElement("div");
+    typeField.className = "field";
+    typeField.innerHTML = '<label for="pfType">Type de plan</label><select id="pfType">' +
+      SHOT_TYPES.map(function (t) { return '<option value="' + t.code + '"' + (pl.shotType === t.code ? " selected" : "") + ">" + t.label + " (" + t.code + ")</option>"; }).join("") + "</select>";
+    var hintEl = document.createElement("p");
+    hintEl.className = "hint";
+    hintEl.id = "pfHint";
+    hintEl.textContent = shotType(pl.shotType).hint;
+    typeField.appendChild(hintEl);
+    typeField.querySelector("#pfType").addEventListener("change", function (e) {
+      hintEl.textContent = shotType(e.target.value).hint;
+    });
+    wrap.appendChild(typeField);
+
+    var descField = document.createElement("div");
+    descField.className = "field";
+    descField.innerHTML = '<label for="pfDesc">Description du plan</label><textarea id="pfDesc" placeholder="Ce que la caméra montre, l\'action à l\'image…">' + esc(pl.description) + "</textarea>";
+    wrap.appendChild(descField);
+
+    var dialoguesField = document.createElement("div");
+    dialoguesField.className = "field";
+    dialoguesField.innerHTML = '<label>Dialogue (facultatif)</label>';
+    var dialogues = pl.dialogues.map(function (d) { return { characterId: d.characterId, text: d.text }; });
+    var dList = document.createElement("div");
+    dList.style.cssText = "display:flex;flex-direction:column;gap:8px;";
+
+    function renderDialogueRows() {
+      dList.innerHTML = "";
+      dialogues.forEach(function (d, idx) {
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;gap:6px;align-items:flex-start;";
+        var sel = document.createElement("select");
+        sel.style.cssText = "flex:0 0 150px;background:var(--paper-sunken);border:1px solid var(--rule);border-radius:8px;padding:8px;color:var(--ink);";
+        sel.innerHTML = project.characters.map(function (c) { return '<option value="' + c.id + '"' + (d.characterId === c.id ? " selected" : "") + ">" + esc(c.name) + "</option>"; }).join("");
+        sel.addEventListener("change", function () { dialogues[idx].characterId = sel.value; });
+        var txt = document.createElement("textarea");
+        txt.style.cssText = "flex:1;min-height:44px;background:var(--paper-sunken);border:1px solid var(--rule);border-radius:8px;padding:8px;color:var(--ink);";
+        txt.value = d.text;
+        txt.placeholder = "Réplique…";
+        txt.addEventListener("input", function () { dialogues[idx].text = txt.value; });
+        var rm = iconButton("trash", "Retirer cette réplique", function () { dialogues.splice(idx, 1); renderDialogueRows(); });
+        row.appendChild(sel); row.appendChild(txt); row.appendChild(rm);
+        dList.appendChild(row);
+      });
+    }
+    renderDialogueRows();
+    dialoguesField.appendChild(dList);
+
+    if (project.characters.length > 0) {
+      var addDialogueBtn = document.createElement("button");
+      addDialogueBtn.className = "btn btn-sm";
+      addDialogueBtn.style.marginTop = "8px";
+      addDialogueBtn.textContent = "+ Ajouter une réplique";
+      addDialogueBtn.addEventListener("click", function () {
+        dialogues.push({ characterId: project.characters[0].id, text: "" });
+        renderDialogueRows();
+      });
+      dialoguesField.appendChild(addDialogueBtn);
+    } else {
+      var pnote = document.createElement("p");
+      pnote.className = "hint";
+      pnote.textContent = "Ajoutez des personnages pour pouvoir leur écrire des répliques.";
+      dialoguesField.appendChild(pnote);
+    }
+    wrap.appendChild(dialoguesField);
+
+    var actions = document.createElement("div");
+    actions.className = "form-actions";
+    var saveBtn = document.createElement("button");
+    saveBtn.className = "btn btn-primary";
+    saveBtn.textContent = "Enregistrer";
+    var cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn";
+    cancelBtn.textContent = "Annuler";
+    cancelBtn.addEventListener("click", function () { editingPlan = null; render(); });
+    saveBtn.addEventListener("click", function () {
+      var shotTypeCode = wrap.querySelector("#pfType").value;
+      var desc = wrap.querySelector("#pfDesc").value.trim();
+      var cleanDialogues = dialogues.filter(function (d) { return d.text.trim().length > 0; });
+      if (isNew) {
+        scene.plans.push({ id: uid("plan"), shotType: shotTypeCode, description: desc, dialogues: cleanDialogues });
+      } else {
+        existing.shotType = shotTypeCode; existing.description = desc; existing.dialogues = cleanDialogues;
+      }
+      project.example = false;
+      touch(project);
+      editingPlan = null;
+      save();
+    });
+    actions.appendChild(saveBtn);
+    actions.appendChild(cancelBtn);
+    wrap.appendChild(actions);
+    return wrap;
+  }
+
+  function renderScenario(project, container) {
+    var toolbar = document.createElement("div");
+    toolbar.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;";
+    toolbar.innerHTML = '<div class="eyebrow">' + project.scenes.length + " scène" + (project.scenes.length === 1 ? "" : "s") + "</div>";
+    var addBtn = document.createElement("button");
+    addBtn.className = "btn btn-primary btn-sm";
+    addBtn.textContent = "+ Ajouter une scène";
+    addBtn.addEventListener("click", function () { editingSceneId = "new"; render(); });
+    if (editingSceneId === null) toolbar.appendChild(addBtn);
+    container.appendChild(toolbar);
+
+    if (editingSceneId === "new") container.appendChild(sceneForm(project, null));
+
+    if (project.scenes.length === 0 && editingSceneId !== "new") {
+      container.appendChild(emptyState(
+        "Le scénario est vide",
+        "Ajoutez une première scène : choisissez un lieu, un moment, les personnages présents, puis découpez-la en plans.",
+        "+ Créer la première scène",
+        function () { editingSceneId = "new"; render(); }
+      ));
+      return;
+    }
+
+    project.scenes.forEach(function (scene, sIdx) {
+      if (editingSceneId === scene.id) { container.appendChild(sceneForm(project, scene)); return; }
+      var isOpen = !!ui.openScenes[scene.id];
+      var el = document.createElement("section");
+      el.className = "scene" + (isOpen ? " is-open" : "");
+
+      var place = scene.placeId ? project.places.filter(function (p) { return p.id === scene.placeId; })[0] : null;
+      var cast = scene.characterIds.map(function (id) {
+        var c = project.characters.filter(function (x) { return x.id === id; })[0];
+        return c ? c.name : null;
+      }).filter(Boolean);
+
+      var head = document.createElement("div");
+      head.className = "scene__head";
+      head.innerHTML =
+        '<div class="scene__num">' + (sIdx + 1) + '</div>' +
+        '<div class="scene__heading"><div class="scene__slug">' + esc(sceneSlug(project, scene)) + '</div>' +
+        '<div class="scene__meta">' + scene.plans.length + " plan" + (scene.plans.length === 1 ? "" : "s") + (cast.length ? " · " + esc(cast.join(", ")) : "") + '</div></div>' +
+        '<div class="scene__actions"></div>' +
+        '<div class="scene__toggle" aria-hidden="true">' + ICONS.chevron + "</div>";
+      head.addEventListener("click", function () { ui.openScenes[scene.id] = !isOpen; render(); });
+      var sActions = head.querySelector(".scene__actions");
+      sActions.appendChild(iconButton("up", "Monter la scène", function () {
+        if (sIdx === 0) return;
+        var arr = project.scenes; var tmp = arr[sIdx - 1]; arr[sIdx - 1] = arr[sIdx]; arr[sIdx] = tmp;
+        touch(project); save();
+      }));
+      sActions.appendChild(iconButton("down", "Descendre la scène", function () {
+        if (sIdx === project.scenes.length - 1) return;
+        var arr = project.scenes; var tmp = arr[sIdx + 1]; arr[sIdx + 1] = arr[sIdx]; arr[sIdx] = tmp;
+        touch(project); save();
+      }));
+      sActions.appendChild(iconButton("edit", "Modifier la scène", function () { editingSceneId = scene.id; render(); }));
+      sActions.appendChild(iconButton("trash", "Supprimer la scène", function () {
+        confirmModal({
+          title: "Supprimer cette scène ?",
+          message: "La scène et tous ses plans seront définitivement supprimés.",
+          onConfirm: function () {
+            project.scenes = project.scenes.filter(function (x) { return x.id !== scene.id; });
+            touch(project); save();
+          }
+        });
+      }));
+      el.appendChild(head);
+
+      var body = document.createElement("div");
+      body.className = "scene__body";
+      if (scene.summary) {
+        var sum = document.createElement("p");
+        sum.className = "scene__summary";
+        sum.textContent = scene.summary;
+        body.appendChild(sum);
+      }
+      if (cast.length) {
+        var castWrap = document.createElement("div");
+        castWrap.className = "scene__cast";
+        cast.forEach(function (name) {
+          var b = document.createElement("span");
+          b.className = "badge";
+          b.textContent = name;
+          castWrap.appendChild(b);
+        });
+        body.appendChild(castWrap);
+      }
+
+      if (scene.plans.length === 0 && !(editingPlan && editingPlan.sceneId === scene.id && editingPlan.planId === "new")) {
+        body.appendChild(emptyState("Aucun plan pour cette scène", "Découpez la scène en plans : chaque plan précise le cadrage et ce que la caméra montre.", null, null));
+      }
+
+      scene.plans.forEach(function (plan, pIdx) {
+        if (editingPlan && editingPlan.sceneId === scene.id && editingPlan.planId === plan.id) {
+          body.appendChild(planForm(project, scene, plan));
+          return;
+        }
+        var t = shotType(plan.shotType);
+        var pEl = document.createElement("div");
+        pEl.className = "plan";
+        var top = document.createElement("div");
+        top.className = "plan__top";
+        top.innerHTML = '<span class="plan__num">' + (pIdx + 1) + '.</span><span class="plan__type">' + esc(t.code) + " — " + esc(t.label) + '</span>';
+        var pActions = document.createElement("div");
+        pActions.className = "plan__actions";
+        pActions.appendChild(iconButton("up", "Monter le plan", function () {
+          if (pIdx === 0) return;
+          var arr = scene.plans; var tmp = arr[pIdx - 1]; arr[pIdx - 1] = arr[pIdx]; arr[pIdx] = tmp;
+          touch(project); save();
+        }));
+        pActions.appendChild(iconButton("down", "Descendre le plan", function () {
+          if (pIdx === scene.plans.length - 1) return;
+          var arr = scene.plans; var tmp = arr[pIdx + 1]; arr[pIdx + 1] = arr[pIdx]; arr[pIdx] = tmp;
+          touch(project); save();
+        }));
+        pActions.appendChild(iconButton("edit", "Modifier le plan", function () { editingPlan = { sceneId: scene.id, planId: plan.id }; render(); }));
+        pActions.appendChild(iconButton("trash", "Supprimer le plan", function () {
+          confirmModal({
+            title: "Supprimer ce plan ?",
+            message: "Ce plan sera définitivement supprimé.",
+            onConfirm: function () {
+              scene.plans = scene.plans.filter(function (x) { return x.id !== plan.id; });
+              touch(project); save();
+            }
+          });
+        }));
+        top.appendChild(pActions);
+        pEl.appendChild(top);
+        if (plan.description) {
+          var d = document.createElement("div");
+          d.className = "plan__desc";
+          d.textContent = plan.description;
+          pEl.appendChild(d);
+        }
+        if (plan.dialogues.length) {
+          var dWrap = document.createElement("div");
+          dWrap.className = "plan__dialogues";
+          plan.dialogues.forEach(function (dl) {
+            var c = project.characters.filter(function (x) { return x.id === dl.characterId; })[0];
+            var line = document.createElement("div");
+            line.className = "dialogue-line";
+            line.innerHTML = '<div class="dialogue-line__name">' + esc(c ? c.name : "?") + '</div><div class="dialogue-line__text">' + nl2br(dl.text) + "</div>";
+            dWrap.appendChild(line);
+          });
+          pEl.appendChild(dWrap);
+        }
+        body.appendChild(pEl);
+      });
+
+      if (editingPlan && editingPlan.sceneId === scene.id && editingPlan.planId === "new") {
+        body.appendChild(planForm(project, scene, null));
+      } else {
+        var addPlanRow = document.createElement("div");
+        addPlanRow.className = "add-plan-row";
+        var addPlanBtn = document.createElement("button");
+        addPlanBtn.className = "btn btn-sm";
+        addPlanBtn.textContent = "+ Ajouter un plan";
+        addPlanBtn.addEventListener("click", function () { editingPlan = { sceneId: scene.id, planId: "new" }; ui.openScenes[scene.id] = true; render(); });
+        addPlanRow.appendChild(addPlanBtn);
+        body.appendChild(addPlanRow);
+      }
+
+      el.appendChild(body);
+      container.appendChild(el);
+    });
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Aperçu                                                             */
+  /* ---------------------------------------------------------------- */
+  function renderApercu(project, container) {
+    var page = document.createElement("div");
+    page.className = "apercu-page";
+    var html = '<div class="apercu-title">' + esc(project.name.replace(/^Exemple\s*—\s*/, "")) + '</div>' +
+      '<div class="apercu-byline">Scénario' + (userNameForByline() ? " — " + esc(userNameForByline()) : "") + '</div>';
+    if (project.scenes.length === 0) {
+      html += '<p style="text-align:center;color:var(--ink-soft);">Aucune scène à afficher pour l\'instant.</p>';
+    }
+    project.scenes.forEach(function (scene, sIdx) {
+      html += '<div class="apercu-slug">' + (sIdx + 1) + ". " + esc(sceneSlug(project, scene)) + "</div>";
+      if (scene.summary) html += '<div class="apercu-summary">' + esc(scene.summary) + "</div>";
+      scene.plans.forEach(function (plan, pIdx) {
+        var t = shotType(plan.shotType);
+        html += '<div class="apercu-plan"><div class="apercu-plan-tag">Plan ' + (pIdx + 1) + " — " + esc(t.label) + '</div>';
+        if (plan.description) html += '<div class="apercu-desc">' + esc(plan.description) + "</div>";
+        plan.dialogues.forEach(function (dl) {
+          var c = project.characters.filter(function (x) { return x.id === dl.characterId; })[0];
+          html += '<div class="apercu-dialogue"><div class="name">' + esc(c ? c.name : "?") + '</div><div>' + nl2br(dl.text) + "</div></div>";
+        });
+        html += "</div>";
+      });
+    });
+    page.innerHTML = html;
+    container.appendChild(page);
+
+    if (project.scenes.length > 0) {
+      var printBtn = document.createElement("button");
+      printBtn.className = "btn btn-primary";
+      printBtn.style.marginTop = "16px";
+      printBtn.textContent = "Imprimer / Enregistrer en PDF";
+      printBtn.addEventListener("click", function () { window.print(); });
+      container.appendChild(printBtn);
+    }
+  }
+  function userNameForByline() { return ""; }
+
+  /* ---------------------------------------------------------------- */
+  /* Sauvegarde / restauration JSON                                    */
+  /* ---------------------------------------------------------------- */
+  function restoreProjectsFromRaw(raw) {
+    var parsed;
+    try { parsed = JSON.parse(raw); } catch (e) { showToast("Ce fichier n'est pas un export valide."); return; }
+    if (!Array.isArray(parsed) || parsed.length === 0) { showToast("Ce fichier n'est pas un export valide."); return; }
+    closeModal();
+    confirmModal({
+      title: "Remplacer tous les projets ?",
+      message: "Les projets actuellement sur cet appareil seront remplacés par ceux importés.",
+      confirmLabel: "Restaurer",
+      onConfirm: function () {
+        state.projects = parsed;
+        state.activeId = parsed[0].id;
+        ui.tab = "personnages";
+        save();
+        showToast("Projets restaurés.");
+      }
+    });
+  }
+
+  function openSavedFile() {
+    if (window.showOpenFilePicker) {
+      window.showOpenFilePicker({
+        types: [{ description: "Fichier JSON", accept: { "application/json": [".json"] } }],
+        excludeAcceptAllOption: false,
+        multiple: false
+      }).then(function (handles) {
+        return handles[0].getFile();
+      }).then(function (file) {
+        return file.text();
+      }).then(function (text) {
+        restoreProjectsFromRaw(text);
+      }).catch(function (e) {
+        if (e && e.name === "AbortError") return;
+        byId("openFileInput").click();
+      });
+    } else {
+      byId("openFileInput").click();
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Rendu principal                                                    */
+  /* ---------------------------------------------------------------- */
+  function renderSavedIndicator() {
+    byId("savedIndicator").textContent = ui.savedAt ? "Enregistré à " + ui.savedAt : "Non enregistré";
+  }
+
+  function fileDateStamp() {
+    var d = new Date();
+    function pad(n) { return String(n).padStart(2, "0"); }
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "_" + pad(d.getHours()) + "h" + pad(d.getMinutes());
+  }
+
+  function saveFileName() {
+    var project = activeProject();
+    var base = project ? project.name : "projets";
+    var slug = base.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "decoupage";
+    return "decoupage-" + slug + "-" + fileDateStamp() + ".json";
+  }
+
+  function fallbackDownload(data, filename) {
+    var blob = new Blob([data], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+    showToast("Fichier téléchargé.");
+  }
+
+  function downloadSaveFile() {
+    var data = JSON.stringify(state.projects, null, 2);
+    var filename = saveFileName();
+    if (window.showSaveFilePicker) {
+      window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: "Fichier JSON", accept: { "application/json": [".json"] } }]
+      }).then(function (handle) {
+        return handle.createWritable().then(function (writable) {
+          return writable.write(data).then(function () { return writable.close(); });
+        });
+      }).then(function () {
+        showToast("Fichier enregistré.");
+      }).catch(function (e) {
+        if (e && e.name === "AbortError") return; // l'utilisateur a annulé la boîte de dialogue
+        fallbackDownload(data, filename);
+      });
+    } else {
+      fallbackDownload(data, filename);
+    }
+  }
+
+  function manualSave() {
+    persist();
+    renderSavedIndicator();
+    var indicator = byId("savedIndicator");
+    indicator.classList.add("just-saved");
+    setTimeout(function () { indicator.classList.remove("just-saved"); }, 1200);
+    downloadSaveFile();
+  }
+
+  function render() {
+    var project = activeProject();
+    if (!project) return;
+
+    byId("activeProjectName").textContent = project.name;
+    renderSavedIndicator();
+
+    // Rail : liste des projets
+    var list = byId("projectList");
+    list.innerHTML = "";
+    state.projects.forEach(function (p) {
+      var li = document.createElement("li");
+      li.className = "project-item" + (p.id === state.activeId ? " is-active" : "");
+      var btn = document.createElement("button");
+      btn.className = "select";
+      btn.textContent = p.name;
+      btn.title = p.name;
+      btn.addEventListener("click", function () { if (p.id !== state.activeId) switchProject(p.id); });
+      li.appendChild(btn);
+      var actions = document.createElement("div");
+      actions.style.cssText = "display:flex;flex:none;";
+      actions.appendChild(iconButton("edit", "Renommer " + p.name, function () { renameProject(p.id); }, ""));
+      actions.appendChild(iconButton("trash", "Supprimer " + p.name, function () { deleteProject(p.id); }));
+      li.appendChild(actions);
+      list.appendChild(li);
+    });
+
+    // Onglets
+    byId("countPersonnages").textContent = project.characters.length;
+    byId("countLieux").textContent = project.places.length;
+    byId("countScenes").textContent = project.scenes.length;
+    var tabButtons = document.querySelectorAll(".tab");
+    tabButtons.forEach(function (b) {
+      var active = b.getAttribute("data-tab") === ui.tab;
+      b.classList.toggle("is-active", active);
+      b.setAttribute("aria-selected", active ? "true" : "false");
+    });
+
+    var panel = byId("tabPanel");
+    panel.innerHTML = "";
+    if (project.example) {
+      var exBanner = document.createElement("div");
+      exBanner.className = "hint";
+      exBanner.style.cssText = "margin-bottom:14px;font-size:13px;";
+      exBanner.textContent = "Ceci est un projet d'exemple, pour vous montrer comment l'atelier fonctionne — modifiez-le librement ou créez votre propre projet dans la colonne de gauche.";
+      panel.appendChild(exBanner);
+    }
+    if (ui.tab === "personnages") renderPersonnages(project, panel);
+    else if (ui.tab === "lieux") renderLieux(project, panel);
+    else if (ui.tab === "scenario") renderScenario(project, panel);
+    else if (ui.tab === "apercu") renderApercu(project, panel);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Événements globaux                                                */
+  /* ---------------------------------------------------------------- */
+  document.getElementById("tabs").addEventListener("click", function (e) {
+    var btn = e.target.closest(".tab");
+    if (!btn) return;
+    ui.tab = btn.getAttribute("data-tab");
+    editingCharacterId = null; editingPlaceId = null; editingSceneId = null; editingPlan = null;
+    render();
+  });
+  byId("newProjectBtn").addEventListener("click", newProject);
+  byId("saveBtn").addEventListener("click", manualSave);
+  byId("openBtn").addEventListener("click", openSavedFile);
+  byId("openFileInput").addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () { restoreProjectsFromRaw(String(reader.result)); };
+    reader.onerror = function () { showToast("Impossible de lire ce fichier."); };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+  document.addEventListener("keydown", function (e) {
+    var key = (e.key || "").toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && key === "s") {
+      e.preventDefault();
+      manualSave();
+    }
+    if ((e.ctrlKey || e.metaKey) && key === "o") {
+      e.preventDefault();
+      openSavedFile();
+    }
+  });
+
+  /* ---------------------------------------------------------------- */
+  /* Démarrage                                                          */
+  /* ---------------------------------------------------------------- */
+  function start(hotData) {
+    load();
+    var proj = activeProject();
+    if (proj && proj.scenes.length && ui.openScenes) ui.openScenes[proj.scenes[0].id] = true;
+    render();
+  }
+
+  if (window.claude && window.claude.hot) {
+    window.claude.hot.ready ? window.claude.hot.ready(start) : start();
+  } else {
+    start();
+  }
+})();
+</script>
+</body>
+</html>
