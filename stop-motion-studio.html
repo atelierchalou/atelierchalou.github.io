@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>STOP/MOTION — Studio d'animation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#16140f;
+    --surface:#201c15;
+    --surface-2:#2a2419;
+    --border:#3c3527;
+    --text:#f2ede2;
+    --muted:#928a78;
+    --accent:#e0532a;
+    --accent-dim:#8a3420;
+    --tally:#4caf6b;
+    --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  html,body{margin:0;padding:0;max-width:100vw;overflow-x:hidden;}
+  body{
+    background:radial-gradient(ellipse at top, rgba(224,83,42,0.06), transparent 55%), var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    padding-bottom:60px;
+    width:100%;
+  }
+  img,video,canvas,select,input,textarea{max-width:100%;}
+  ::selection{background:var(--accent);color:#16140f;}
+
+  header{
+    display:flex;align-items:center;gap:16px;
+    padding:22px 28px 18px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(0,0,0,0.25),transparent);
+  }
+  .tally{
+    width:11px;height:11px;border-radius:50%;
+    background:var(--muted);
+    box-shadow:0 0 0 3px rgba(255,255,255,0.03);
+    transition:background .2s, box-shadow .2s;
+    flex-shrink:0;
+  }
+  .tally.live{background:var(--tally);box-shadow:0 0 10px 2px rgba(76,175,107,0.6);}
+  h1{
+    font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;letter-spacing:4px;
+    margin:0;text-transform:uppercase;
+  }
+  h1 span{color:var(--accent);}
+  header p{margin:2px 0 0;color:var(--muted);font-size:12.5px;letter-spacing:.3px;}
+
+  main{
+    display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+    gap:22px;padding:24px 28px;max-width:1400px;margin:0 auto;
+    width:100%;
+  }
+  main > *{min-width:0;}
+  @media (min-width:921px){ main{grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);} }
+  @media (max-width:920px){ main{grid-template-columns:1fr;} }
+  @media (max-width:480px){
+    header{padding:16px 14px 14px;gap:10px;}
+    h1{font-size:19px;letter-spacing:2px;}
+    header p{font-size:11px;}
+    main{padding:14px;gap:16px;}
+    .panel-body{padding:12px;}
+    .stage-controls{padding:12px;gap:10px;}
+    .shutter{width:44px;height:44px;}
+  }
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:100%;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
+  .panel-head h2{font-family:'Oswald',sans-serif;font-size:12.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin:0;font-weight:600;}
+  .panel-head h2 b{color:var(--text);}
+  .panel-body{padding:16px;}
+
+  .stage-wrap{position:relative;}
+  .tip-banner{
+    display:none;
+    background:var(--surface-2);border-bottom:1px solid var(--border);
+    color:var(--muted);font-size:12.5px;line-height:1.5;
+    padding:10px 16px;
+    overflow-wrap:break-word;word-break:break-word;
+  }
+  .tip-banner.show{display:block;}
+  .tip-banner b{color:var(--accent);}
+  .stage{
+    position:relative;width:100%;max-width:100%;aspect-ratio:16/9;
+    background:#0a0906 repeating-linear-gradient(45deg,#0d0c08 0 2px, #0a0906 2px 4px);
+    border-bottom:1px solid var(--border);overflow:hidden;
+  }
+  .sprocket-rail{
+    position:absolute;top:0;bottom:0;width:14px;z-index:5;
+    background:repeating-linear-gradient(var(--bg) 0 10px, transparent 10px 22px);
+    background-color:#0a0906;
+  }
+  .sprocket-rail.left{left:0;border-right:1px solid var(--border);}
+  .sprocket-rail.right{right:0;border-left:1px solid var(--border);}
+
+  #video, #ghostImg, #currentFrameImg{
+    position:absolute;top:0;left:16px;right:16px;bottom:0;
+    width:calc(100% - 32px);height:100%;object-fit:cover;
+  }
+  #video{background:#000;}
+  #currentFrameImg{display:none;background:#000;}
+  #ghostImg{opacity:0;pointer-events:none;transition:opacity .15s;}
+  .frame-readout{
+    position:absolute;bottom:10px;left:26px;z-index:6;
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;
+    background:rgba(10,9,6,0.7);padding:3px 8px;border:1px solid var(--border);color:var(--accent);
+  }
+  .no-source{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:8px;color:var(--muted);font-size:13px;text-align:center;padding:20px;
+    overflow-wrap:break-word;word-break:break-word;
+  }
+
+  .source-toggle{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:2px;}
+  .source-toggle button{
+    background:transparent;border:none;color:var(--muted);
+    font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+    padding:7px 12px;cursor:pointer;border-radius:2px;
+  }
+  .source-toggle button.active{background:var(--accent);color:#16140f;font-weight:600;}
+
+  select.device-select{
+    background:var(--surface-2);color:var(--text);border:1px solid var(--border);
+    border-radius:var(--radius);padding:7px 10px;font-size:12px;font-family:'Inter';max-width:180px;
+  }
+
+  .shutter{
+    width:52px;height:52px;border-radius:50%;background:var(--accent);border:3px solid #16140f;
+    box-shadow:0 0 0 2px var(--accent);cursor:pointer;flex-shrink:0;transition:transform .08s;
+    display:block;
+  }
+  .stage-controls{display:flex;align-items:center;gap:14px;padding:14px 16px;flex-wrap:wrap;width:100%;}
+  .shutter-wrap{margin-left:auto;}
+  @media (max-width:480px){
+    .stage-controls{justify-content:center;}
+    .shutter-wrap{margin-left:0;flex-basis:100%;order:10;display:flex;justify-content:center;margin-top:4px;}
+    .shutter{width:44px;height:44px;}
+  }
+  .shutter:hover{transform:scale(1.06);}
+  .shutter:active{transform:scale(0.92);}
+  .shutter:disabled{opacity:.3;cursor:not-allowed;transform:none;}
+
+  .ghost-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);}
+
+  .filmstrip-panel .panel-body{padding:12px;}
+  .filmstrip{display:flex;gap:8px;overflow-x:auto;padding:10px 4px;background:#0a0906;border:1px solid var(--border);}
+  .filmstrip:empty::after{
+    content:'Aucune image — capturez ou importez pour commencer la pellicule';
+    color:var(--muted);font-size:12px;padding:20px;white-space:nowrap;
+  }
+  .thumb{position:relative;flex:0 0 auto;width:78px;height:58px;background:#000;border:1px solid var(--border);cursor:grab;background-size:cover;background-position:center;}
+  .thumb.dragging{opacity:.35;}
+  .thumb .num{position:absolute;bottom:2px;left:3px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--accent);background:rgba(0,0,0,0.55);padding:0 3px;}
+  .thumb .del{position:absolute;top:0;right:0;background:rgba(10,9,6,0.85);color:var(--text);border:none;width:16px;height:16px;font-size:10px;line-height:16px;cursor:pointer;}
+  .thumb .del:hover{background:var(--accent);color:#16140f;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:'Oswald',sans-serif;}
+  .field input[type=text], .field textarea, .field input[type=number]{
+    width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    padding:8px 10px;border-radius:var(--radius);font-size:13px;font-family:'Inter';
+  }
+  .field textarea{resize:vertical;min-height:60px;font-family:'Inter';}
+  .range-row{display:flex;align-items:center;gap:10px;}
+  .range-row input[type=range]{flex:1;accent-color:var(--accent);}
+  .range-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:42px;text-align:right;}
+  .filebtn{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:var(--radius);cursor:pointer;font-size:12.5px;}
+  .filebtn:hover{border-color:var(--accent);}
+  .filename{color:var(--muted);font-size:11.5px;margin-top:6px;word-break:break-all;}
+  .clear-audio{background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;margin-left:8px;text-decoration:underline;}
+
+  hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
+
+  .actions{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+  .btn{
+    font-family:'Oswald',sans-serif;letter-spacing:1.5px;text-transform:uppercase;font-size:12.5px;font-weight:600;
+    padding:12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface-2);color:var(--text);
+    cursor:pointer;text-align:center;
+  }
+  .btn:hover{border-color:var(--accent);}
+  .btn.primary{background:var(--accent);color:#16140f;border-color:var(--accent);}
+  .btn.primary:hover{background:#f06843;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .status-line{font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;min-height:14px;}
+
+  #previewOverlay{
+    position:fixed;inset:0;background:rgba(6,5,3,0.95);display:none;
+    align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:16px;
+  }
+  #previewOverlay.open{display:flex;}
+  #previewCanvas{max-width:90vw;max-height:75vh;background:#000;border:1px solid var(--border);}
+  .preview-bar{display:flex;gap:12px;align-items:center;}
+  .close-preview{
+    background:none;border:1px solid var(--border);color:var(--text);padding:9px 18px;border-radius:var(--radius);
+    cursor:pointer;font-family:'Oswald',sans-serif;letter-spacing:1.5px;text-transform:uppercase;font-size:12px;
+  }
+  .close-preview:hover{border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tally" id="tally"></div>
+  <div>
+    <h1>STOP<span>/</span>MOTION</h1>
+    <p>studio d'animation image par image — caméra, pellicule &amp; montage</p>
+  </div>
+</header>
+
+<main>
+  <div>
+    <div class="panel stage-wrap">
+      <div class="panel-head"><h2>Plateau de <b>tournage</b></h2></div>
+      <div class="tip-banner" id="tipBanner">
+        📷 Prenez vos photos <b>avant</b>, avec l'appareil photo de votre téléphone (une par pose), puis importez-les ici avec le bouton ci-dessous.
+      </div>
+      <div class="stage" id="stage">
+        <div class="sprocket-rail left"></div>
+        <video id="video" autoplay playsinline muted></video>
+        <img id="currentFrameImg" alt="dernière image importée">
+        <img id="ghostImg" alt="image fantôme">
+        <div class="no-source" id="noSource">Activez la caméra ou importez une image pour démarrer</div>
+        <div class="frame-readout" id="frameReadout">FRAME 000</div>
+        <div class="sprocket-rail right"></div>
+      </div>
+      <div class="stage-controls">
+        <div class="source-toggle">
+          <button id="btnCamMode" class="active">Caméra</button>
+          <button id="btnFileMode">Fichier</button>
+        </div>
+        <select id="deviceSelect" class="device-select"></select>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+        <label class="ghost-toggle">
+          <input type="checkbox" id="ghostToggle" checked> Image fantôme
+        </label>
+        <div class="shutter-wrap">
+          <button class="shutter" id="shutterBtn" title="Capturer une image"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel filmstrip-panel" style="margin-top:18px;">
+      <div class="panel-head"><h2>Pellicule (<b id="frameCount">0</b> images)</h2></div>
+      <div class="panel-body">
+        <div class="filmstrip" id="filmstrip"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Réglages du <b>montage</b></h2></div>
+    <div class="panel-body">
+
+      <div class="field">
+        <label>Image fantôme — opacité</label>
+        <div class="range-row">
+          <input type="range" id="ghostOpacity" min="0" max="80" value="40">
+          <span class="range-val" id="ghostOpacityVal">40%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cadence (images / seconde)</label>
+        <div class="range-row">
+          <input type="range" id="fpsRange" min="1" max="24" value="8">
+          <span class="range-val" id="fpsVal">8 ips</span>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="field">
+        <label>Générique de début — titre</label>
+        <input type="text" id="introTitle" placeholder="Le titre de votre film">
+      </div>
+      <div class="field">
+        <label>Générique de début — sous-titre</label>
+        <input type="text" id="introSubtitle" placeholder="Un film en pâte à modeler...">
+      </div>
+      <div class="field">
+        <label>Durée du générique de début (s)</label>
+        <input type="number" id="introDuration" min="0" max="15" value="3" step="0.5">
+      </div>
+
+      <hr class="sep">
+
+      <div class="field">
+        <label>Générique de fin</label>
+        <textarea id="outroText" placeholder="Réalisé par...&#10;Musique...&#10;Merci d'avoir regardé !"></textarea>
+      </div>
+      <div class="field">
+        <label>Durée du générique de fin (s)</label>
+        <input type="number" id="outroDuration" min="0" max="15" value="4" step="0.5">
+      </div>
+
+      <hr class="sep">
+
+      <div class="field">
+        <label>Bande son</label>
+        <label class="filebtn" for="audioInput">🎵 Choisir un fichier audio</label>
+        <input type="file" id="audioInput" accept="audio/*" style="display:none">
+        <div class="filename" id="audioFilename">Aucun son sélectionné<button class="clear-audio" id="clearAudio" style="display:none">retirer</button></div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="actions">
+        <button class="btn" id="previewBtn">▶ Aperçu du film</button>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Nom du fichier</label>
+          <input type="text" id="exportFilename" placeholder="mon-film">
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Format d'export</label>
+          <select id="exportFormat" class="device-select" style="width:100%;max-width:none;">
+            <option value="webm">Vidéo WebM (image + son, rapide)</option>
+            <option value="mp4">Vidéo MP4 (image + son, conversion locale, plus lent)</option>
+            <option value="gif">GIF animé (image seule, sans son)</option>
+          </select>
+        </div>
+        <div class="filename" id="formatNote" style="margin:-4px 0 10px;">Le WebM est le plus rapide et lit le son ; le MP4 est plus compatible mais se convertit localement (peut prendre 1 à 2 min) ; le GIF n'inclut pas le son.</div>
+        <button class="btn primary" id="exportBtn">⇩ Exporter</button>
+        <div class="status-line" id="statusLine"></div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<div id="previewOverlay">
+  <canvas id="previewCanvas" width="1280" height="720"></canvas>
+  <div class="preview-bar">
+    <button class="close-preview" id="closePreview">Fermer</button>
+  </div>
+</div>
+
+<audio id="audioEl" style="display:none"></audio>
+
+<script>
+(() => {
+  const state = { frames: [], stream: null, mode: 'camera', audioURL: null, audioFile: null };
+
+  const video = document.getElementById('video');
+  const ghostImg = document.getElementById('ghostImg');
+  const currentFrameImg = document.getElementById('currentFrameImg');
+  const noSource = document.getElementById('noSource');
+  const shutterBtn = document.getElementById('shutterBtn');
+  const filmstrip = document.getElementById('filmstrip');
+  const frameCountEl = document.getElementById('frameCount');
+  const frameReadout = document.getElementById('frameReadout');
+  const tally = document.getElementById('tally');
+  const deviceSelect = document.getElementById('deviceSelect');
+  const fileInput = document.getElementById('fileInput');
+  const btnCamMode = document.getElementById('btnCamMode');
+  const btnFileMode = document.getElementById('btnFileMode');
+  const ghostToggle = document.getElementById('ghostToggle');
+  const ghostOpacity = document.getElementById('ghostOpacity');
+  const ghostOpacityVal = document.getElementById('ghostOpacityVal');
+  const fpsRange = document.getElementById('fpsRange');
+  const fpsVal = document.getElementById('fpsVal');
+  const audioInput = document.getElementById('audioInput');
+  const audioFilename = document.getElementById('audioFilename');
+  const clearAudio = document.getElementById('clearAudio');
+  const audioEl = document.getElementById('audioEl');
+  const previewBtn = document.getElementById('previewBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const statusLine = document.getElementById('statusLine');
+  const previewOverlay = document.getElementById('previewOverlay');
+  const previewCanvas = document.getElementById('previewCanvas');
+  const closePreview = document.getElementById('closePreview');
+  const tipBanner = document.getElementById('tipBanner');
+
+  function updateGhostOpacity(){
+    ghostOpacityVal.textContent = ghostOpacity.value + '%';
+    refreshStagePreview();
+  }
+  ghostOpacity.addEventListener('input', updateGhostOpacity);
+  ghostToggle.addEventListener('change', refreshStagePreview);
+  fpsRange.addEventListener('input', () => { fpsVal.textContent = fpsRange.value + ' ips'; });
+
+  // Suggère automatiquement le nom de fichier à partir du titre du générique,
+  // tant que l'utilisateur n'a pas encore saisi son propre nom.
+  const introTitleInput = document.getElementById('introTitle');
+  const exportFilenameEl = document.getElementById('exportFilename');
+  introTitleInput.addEventListener('input', () => {
+    if(exportFilenameEl.dataset.userEdited === 'true') return;
+    const slug = introTitleInput.value.trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    exportFilenameEl.value = slug;
+  });
+  exportFilenameEl.addEventListener('input', () => { exportFilenameEl.dataset.userEdited = 'true'; });
+
+  // Met à jour ce qui est affiché sur le plateau : image courante + image fantôme,
+  // que l'on soit en mode Caméra (fantôme = dernière capture, par-dessus le flux live)
+  // ou en mode Fichier (image courante = dernière image importée, fantôme = l'avant-dernière).
+  function refreshStagePreview(){
+    if(state.mode === 'camera'){
+      currentFrameImg.style.display = 'none';
+      if(ghostToggle.checked && state.frames.length){
+        ghostImg.src = state.frames[state.frames.length-1].dataURL;
+        ghostImg.style.opacity = (ghostOpacity.value/100).toString();
+      } else {
+        ghostImg.style.opacity = 0;
+      }
+      return;
+    }
+    // mode fichier
+    if(state.frames.length){
+      noSource.style.display = 'none';
+      currentFrameImg.style.display = 'block';
+      currentFrameImg.src = state.frames[state.frames.length-1].dataURL;
+      if(ghostToggle.checked && state.frames.length >= 2){
+        ghostImg.src = state.frames[state.frames.length-2].dataURL;
+        ghostImg.style.opacity = (ghostOpacity.value/100).toString();
+      } else {
+        ghostImg.style.opacity = 0;
+      }
+    } else {
+      currentFrameImg.style.display = 'none';
+      ghostImg.style.opacity = 0;
+      noSource.style.display = 'flex';
+      noSource.textContent = 'Appuyez sur le bouton rond pour importer vos photos';
+    }
+  }
+
+  async function listDevices(){
+    try{
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter(d => d.kind === 'videoinput');
+      deviceSelect.innerHTML = '';
+      cams.forEach((c,i) => {
+        const opt = document.createElement('option');
+        opt.value = c.deviceId;
+        opt.textContent = c.label || ('Caméra ' + (i+1));
+        deviceSelect.appendChild(opt);
+      });
+    }catch(e){}
+  }
+
+  async function startCamera(deviceId){
+    stopCamera();
+    try{
+      const constraints = { video: deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'environment'}, audio:false };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      state.stream = stream;
+      video.srcObject = stream;
+      noSource.style.display = 'none';
+      video.style.display = 'block';
+      tally.classList.add('live');
+      await listDevices();
+      refreshStagePreview();
+    }catch(e){
+      noSource.style.display = 'flex';
+      noSource.textContent = "Impossible d'accéder à la caméra : " + e.message;
+      tally.classList.remove('live');
+    }
+  }
+  function stopCamera(){
+    if(state.stream){ state.stream.getTracks().forEach(t => t.stop()); state.stream = null; }
+    tally.classList.remove('live');
+  }
+
+  btnCamMode.addEventListener('click', () => {
+    state.mode = 'camera';
+    btnCamMode.classList.add('active'); btnFileMode.classList.remove('active');
+    deviceSelect.style.display = '';
+    video.style.display = 'block';
+    currentFrameImg.style.display = 'none';
+    tipBanner.classList.remove('show');
+    startCamera(deviceSelect.value);
+    shutterBtn.disabled = false;
+  });
+  btnFileMode.addEventListener('click', () => {
+    state.mode = 'file';
+    btnFileMode.classList.add('active'); btnCamMode.classList.remove('active');
+    deviceSelect.style.display = 'none';
+    stopCamera();
+    video.style.display = 'none';
+    tipBanner.classList.add('show');
+    refreshStagePreview();
+  });
+  deviceSelect.addEventListener('change', () => startCamera(deviceSelect.value));
+
+  shutterBtn.addEventListener('click', () => {
+    if(state.mode === 'camera') captureFromVideo();
+    else fileInput.click();
+  });
+
+  function captureFromVideo(){
+    if(!video.srcObject) return;
+    const c = document.createElement('canvas');
+    c.width = video.videoWidth || 1280;
+    c.height = video.videoHeight || 720;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(video, 0, 0, c.width, c.height);
+    addFrame(c.toDataURL('image/jpeg', 0.92));
+  }
+
+  fileInput.addEventListener('change', () => {
+    const files = Array.from(fileInput.files || []);
+    files.forEach(f => {
+      const reader = new FileReader();
+      reader.onload = e => addFrame(e.target.result);
+      reader.readAsDataURL(f);
+    });
+    fileInput.value = '';
+  });
+
+  function addFrame(dataURL){
+    const img = new Image();
+    img.onload = () => {
+      state.frames.push({img, dataURL});
+      renderFilmstrip();
+      refreshStagePreview();
+    };
+    img.src = dataURL;
+  }
+
+  let dragSrcIndex = null;
+  function renderFilmstrip(){
+    filmstrip.innerHTML = '';
+    state.frames.forEach((f, i) => {
+      const div = document.createElement('div');
+      div.className = 'thumb';
+      div.style.backgroundImage = `url(${f.dataURL})`;
+      div.draggable = true;
+      div.dataset.index = i;
+
+      const num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = String(i+1).padStart(3,'0');
+      div.appendChild(num);
+
+      const del = document.createElement('button');
+      del.className = 'del';
+      del.textContent = '×';
+      del.title = 'Supprimer cette image';
+      del.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        state.frames.splice(i,1);
+        renderFilmstrip();
+        refreshStagePreview();
+      });
+      div.appendChild(del);
+
+      div.addEventListener('dragstart', () => { dragSrcIndex = i; div.classList.add('dragging'); });
+      div.addEventListener('dragend', () => div.classList.remove('dragging'));
+      div.addEventListener('dragover', ev => ev.preventDefault());
+      div.addEventListener('drop', ev => {
+        ev.preventDefault();
+        const targetIndex = Number(div.dataset.index);
+        if(dragSrcIndex === null || dragSrcIndex === targetIndex) return;
+        const moved = state.frames.splice(dragSrcIndex,1)[0];
+        state.frames.splice(targetIndex,0,moved);
+        renderFilmstrip();
+        refreshStagePreview();
+      });
+
+      filmstrip.appendChild(div);
+    });
+    frameCountEl.textContent = state.frames.length;
+    frameReadout.textContent = 'FRAME ' + String(state.frames.length).padStart(3,'0');
+  }
+
+  audioInput.addEventListener('change', () => {
+    const f = audioInput.files[0];
+    if(!f) return;
+    if(state.audioURL) URL.revokeObjectURL(state.audioURL);
+    state.audioFile = f;
+    state.audioURL = URL.createObjectURL(f);
+    audioEl.src = state.audioURL;
+    audioFilename.textContent = f.name + ' ';
+    audioFilename.appendChild(clearAudio);
+    clearAudio.style.display = 'inline';
+  });
+  clearAudio.addEventListener('click', () => {
+    state.audioFile = null;
+    if(state.audioURL) URL.revokeObjectURL(state.audioURL);
+    state.audioURL = null;
+    audioEl.removeAttribute('src');
+    audioInput.value = '';
+    audioFilename.textContent = 'Aucun son sélectionné';
+    audioFilename.appendChild(clearAudio);
+    clearAudio.style.display = 'none';
+  });
+
+  function buildSequence(){
+    const fps = Number(fpsRange.value) || 8;
+    const introDur = Number(document.getElementById('introDuration').value) || 0;
+    const outroDur = Number(document.getElementById('outroDuration').value) || 0;
+    const segments = [];
+    if(introDur > 0){
+      segments.push({
+        type:'title', duration: introDur,
+        title: document.getElementById('introTitle').value || '',
+        subtitle: document.getElementById('introSubtitle').value || ''
+      });
+    }
+    const frameDur = 1/fps;
+    state.frames.forEach(f => segments.push({type:'frame', duration: frameDur, img: f.img}));
+    if(outroDur > 0){
+      segments.push({ type:'credits', duration: outroDur, text: document.getElementById('outroText').value || '' });
+    }
+    return segments;
+  }
+
+  function drawTitleCard(ctx, W, H, title, subtitle){
+    ctx.fillStyle = '#0a0906'; ctx.fillRect(0,0,W,H);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#f2ede2';
+    ctx.font = '700 ' + Math.round(H*0.09) + 'px Oswald, sans-serif';
+    ctx.fillText(title, W/2, H/2 - 10);
+    ctx.fillStyle = '#e0532a';
+    ctx.font = '400 ' + Math.round(H*0.04) + 'px Inter, sans-serif';
+    ctx.fillText(subtitle, W/2, H/2 + 40);
+  }
+  function drawCreditsCard(ctx, W, H, text){
+    ctx.fillStyle = '#0a0906'; ctx.fillRect(0,0,W,H);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#f2ede2';
+    const lines = text.split('\n').filter(l => l.length);
+    const lineHeight = Math.round(H*0.06);
+    ctx.font = '500 ' + Math.round(H*0.045) + 'px Inter, sans-serif';
+    const startY = H/2 - (lines.length-1)*lineHeight/2;
+    lines.forEach((line,i) => ctx.fillText(line, W/2, startY + i*lineHeight));
+    if(!lines.length){
+      ctx.fillStyle = '#928a78';
+      ctx.font = '400 ' + Math.round(H*0.035) + 'px Inter, sans-serif';
+      ctx.fillText('FIN', W/2, H/2);
+    }
+  }
+  function drawFrameCover(ctx, W, H, img){
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+    const ir = img.width/img.height, cr = W/H;
+    let dw,dh,dx,dy;
+    if(ir > cr){ dh = H; dw = H*ir; dx = (W-dw)/2; dy = 0; }
+    else{ dw = W; dh = W/ir; dx = 0; dy = (H-dh)/2; }
+    ctx.drawImage(img, dx, dy, dw, dh);
+  }
+  function drawSegment(ctx, W, H, seg){
+    if(seg.type === 'title') drawTitleCard(ctx, W, H, seg.title, seg.subtitle);
+    else if(seg.type === 'credits') drawCreditsCard(ctx, W, H, seg.text);
+    else drawFrameCover(ctx, W, H, seg.img);
+  }
+
+  function runSequence(ctx, W, H, segments, {withAudio, onEnd}){
+    if(!segments.length){ onEnd && onEnd(); return; }
+    let segIndex = 0;
+    let segStart = performance.now();
+    if(withAudio && state.audioURL){
+      audioEl.currentTime = 0;
+      audioEl.play().catch(()=>{});
+    }
+    function step(now){
+      const elapsed = (now - segStart) / 1000;
+      let seg = segments[segIndex];
+      if(elapsed >= seg.duration){
+        segIndex++; segStart = now;
+        if(segIndex >= segments.length){
+          if(withAudio) audioEl.pause();
+          onEnd && onEnd();
+          return;
+        }
+        seg = segments[segIndex];
+      }
+      drawSegment(ctx, W, H, seg);
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  previewBtn.addEventListener('click', () => {
+    const segments = buildSequence();
+    if(!segments.length){ statusLine.textContent = "Ajoutez au moins une image avant l'aperçu."; return; }
+    previewOverlay.classList.add('open');
+    const ctx = previewCanvas.getContext('2d');
+    runSequence(ctx, previewCanvas.width, previewCanvas.height, segments, { withAudio:true, onEnd: () => {} });
+  });
+  closePreview.addEventListener('click', () => {
+    previewOverlay.classList.remove('open');
+    audioEl.pause();
+  });
+
+  // ---------- Export : WebM (natif), MP4 (conversion via ffmpeg.wasm), GIF (via gif.js) ----------
+  const exportFormat = document.getElementById('exportFormat');
+  const exportFilename = document.getElementById('exportFilename');
+
+  function getExportBaseName(){
+    const raw = exportFilename.value.trim();
+    const cleaned = raw.replace(/[\\/:*?"<>|]/g, '').trim();
+    return cleaned || 'stop-motion';
+  }
+
+  function loadScript(src){
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve; s.onerror = () => reject(new Error('Échec du chargement de ' + src));
+      document.head.appendChild(s);
+    });
+  }
+
+  // Enregistre la séquence sur un canvas et renvoie un Blob WebM (avec son si présent).
+  function recordWebM(segments, {width, height, includeAudio}){
+    return new Promise((resolve, reject) => {
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = width; exportCanvas.height = height;
+      const ctx = exportCanvas.getContext('2d');
+
+      const videoStream = exportCanvas.captureStream(30);
+      let mixedStream = videoStream;
+      let audioCtx, srcNode, destNode;
+      if(includeAudio && state.audioURL){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        srcNode = audioCtx.createMediaElementSource(audioEl);
+        destNode = audioCtx.createMediaStreamDestination();
+        srcNode.connect(destNode);
+        srcNode.connect(audioCtx.destination);
+        mixedStream = new MediaStream([...videoStream.getVideoTracks(), ...destNode.stream.getAudioTracks()]);
+      }
+
+      let mimeType = 'video/webm;codecs=vp9,opus';
+      if(!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm;codecs=vp8,opus';
+      if(!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+
+      const recorder = new MediaRecorder(mixedStream, {mimeType});
+      const chunks = [];
+      recorder.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
+      recorder.onstop = () => {
+        if(audioCtx) audioCtx.close();
+        resolve(new Blob(chunks, {type:'video/webm'}));
+      };
+      recorder.onerror = reject;
+      recorder.start(200);
+
+      runSequence(ctx, exportCanvas.width, exportCanvas.height, segments, {
+        withAudio: includeAudio && !!state.audioURL,
+        onEnd: () => setTimeout(() => recorder.stop(), 150)
+      });
+    });
+  }
+
+  function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  let ffmpegInstance = null;
+  async function getFFmpeg(){
+    if(ffmpegInstance) return ffmpegInstance;
+    statusLine.textContent = 'Téléchargement du convertisseur MP4 (une seule fois)...';
+    if(!window.FFmpeg) await loadScript('https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js');
+    const { createFFmpeg } = window.FFmpeg;
+    const ffmpeg = createFFmpeg({
+      log:false,
+      corePath:'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+    });
+    await ffmpeg.load();
+    ffmpegInstance = ffmpeg;
+    return ffmpeg;
+  }
+
+  async function exportAsMp4(segments){
+    statusLine.textContent = 'Enregistrement de la séquence...';
+    const webmBlob = await recordWebM(segments, {width:1280, height:720, includeAudio:true});
+    const ffmpeg = await getFFmpeg();
+    statusLine.textContent = 'Conversion en MP4 en cours (peut prendre 1-2 min)...';
+    const { fetchFile } = window.FFmpeg;
+    ffmpeg.FS('writeFile', 'input.webm', await fetchFile(webmBlob));
+    await ffmpeg.run('-i','input.webm','-c:v','libx264','-preset','veryfast','-crf','23','-c:a','aac','-movflags','faststart','output.mp4');
+    const data = ffmpeg.FS('readFile','output.mp4');
+    ffmpeg.FS('unlink','input.webm'); ffmpeg.FS('unlink','output.mp4');
+    downloadBlob(new Blob([data.buffer], {type:'video/mp4'}), getExportBaseName() + '.mp4');
+  }
+
+  async function exportAsGif(segments){
+    if(!window.GIF) {
+      statusLine.textContent = 'Téléchargement du générateur GIF...';
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js');
+    }
+    const W = 640, H = 360;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const gif = new GIF({
+      workers:2, quality:10, width:W, height:H,
+      workerScript:'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+    });
+
+    statusLine.textContent = 'Composition des images du GIF...';
+    segments.forEach(seg => {
+      drawSegment(ctx, W, H, seg);
+      gif.addFrame(ctx, {copy:true, delay: Math.round(seg.duration*1000)});
+    });
+
+    await new Promise((resolve, reject) => {
+      gif.on('finished', blob => { downloadBlob(blob, getExportBaseName() + '.gif'); resolve(); });
+      gif.on('abort', () => reject(new Error('Génération du GIF annulée')));
+      statusLine.textContent = 'Encodage du GIF en cours...';
+      gif.render();
+    });
+  }
+
+  exportBtn.addEventListener('click', async () => {
+    const segments = buildSequence();
+    if(!segments.length){ statusLine.textContent = "Ajoutez au moins une image avant l'export."; return; }
+    const format = exportFormat.value;
+    exportBtn.disabled = true;
+    previewBtn.disabled = true;
+    try{
+      if(format === 'webm'){
+        statusLine.textContent = 'Enregistrement en cours...';
+        const blob = await recordWebM(segments, {width:1280, height:720, includeAudio:true});
+        downloadBlob(blob, getExportBaseName() + '.webm');
+        statusLine.textContent = 'Export terminé — fichier .webm téléchargé.';
+      } else if(format === 'mp4'){
+        await exportAsMp4(segments);
+        statusLine.textContent = 'Export terminé — fichier .mp4 téléchargé.';
+      } else if(format === 'gif'){
+        await exportAsGif(segments);
+        statusLine.textContent = 'Export terminé — fichier .gif téléchargé (sans son).';
+      }
+    }catch(err){
+      statusLine.textContent = "Erreur pendant l'export : " + err.message;
+    }finally{
+      exportBtn.disabled = false;
+      previewBtn.disabled = false;
+    }
+  });
+
+
+  // Mode "Fichier" par défaut : la caméra en direct ne fonctionne pas dans tous les
+  // contextes (ex. fichier ouvert localement sur mobile), donc on démarre en mode
+  // import — l'utilisateur prend ses photos avec l'appareil photo du téléphone,
+  // puis les importe ici. Le mode Caméra reste disponible en un clic.
+  state.mode = 'file';
+  btnFileMode.classList.add('active'); btnCamMode.classList.remove('active');
+  deviceSelect.style.display = 'none';
+  video.style.display = 'none';
+  tipBanner.classList.add('show');
+
+  renderFilmstrip();
+  updateGhostOpacity();
+})();
+</script>
+</body>
+</html>
