@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Tableau de classe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#1e3a34;
+    --board-2:#234840;
+    --chalk:#f4efe1;
+    --chalk-dim:#cfd8ce;
+    --frame:#7a5233;
+    --accent:#f2b544;
+    --danger:#e8735a;
+    --radius: 14px;
+    --bg: var(--board);
+    --panel: var(--board-2);
+    --text: var(--chalk);
+    --text-dim: var(--chalk-dim);
+    --input-bg: rgba(244,239,225,0.08);
+    --line: rgba(244,239,225,0.16);
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#fbf8f1; --panel:#ffffff; --text:#22301f; --text-dim:#5b6a55;
+      --line: rgba(34,48,31,0.12); --input-bg: rgba(34,48,31,0.05); --frame:#c9a15f;
+    }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg); color: var(--text);
+    font-family:'Nunito Sans', system-ui, -apple-system, sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; overflow-x:hidden;
+  }
+  .title-font{ font-family:'Kalam', cursive; }
+
+  #landing{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 20px; text-align:center; gap:26px; }
+  .board-frame{ width:100%; max-width:420px; background: var(--panel); border:6px solid var(--frame); border-radius:18px; padding:28px 22px; box-shadow: 0 10px 0 -4px rgba(0,0,0,0.15), 0 18px 30px rgba(0,0,0,0.18); }
+  .board-frame h1{ font-family:'Kalam',cursive; font-weight:700; font-size:2rem; margin:0 0 6px; }
+  .board-frame p.sub{ color:var(--text-dim); margin:0 0 22px; font-size:0.95rem; line-height:1.4; }
+  .role-row{ display:flex; gap:12px; }
+  .role-btn{ flex:1; padding:18px 10px; border-radius:12px; border:2px solid var(--line); background: var(--input-bg); color:var(--text); font-size:1rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .role-btn:active{ transform: scale(0.97); }
+  .role-btn .emoji{ font-size:1.8rem; }
+  .role-btn:hover{ border-color: var(--accent); }
+
+  .panel{ width:100%; max-width:420px; background: var(--panel); border-radius:16px; padding:24px; border:1px solid var(--line); display:flex; flex-direction:column; gap:14px; }
+  .panel h2{ margin:0; font-family:'Kalam',cursive; font-size:1.4rem;}
+  label{ font-size:0.85rem; color:var(--text-dim); font-weight:600; }
+  input[type=text]{ width:100%; padding:14px; border-radius:10px; border:2px solid var(--line); background: var(--input-bg); color:var(--text); font-size:1.05rem; letter-spacing:1px; font-weight:700; text-align:center; }
+  input[type=text]:focus{ outline:2px solid var(--accent); border-color:var(--accent); }
+  .btn{ padding:14px 18px; border-radius:10px; border:none; font-weight:800; font-size:1rem; cursor:pointer; color:#1e2a1a; background: var(--accent); }
+  .btn:active{ transform: scale(0.98); }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .link-btn{ background:none; border:none; color:var(--text-dim); text-decoration:underline; cursor:pointer; font-size:0.85rem; }
+  .hint{ font-size:0.78rem; color:var(--text-dim); line-height:1.4; text-align:left; }
+
+  #app{ display:none; flex-direction:column; min-height:100vh; }
+  header.topbar{ position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background: var(--panel); border-bottom:1px solid var(--line); }
+  header.topbar .who{ display:flex; flex-direction:column; }
+  header.topbar .who .role-tag{ font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); font-weight:700; }
+  header.topbar .who .code-tag{ font-family:'Kalam',cursive; font-size:1.15rem; color:var(--accent); max-width:52vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  header.topbar .status{ display:flex; align-items:center; gap:6px; font-size:0.78rem; color:var(--text-dim); }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#7fbf6a; }
+  .dot.off{ background:#999; }
+  .exit-btn{ background:none; border:none; color:var(--text-dim); font-size:1.3rem; cursor:pointer; padding:4px 8px; }
+
+  main#feed{ flex:1; overflow-y:auto; padding:16px 14px 20px; display:flex; flex-direction:column; gap:12px; }
+  .empty-state{ margin:auto; text-align:center; color:var(--text-dim); padding:30px; }
+  .empty-state .big{ font-size:2.4rem; display:block; margin-bottom:10px;}
+
+  .card{ background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding:14px; max-width: 92%; animation: pop .25s ease; }
+  @keyframes pop{ from{ opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+  .card .kind{ font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); font-weight:700; margin-bottom:6px; }
+  .card .txt{ font-size:1.05rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+  .card img{ width:100%; border-radius:10px; display:block; margin-top:4px; }
+  .card .linkbox{ display:block; padding:12px; border-radius:10px; background:var(--input-bg); border:1px solid var(--line); color:var(--text); text-decoration:none; word-break:break-all; font-size:0.95rem; }
+  .card .linkbox:hover{ border-color:var(--accent); }
+  .card iframe{ width:100%; aspect-ratio:16/9; border:0; border-radius:10px; margin-top:4px; }
+  .card .time{ font-size:0.7rem; color:var(--text-dim); margin-top:8px; text-align:right; }
+
+  #composer{ position:sticky; bottom:0; background: var(--panel); border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:8px; }
+  .tabs{ display:flex; gap:6px; }
+  .tab{ flex:1; padding:9px 4px; border-radius:8px; border:none; background:var(--input-bg); color:var(--text-dim); font-weight:700; font-size:0.82rem; cursor:pointer; }
+  .tab.active{ background:var(--accent); color:#1e2a1a; }
+  .compose-row{ display:flex; gap:8px; align-items:flex-end; }
+  textarea{ flex:1; resize:none; min-height:44px; max-height:120px; padding:12px 14px; border-radius:12px; border:2px solid var(--line); background:var(--input-bg); color:var(--text); font-size:1rem; font-family:inherit; }
+  textarea:focus{ outline:none; border-color:var(--accent); }
+  .send-btn{ width:46px; height:46px; border-radius:50%; border:none; background:var(--accent); color:#1e2a1a; font-size:1.2rem; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .send-btn:disabled{ opacity:0.4; }
+  .hidden{ display:none !important; }
+  #imgInput{ display:none; }
+  .pick-img-btn{ width:46px; height:46px; border-radius:50%; border:2px dashed var(--line); background:none; color:var(--text-dim); font-size:1.2rem; cursor:pointer; flex-shrink:0; }
+  .toast{ position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background: var(--accent); color:#1e2a1a; padding:10px 18px; border-radius:20px; font-weight:700; font-size:0.85rem; box-shadow:0 6px 16px rgba(0,0,0,0.25); z-index:50; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+  .readonly-banner{ text-align:center; font-size:0.8rem; color:var(--text-dim); padding:10px; }
+
+  input[type=password]{ width:100%; padding:14px; border-radius:10px; border:2px solid var(--line); background: var(--input-bg); color:var(--text); font-size:1.05rem; text-align:center; }
+  input[type=password]:focus{ outline:2px solid var(--accent); border-color:var(--accent); }
+  .hint{ font-size:0.78rem; color:var(--text-dim); line-height:1.4; text-align:left; }
+  .btn.secondary{ background:transparent; border:2px solid var(--line); color:var(--text); }
+
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:40; display:flex; align-items:flex-end; justify-content:center; }
+  @media(min-width:480px){ .overlay{ align-items:center; } }
+  .overlay-panel{ background:var(--panel); width:100%; max-width:460px; max-height:88vh; overflow-y:auto; border-radius:18px 18px 0 0; padding:20px; display:flex; flex-direction:column; gap:14px; }
+  @media(min-width:480px){ .overlay-panel{ border-radius:18px; } }
+  .overlay-header{ display:flex; align-items:center; justify-content:space-between; }
+  .overlay-header h2{ margin:0; font-family:'Kalam',cursive; font-size:1.3rem; }
+  .close-x{ background:none; border:none; font-size:1.3rem; color:var(--text-dim); cursor:pointer; }
+  .draft-row{ display:flex; align-items:center; gap:8px; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--input-bg); }
+  .draft-row .info{ flex:1; min-width:0; }
+  .draft-row .info .name{ font-weight:700; }
+  .draft-row .info .meta{ font-size:0.75rem; color:var(--text-dim); }
+  .icon-btn{ background:none; border:1px solid var(--line); border-radius:8px; padding:6px 9px; color:var(--text); cursor:pointer; font-size:0.9rem; flex-shrink:0; }
+  .icon-btn.danger{ color:var(--danger); border-color:var(--danger); }
+  .item-row{ display:flex; align-items:center; gap:8px; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--input-bg); }
+  .item-row .info{ flex:1; min-width:0; font-size:0.88rem; }
+  .item-row .info .k{ font-size:0.68rem; }
+  .item-row .info .p{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .queue-wrap{ display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto; padding:2px; }
+  .queue-actions{ display:flex; gap:8px; }
+  .queue-actions .btn{ flex:1; padding:10px; font-size:0.85rem; }
+  #liveQueueWrap{ display:flex; flex-direction:column; gap:8px; }
+  #diaporamaView{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; overflow-y:auto; text-align:center; }
+  #diaporamaView .card{ width:100%; max-width:520px; }
+  #diaporamaView .txt{ font-size:1.35rem; }
+  .diapo-controlbar{ display:flex; align-items:center; justify-content:center; gap:10px; }
+  .diapo-controlbar .icon-btn{ font-size:1.1rem; padding:10px 16px; }
+  .diapo-controlbar .icon-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+</style>
+</head>
+<body>
+
+<div id="landing">
+  <div class="board-frame" id="roleChoice">
+    <h1 class="title-font">📋 Tableau de classe</h1>
+    <p class="sub">Diffusion en direct du prof vers les téléphones des élèves — sans compte, via le relais public <strong>ntfy.sh</strong>.</p>
+    <div class="role-row">
+      <button class="role-btn" id="chooseProf"><span class="emoji">🧑‍🏫</span>Je suis prof</button>
+      <button class="role-btn" id="chooseEleve"><span class="emoji">🎒</span>Je suis élève</button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="profPanel">
+    <h2 class="title-font">Créer le tableau</h2>
+    <label>Code de la classe (laisser vide pour générer un code sûr)</label>
+    <input type="text" id="profCodeInput" maxlength="40" placeholder="ex : classe-4B-rentree">
+    <label>Mot de passe prof</label>
+    <input type="password" id="profPassword" maxlength="40" placeholder="mot de passe" autocomplete="off">
+    <button class="btn" id="profGo">Ouvrir le tableau</button>
+    <p class="hint">⚠️ N'importe qui connaissant ce code exact peut le rejoindre : choisis un code long et peu devinable, ne le partage qu'avec ta classe.</p>
+    <button class="link-btn" id="openPrepBtn">📁 Préparer une diffusion à l'avance</button>
+    <button class="link-btn" id="backFromProf">← retour</button>
+  </div>
+
+  <div class="panel hidden" id="elevePanel">
+    <h2 class="title-font">Rejoindre une classe</h2>
+    <label>Code donné par le prof</label>
+    <input type="text" id="eleveCodeInput" maxlength="40" placeholder="colle le code exact" autocomplete="off">
+    <button class="btn" id="eleveGo">Rejoindre</button>
+    <button class="link-btn" id="backFromEleve">← retour</button>
+  </div>
+</div>
+
+<div id="app">
+  <header class="topbar">
+    <div class="who">
+      <span class="role-tag" id="roleTag">—</span>
+      <span class="code-tag" id="codeTag">—</span>
+    </div>
+    <div class="status">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">connexion…</span>
+      <button class="exit-btn" id="exitBtn" title="Quitter">✕</button>
+    </div>
+  </header>
+
+  <main id="feed">
+    <div class="empty-state" id="emptyState">
+      <span class="big">🕊️</span>
+      En attente du premier message du prof…
+    </div>
+  </main>
+
+  <div id="diaporamaView" class="hidden"></div>
+
+  <div id="composer" class="hidden">
+    <button class="link-btn" id="openPrepFromLive">📁 Charger une préparation</button>
+    <div id="liveQueueWrap" class="hidden">
+      <div class="queue-actions">
+        <button class="btn secondary" id="clearQueueBtn">🗑 Vider</button>
+        <button class="btn" id="sendAllQueueBtn">▶ Tout diffuser</button>
+      </div>
+      <div class="queue-wrap" id="liveQueueList"></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="text">📝 Texte</button>
+      <button class="tab" data-tab="image">🖼️ Image</button>
+      <button class="tab" data-tab="link">🔗 Lien / vidéo</button>
+      <button class="tab" data-tab="diapo">🖥️ Diaporama</button>
+    </div>
+
+    <div class="compose-row" id="row-text">
+      <textarea id="textInput" placeholder="Écrire un message pour la classe…" rows="1"></textarea>
+      <button class="send-btn" id="sendText">➤</button>
+    </div>
+
+    <div class="compose-row hidden" id="row-image">
+      <input type="file" id="imgInput" accept="image/*">
+      <button class="pick-img-btn" id="pickImgBtn">📎</button>
+      <textarea id="imgCaption" placeholder="Légende (facultatif)…" rows="1"></textarea>
+      <button class="send-btn" id="sendImage" disabled>➤</button>
+    </div>
+
+    <div class="compose-row hidden" id="row-link">
+      <textarea id="linkInput" placeholder="Coller un lien (vidéo YouTube, site, PDF…)" rows="1"></textarea>
+      <button class="send-btn" id="sendLink">➤</button>
+    </div>
+
+    <div class="hidden" id="row-diapo" style="display:flex; flex-direction:column; align-items:stretch; gap:10px;">
+      <div id="diapoEmpty">
+        <p class="hint">Les élèves ne verront qu'une diapositive à la fois — texte (plusieurs pages) ou images, à ton rythme.</p>
+        <button class="btn secondary" id="diapoLoadBtn" style="width:100%;">📁 Charger une préparation comme diaporama</button>
+      </div>
+      <div id="diapoReady" class="hidden" style="display:flex; flex-direction:column; gap:8px;">
+        <p class="hint" id="diapoReadyInfo"></p>
+        <button class="btn" id="diapoStartBtn">▶ Démarrer le diaporama</button>
+        <button class="link-btn" id="diapoChangeBtn">Changer de préparation</button>
+      </div>
+      <div id="diapoControls" class="hidden">
+        <div class="diapo-controlbar">
+          <button class="icon-btn" id="diapoPrevBtn">◀ Précédent</button>
+          <span id="diapoIndexLabel" style="font-weight:800; min-width:60px; text-align:center;">1 / 1</span>
+          <button class="icon-btn" id="diapoNextBtn">Suivant ▶</button>
+        </div>
+        <button class="btn secondary" id="diapoEndBtn" style="margin-top:8px;">⏹ Terminer le diaporama</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="readonly-banner hidden" id="readonlyBanner">Les élèves suivent le tableau en direct — seul le prof publie.</div>
+</div>
+
+<div class="overlay hidden" id="prepOverlay">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h2 class="title-font" id="prepTitle">Mes préparations</h2>
+      <button class="close-x" id="prepClose">✕</button>
+    </div>
+
+    <div id="prepListView">
+      <div id="draftsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <button class="btn" id="newDraftBtn" style="margin-top:12px;">+ Nouvelle préparation</button>
+    </div>
+
+    <div id="prepEditView" class="hidden" style="display:flex;flex-direction:column;gap:12px;">
+      <label>Nom de la préparation</label>
+      <input type="text" id="draftNameInput" placeholder="ex : Chapitre 3 - énergie" style="text-transform:none;letter-spacing:normal;">
+
+      <div class="tabs">
+        <button class="tab active" data-etab="text">📝 Texte</button>
+        <button class="tab" data-etab="image">🖼️ Image</button>
+        <button class="tab" data-etab="link">🔗 Lien</button>
+      </div>
+      <div class="compose-row" id="erow-text">
+        <textarea id="draftTextInput" placeholder="Texte du message…" rows="1"></textarea>
+        <button class="send-btn" id="draftAddText">+</button>
+      </div>
+      <div class="compose-row hidden" id="erow-image">
+        <input type="file" id="draftImgInput" accept="image/*">
+        <button class="pick-img-btn" id="draftPickImgBtn">📎</button>
+        <textarea id="draftImgCaption" placeholder="Légende (facultatif)…" rows="1"></textarea>
+        <button class="send-btn" id="draftAddImage" disabled>+</button>
+      </div>
+      <div class="compose-row hidden" id="erow-link">
+        <textarea id="draftLinkInput" placeholder="Lien…" rows="1"></textarea>
+        <button class="send-btn" id="draftAddLink">+</button>
+      </div>
+
+      <label>Contenu de la préparation</label>
+      <div class="queue-wrap" id="draftItemsList"></div>
+
+      <div class="queue-actions">
+        <button class="btn secondary" id="cancelDraftBtn">Annuler</button>
+        <button class="btn" id="saveDraftBtn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Relais public gratuit, sans compte : https://ntfy.sh (open source, auto-hébergeable aussi).
+  // Le "code de classe" = un nom de "topic" ntfy. Toute personne connaissant le code exact
+  // peut lire/écrire dessus : ce n'est PAS un canal privé sécurisé, seulement obscur.
+  var NTFY_BASE = 'https://ntfy.sh';
+  var TEACHER_PASSWORD = 'techno91';
+  var wakeLock = null;
+
+  var role = null, classCode = null, es = null;
+  var seenIds = {};
+  var lastCount = 0;
+  var pendingImageFile = null;
+  var pendingDraftImageFile = null;
+  var editingDraft = null;
+  var editingItems = [];
+  var liveQueue = [];
+  var prepLoadTarget = 'queue'; // 'queue' | 'diaporama'
+  var diaporama = null; // {slides, assetUrls, currentIndex, started}
+  var diaporamaMode = false;
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function showToast(msg){
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2400);
+  }
+
+  function randomCode(){
+    var letters = 'abcdefghjkmnpqrstuvwxyz23456789';
+    var out = 'classe-';
+    for(var i=0;i<10;i++){ out += letters[Math.floor(Math.random()*letters.length)]; }
+    return out;
+  }
+
+  function sanitizeCode(v){
+    return (v||'').trim().toLowerCase().replace(/[^a-z0-9._-]/g,'').slice(0,64);
+  }
+
+  // ---------- Navigation ----------
+  $('chooseProf').addEventListener('click', function(){
+    $('roleChoice').classList.add('hidden'); $('profPanel').classList.remove('hidden');
+  });
+  $('chooseEleve').addEventListener('click', function(){
+    $('roleChoice').classList.add('hidden'); $('elevePanel').classList.remove('hidden');
+  });
+  $('backFromProf').addEventListener('click', function(){
+    $('profPanel').classList.add('hidden'); $('roleChoice').classList.remove('hidden');
+  });
+  $('backFromEleve').addEventListener('click', function(){
+    $('elevePanel').classList.add('hidden'); $('roleChoice').classList.remove('hidden');
+  });
+
+  $('profGo').addEventListener('click', function(){
+    var pwd = $('profPassword').value;
+    if(pwd !== TEACHER_PASSWORD){
+      showToast('Mot de passe incorrect');
+      $('profPassword').value = '';
+      $('profPassword').focus();
+      return;
+    }
+    var v = sanitizeCode($('profCodeInput').value);
+    if(!v) v = randomCode();
+    startSession('prof', v);
+  });
+  $('profPassword').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); $('profGo').click(); }
+  });
+  $('eleveGo').addEventListener('click', function(){
+    var v = sanitizeCode($('eleveCodeInput').value);
+    if(!v){ showToast('Entre le code donné par le prof'); return; }
+    startSession('eleve', v);
+  });
+
+  $('exitBtn').addEventListener('click', function(){
+    if(es){ es.close(); es = null; }
+    releaseWakeLock();
+    try{ localStorage.removeItem('tdc_session'); }catch(e){}
+    location.reload();
+  });
+
+  // ---------- Écran toujours allumé pendant la session ----------
+  function requestWakeLock(){
+    if(!('wakeLock' in navigator)){ return; }
+    navigator.wakeLock.request('screen').then(function(lock){
+      wakeLock = lock;
+      wakeLock.addEventListener('release', function(){ wakeLock = null; });
+    }).catch(function(){ /* refusé par le navigateur, on continue sans */ });
+  }
+  function releaseWakeLock(){
+    if(wakeLock){ wakeLock.release().catch(function(){}); wakeLock = null; }
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible' && classCode && !wakeLock){
+      requestWakeLock();
+    }
+  });
+
+  function startSession(r, code){
+    role = r; classCode = code;
+    try{ localStorage.setItem('tdc_session', JSON.stringify({role:role, code:classCode})); }catch(e){}
+
+    $('landing').style.display = 'none';
+    $('app').style.display = 'flex';
+    $('roleTag').textContent = role === 'prof' ? 'Prof' : 'Élève';
+    $('codeTag').textContent = classCode;
+
+    if(role === 'prof'){
+      $('composer').classList.remove('hidden');
+      $('readonlyBanner').classList.add('hidden');
+    } else {
+      $('composer').classList.add('hidden');
+      $('readonlyBanner').classList.remove('hidden');
+    }
+
+    connect();
+    requestWakeLock();
+  }
+
+  function setStatus(on, text){
+    $('statusDot').classList.toggle('off', !on);
+    $('statusText').textContent = text;
+  }
+
+  function topicUrl(){ return NTFY_BASE + '/' + encodeURIComponent(classCode); }
+
+  // ---------- Connect: load recent history, then live-subscribe ----------
+  function connect(){
+    setStatus(false, 'connexion…');
+    seenIds = {};
+    diaporamaMode = false;
+    $('diaporamaView').classList.add('hidden');
+    $('feed').classList.remove('hidden');
+    diaporama = null;
+    renderDiapoState();
+
+    fetch(topicUrl() + '/json?poll=1&since=12h')
+      .then(function(res){ return res.text(); })
+      .then(function(text){
+        var lines = text.split('\n').filter(Boolean);
+        lines.forEach(function(line){
+          try{ handleEvent(JSON.parse(line)); }catch(e){}
+        });
+      })
+      .catch(function(){ /* pas grave, on continue en direct */ })
+      .finally(subscribeLive);
+  }
+
+  function subscribeLive(){
+    try{
+      es = new EventSource(topicUrl() + '/sse');
+    }catch(e){
+      setStatus(false, 'indisponible sur ce navigateur');
+      showToast("La connexion en direct n'est pas supportée ici.");
+      return;
+    }
+    es.onopen = function(){ setStatus(true, 'en direct'); };
+    es.onmessage = function(ev){
+      try{ handleEvent(JSON.parse(ev.data)); }catch(e){}
+    };
+    es.onerror = function(){
+      setStatus(false, 'reconnexion…');
+    };
+  }
+
+  function handleEvent(msg){
+    if(!msg || msg.event !== 'message') return;
+    if(seenIds[msg.id]) return;
+    seenIds[msg.id] = true;
+    var tags = msg.tags || [];
+    if(tags.indexOf('asset') !== -1) return; // upload technique pour le diaporama, pas un message à afficher
+    if(tags.indexOf('diaporama_end') !== -1){
+      diaporamaMode = false;
+      $('diaporamaView').classList.add('hidden');
+      $('feed').classList.remove('hidden');
+      return;
+    }
+    if(tags.indexOf('slide') !== -1){
+      try{ renderDiaporamaSlide(JSON.parse(msg.message)); }catch(e){}
+      return;
+    }
+    addCard(msg);
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function youtubeEmbed(url){
+    var m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{6,})/);
+    if(m) return 'https://www.youtube.com/embed/' + m[1];
+    var v = url.match(/vimeo\.com\/(\d+)/);
+    if(v) return 'https://player.vimeo.com/video/' + v[1];
+    return null;
+  }
+
+  function addCard(msg){
+    var feed = $('feed');
+    var empty = $('emptyState');
+    var wasNearBottom = (feed.scrollHeight - feed.scrollTop - feed.clientHeight) < 120;
+
+    var tags = msg.tags || [];
+    var isLink = tags.indexOf('link') !== -1;
+    var isImage = !!msg.attachment;
+
+    var kindLabel = '📝 Message', body = '';
+
+    if(isImage){
+      kindLabel = '🖼️ Image';
+      body = '<img src="' + escapeHtml(msg.attachment.url) + '" alt="image partagée" loading="lazy">';
+      if(msg.message){ body += '<div class="txt" style="margin-top:8px;">' + escapeHtml(msg.message) + '</div>'; }
+    } else if(isLink){
+      kindLabel = '🔗 Lien';
+      var url = msg.message || '';
+      var embed = youtubeEmbed(url);
+      if(embed){
+        body = '<iframe src="' + embed + '" allowfullscreen loading="lazy"></iframe>';
+      } else {
+        body = '<a class="linkbox" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(url) + '</a>';
+      }
+    } else {
+      body = '<div class="txt">' + escapeHtml(msg.message || '') + '</div>';
+    }
+
+    var timeStr = '';
+    try{
+      if(msg.time){ timeStr = new Date(msg.time * 1000).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}); }
+    }catch(e){}
+
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = '<div class="kind">' + kindLabel + '</div>' + body + '<div class="time">' + timeStr + '</div>';
+    feed.appendChild(card);
+
+    empty.classList.add('hidden');
+    lastCount++;
+
+    if(role === 'prof' || wasNearBottom || lastCount === 1){
+      feed.scrollTop = feed.scrollHeight;
+    }
+  }
+
+  // ---------- Composer tabs ----------
+  document.querySelectorAll('#composer .tabs .tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('#composer .tabs .tab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      var which = tab.getAttribute('data-tab');
+      ['text','image','link','diapo'].forEach(function(k){
+        $('row-' + k).classList.toggle('hidden', k !== which);
+      });
+    });
+  });
+
+  document.querySelectorAll('textarea').forEach(function(ta){
+    ta.addEventListener('input', function(){
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+    });
+  });
+
+  // ---------- Publication brute vers ntfy ----------
+  function publishText(text){
+    return fetch(topicUrl(), { method:'POST', body:text, headers:{ 'X-Title':'Message du prof' } })
+      .then(function(res){ if(!res.ok) throw new Error('http ' + res.status); });
+  }
+  function publishLink(url){
+    if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    return fetch(topicUrl(), { method:'POST', body:url, headers:{ 'X-Title':'Lien partagé', 'X-Tags':'link' } })
+      .then(function(res){ if(!res.ok) throw new Error('http ' + res.status); });
+  }
+  function publishImageBlob(blob, filename, caption){
+    var headers = { 'X-Filename': filename || 'image.jpg' };
+    if(caption){ headers['X-Message'] = caption; }
+    return fetch(topicUrl(), { method:'POST', body:blob, headers:headers })
+      .then(function(res){ if(!res.ok) throw new Error('http ' + res.status); });
+  }
+  function dataURLtoBlob(dataurl){
+    var arr = dataurl.split(','), mimeMatch = arr[0].match(/:(.*?);/), mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    var bstr = atob(arr[1]), n = bstr.length, u8 = new Uint8Array(n);
+    while(n--){ u8[n] = bstr.charCodeAt(n); }
+    return new Blob([u8], { type: mime });
+  }
+
+  // ---------- Send: text (composeur direct) ----------
+  $('sendText').addEventListener('click', sendTextMsg);
+  $('textInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendTextMsg(); }
+  });
+  function sendTextMsg(){
+    var v = $('textInput').value.trim();
+    if(!v) return;
+    $('sendText').disabled = true;
+    publishText(v).then(function(){
+      $('textInput').value = '';
+      $('textInput').style.height = 'auto';
+    }).catch(function(){ showToast('Envoi impossible — vérifie la connexion internet'); })
+      .finally(function(){ $('sendText').disabled = false; });
+  }
+
+  // ---------- Send: image (composeur direct) ----------
+  $('pickImgBtn').addEventListener('click', function(){ $('imgInput').click(); });
+  $('imgInput').addEventListener('change', function(){
+    pendingImageFile = $('imgInput').files[0] || null;
+    $('sendImage').disabled = !pendingImageFile;
+    if(pendingImageFile){ showToast(pendingImageFile.name + ' prête à envoyer'); }
+  });
+  $('sendImage').addEventListener('click', function(){
+    if(!pendingImageFile) return;
+    $('sendImage').disabled = true;
+    showToast('Envoi de l\u2019image…');
+    var caption = $('imgCaption').value.trim();
+    publishImageBlob(pendingImageFile, pendingImageFile.name, caption).then(function(){
+      pendingImageFile = null;
+      $('imgInput').value = '';
+      $('imgCaption').value = '';
+      showToast('Image envoyée ✔');
+    }).catch(function(){ showToast('Échec de l\u2019envoi de l\u2019image'); })
+      .finally(function(){ $('sendImage').disabled = !pendingImageFile; });
+  });
+
+  // ---------- Send: link (composeur direct) ----------
+  $('sendLink').addEventListener('click', sendLinkMsg);
+  $('linkInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendLinkMsg(); }
+  });
+  function sendLinkMsg(){
+    var v = $('linkInput').value.trim();
+    if(!v) return;
+    $('sendLink').disabled = true;
+    publishLink(v).then(function(){
+      $('linkInput').value = '';
+      $('linkInput').style.height = 'auto';
+    }).catch(function(){ showToast('Envoi impossible — vérifie la connexion internet'); })
+      .finally(function(){ $('sendLink').disabled = false; });
+  }
+
+  // ============================================================
+  // Préparations enregistrées (brouillons) — localStorage
+  // ============================================================
+  function loadDrafts(){
+    try{ return JSON.parse(localStorage.getItem('tdc_drafts') || '[]'); }catch(e){ return []; }
+  }
+  function saveDraftsList(list){
+    localStorage.setItem('tdc_drafts', JSON.stringify(list));
+  }
+
+  function openPrepOverlay(target){
+    prepLoadTarget = target || 'queue';
+    $('prepOverlay').classList.remove('hidden');
+    showListView();
+  }
+  function closePrepOverlay(){
+    $('prepOverlay').classList.add('hidden');
+  }
+  $('openPrepBtn').addEventListener('click', function(){ openPrepOverlay('queue'); });
+  $('openPrepFromLive').addEventListener('click', function(){ openPrepOverlay('queue'); });
+  $('diapoLoadBtn').addEventListener('click', function(){ openPrepOverlay('diaporama'); });
+  $('prepClose').addEventListener('click', closePrepOverlay);
+
+  function showListView(){
+    $('prepEditView').classList.add('hidden');
+    $('prepListView').classList.remove('hidden');
+    $('prepTitle').textContent = 'Mes préparations';
+    renderDraftsList();
+  }
+  function showEditorView(){
+    $('prepListView').classList.add('hidden');
+    $('prepEditView').classList.remove('hidden');
+    renderEditorItems();
+  }
+
+  function renderDraftsList(){
+    var list = loadDrafts();
+    var wrap = $('draftsList');
+    wrap.innerHTML = '';
+    var inLive = $('app').style.display === 'flex' && role === 'prof' && !!classCode;
+    if(list.length === 0){
+      wrap.innerHTML = '<p class="hint">Aucune préparation enregistrée pour l\u2019instant.</p>';
+      return;
+    }
+    list.forEach(function(d){
+      var row = document.createElement('div');
+      row.className = 'draft-row';
+      row.innerHTML =
+        '<div class="info"><div class="name">' + escapeHtml(d.name) + '</div><div class="meta">' + d.items.length + ' élément(s)</div></div>' +
+        (inLive ? '<button class="icon-btn" data-load="' + d.id + '">Charger</button>' : '') +
+        '<button class="icon-btn" data-edit="' + d.id + '">✏️</button>' +
+        '<button class="icon-btn danger" data-del="' + d.id + '">🗑</button>';
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('[data-load]').forEach(function(b){
+      b.addEventListener('click', function(){ loadDraftIntoQueue(b.getAttribute('data-load')); });
+    });
+    wrap.querySelectorAll('[data-edit]').forEach(function(b){
+      b.addEventListener('click', function(){ editDraft(b.getAttribute('data-edit')); });
+    });
+    wrap.querySelectorAll('[data-del]').forEach(function(b){
+      b.addEventListener('click', function(){ deleteDraft(b.getAttribute('data-del')); });
+    });
+  }
+
+  function editDraft(id){
+    var d = loadDrafts().find(function(x){ return x.id === id; });
+    if(!d) return;
+    editingDraft = d;
+    editingItems = d.items.map(function(it){ var c={}; for(var k in it){ c[k]=it[k]; } return c; });
+    $('draftNameInput').value = d.name;
+    $('prepTitle').textContent = 'Modifier la préparation';
+    showEditorView();
+  }
+
+  function deleteDraft(id){
+    if(!confirm('Supprimer cette préparation ?')) return;
+    saveDraftsList(loadDrafts().filter(function(x){ return x.id !== id; }));
+    renderDraftsList();
+  }
+
+  function loadDraftIntoQueue(id){
+    var d = loadDrafts().find(function(x){ return x.id === id; });
+    if(!d) return;
+    if(prepLoadTarget === 'diaporama'){
+      diaporama = {
+        slides: d.items.map(function(it){ var c={}; for(var k in it){ c[k]=it[k]; } return c; }),
+        assetUrls: new Array(d.items.length).fill(null),
+        currentIndex: -1,
+        started: false
+      };
+      renderDipoState();
+      closePrepOverlay();
+      showToast('Diaporama chargé : ' + d.items.length + ' diapositive(s)');
+      return;
+    }
+    liveQueue = liveQueue.concat(d.items.map(function(it){ var c={}; for(var k in it){ c[k]=it[k]; } return c; }));
+    renderLiveQueue();
+    closePrepOverlay();
+    showToast('Préparation chargée : ' + d.items.length + ' élément(s)');
+  }
+
+  $('newDraftBtn').addEventListener('click', function(){
+    editingDraft = null;
+    editingItems = [];
+    $('draftNameInput').value = '';
+    $('prepTitle').textContent = 'Nouvelle préparation';
+    showEditorView();
+  });
+  $('cancelDraftBtn').addEventListener('click', showListView);
+
+  $('saveDraftBtn').addEventListener('click', function(){
+    var name = $('draftNameInput').value.trim();
+    if(!name){ showToast('Donne un nom à la préparation'); return; }
+    if(editingItems.length === 0){ showToast('Ajoute au moins un élément'); return; }
+    var list = loadDrafts();
+    if(editingDraft){
+      var idx = list.findIndex(function(x){ return x.id === editingDraft.id; });
+      if(idx >= 0){ list[idx] = { id: editingDraft.id, name: name, items: editingItems, createdAt: editingDraft.createdAt }; }
+    } else {
+      list.push({ id: 'd_' + Date.now() + '_' + Math.random().toString(36).slice(2,7), name: name, items: editingItems, createdAt: Date.now() });
+    }
+    try{
+      saveDraftsList(list);
+      showToast('Préparation enregistrée ✔');
+      showListView();
+    }catch(e){
+      showToast('Stockage plein : supprime une préparation ou utilise moins d\u2019images');
+    }
+  });
+
+  // ---- Éditeur d'items (tabs + ajout) ----
+  document.querySelectorAll('[data-etab]').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('[data-etab]').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      var which = tab.getAttribute('data-etab');
+      ['text','image','link'].forEach(function(k){ $('erow-' + k).classList.toggle('hidden', k !== which); });
+    });
+  });
+
+  $('draftAddText').addEventListener('click', function(){
+    var v = $('draftTextInput').value.trim();
+    if(!v) return;
+    editingItems.push({ type:'text', text:v });
+    $('draftTextInput').value = ''; $('draftTextInput').style.height = 'auto';
+    renderEditorItems();
+  });
+  $('draftAddLink').addEventListener('click', function(){
+    var v = $('draftLinkInput').value.trim();
+    if(!v) return;
+    if(!/^https?:\/\//i.test(v)) v = 'https://' + v;
+    editingItems.push({ type:'link', url:v });
+    $('draftLinkInput').value = ''; $('draftLinkInput').style.height = 'auto';
+    renderEditorItems();
+  });
+  $('draftPickImgBtn').addEventListener('click', function(){ $('draftImgInput').click(); });
+  $('draftImgInput').addEventListener('change', function(){
+    pendingDraftImageFile = $('draftImgInput').files[0] || null;
+    $('draftAddImage').disabled = !pendingDraftImageFile;
+  });
+  $('draftAddImage').addEventListener('click', function(){
+    if(!pendingDraftImageFile) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      editingItems.push({ type:'image', imageData: reader.result, filename: pendingDraftImageFile.name, caption: $('draftImgCaption').value.trim() });
+      pendingDraftImageFile = null;
+      $('draftImgInput').value = '';
+      $('draftImgCaption').value = '';
+      $('draftAddImage').disabled = true;
+      renderEditorItems();
+    };
+    reader.readAsDataURL(pendingDraftImageFile);
+  });
+
+  function renderEditorItems(){
+    var wrap = $('draftItemsList');
+    wrap.innerHTML = '';
+    if(editingItems.length === 0){
+      wrap.innerHTML = '<p class="hint">Aucun élément ajouté pour l\u2019instant.</p>';
+      return;
+    }
+    editingItems.forEach(function(item, idx){
+      var kind = item.type === 'text' ? '📝' : item.type === 'image' ? '🖼️' : '🔗';
+      var preview = item.type === 'text' ? item.text : item.type === 'link' ? item.url : (item.filename || 'image') + (item.caption ? ' — ' + item.caption : '');
+      var row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = '<div class="info"><div class="k">' + kind + '</div><div class="p">' + escapeHtml(preview) + '</div></div>' +
+        '<button class="icon-btn danger" data-rmitem="' + idx + '">✕</button>';
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('[data-rmitem]').forEach(function(b){
+      b.addEventListener('click', function(){
+        editingItems.splice(parseInt(b.getAttribute('data-rmitem'), 10), 1);
+        renderEditorItems();
+      });
+    });
+  }
+
+  // ============================================================
+  // File de diffusion en direct (préparation chargée pendant le cours)
+  // ============================================================
+  function renderLiveQueue(){
+    var wrap = $('liveQueueList');
+    wrap.innerHTML = '';
+    if(liveQueue.length === 0){ $('liveQueueWrap').classList.add('hidden'); return; }
+    $('liveQueueWrap').classList.remove('hidden');
+    liveQueue.forEach(function(item, idx){
+      var kind = item.type === 'text' ? '📝' : item.type === 'image' ? '🖼️' : '🔗';
+      var preview = item.type === 'text' ? item.text : item.type === 'link' ? item.url : (item.filename || 'image') + (item.caption ? ' — ' + item.caption : '');
+      var row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = '<div class="info"><div class="k">' + kind + '</div><div class="p">' + escapeHtml(preview) + '</div></div>' +
+        '<button class="icon-btn" data-send="' + idx + '">Envoyer</button>' +
+        '<button class="icon-btn danger" data-rm="' + idx + '">✕</button>';
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('[data-send]').forEach(function(b){
+      b.addEventListener('click', function(){ sendQueueItem(parseInt(b.getAttribute('data-send'), 10)); });
+    });
+    wrap.querySelectorAll('[data-rm]').forEach(function(b){
+      b.addEventListener('click', function(){
+        liveQueue.splice(parseInt(b.getAttribute('data-rm'), 10), 1);
+        renderLiveQueue();
+      });
+    });
+  }
+
+  function publishQueueItem(item){
+    if(item.type === 'text') return publishText(item.text);
+    if(item.type === 'link') return publishLink(item.url);
+    return publishImageBlob(dataURLtoBlob(item.imageData), item.filename || 'image.jpg', item.caption || '');
+  }
+
+  function sendQueueItem(idx){
+    var item = liveQueue[idx];
+    if(!item) return;
+    publishQueueItem(item).then(function(){
+      liveQueue.splice(idx, 1);
+      renderLiveQueue();
+      showToast('Envoyé ✔');
+    }).catch(function(){ showToast('Échec de l\u2019envoi'); });
+  }
+
+  function sendAllSequential(){
+    if(liveQueue.length === 0){ showToast('Diffusion terminée ✔'); return; }
+    publishQueueItem(liveQueue[0]).then(function(){
+      liveQueue.shift();
+      renderLiveQueue();
+      setTimeout(sendAllSequential, 900);
+    }).catch(function(){ showToast('Échec — diffusion arrêtée'); });
+  }
+  $('sendAllQueueBtn').addEventListener('click', function(){
+    if(liveQueue.length) sendAllSequential();
+  });
+  $('clearQueueBtn').addEventListener('click', function(){
+    if(liveQueue.length && !confirm('Vider la file de diffusion ?')) return;
+    liveQueue = [];
+    renderLiveQueue();
+  });
+
+  // ============================================================
+  // Diaporama — une seule diapositive visible à la fois côté élèves
+  // ============================================================
+  function renderDipoState(){
+    if(!diaporama){
+      $('diapoEmpty').classList.remove('hidden');
+      $('diapoReady').classList.add('hidden');
+      $('diapoControls').classList.add('hidden');
+      return;
+    }
+    if(!diaporama.started){
+      $('diapoEmpty').classList.add('hidden');
+      $('diapoReady').classList.remove('hidden');
+      $('diapoControls').classList.add('hidden');
+      $('diapoReadyInfo').textContent = diaporama.slides.length + ' diapositive(s) prête(s).';
+      return;
+    }
+    $('diapoEmpty').classList.add('hidden');
+    $('diapoReady').classList.add('hidden');
+    $('diapoControls').classList.remove('hidden');
+    $('diapoIndexLabel').textContent = (diaporama.currentIndex + 1) + ' / ' + diaporama.slides.length;
+    $('diapoPrevBtn').disabled = diaporama.currentIndex <= 0;
+    $('diapoNextBtn').disabled = diaporama.currentIndex >= diaporama.slides.length - 1;
+  }
+
+  function uploadAssetForDiapo(blob, filename){
+    return fetch(topicUrl(), {
+      method: 'POST', body: blob,
+      headers: { 'X-Filename': filename || 'image.jpg', 'X-Tags': 'asset' }
+    }).then(function(res){
+      if(!res.ok) throw new Error('http ' + res.status);
+      return res.json();
+    }).then(function(data){
+      return data.attachment && data.attachment.url;
+    });
+  }
+
+  function startDiaporama(){
+    if(!diaporama) return;
+    $('diapoStartBtn').disabled = true;
+    $('diapoStartBtn').textContent = 'Préparation…';
+    var slides = diaporama.slides;
+    var i = 0;
+    function step(){
+      if(i >= slides.length){
+        diaporama.started = true;
+        $('diapoStartBtn').disabled = false;
+        $('diapoStartBtn').textContent = '▶ Démarrer le diaporama';
+        goToSlide(0);
+        return;
+      }
+      var s = slides[i];
+      if(s.type === 'image'){
+        uploadAssetForDiapo(dataURLtoBlob(s.imageData), s.filename).then(function(url){
+          diaporama.assetUrls[i] = url; i++; step();
+        }).catch(function(){
+          showToast('Échec de préparation d\u2019une image, elle sera ignorée');
+          i++; step();
+        });
+      } else { i++; step(); }
+    }
+    step();
+  }
+
+  function goToSlide(i){
+    if(!diaporama || !diaporama.started) return;
+    var n = diaporama.slides.length;
+    if(i < 0) i = 0;
+    if(i >= n) i = n - 1;
+    diaporama.currentIndex = i;
+    var s = diaporama.slides[i];
+    var payload = { idx: i, total: n };
+    if(s.type === 'text'){ payload.kind = 'text'; payload.text = s.text; }
+    else if(s.type === 'link'){ payload.kind = 'link'; payload.url = s.url; }
+    else { payload.kind = 'image'; payload.url = diaporama.assetUrls[i]; payload.caption = s.caption || ''; }
+
+    fetch(topicUrl(), {
+      method: 'POST', body: JSON.stringify(payload),
+      headers: { 'X-Tags': 'slide', 'X-Title': 'Diaporama' }
+    }).catch(function(){ showToast('Échec d\u2019envoi de la diapositive'); });
+
+    renderDiaporamaSlide(payload);
+    renderDipoState();
+  }
+
+  function renderDiaporamaSlide(payload){
+    diaporamaMode = true;
+    $('feed').classList.add('hidden');
+    var dv = $('diaporamaView');
+    dv.classList.remove('hidden');
+    var body = '';
+    if(payload.kind === 'text'){
+      body = '<div class="txt">' + escapeHtml(payload.text || '') + '</div>';
+    } else if(payload.kind === 'link'){
+      var embed = youtubeEmbed(payload.url || '');
+      body = embed
+        ? '<iframe src="' + embed + '" allowfullscreen loading="lazy"></iframe>'
+        : '<a class="linkbox" href="' + escapeHtml(payload.url || '#') + '" target="_blank" rel="noopener">' + escapeHtml(payload.url || '') + '</a>';
+    } else if(payload.kind === 'image'){
+      body = '<img src="' + escapeHtml(payload.url || '') + '" alt="diapositive">';
+      if(payload.caption){ body += '<div class="txt" style="margin-top:10px;">' + escapeHtml(payload.caption) + '</div>'; }
+    }
+    var pageStr = (payload.idx != null && payload.total != null) ? (payload.idx + 1) + ' / ' + payload.total : '';
+    dv.innerHTML = '<div class="card">' + body + '</div><div class="time" style="margin-top:10px;">' + pageStr + '</div>';
+  }
+
+  $('diapoStartBtn').addEventListener('click', startDiaporama);
+  $('diapoChangeBtn').addEventListener('click', function(){ diaporama = null; renderDipoState(); });
+  $('diapoPrevBtn').addEventListener('click', function(){ if(diaporama) goToSlide(diaporama.currentIndex - 1); });
+  $('diapoNextBtn').addEventListener('click', function(){ if(diaporama) goToSlide(diaporama.currentIndex + 1); });
+  $('diapoEndBtn').addEventListener('click', function(){
+    fetch(topicUrl(), { method:'POST', body:'fin', headers:{ 'X-Tags':'diaporama_end' } }).catch(function(){});
+    diaporama = null;
+    diaporamaMode = false;
+    $('diaporamaView').classList.add('hidden');
+    $('feed').classList.remove('hidden');
+    renderDipoState();
+  });
+
+  // ---------- Resume previous session ----------
+  (function tryResume(){
+    try{
+      var raw = localStorage.getItem('tdc_session');
+      if(raw){
+        var s = JSON.parse(raw);
+        if(s && s.role && s.code){ startSession(s.role, s.code); }
+      }
+    }catch(e){}
+  })();
+
+})();
+</script>
+</body>
+</html>
