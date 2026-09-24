@@ -68,9 +68,23 @@
   a.card .emoji{font-size:1.8rem;}
   a.card .name{font-weight:800; font-size:1.1rem;}
   a.card .desc{color:var(--chalk-dim); font-size:.9rem; line-height:1.4;}
+  .site-logo{
+    position:fixed;
+    top:16px;
+    left:16px;
+    z-index:10;
+  }
+  .site-logo img{
+    display:block;
+    height:36px;
+    width:auto;
+  }
 </style>
 </head>
 <body>
+  <a class="site-logo" href="index.html">
+    <img src="logo-blanc.png" alt="Atelier Chalou">
+  </a>
   <a class="back" href="index.html">← Retour à l'accueil</a>
   <h1>🧩 Mes applis</h1>
   <div class="grid">
