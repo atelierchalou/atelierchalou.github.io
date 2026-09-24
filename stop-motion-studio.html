@@ -77,7 +77,19 @@
   }
 
   .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:100%;}
-  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;}
+  .project-buttons{display:flex;gap:8px;flex-shrink:0;}
+  .btn-mini{
+    font-family:'Oswald',sans-serif;letter-spacing:1px;text-transform:uppercase;font-size:11px;font-weight:600;
+    padding:7px 11px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface-2);color:var(--text);
+    cursor:pointer;white-space:nowrap;
+  }
+  .btn-mini:hover{border-color:var(--accent);}
+  .btn-mini:disabled{opacity:.4;cursor:not-allowed;}
+  @media (max-width:480px){
+    .project-buttons{width:100%;}
+    .btn-mini{flex:1;}
+  }
   .panel-head h2{font-family:'Oswald',sans-serif;font-size:12.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin:0;font-weight:600;}
   .panel-head h2 b{color:var(--text);}
   .panel-body{padding:16px;}
@@ -223,7 +235,13 @@
 <main>
   <div>
     <div class="panel stage-wrap">
-      <div class="panel-head"><h2>Plateau de <b>tournage</b></h2></div>
+      <div class="panel-head">
+        <h2>Plateau de <b>tournage</b></h2>
+        <div class="project-buttons">
+          <button class="btn-mini" id="saveProjectBtn" title="Enregistrer le projet (images, son et réglages)">💾 Enregistrer</button>
+          <button class="btn-mini" id="openProjectBtn" title="Ouvrir un projet précédemment enregistré">📂 Ouvrir</button>
+        </div>
+      </div>
       <div class="tip-banner" id="tipBanner">
         📷 Prenez vos photos <b>avant</b>, avec l'appareil photo de votre téléphone (une par pose), puis importez-les ici avec le bouton ci-dessous.
       </div>
@@ -250,6 +268,8 @@
           <button class="shutter" id="shutterBtn" title="Capturer une image"></button>
         </div>
       </div>
+      <input type="file" id="projectFileInput" accept=".smproj,.json" style="display:none">
+      <div class="filename" id="projectStatus" style="padding:0 16px 12px;">Enregistrez pour reprendre ce film plus tard, même sur un autre appareil (images, son et réglages inclus).</div>
     </div>
 
     <div class="panel filmstrip-panel" style="margin-top:18px;">
@@ -382,6 +402,10 @@
   const previewCanvas = document.getElementById('previewCanvas');
   const closePreview = document.getElementById('closePreview');
   const tipBanner = document.getElementById('tipBanner');
+  const saveProjectBtn = document.getElementById('saveProjectBtn');
+  const openProjectBtn = document.getElementById('openProjectBtn');
+  const projectFileInput = document.getElementById('projectFileInput');
+  const projectStatus = document.getElementById('projectStatus');
 
   function updateGhostOpacity(){
     ghostOpacityVal.textContent = ghostOpacity.value + '%';
@@ -693,6 +717,161 @@
   closePreview.addEventListener('click', () => {
     previewOverlay.classList.remove('open');
     audioEl.pause();
+  });
+
+  // ---------- Projet : enregistrer / ouvrir (images + son + réglages dans un seul fichier .smproj) ----------
+  function loadFrameAsync(dataURL){
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({img, dataURL});
+      img.src = dataURL;
+    });
+  }
+
+  function fileToDataURL(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function buildProjectData(){
+    return {
+      type: 'stop-motion-project',
+      version: 1,
+      savedAt: new Date().toISOString(),
+      settings: {
+        ghostOpacity: Number(ghostOpacity.value),
+        ghostToggle: ghostToggle.checked,
+        fps: Number(fpsRange.value),
+        introTitle: introTitleInput.value,
+        introSubtitle: document.getElementById('introSubtitle').value,
+        introDuration: Number(document.getElementById('introDuration').value),
+        outroText: document.getElementById('outroText').value,
+        outroDuration: Number(document.getElementById('outroDuration').value),
+        exportFilename: exportFilenameEl.value
+      },
+      frames: state.frames.map(f => f.dataURL),
+      audio: state.audioFile ? { name: state.audioFile.name, dataURL: await fileToDataURL(state.audioFile) } : null
+    };
+  }
+
+  async function restoreProjectData(data){
+    // réinitialise le son
+    if(state.audioURL) URL.revokeObjectURL(state.audioURL);
+    state.audioURL = null; state.audioFile = null;
+    audioEl.removeAttribute('src');
+    audioFilename.textContent = 'Aucun son sélectionné';
+    audioFilename.appendChild(clearAudio);
+    clearAudio.style.display = 'none';
+
+    const s = data.settings || {};
+    ghostOpacity.value = s.ghostOpacity ?? 40;
+    ghostToggle.checked = s.ghostToggle !== false;
+    fpsRange.value = s.fps ?? 8;
+    introTitleInput.value = s.introTitle ?? '';
+    document.getElementById('introSubtitle').value = s.introSubtitle ?? '';
+    document.getElementById('introDuration').value = s.introDuration ?? 3;
+    document.getElementById('outroText').value = s.outroText ?? '';
+    document.getElementById('outroDuration').value = s.outroDuration ?? 4;
+    exportFilenameEl.value = s.exportFilename ?? '';
+    exportFilenameEl.dataset.userEdited = s.exportFilename ? 'true' : '';
+    fpsVal.textContent = fpsRange.value + ' ips';
+
+    state.frames = data.frames && data.frames.length ? await Promise.all(data.frames.map(loadFrameAsync)) : [];
+    renderFilmstrip();
+    updateGhostOpacity();
+
+    if(data.audio && data.audio.dataURL){
+      const resp = await fetch(data.audio.dataURL);
+      const blob = await resp.blob();
+      state.audioFile = new File([blob], data.audio.name || 'audio', {type: blob.type || 'audio/mpeg'});
+      state.audioURL = URL.createObjectURL(state.audioFile);
+      audioEl.src = state.audioURL;
+      audioFilename.textContent = (data.audio.name || 'audio') + ' ';
+      audioFilename.appendChild(clearAudio);
+      clearAudio.style.display = 'inline';
+    }
+  }
+
+  // Utilise le sélecteur de fichiers natif du système quand le navigateur le permet
+  // (l'utilisateur choisit alors librement le dossier) ; sinon repli sur un téléchargement classique.
+  async function saveProjectToDisk(blob, suggestedName){
+    if(window.showSaveFilePicker){
+      try{
+        const handle = await window.showSaveFilePicker({
+          suggestedName,
+          types:[{description:'Projet Stop Motion', accept:{'application/json':['.smproj']}}]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return 'picker';
+      }catch(err){
+        if(err.name === 'AbortError') return 'cancelled';
+        // en cas d'échec inattendu, on retombe sur le téléchargement classique ci-dessous
+      }
+    }
+    downloadBlob(blob, suggestedName);
+    return 'download';
+  }
+
+  async function pickProjectFile(){
+    if(window.showOpenFilePicker){
+      try{
+        const [handle] = await window.showOpenFilePicker({
+          types:[{description:'Projet Stop Motion', accept:{'application/json':['.smproj','.json']}}]
+        });
+        return await handle.getFile();
+      }catch(err){
+        if(err.name === 'AbortError') return null;
+        // en cas d'échec inattendu, on retombe sur l'input fichier classique ci-dessous
+      }
+    }
+    return new Promise((resolve) => {
+      projectFileInput.onchange = () => resolve(projectFileInput.files[0] || null);
+      projectFileInput.click();
+    });
+  }
+
+  saveProjectBtn.addEventListener('click', async () => {
+    if(!state.frames.length){ projectStatus.textContent = "Rien à enregistrer pour l'instant — ajoutez au moins une image."; return; }
+    saveProjectBtn.disabled = true;
+    projectStatus.textContent = 'Préparation du fichier projet...';
+    try{
+      const data = await buildProjectData();
+      const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+      const suggestedName = getExportBaseName() + '.smproj';
+      const method = await saveProjectToDisk(blob, suggestedName);
+      if(method === 'picker') projectStatus.textContent = 'Projet enregistré dans le dossier choisi.';
+      else if(method === 'download') projectStatus.textContent = 'Projet téléchargé. Sur mobile, activez « Demander où enregistrer chaque fichier » dans les réglages de téléchargement de Chrome pour choisir le dossier à chaque fois.';
+      else projectStatus.textContent = 'Enregistrement annulé.';
+    }catch(err){
+      projectStatus.textContent = "Erreur à l'enregistrement : " + err.message;
+    }finally{
+      saveProjectBtn.disabled = false;
+    }
+  });
+
+  openProjectBtn.addEventListener('click', async () => {
+    openProjectBtn.disabled = true;
+    try{
+      const file = await pickProjectFile();
+      if(!file){ openProjectBtn.disabled = false; return; }
+      projectStatus.textContent = 'Chargement du projet...';
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if(data.type !== 'stop-motion-project') throw new Error("ce fichier n'est pas un projet Stop Motion valide.");
+      await restoreProjectData(data);
+      projectStatus.textContent = 'Projet chargé (' + state.frames.length + ' image' + (state.frames.length>1?'s':'') + ').';
+    }catch(err){
+      projectStatus.textContent = "Erreur à l'ouverture : " + err.message;
+    }finally{
+      openProjectBtn.disabled = false;
+      projectFileInput.value = '';
+    }
   });
 
   // ---------- Export : WebM (natif), MP4 (conversion via ffmpeg.wasm), GIF (via gif.js) ----------

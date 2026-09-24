@@ -71,6 +71,23 @@ label.field span.val{float:right;color:var(--text);text-transform:none;letter-sp
 .prop-section h4.prop-sec-title:hover{color:var(--text);}
 .prop-sec-title .chev{font-size:9px;color:var(--muted);transition:transform .15s;display:inline-block;}
 .prop-section.open .prop-sec-title .chev{transform:rotate(90deg);}
+.prop-section.cat-general{border-left:3px solid #7d1f3d;padding-left:8px;}
+.prop-section.cat-general h4.prop-sec-title{color:#b83a5e;}
+.prop-section.cat-audio{border-left:3px solid #2e8b57;padding-left:8px;}
+.prop-section.cat-audio h4.prop-sec-title{color:#3fae74;}
+.prop-section.cat-video{border-left:3px solid #2f6fd6;padding-left:8px;}
+.prop-section.cat-video h4.prop-sec-title{color:#5b93e6;}
+.prop-sec-title .cat-icon{margin-right:5px;font-size:11px;}
+#btnExpertMode.active{background:#5b2fae;border-color:#7a4fd6;color:#fff;}
+.kfrow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:2px 0 10px;}
+.kfrow .kf-add{font-size:10.5px;padding:3px 8px;}
+.kfchips{display:flex;flex-wrap:wrap;gap:4px;}
+.kfchip{display:inline-flex;align-items:center;gap:4px;background:#5b2fae33;border:1px solid #7a4fd6;color:var(--text);font-size:10.5px;padding:2px 6px;border-radius:10px;cursor:pointer;}
+.kfchip b{color:#e06666;font-weight:700;}
+.kfchip:hover{background:#5b2fae55;}
+.kfchip .kftime{cursor:pointer;}
+.kfchip .kftime:hover{text-decoration:underline;}
+.clip .kf-marker{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(255,255,255,.85);pointer-events:none;z-index:2;}
 .prop-sec-body{overflow:hidden;max-height:0;transition:max-height .22s ease;}
 .prop-section.open .prop-sec-body{max-height:900px;padding-top:6px;}
 .chk-row{display:flex;align-items:center;gap:7px;margin:8px 0;}
@@ -258,6 +275,7 @@ body.phone-mode .peek-tab.peek-right{right:0;border-radius:8px 0 0 8px;border-ri
     <button id="btnAddTitle">🔤 Titre</button>
     <div class="grow"></div>
     <button id="btnPhoneMode" title="Basculer l'affichage optimisé smartphone">📱 Mode téléphone</button>
+    <button id="btnExpertMode" title="Mode expert : animer les réglages avec des images clés">🧪 Mode expert</button>
     <button id="btnOpenProject" title="Ouvrir un montage enregistré">📂</button>
     <button id="btnSaveProject" title="Enregistrer le montage">💾</button>
     <button id="btnHelp" title="Aide">❓</button>
@@ -371,7 +389,7 @@ body.phone-mode .peek-tab.peek-right{right:0;border-radius:8px 0 0 8px;border-ri
     <p><b>2. Ajouter à la timeline.</b> Cliquez sur un élément de la bibliothèque pour l'ajouter à la piste sélectionnée (surlignée), ou faites-le glisser directement à l'endroit voulu sur une piste.</p>
     <p><b>3. Déplacer / découper.</b> Faites glisser un clip pour le déplacer, tirez ses bords pour le rogner. Sélectionnez-le puis utilisez le panneau de droite pour ses effets.</p>
     <h4>🟢 Effet fond vert</h4>
-    <p>Placez votre vidéo (ou photo) tournée devant un fond vert sur une piste vidéo <i>au-dessus</i> d'une autre piste (image ou vidéo de fond). Sélectionnez le clip du dessus, cochez « Incrustation (fond vert) » dans le panneau Effets spéciaux, et ajustez la couleur / tolérance si besoin. Le fond de la piste du dessous apparaîtra à travers.</p>
+    <p>Placez votre vidéo (ou photo) tournée devant un fond vert sur une piste vidéo <i>au-dessus</i> d'une autre piste (image ou vidéo de fond). Sélectionnez le clip du dessus, cochez « Fond coloré (chroma key) » dans le panneau Effets spéciaux, et ajustez la couleur / tolérance si besoin. Le fond de la piste du dessous apparaîtra à travers.</p>
     <p>Utilisez les flèches ▲▼ dans l'en-tête d'une piste vidéo pour changer l'ordre des pistes (premier plan / arrière-plan).</p>
     <p><b>🎯 Outil pipette.</b> Plutôt que de deviner la couleur exacte du fond, cliquez sur « 🎯 Pipette » dans les propriétés du clip : l'aperçu affiche alors l'image brute (sans incrustation), il ne reste qu'à cliquer sur le vert (ou toute autre couleur) à retirer pour la sélectionner automatiquement. Échap ou « Annuler » pour quitter cet outil.</p>
     <p><b>🖼️ Images.</b> Le bouton « Importer image » ajoute des photos/PNG à la bibliothèque ; elles se placent sur les pistes vidéo comme des clips (durée par défaut 4 s, modifiable en tirant le bord droit) et profitent des mêmes effets : incrustation, luminosité, transitions, fondus…</p>
@@ -417,16 +435,29 @@ body.phone-mode .peek-tab.peek-right{right:0;border-radius:8px 0 0 8px;border-ri
   <div class="modal">
     <button class="close small" id="closeProjectModal">✕</button>
     <h2>💾 Projet</h2>
-    <p style="color:var(--muted);font-size:11.5px;margin-top:-6px;">Enregistre la timeline et tous les médias importés dans ce navigateur, pour reprendre le montage plus tard sur cet appareil.</p>
-    <label class="field">Nom du projet</label>
-    <div class="row">
-      <input type="text" id="projectNameInput" placeholder="Mon montage" style="flex:1;min-width:0;">
-      <button id="btnDoSaveProject" class="primary">Enregistrer</button>
+
+    <div class="prop-section" style="border-top:none;margin-top:0;padding-top:0;">
+      <h4>💻 Sur cet ordinateur (dossier au choix)</h4>
+      <p style="color:var(--muted);font-size:11px;line-height:1.4;margin:0 0 8px;">Enregistre le montage et tous les médias dans un dossier de votre choix. Vous pourrez ensuite rouvrir ce même dossier de travail depuis un autre ordinateur pour continuer votre montage.</p>
+      <div class="btnrow">
+        <button id="btnSaveToFolder">💾 Enregistrer dans un dossier…</button>
+        <button id="btnOpenFromFolder">📂 Ouvrir depuis un dossier…</button>
+      </div>
+      <p style="color:var(--muted);font-size:11px;line-height:1.4;margin-top:6px;">⚠️ Choisissez simplement votre dossier de travail, puis cliquez sur <b>« Sélectionner un dossier »</b> (ou « Ouvrir ») en bas de la fenêtre.</p>
+      <p id="folderUnsupportedNote" class="hidden" style="color:var(--muted);font-size:11px;line-height:1.4;margin-top:6px;">Cette fonction nécessite un navigateur de bureau compatible (Chrome ou Edge).</p>
+      <div id="folderOpStatus" style="color:var(--muted);font-size:11.5px;margin-top:6px;min-height:16px;"></div>
     </div>
-    <div id="projectSaveStatus" style="color:var(--muted);font-size:11.5px;margin-top:6px;min-height:16px;"></div>
+
     <div class="prop-section">
-      <h4>Projets enregistrés sur cet appareil</h4>
-      <div id="projectList"><div class="prop-empty">Aucun projet enregistré pour l'instant.</div></div>
+      <h4>⚡ Sauvegarde rapide dans ce navigateur</h4>
+      <p style="color:var(--muted);font-size:11px;line-height:1.4;margin:0 0 8px;">Enregistré directement dans ce navigateur, sans dossier à choisir — pratique pour reprendre vite sur cet appareil.</p>
+      <label class="field">Nom du projet</label>
+      <div class="row">
+        <input type="text" id="projectNameInput" placeholder="Mon montage" style="flex:1;min-width:0;">
+        <button id="btnDoSaveProject" class="primary">Enregistrer</button>
+      </div>
+      <div id="projectSaveStatus" style="color:var(--muted);font-size:11.5px;margin-top:6px;min-height:16px;"></div>
+      <div id="projectList" style="margin-top:10px;"><div class="prop-empty">Aucun projet enregistré pour l'instant.</div></div>
     </div>
   </div>
 </div>
@@ -447,6 +478,32 @@ let _uid = 1;
 function uid(prefix){ return prefix + (_uid++) + '_' + Math.random().toString(36).slice(2,7); }
 function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 function clamp01(v){ return clamp(v,0,1); }
+// Generic keyframe interpolation: clip.kf[param] is a sorted array of
+// {t (seconds relative to the clip's own start), v (value)}. With 0 or 1
+// keyframe the static value (clip[param] or a fallback) is used everywhere,
+// so keyframes are purely additive — nothing breaks for clips that don't use them.
+function kfValue(clip, param, tRel, fallback){
+  const arr = clip.kf && clip.kf[param];
+  if(!arr || arr.length===0) return fallback;
+  if(arr.length===1) return arr[0].v;
+  if(tRel <= arr[0].t) return arr[0].v;
+  if(tRel >= arr[arr.length-1].t) return arr[arr.length-1].v;
+  for(let i=0;i<arr.length-1;i++){
+    const a=arr[i], b=arr[i+1];
+    if(tRel>=a.t && tRel<=b.t){
+      const p = (b.t-a.t)>0 ? (tRel-a.t)/(b.t-a.t) : 0;
+      return a.v + (b.v-a.v)*p;
+    }
+  }
+  return fallback;
+}
+function addKeyframe(clip, param, tRel, val){
+  if(!clip.kf) clip.kf = {};
+  if(!clip.kf[param]) clip.kf[param] = [];
+  const arr = clip.kf[param];
+  const existing = arr.find(k=>Math.abs(k.t-tRel)<0.05);
+  if(existing){ existing.v = val; } else { arr.push({t:tRel, v:val}); arr.sort((a,b)=>a.t-b.t); }
+}
 function fmtTime(t){
   if(!isFinite(t) || t<0) t=0;
   const m = Math.floor(t/60), s = t-m*60;
@@ -480,6 +537,7 @@ const st = {
   playing: false,
   pxPerSec: 80,
   exporting: false,
+  expertMode: false,
 };
 
 function newVideoTrack(name){ return { id: uid('vt'), type:'video', name: name, muted:false, hidden:false, clips:[] }; }
@@ -915,12 +973,13 @@ function applyChromaKey(context, keyHex, tolerance, softness){
 // already-tinted colors). "Intensité générale" is allowed up to 200% (not
 // just 100%) so the look can be pushed well past the old ceiling when a
 // stronger night feel is wanted; the sub-sliders shape *how* it darkens.
-function applyNightEffect(context, clip){
-  const master = clamp((clip.nightIntensity!==undefined?clip.nightIntensity:70)/100, 0, 2);
+function applyNightEffect(context, clip, tRel){
+  tRel = tRel!==undefined ? tRel : 0;
+  const master = clamp(kfValue(clip,'nightIntensity',tRel,clip.nightIntensity!==undefined?clip.nightIntensity:70)/100, 0, 2);
   if(master<=0) return;
-  const blueAmt = clamp((clip.nightBlue!==undefined?clip.nightBlue:60)/100, 0, 1);
-  const vigAmt = clamp((clip.nightVignette!==undefined?clip.nightVignette:50)/100, 0, 1);
-  const contrastAmt = clamp((clip.nightContrast!==undefined?clip.nightContrast:30)/100, 0, 1);
+  const blueAmt = clamp(kfValue(clip,'nightBlue',tRel,clip.nightBlue!==undefined?clip.nightBlue:60)/100, 0, 1);
+  const vigAmt = clamp(kfValue(clip,'nightVignette',tRel,clip.nightVignette!==undefined?clip.nightVignette:50)/100, 0, 1);
+  const contrastAmt = clamp(kfValue(clip,'nightContrast',tRel,clip.nightContrast!==undefined?clip.nightContrast:30)/100, 0, 1);
 
   context.save();
   context.globalCompositeOperation = 'multiply';
@@ -965,6 +1024,11 @@ function ensureClipImage(clip){
 // clip's raw (un-keyed) frame full-canvas so the user can click a pixel to sample.
 function drawClip(clip, t, alpha, opts){
   opts = opts || {};
+  const tRel = clamp(t - clip.start, 0, clip.dur);
+  if(clip.type!=='title'){
+    const effOpacity = kfValue(clip, 'opacity', tRel, clip.opacity!==undefined?clip.opacity:100);
+    alpha = alpha * clamp01(effOpacity/100);
+  }
   if(alpha<=0.003 && !opts.force) return;
   if(clip.type==='title'){
     ctx.save();
@@ -989,14 +1053,19 @@ function drawClip(clip, t, alpha, opts){
   }
   offCtx.save();
   offCtx.clearRect(0,0,W,H);
-  offCtx.filter = buildFilterString(clip);
+  offCtx.filter = buildFilterString({
+    brightness: kfValue(clip,'brightness',tRel,clip.brightness),
+    contrast: kfValue(clip,'contrast',tRel,clip.contrast),
+    saturation: kfValue(clip,'saturation',tRel,clip.saturation),
+    grayscale: clip.grayscale
+  });
 
   // "Incrustation (fenêtre flottante)": instead of filling the whole frame,
   // the clip is drawn into a small window in a corner (picture-in-picture),
   // leaving the rest of the canvas transparent so tracks below show through.
   let dest = {dx:0, dy:0, dw:W, dh:H};
   if(clip.pip){
-    const sizePct = clamp((clip.pipSize!==undefined?clip.pipSize:30)/100, 0.1, 0.7);
+    const sizePct = clamp(kfValue(clip,'pipSize',tRel,clip.pipSize!==undefined?clip.pipSize:30)/100, 0.1, 0.7);
     const winW = Math.round(W*sizePct);
     const winH = Math.round(winW * (H/W));
     const margin = 18;
@@ -1010,7 +1079,10 @@ function drawClip(clip, t, alpha, opts){
     dest = {dx, dy, dw:winW, dh:winH};
   }
 
-  const r = computeCoverRect(sw, sh, dest.dw, dest.dh, clip.cropZoom, clip.cropPanX, clip.cropPanY);
+  const effCropZoom = kfValue(clip,'cropZoom',tRel,clip.cropZoom!==undefined?clip.cropZoom:100);
+  const effCropPanX = kfValue(clip,'cropPanX',tRel,clip.cropPanX||0);
+  const effCropPanY = kfValue(clip,'cropPanY',tRel,clip.cropPanY||0);
+  const r = computeCoverRect(sw, sh, dest.dw, dest.dh, effCropZoom, effCropPanX, effCropPanY);
   if(clip.mirror){
     offCtx.translate(dest.dx+dest.dw, dest.dy);
     offCtx.scale(-1,1);
@@ -1024,7 +1096,7 @@ function drawClip(clip, t, alpha, opts){
   if(clip.nightEffect){
     offCtx.save();
     if(clip.pip){ offCtx.beginPath(); offCtx.rect(dest.dx, dest.dy, dest.dw, dest.dh); offCtx.clip(); }
-    applyNightEffect(offCtx, clip);
+    applyNightEffect(offCtx, clip, tRel);
     offCtx.restore();
   }
   if(clip.chroma && !opts.skipChroma){ applyChromaKey(offCtx, clip.chromaColor, clip.chromaTolerance, clip.chromaSoftness); }
@@ -1109,7 +1181,8 @@ function syncMedia(t, alphas, playing){
           // A video clip whose audio has been detached to an independent audio
           // clip keeps playing its picture, but its own embedded sound is muted
           // (the separate audio clip is now the one carrying the sound).
-          clip.gainNode.gain.value = (trackMuted || clip.audioDetached) ? 0 : (clip.volume * trackVol * alpha);
+          const effVol = kfValue(clip, 'volume', clamp(t-clip.start,0,clip.dur), clip.volume*100)/100;
+          clip.gainNode.gain.value = (trackMuted || clip.audioDetached) ? 0 : (effVol * trackVol * alpha);
         }
         if(playing && el.paused){ el.play().catch(()=>{}); }
         if(!playing && !el.paused){ el.pause(); }
@@ -1501,6 +1574,18 @@ function renderClipEl(clip){
     div.appendChild(lockBtn);
   }
 
+  if(clip.kf){
+    const kfTimes = new Set();
+    Object.values(clip.kf).forEach(arr=>{ (arr||[]).forEach(k=> kfTimes.add(Math.round(k.t*100)/100)); });
+    kfTimes.forEach(kt=>{
+      const marker = document.createElement('div');
+      marker.className = 'kf-marker';
+      marker.style.left = (kt*st.pxPerSec)+'px';
+      marker.title = 'Image clé à ' + fmtTime(kt);
+      div.appendChild(marker);
+    });
+  }
+
   const hL = document.createElement('div'); hL.className='handle left';
   const hR = document.createElement('div'); hR.className='handle right';
   div.appendChild(hL); div.appendChild(hR);
@@ -1678,10 +1763,12 @@ function selectClip(id){
 function deselect(){ st.selectedClipId=null; renderTracks(); renderProps(); }
 
 const propSectionState = {}; // persists open/closed accordion state across re-renders, keyed by section title
-function section(title, bodyHtml){
+function section(title, bodyHtml, category){
   const open = !!propSectionState[title];
-  return '<div class="prop-section'+(open?' open':'')+'" data-sec="'+escapeHtml(title)+'">'+
-    '<h4 class="prop-sec-title"><span>'+title+'</span><span class="chev">▸</span></h4>'+
+  const cat = category||'general';
+  const catIcon = cat==='audio' ? '<span class="cat-icon" title="Effet audio">🔊</span>' : (cat==='video' ? '<span class="cat-icon" title="Effet vidéo">🎥</span>' : '');
+  return '<div class="prop-section cat-'+cat+(open?' open':'')+'" data-sec="'+escapeHtml(title)+'">'+
+    '<h4 class="prop-sec-title"><span>'+catIcon+title+'</span><span class="chev">▸</span></h4>'+
     '<div class="prop-sec-body">'+bodyHtml+'</div>'+
     '</div>';
 }
@@ -1698,7 +1785,7 @@ function bindPropAccordion(){
 }
 function renderProps(){
   const body = document.getElementById('propBody');
-  const globalHtml = section('🌊 Anti-saut audio', buildAudioFadeSectionHtml());
+  const globalHtml = section('🌊 Anti-saut audio', buildAudioFadeSectionHtml(), 'audio');
   const found = findClip(st.selectedClipId);
   if(!found){
     body.innerHTML = globalHtml + '<div class="prop-empty">Sélectionnez un clip sur la timeline pour voir et modifier ses effets, transitions, volume et fondus.</div>';
@@ -1707,7 +1794,9 @@ function renderProps(){
   }
   const {clip, track} = found;
   const linkedTarget = clip.linkedClipId ? findClip(clip.linkedClipId) : null;
-  let html = globalHtml;
+  let generalHtml = '';
+  let audioHtml = globalHtml;
+  let videoHtml = '';
 
   let general = '';
   general += field('Nom', inputText('p_name', clip.name));
@@ -1723,10 +1812,13 @@ function renderProps(){
     general += chkField('p_link', '🔒 Lier ce clip à son audio associé (déplacement/découpe synchronisés)', clip.linkLocked!==false);
     general += '<div class="btnrow"><button id="p_reattach" class="small">🔁 Réactiver le son intégré de la vidéo</button></div>';
   } else {
-    general += fieldRange('p_vol', 'Volume', 0, 200, Math.round(clip.volume*100), '%');
+    general += fieldRangeKf('p_vol', 'Volume', 0, 200, Math.round(clip.volume*100), '%', 1, clip, 'volume');
   }
   general += fieldRange('p_fadein', 'Fondu ouverture', 0, 5, clip.fadeIn, ' s', 0.1);
   general += fieldRange('p_fadeout', 'Fondu fermeture', 0, 5, clip.fadeOut, ' s', 0.1);
+  if(clip.type!=='title'){
+    general += fieldRangeKf('p_opacity', 'Opacité', 0, 100, clip.opacity!==undefined?clip.opacity:100, '%', 1, clip, 'opacity');
+  }
   if(clip.type==='audio' && linkedTarget){
     general += '<p style="color:var(--muted);font-size:11.5px;line-height:1.5;margin:8px 0 0;">🔗 Son détaché de la vidéo « '+escapeHtml(linkedTarget.clip.name)+' ».</p>';
     general += chkField('p_link', '🔒 Lier ce clip à sa vidéo associée (déplacement/découpe synchronisés)', clip.linkLocked!==false);
@@ -1734,7 +1826,7 @@ function renderProps(){
   if(clip.type==='video' && !clip.audioDetached){
     general += '<div class="btnrow"><button id="p_detach" class="small">🔊 Détacher le son sur une piste audio</button></div>';
   }
-  html += section('Général', general);
+  generalHtml += section('Général', general, 'general');
 
   if(clip.type==='video' || clip.type==='audio'){
     let speedSec = '';
@@ -1751,13 +1843,17 @@ function renderProps(){
       '<button type="button" class="small" data-speedpreset="1.25|0">🤪 Rigolo</button>'+
       '</div>';
     speedSec += '<p style="color:var(--muted);font-size:11px;line-height:1.4;margin-top:4px;">Décochez « garder une voix naturelle » pour un effet grave/aigu façon dessin animé — changer la vitesse déforme alors aussi le son. Les préréglages « voix » (grave, aiguë, rigolo) ne changent que le son : le clip garde exactement la même durée sur la timeline. Les préréglages « ralenti/normal/accéléré » gardent la voix naturelle et redimensionnent le clip en conséquence.</p>';
-    html += section('Vitesse / Voix', speedSec);
+    audioHtml += section('Vitesse / Voix', speedSec, 'audio');
   }
 
   let trans = '';
   trans += selectField('p_trans', ['none:Aucune','crossfade:Fondu enchaîné','fadeblack:Fondu au noir','fadewhite:Fondu au blanc','wipe:Volet'], clip.transitionIn||'none');
   trans += '<p style="color:var(--muted);font-size:11px;line-height:1.4;margin-top:4px;">Chevauchez ce clip avec le précédent sur la même piste pour activer la transition dans la zone de recouvrement.</p>';
-  html += section('Transition (avec le clip précédent)', trans);
+  if(clip.type==='audio'){
+    audioHtml += section('Transition (avec le clip précédent)', trans, 'audio');
+  } else {
+    videoHtml += section('Transition (avec le clip précédent)', trans, 'video');
+  }
 
   if(clip.type==='video' || clip.type==='image'){
     let chroma = '';
@@ -1770,39 +1866,39 @@ function renderProps(){
     chroma += '<div class="presetrow"><button data-preset="#00ff00">Vert</button><button data-preset="#0000ff">Bleu</button></div>';
     chroma += fieldRange('p_tol', 'Tolérance', 5, 160, clip.chromaTolerance, '', 1);
     chroma += fieldRange('p_soft', 'Douceur du bord', 1, 120, clip.chromaSoftness, '', 1);
-    html += section('Incrustation (fond vert)', chroma);
+    videoHtml += section('Fond coloré (chroma key)', chroma, 'video');
 
     let pip = '';
     pip += chkField('p_pip', 'Afficher ce clip en petite fenêtre flottante', clip.pip);
-    pip += fieldRange('p_pipsize', 'Taille de la fenêtre', 10, 70, clip.pipSize!==undefined?clip.pipSize:30, '%');
+    pip += fieldRangeKf('p_pipsize', 'Taille de la fenêtre', 10, 70, clip.pipSize!==undefined?clip.pipSize:30, '%', 1, clip, 'pipSize');
     pip += '<label class="field">Position</label>';
     pip += selectField('p_pipposition', ['tl:Haut gauche','tr:Haut droite','bl:Bas gauche','br:Bas droite'], clip.pipPosition||'br');
     pip += '<p style="color:var(--muted);font-size:11px;line-height:1.4;margin-top:4px;">Incruste ce clip en petite fenêtre par-dessus la piste vidéo du dessous (ex : bulle webcam), au lieu de remplir tout le cadre.</p>';
-    html += section('🖼️ Incrustation (fenêtre flottante)', pip);
+    videoHtml += section('🖼️ Incrustation (fenêtre flottante)', pip, 'video');
 
     let crop = '';
-    crop += fieldRange('p_cropzoom', 'Zoom / recadrage', 100, 300, clip.cropZoom!==undefined?clip.cropZoom:100, '%');
-    crop += fieldRange('p_croppanx', 'Décalage horizontal', -50, 50, clip.cropPanX!==undefined?clip.cropPanX:0, '');
-    crop += fieldRange('p_croppany', 'Décalage vertical', -50, 50, clip.cropPanY!==undefined?clip.cropPanY:0, '');
+    crop += fieldRangeKf('p_cropzoom', 'Zoom / recadrage', 100, 300, clip.cropZoom!==undefined?clip.cropZoom:100, '%', 1, clip, 'cropZoom');
+    crop += fieldRangeKf('p_croppanx', 'Décalage horizontal', -50, 50, clip.cropPanX!==undefined?clip.cropPanX:0, '', 1, clip, 'cropPanX');
+    crop += fieldRangeKf('p_croppany', 'Décalage vertical', -50, 50, clip.cropPanY!==undefined?clip.cropPanY:0, '', 1, clip, 'cropPanY');
     crop += '<p style="color:var(--muted);font-size:11px;line-height:1.4;margin-top:4px;">Zoomez dans l\'image puis déplacez le cadrage pour recentrer le sujet.</p>';
-    html += section('Recadrage', crop);
+    videoHtml += section('Recadrage', crop, 'video');
 
     let image = '';
-    image += fieldRange('p_bright', 'Luminosité', 30, 200, clip.brightness, '%');
-    image += fieldRange('p_contrast', 'Contraste', 30, 200, clip.contrast, '%');
-    image += fieldRange('p_sat', 'Saturation', 0, 250, clip.saturation, '%');
+    image += fieldRangeKf('p_bright', 'Luminosité', 30, 200, clip.brightness, '%', 1, clip, 'brightness');
+    image += fieldRangeKf('p_contrast', 'Contraste', 30, 200, clip.contrast, '%', 1, clip, 'contrast');
+    image += fieldRangeKf('p_sat', 'Saturation', 0, 250, clip.saturation, '%', 1, clip, 'saturation');
     image += chkField('p_gray', 'Noir & blanc', clip.grayscale);
     image += chkField('p_mirror', 'Effet miroir', clip.mirror);
-    html += section('Image', image);
+    videoHtml += section('Image', image, 'video');
 
     let night = '';
     night += chkField('p_night', 'Simuler une scène de nuit', clip.nightEffect);
-    night += fieldRange('p_nightint', 'Intensité générale', 0, 200, clip.nightIntensity!==undefined?clip.nightIntensity:70, '%');
-    night += fieldRange('p_nightblue', 'Teinte bleue (clair de lune)', 0, 100, clip.nightBlue!==undefined?clip.nightBlue:60, '%');
-    night += fieldRange('p_nightvig', 'Vignettage (bords sombres)', 0, 100, clip.nightVignette!==undefined?clip.nightVignette:50, '%');
-    night += fieldRange('p_nightcontrast', 'Contraste renforcé', 0, 100, clip.nightContrast!==undefined?clip.nightContrast:30, '%');
+    night += fieldRangeKf('p_nightint', 'Intensité générale', 0, 200, clip.nightIntensity!==undefined?clip.nightIntensity:70, '%', 1, clip, 'nightIntensity');
+    night += fieldRangeKf('p_nightblue', 'Teinte bleue (clair de lune)', 0, 100, clip.nightBlue!==undefined?clip.nightBlue:60, '%', 1, clip, 'nightBlue');
+    night += fieldRangeKf('p_nightvig', 'Vignettage (bords sombres)', 0, 100, clip.nightVignette!==undefined?clip.nightVignette:50, '%', 1, clip, 'nightVignette');
+    night += fieldRangeKf('p_nightcontrast', 'Contraste renforcé', 0, 100, clip.nightContrast!==undefined?clip.nightContrast:30, '%', 1, clip, 'nightContrast');
     night += '<p style="color:var(--muted);font-size:11px;line-height:1.4;margin-top:4px;">Assombrit l\'image, la refroidit vers le bleu, assombrit les bords et accentue le contraste, comme au cinéma pour tourner une scène de nuit en plein jour. Montez « Intensité générale » au-delà de 100% pour un effet plus marqué.</p>';
-    html += section('🌙 Nuit américaine', night);
+    videoHtml += section('🌙 Nuit américaine', night, 'video');
   }
   if(clip.type==='title'){
     let titleSec = '';
@@ -1810,8 +1906,9 @@ function renderProps(){
     titleSec += field('Couleur texte', '<input type="color" id="p_textcolor" value="'+clip.textColor+'">');
     titleSec += field('Couleur fond', '<input type="color" id="p_bgcolor" value="'+clip.bgColor+'">');
     titleSec += fieldRange('p_fontsize', 'Taille du texte', 16, 120, clip.fontSize, ' px', 1);
-    html += section('Titre', titleSec);
+    videoHtml += section('Titre', titleSec, 'video');
   }
+  let html = generalHtml + audioHtml + videoHtml;
   html += '<div class="btnrow"><button id="p_split">✂️ Couper au curseur</button><button id="p_dup">⧉ Dupliquer</button><button id="p_del" class="danger" title="Supprimer">🗑️</button></div>';
   body.innerHTML = html;
   wireProps(clip, track);
@@ -1823,6 +1920,47 @@ function fieldRange(id, labelText, min, max, val, unit, step){
   step = step||1;
   return '<label class="field">'+labelText+' <span class="val" id="'+id+'_v">'+val+(unit||'')+'</span></label>'+
     '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">';
+}
+// In expert mode, appends an "⏱️ Image clé" button plus chips for existing
+// keyframes below a slider, so any keyframable setting can be animated over
+// the clip's duration. clip/param identify where keyframes are stored.
+function kfControlsHtml(clip, param, inputId){
+  if(!st.expertMode) return '';
+  const list = (clip.kf && clip.kf[param]) || [];
+  let html = '<div class="kfrow" data-kfparam="'+param+'" data-kfinput="'+inputId+'">';
+  html += '<button type="button" class="small kf-add" data-kfadd="'+param+'" data-kfinput="'+inputId+'" title="Ajouter une image clé à la position actuelle du curseur">⏱️ Image clé ici</button>';
+  if(list.length){
+    html += '<div class="kfchips">';
+    list.forEach((k,i)=>{
+      html += '<span class="kfchip">'+
+        '<span class="kftime" data-kfseek="'+param+'|'+i+'" title="Déplacer le curseur à ce temps">'+fmtTime(k.t)+'</span> '+
+        '<b data-kfdel="'+param+'|'+i+'" title="Supprimer cette image clé">×</b>'+
+        '</span>';
+    });
+    html += '</div>';
+    html += '<p style="color:var(--muted);font-size:10px;line-height:1.3;margin:2px 0 0;">Cliquez sur le temps d\'une image clé ci-dessus pour vous y placer, puis ajustez le réglage pour la modifier.</p>';
+  }
+  html += '</div>';
+  return html;
+}
+function fieldRangeKf(id, labelText, min, max, staticVal, unit, step, clip, param){
+  // Show the value the animation actually has at the current playhead position
+  // (interpolated if keyframes exist), not the clip's static base value, so the
+  // slider always reflects what you'd see on screen right now.
+  const tRel = clamp(st.playhead - clip.start, 0, clip.dur);
+  const val = kfValue(clip, param, tRel, staticVal);
+  return fieldRange(id, labelText, min, max, val, unit, step) + kfControlsHtml(clip, param, id);
+}
+// When a slider tied to a keyframable param is adjusted while the playhead sits
+// exactly on one of its existing keyframes, update that keyframe's value in
+// place instead of silently doing nothing (keyframes otherwise override the
+// clip's static value entirely, so editing the static value would have no
+// visible effect once at least one keyframe exists).
+function kfSyncOnEdit(clip, param, rawValue){
+  if(!clip.kf || !clip.kf[param] || !clip.kf[param].length) return;
+  const tRel = clamp(st.playhead - clip.start, 0, clip.dur);
+  const hit = clip.kf[param].find(k=>Math.abs(k.t-tRel)<0.05);
+  if(hit) hit.v = rawValue;
 }
 function chkField(id, labelText, checked){
   return '<div class="chk-row"><input type="checkbox" id="'+id+'" '+(checked?'checked':'')+'><label for="'+id+'" style="cursor:pointer;">'+labelText+'</label></div>';
@@ -1865,7 +2003,38 @@ function wireProps(clip, track){
     if(clip.linkedClipId){ const partner = findClip(clip.linkedClipId); if(partner) partner.clip.linkLocked = locked; }
     renderTracks();
   });
-  onInput('p_vol', ()=>{ clip.volume = $('p_vol').value/100; $('p_vol_v').textContent=$('p_vol').value+'%'; });
+  onInput('p_vol', ()=>{ clip.volume = $('p_vol').value/100; $('p_vol_v').textContent=$('p_vol').value+'%'; kfSyncOnEdit(clip,'volume',parseFloat($('p_vol').value)); renderTracks(); });
+  onInput('p_opacity', ()=>{ clip.opacity = parseFloat($('p_opacity').value); $('p_opacity_v').textContent=$('p_opacity').value+'%'; kfSyncOnEdit(clip,'opacity',clip.opacity); renderSettle(); });
+  if(st.expertMode){
+    document.querySelectorAll('#propBody [data-kfadd]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const param = b.dataset.kfadd;
+        const inputEl = $(b.dataset.kfinput);
+        if(!inputEl) return;
+        const tRel = clamp(st.playhead - clip.start, 0, clip.dur);
+        addKeyframe(clip, param, tRel, parseFloat(inputEl.value));
+        renderProps(); renderTracks(); renderSettle();
+      });
+    });
+    document.querySelectorAll('#propBody [data-kfseek]').forEach(timeEl=>{
+      timeEl.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const [param, idx] = timeEl.dataset.kfseek.split('|');
+        const kf = clip.kf && clip.kf[param] && clip.kf[param][parseInt(idx,10)];
+        if(!kf) return;
+        previewSeek(clip.start + kf.t);
+        renderProps();
+      });
+    });
+    document.querySelectorAll('#propBody [data-kfdel]').forEach(delBtn=>{
+      delBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const [param, idx] = delBtn.dataset.kfdel.split('|');
+        if(clip.kf && clip.kf[param]) clip.kf[param].splice(parseInt(idx,10),1);
+        renderProps(); renderTracks(); renderSettle();
+      });
+    });
+  }
   if(clip.type==='video' || clip.type==='audio'){
     onInput('p_speed', ()=>{
       retimeClipForSpeed(clip, parseFloat($('p_speed').value)/100);
@@ -1912,22 +2081,22 @@ function wireProps(clip, track){
     });
     const pipetteBtn = $('p_pipette');
     if(pipetteBtn) pipetteBtn.addEventListener('click', ()=> startPipette(clip));
-    onInput('p_bright', ()=>{ clip.brightness=parseFloat($('p_bright').value); $('p_bright_v').textContent=$('p_bright').value+'%'; renderSettle(); });
-    onInput('p_contrast', ()=>{ clip.contrast=parseFloat($('p_contrast').value); $('p_contrast_v').textContent=$('p_contrast').value+'%'; renderSettle(); });
-    onInput('p_sat', ()=>{ clip.saturation=parseFloat($('p_sat').value); $('p_sat_v').textContent=$('p_sat').value+'%'; renderSettle(); });
+    onInput('p_bright', ()=>{ clip.brightness=parseFloat($('p_bright').value); $('p_bright_v').textContent=$('p_bright').value+'%'; kfSyncOnEdit(clip,'brightness',clip.brightness); renderSettle(); });
+    onInput('p_contrast', ()=>{ clip.contrast=parseFloat($('p_contrast').value); $('p_contrast_v').textContent=$('p_contrast').value+'%'; kfSyncOnEdit(clip,'contrast',clip.contrast); renderSettle(); });
+    onInput('p_sat', ()=>{ clip.saturation=parseFloat($('p_sat').value); $('p_sat_v').textContent=$('p_sat').value+'%'; kfSyncOnEdit(clip,'saturation',clip.saturation); renderSettle(); });
     onChange('p_gray', ()=>{ clip.grayscale=$('p_gray').checked; renderSettle(); });
     onChange('p_mirror', ()=>{ clip.mirror=$('p_mirror').checked; renderSettle(); });
     onChange('p_night', ()=>{ clip.nightEffect=$('p_night').checked; renderSettle(); });
-    onInput('p_nightint', ()=>{ clip.nightIntensity=parseFloat($('p_nightint').value); $('p_nightint_v').textContent=$('p_nightint').value+'%'; renderSettle(); });
-    onInput('p_nightblue', ()=>{ clip.nightBlue=parseFloat($('p_nightblue').value); $('p_nightblue_v').textContent=$('p_nightblue').value+'%'; renderSettle(); });
-    onInput('p_nightvig', ()=>{ clip.nightVignette=parseFloat($('p_nightvig').value); $('p_nightvig_v').textContent=$('p_nightvig').value+'%'; renderSettle(); });
-    onInput('p_nightcontrast', ()=>{ clip.nightContrast=parseFloat($('p_nightcontrast').value); $('p_nightcontrast_v').textContent=$('p_nightcontrast').value+'%'; renderSettle(); });
+    onInput('p_nightint', ()=>{ clip.nightIntensity=parseFloat($('p_nightint').value); $('p_nightint_v').textContent=$('p_nightint').value+'%'; kfSyncOnEdit(clip,'nightIntensity',clip.nightIntensity); renderSettle(); });
+    onInput('p_nightblue', ()=>{ clip.nightBlue=parseFloat($('p_nightblue').value); $('p_nightblue_v').textContent=$('p_nightblue').value+'%'; kfSyncOnEdit(clip,'nightBlue',clip.nightBlue); renderSettle(); });
+    onInput('p_nightvig', ()=>{ clip.nightVignette=parseFloat($('p_nightvig').value); $('p_nightvig_v').textContent=$('p_nightvig').value+'%'; kfSyncOnEdit(clip,'nightVignette',clip.nightVignette); renderSettle(); });
+    onInput('p_nightcontrast', ()=>{ clip.nightContrast=parseFloat($('p_nightcontrast').value); $('p_nightcontrast_v').textContent=$('p_nightcontrast').value+'%'; kfSyncOnEdit(clip,'nightContrast',clip.nightContrast); renderSettle(); });
     onChange('p_pip', ()=>{ clip.pip=$('p_pip').checked; renderSettle(); });
-    onInput('p_pipsize', ()=>{ clip.pipSize=parseFloat($('p_pipsize').value); $('p_pipsize_v').textContent=$('p_pipsize').value+'%'; renderSettle(); });
+    onInput('p_pipsize', ()=>{ clip.pipSize=parseFloat($('p_pipsize').value); $('p_pipsize_v').textContent=$('p_pipsize').value+'%'; kfSyncOnEdit(clip,'pipSize',clip.pipSize); renderSettle(); });
     onChange('p_pipposition', ()=>{ clip.pipPosition=$('p_pipposition').value; renderSettle(); });
-    onInput('p_cropzoom', ()=>{ clip.cropZoom=parseFloat($('p_cropzoom').value); $('p_cropzoom_v').textContent=$('p_cropzoom').value+'%'; renderSettle(); });
-    onInput('p_croppanx', ()=>{ clip.cropPanX=parseFloat($('p_croppanx').value); $('p_croppanx_v').textContent=$('p_croppanx').value; renderSettle(); });
-    onInput('p_croppany', ()=>{ clip.cropPanY=parseFloat($('p_croppany').value); $('p_croppany_v').textContent=$('p_croppany').value; renderSettle(); });
+    onInput('p_cropzoom', ()=>{ clip.cropZoom=parseFloat($('p_cropzoom').value); $('p_cropzoom_v').textContent=$('p_cropzoom').value+'%'; kfSyncOnEdit(clip,'cropZoom',clip.cropZoom); renderSettle(); });
+    onInput('p_croppanx', ()=>{ clip.cropPanX=parseFloat($('p_croppanx').value); $('p_croppanx_v').textContent=$('p_croppanx').value; kfSyncOnEdit(clip,'cropPanX',clip.cropPanX); renderSettle(); });
+    onInput('p_croppany', ()=>{ clip.cropPanY=parseFloat($('p_croppany').value); $('p_croppany_v').textContent=$('p_croppany').value; kfSyncOnEdit(clip,'cropPanY',clip.cropPanY); renderSettle(); });
   }
   if(clip.type==='title'){
     onInput('p_text', ()=>{ clip.text=$('p_text').value; renderSettle(); });
@@ -2285,6 +2454,11 @@ document.getElementById('btnDup').addEventListener('click', ()=>{ const f=findCl
 document.getElementById('btnDel').addEventListener('click', ()=>{ const f=findClip(st.selectedClipId); if(f) deleteClip(f.clip); });
 document.getElementById('btnUndo').addEventListener('click', undoHistory);
 document.getElementById('btnRedo').addEventListener('click', redoHistory);
+document.getElementById('btnExpertMode').addEventListener('click', ()=>{
+  st.expertMode = !st.expertMode;
+  document.getElementById('btnExpertMode').classList.toggle('active', st.expertMode);
+  renderProps();
+});
 
 function addOneVideoTrack(){
   if(st.videoTracks.length>=MAX_VIDEO_TRACKS) return null;
@@ -2562,12 +2736,32 @@ async function deleteSavedProject(name){
   await pdbDelete('projects', name);
 }
 
-async function loadSavedProject(name){
-  const rec = await pdbGet('projects', name);
-  if(!rec) throw new Error('Ce projet est introuvable.');
+// Shared by every "load a project" path (browser storage or a real folder):
+// takes the serialized timeline data plus a library array whose items already
+// have a usable `url`, and replaces the current montage with it.
+function applyLoadedProjectData(data, library){
   stopPlayback();
   if(pipetteClipId) stopPipette();
   document.getElementById('mediaPool').innerHTML = '';
+  const reviveClips = (clips)=> clips.map(c=> Object.assign({}, c, {el:null, gainNode:null, imgEl:null}));
+  st.library = library;
+  st.videoTracks = (data.videoTracks||[]).map(t=> Object.assign({}, t, {clips: reviveClips(t.clips||[])}));
+  st.audioTracks = (data.audioTracks||[]).map(t=> Object.assign({}, t, {clips: reviveClips(t.clips||[])}));
+  if(st.videoTracks.length===0) st.videoTracks.push(newVideoTrack('Vidéo 1'));
+  if(st.audioTracks.length===0) st.audioTracks.push(newAudioTrack('Audio 1'));
+  st.selectedTrackId = data.selectedTrackId && findTrack(data.selectedTrackId) ? data.selectedTrackId : st.videoTracks[st.videoTracks.length-1].id;
+  st.selectedClipId = null;
+  st.playhead = 0;
+  st.pxPerSec = data.pxPerSec || 80;
+  historyStack = []; futureStack = []; updateHistoryButtons();
+  refreshAll();
+  renderLibrary();
+  renderProps();
+}
+
+async function loadSavedProject(name){
+  const rec = await pdbGet('projects', name);
+  if(!rec) throw new Error('Ce projet est introuvable.');
   const newLibrary = [];
   for(const l of (rec.data.library||[])){
     let url = '';
@@ -2577,19 +2771,85 @@ async function loadSavedProject(name){
     }catch(e){ console.warn('Média manquant pour', l.name, e); }
     newLibrary.push(Object.assign({}, l, {url}));
   }
-  const reviveClips = (clips)=> clips.map(c=> Object.assign({}, c, {el:null, gainNode:null, imgEl:null}));
-  st.library = newLibrary;
-  st.videoTracks = (rec.data.videoTracks||[]).map(t=> Object.assign({}, t, {clips: reviveClips(t.clips||[])}));
-  st.audioTracks = (rec.data.audioTracks||[]).map(t=> Object.assign({}, t, {clips: reviveClips(t.clips||[])}));
-  if(st.videoTracks.length===0) st.videoTracks.push(newVideoTrack('Vidéo 1'));
-  if(st.audioTracks.length===0) st.audioTracks.push(newAudioTrack('Audio 1'));
-  st.selectedTrackId = rec.data.selectedTrackId && findTrack(rec.data.selectedTrackId) ? rec.data.selectedTrackId : st.videoTracks[st.videoTracks.length-1].id;
-  st.selectedClipId = null;
-  st.playhead = 0;
-  st.pxPerSec = rec.data.pxPerSec || 80;
-  refreshAll();
-  renderLibrary();
-  renderProps();
+  applyLoadedProjectData(rec.data, newLibrary);
+}
+
+/* ============================= Sauvegarde / ouverture dans un dossier choisi ============================= */
+// Uses the File System Access API (Chrome/Edge desktop) so the person can pick
+// a real folder on their computer, instead of always going through the
+// browser's internal storage. Falls back gracefully (buttons disabled with an
+// explanatory note) where the API isn't available.
+function folderPickerSupported(){
+  return typeof window.showDirectoryPicker === 'function';
+}
+function extForMedia(mime, kind){
+  const map = {
+    'video/webm':'webm', 'video/mp4':'mp4', 'video/quicktime':'mov', 'video/x-matroska':'mkv',
+    'audio/webm':'webm', 'audio/mpeg':'mp3', 'audio/wav':'wav', 'audio/x-wav':'wav', 'audio/ogg':'ogg', 'audio/mp4':'m4a',
+    'image/png':'png', 'image/jpeg':'jpg', 'image/webp':'webp', 'image/gif':'gif',
+  };
+  if(mime && map[mime]) return map[mime];
+  return kind==='image' ? 'png' : 'webm';
+}
+function slugifyFilename(name){
+  return (name||'media').normalize('NFKD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-zA-Z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'media';
+}
+async function writeFileToDir(dirHandle, filename, blob){
+  const fileHandle = await dirHandle.getFileHandle(filename, {create:true});
+  const writable = await fileHandle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+}
+async function saveProjectToFolder(){
+  if(!folderPickerSupported()) throw new Error("Cette fonction nécessite un navigateur de bureau compatible (Chrome ou Edge).");
+  const dirHandle = await window.showDirectoryPicker({mode:'readwrite'}); // throws AbortError if the person cancels
+  const mediaDir = await dirHandle.getDirectoryHandle('media', {create:true});
+  const libraryManifest = [];
+  for(const lib of st.library){
+    let filename = null;
+    try{
+      const resp = await fetch(lib.url);
+      const blob = await resp.blob();
+      const ext = extForMedia(blob.type || '', lib.type);
+      filename = slugifyFilename(lib.name) + '_' + lib.id + '.' + ext;
+      await writeFileToDir(mediaDir, filename, blob);
+    }catch(e){ console.warn('Échec de sauvegarde du média', lib.name, e); }
+    libraryManifest.push({ id: lib.id, type: lib.type, name: lib.name, duration: lib.duration, file: filename });
+  }
+  const manifest = Object.assign({ formatVersion: 1, savedAt: Date.now() }, serializeProject());
+  manifest.library = libraryManifest;
+  const jsonBlob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  await writeFileToDir(dirHandle, 'projet.json', jsonBlob);
+  return dirHandle.name;
+}
+async function openProjectFromFolder(){
+  if(!folderPickerSupported()) throw new Error("Cette fonction nécessite un navigateur de bureau compatible (Chrome ou Edge).");
+  const dirHandle = await window.showDirectoryPicker(); // throws AbortError if the person cancels
+  let manifest;
+  try{
+    const fileHandle = await dirHandle.getFileHandle('projet.json');
+    const file = await fileHandle.getFile();
+    manifest = JSON.parse(await file.text());
+  }catch(e){
+    throw new Error("Aucun montage trouvé dans ce dossier — choisissez le dossier où le projet a été enregistré.");
+  }
+  let mediaDir = null;
+  try{ mediaDir = await dirHandle.getDirectoryHandle('media'); }catch(e){}
+  const newLibrary = [];
+  for(const l of (manifest.library||[])){
+    let url = '';
+    if(mediaDir && l.file){
+      try{
+        const fileHandle = await mediaDir.getFileHandle(l.file);
+        const file = await fileHandle.getFile();
+        url = URL.createObjectURL(file);
+      }catch(e){ console.warn('Média manquant pour', l.name, e); }
+    }
+    newLibrary.push({ id: l.id, type: l.type, name: l.name, duration: l.duration, url });
+  }
+  applyLoadedProjectData(manifest, newLibrary);
+  return dirHandle.name;
 }
 
 function fmtSavedAt(ts){
@@ -2641,9 +2901,18 @@ function bindProjectModal(){
   const modal = document.getElementById('projectModal');
   const nameInput = document.getElementById('projectNameInput');
   const statusEl = document.getElementById('projectSaveStatus');
+  const folderStatusEl = document.getElementById('folderOpStatus');
+  const btnSaveToFolder = document.getElementById('btnSaveToFolder');
+  const btnOpenFromFolder = document.getElementById('btnOpenFromFolder');
+  if(!folderPickerSupported()){
+    btnSaveToFolder.disabled = true;
+    btnOpenFromFolder.disabled = true;
+    document.getElementById('folderUnsupportedNote').classList.remove('hidden');
+  }
   function openModal(){
     modal.classList.remove('hidden');
     statusEl.textContent = '';
+    folderStatusEl.textContent = '';
     if(!nameInput.value) nameInput.value = 'Montage du ' + new Date().toLocaleDateString('fr-FR');
     renderProjectList();
   }
@@ -2670,6 +2939,30 @@ function bindProjectModal(){
       statusEl.textContent = "❌ Échec de l'enregistrement : " + e.message;
     }
     btn.disabled = false;
+  });
+  btnSaveToFolder.addEventListener('click', async ()=>{
+    folderStatusEl.textContent = 'Choisissez un dossier…';
+    btnSaveToFolder.disabled = true;
+    try{
+      const folderName = await saveProjectToFolder();
+      folderStatusEl.textContent = '✅ Enregistré dans le dossier « ' + folderName + ' ».';
+    }catch(e){
+      folderStatusEl.textContent = (e.name==='AbortError') ? '' : ('❌ ' + e.message);
+    }
+    btnSaveToFolder.disabled = false;
+  });
+  btnOpenFromFolder.addEventListener('click', async ()=>{
+    if(!confirm('Ouvrir un projet depuis un dossier remplacera le montage actuellement ouvert (non sauvegardé perdu). Continuer ?')) return;
+    folderStatusEl.textContent = 'Choisissez votre dossier de travail…';
+    btnOpenFromFolder.disabled = true;
+    try{
+      const folderName = await openProjectFromFolder();
+      folderStatusEl.textContent = '✅ Projet chargé depuis « ' + folderName + ' ».';
+      modal.classList.add('hidden');
+    }catch(e){
+      folderStatusEl.textContent = (e.name==='AbortError') ? '' : ('❌ ' + e.message);
+    }
+    btnOpenFromFolder.disabled = false;
   });
 }
 
