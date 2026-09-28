@@ -2,787 +2,1387 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulateur d'écluse</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Organigramme interactif — Le fonctionnement d'une écluse</title>
 <style>
   :root{
-    --hull:#0c1a24;
-    --panel:#122430;
-    --panel-2:#18303f;
-    --line:#2c4b5c;
-    --water-deep:#0e6ba8;
-    --water-mid:#1487c7;
-    --water-light:#3fa8d8;
-    --concrete:#7d8b93;
-    --concrete-dk:#59636a;
-    --amber:#e2932f;
-    --amber-dim:#7a5a2c;
-    --red:#e0453d;
-    --red-dim:#5a2622;
-    --green:#4bb35f;
-    --green-dim:#254a2c;
-    --ink:#dce8ee;
-    --ink-dim:#8ea3ad;
-    font-family:'Archivo',sans-serif;
+    --bg: #eef3f7;
+    --card-bg: #ffffff;
+    --text: #1c2b36;
+    --text-soft: #5b6b76;
+    --rect-bg: #dceaf7;
+    --rect-border: #3b7bb8;
+    --diamond-bg: #fdeed3;
+    --diamond-border: #c8862c;
+    --accent: #2d6ca3;
+    --green: #2e9e5b;
+    --green-bg: #e2f6ea;
+    --red: #cf4438;
+    --red-bg: #fbe6e3;
+    --line: #9fb3c1;
+    --overlay: rgba(15, 25, 35, 0.55);
+    --locked-bg: #e4e8eb;
+    --locked-border: #c3ccd2;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--hull);color:var(--ink);min-height:100%;}
-  body{padding:18px;}
-  .app{max-width:1180px;margin:0 auto;}
-  header{margin-bottom:14px;}
-  header h1{font-size:1.35rem;font-weight:700;margin:0 0 4px;letter-spacing:0.2px;}
-  header p{margin:0;color:var(--ink-dim);font-size:0.88rem;max-width:62ch;line-height:1.4;}
-
-  .layout{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;align-items:start;}
-  @media (max-width:860px){ .layout{grid-template-columns:1fr;} }
-
-  .scene-panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;}
-  .scene-panel svg{width:100%;height:auto;display:block;}
-
-  .control-panel{display:flex;flex-direction:column;gap:10px;}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;}
-  .card h2{font-size:0.72rem;text-transform:uppercase;letter-spacing:1.1px;color:var(--ink-dim);margin:0 0 10px;font-weight:600;}
-  .card h2 .sub{color:var(--ink);}
-
-  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
-  .row:last-child{margin-bottom:0;}
-  .row .name{display:flex;align-items:center;gap:7px;font-size:0.86rem;}
-  .dot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px rgba(0,0,0,.25) inset;flex:none;}
-  .dot.on{background:var(--green);}
-  .dot.moving{background:var(--amber);animation:pulse 0.6s infinite alternate;}
-  @keyframes pulse{from{opacity:0.4;}to{opacity:1;}}
-
-  .btns{display:flex;gap:6px;}
-  button{
-    font-family:'Archivo',sans-serif;font-weight:600;font-size:0.76rem;
-    background:var(--panel-2);color:var(--ink);border:1px solid var(--line);
-    border-radius:4px;padding:6px 10px;cursor:pointer;letter-spacing:.2px;
-    transition:background .15s,border-color .15s,transform .05s;
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #121a20; --card-bg: #1b262e; --text: #eaf1f5; --text-soft: #a7b6c0;
+      --rect-bg: #1f3a52; --rect-border: #4f9be0; --diamond-bg: #4a3a1c; --diamond-border: #e0a94f;
+      --accent: #6fb3e6; --green: #4fc987; --green-bg: #17301f; --red: #ef7266; --red-bg: #341c19;
+      --line: #3c4c58; --overlay: rgba(0,0,0,0.7); --locked-bg: #202b32; --locked-border: #33404a;
+    }
   }
-  button:hover:not(:disabled){border-color:var(--amber);color:#fff;}
-  button:active:not(:disabled){transform:translateY(1px);}
-  button:disabled{opacity:0.32;cursor:not-allowed;}
-  button.primary{background:linear-gradient(180deg,#c97a1f,var(--amber));color:#231404;border-color:#a86a1e;}
-  button.primary:hover:not(:disabled){filter:brightness(1.08);}
-  button.wide{width:100%;padding:9px 10px;font-size:0.8rem;}
-  button.go{border-color:#2c6b3a;}
-  button.go:hover:not(:disabled){border-color:var(--green);}
-  button.stop{border-color:#7a3230;}
-  button.stop:hover:not(:disabled){border-color:var(--red);}
-
-  .status-line{font-size:0.8rem;color:var(--ink-dim);margin-top:8px;line-height:1.5;}
-  .status-line b{color:var(--ink);}
-
-  .log{
-    background:#0a151d;border:1px solid var(--line);border-radius:5px;
-    height:150px;overflow-y:auto;padding:8px 10px;font-family:'IBM Plex Mono',monospace;
-    font-size:0.72rem;color:#9fd6a8;
+  :root[data-theme="dark"]{
+    --bg: #121a20; --card-bg: #1b262e; --text: #eaf1f5; --text-soft: #a7b6c0;
+    --rect-bg: #1f3a52; --rect-border: #4f9be0; --diamond-bg: #4a3a1c; --diamond-border: #e0a94f;
+    --accent: #6fb3e6; --green: #4fc987; --green-bg: #17301f; --red: #ef7266; --red-bg: #341c19;
+    --line: #3c4c58; --overlay: rgba(0,0,0,0.7); --locked-bg: #202b32; --locked-border: #33404a;
   }
-  .log-line{margin-bottom:3px;color:var(--ink-dim);}
-  .log-line .t{color:#5c7d8a;margin-right:6px;}
-  .log-line:last-child{color:var(--ink);}
+  html, body{ height: 100%; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 0 0 40px;
+  }
 
-  .legend{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:0.72rem;color:var(--ink-dim);margin-top:2px;}
-  .legend span{display:inline-flex;align-items:center;gap:5px;}
-  .legend i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  /* ---- Sticky animation panel ---- */
+  .anim-sticky{
+    position: fixed;
+    top: env(safe-area-inset-top, 0px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    width: 100%;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    padding: 10px 12px 8px;
+  }
+  .anim-inner{
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  h1{
+    font-size: 1.05rem;
+    margin: 2px 0 6px;
+    line-height:1.25;
+    text-align:center;
+  }
+  .scene-wrap{
+    width:100%;
+    max-width: 460px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #cfe8f7 0%, #eaf5fb 100%);
+    border-radius: 12px;
+    overflow:hidden;
+    border: 1px solid var(--line);
+  }
+  @media (min-width: 700px){
+    .anim-inner{ max-width: 900px; }
+    .scene-wrap{ max-width: 820px; }
+  }
+  @media (min-width: 1100px){
+    .anim-inner{ max-width: 1150px; }
+    .scene-wrap{ max-width: 1050px; }
+  }
+  @media (prefers-color-scheme: dark){ .scene-wrap{ background: linear-gradient(180deg, #16303f 0%, #1b262e 100%); } }
+  :root[data-theme="dark"] .scene-wrap{ background: linear-gradient(180deg, #16303f 0%, #1b262e 100%); }
+  svg#scene{ display:block; width:100%; height:auto; }
 
-  .mode-tabs{display:flex;gap:6px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:4px;}
-  .mode-tab{flex:1;text-align:center;padding:8px 6px;border-radius:4px;font-size:0.78rem;font-weight:700;letter-spacing:.2px;cursor:pointer;color:var(--ink-dim);background:transparent;border:none;transition:background .15s,color .15s;}
-  .mode-tab.active{background:linear-gradient(180deg,#c97a1f,var(--amber));color:#231404;}
-  .mode-tab:disabled{opacity:0.4;cursor:not-allowed;}
-  .app[data-mode="manuel"] .card.auto-only{display:none;}
-  .app[data-mode="auto"] .card.manual-only{display:none;}
+  .caption{
+    text-align:center;
+    font-size: 0.82rem;
+    color: var(--text-soft);
+    margin: 6px 4px 4px;
+    min-height: 2.2em;
+  }
+  .scene-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "scene scene" "tests actions";
+    gap: 8px;
+    align-items: start;
+    font-size: 0.72rem;
+    color: var(--text);
+  }
+  .scene-row .scene-wrap{ grid-area: scene; }
+  .scene-row .status-col.tests{ grid-area: tests; }
+  .scene-row .status-col.actions{ grid-area: actions; }
+  @media (min-width: 760px){
+    .scene-row{
+      grid-template-columns: minmax(170px, 240px) minmax(0, 1fr) minmax(170px, 240px);
+      grid-template-areas: "tests scene actions";
+      align-items: center;
+      font-size: 0.74rem;
+    }
+    .scene-row .scene-wrap{ margin: 0 auto; }
+  }
+  .status-col{
+    border-radius: 10px;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    min-width: 0;
+  }
+  .status-col.tests{ background: var(--diamond-bg); border-color: var(--diamond-border); }
+  .status-col.actions{ background: var(--rect-bg); border-color: var(--rect-border); }
+  .status-col h3{
+    margin: 0 0 4px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .status-col.tests h3{ color: var(--diamond-border); }
+  .status-col.actions h3{ color: var(--rect-border); }
+  .status-row{
+    display:flex; justify-content:space-between; align-items:center; gap: 6px;
+    padding: 2px 0; border-top: 1px dashed rgba(0,0,0,0.08);
+  }
+  .status-row:first-of-type{ border-top: none; }
+  .status-row .sname{ flex: 1; min-width: 0; }
+  .status-val{
+    flex-shrink: 0; font-weight: 700; border-radius: 8px; padding: 1px 7px;
+    background: var(--red-bg); color: var(--red); white-space: nowrap;
+  }
+  .status-val.on{ background: var(--green-bg); color: var(--green); }
+  @media (max-width: 420px){
+    .scene-row{ font-size: 0.64rem; gap: 5px; }
+    .status-col{ padding: 5px 6px; }
+  }
 
-  svg text{font-family:'Archivo',sans-serif;}
+  .anim-actions{
+    display:flex;
+    justify-content:center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .replay-btn{
+    background: var(--accent);
+    color: white;
+    border:none;
+    border-radius: 16px;
+    padding: 6px 14px;
+    font-size: 0.76rem;
+    cursor:pointer;
+  }
+  .replay-btn:disabled{ opacity: 0.4; }
+  .anim-actions{ flex-wrap: wrap; align-items:center; }
+  .zoom-controls{ display:flex; align-items:center; gap: 6px; }
+  .zoom-btn{
+    width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--rect-bg); color: var(--text); font-size: 1.1rem; font-weight:700;
+    cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .zoom-btn:disabled{ opacity: 0.35; cursor:default; }
+  .fs-btn{
+    background: var(--card-bg); color: var(--text); border: 1px solid var(--line);
+    border-radius: 16px; padding: 6px 14px; font-size: 0.76rem; cursor: pointer;
+  }
+  .fs-btn[hidden]{ display:none; }
+  .zoom-level{ font-size: 0.78rem; color: var(--text-soft); min-width: 44px; text-align:center; }
+  .anim-inner.zoomed{ max-width: 100% !important; }
+
+  /* ---- Rest of page ---- */
+  main{ width:100%; display:flex; flex-direction:column; align-items:center; padding: 14px 12px 0; }
+  .subtitle{ color: var(--text-soft); font-size: 0.88rem; margin: 0 0 10px; text-align:center; max-width: 480px; }
+  .legend{ display:flex; justify-content:center; gap: 18px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-soft); margin-bottom: 10px; }
+  .legend-item{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width: 16px; height: 16px; flex-shrink:0; border-width: 2px; border-style: solid; }
+  .swatch.rect{ background: var(--rect-bg); border-color: var(--rect-border); border-radius: 3px; }
+  .swatch.diamond{ background: var(--diamond-bg); border-color: var(--diamond-border); transform: rotate(45deg); width:12px; height:12px; }
+
+  .progress-wrap{ width:100%; max-width: 640px; margin-bottom: 18px; }
+  .progress-label{ display:flex; justify-content:space-between; font-size: 0.82rem; color: var(--text-soft); margin-bottom: 4px; }
+  .progress-bar{ width:100%; height: 10px; border-radius: 6px; background: var(--card-bg); border: 1px solid var(--line); overflow:hidden; }
+  .progress-fill{ height:100%; width:0%; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width 0.4s ease; }
+
+  .flow{ width:100%; max-width: 460px; display:flex; flex-direction:column; align-items:center; }
+  .flow-start{ width:100%; max-width: 460px; display:flex; flex-direction:column; align-items:center; }
+  .start-oval{
+    background: var(--green-bg); border: 2px solid var(--green); color: var(--green);
+    font-weight: 700; font-size: 0.9rem; border-radius: 999px; padding: 10px 30px;
+  }
+  .node-wrap{ display:flex; flex-direction:column; align-items:center; width:100%; }
+  .arrow{ font-size: 1.3rem; color: var(--line); line-height:1; margin: 2px 0; }
+  .node{
+    cursor:pointer; border-width: 2px; border-style: solid; color: var(--text); font-size: 0.9rem;
+    text-align:center; display:flex; align-items:center; justify-content:center; padding: 14px;
+    width: 100%; min-height: 64px; transition: transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative; user-select: none;
+  }
+  .node:active{ transform: scale(0.98); }
+  .node.rect{ background: var(--rect-bg); border-color: var(--rect-border); border-radius: 12px; }
+  .node.diamond-outer{
+    background: transparent; border: none; padding: 0; width: 200px; height: 200px; min-height: unset;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .node.diamond-outer .diamond-shape{
+    width: 100%; height: 100%; background: var(--diamond-bg); border: 2px solid var(--diamond-border);
+    clip-path: polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%);
+    display:flex; align-items:center; justify-content:center; text-align:center; padding: 16px;
+  }
+  .diamond-shape span{ max-width: 120px; font-size: 0.85rem; }
+  .label.placeholder{ color: var(--text-soft); font-style: italic; font-size: 0.82rem; }
+  .placeholder-q{ font-size: 1.4rem; display:block; margin-bottom: 2px; }
+  .node .tag{
+    position:absolute; top: -9px; left: 10px; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em;
+    background: var(--card-bg); padding: 1px 6px; border-radius: 8px; color: var(--text-soft); border: 1px solid var(--line);
+  }
+  .node.diamond-outer .tag{ left: 50%; transform: translateX(-50%); top:-6px; }
+  .node.rect.correct{ background: var(--green-bg) !important; border-color: var(--green) !important; }
+  .node.diamond-outer.correct .diamond-shape{ background: var(--green-bg); border-color: var(--green); }
+  .node.locked{ cursor: default; opacity: 0.55; }
+  .node.locked.rect{ background: var(--locked-bg); border-color: var(--locked-border); }
+  .node.locked.diamond-outer .diamond-shape{ background: var(--locked-bg); border-color: var(--locked-border); }
+  .lock-icon{ position:absolute; top:6px; right:10px; font-size: 0.85rem; }
+  .node.diamond-outer .lock-icon{ top: 14%; right: 18%; }
+  .node.diamond-outer .decision-oui{
+    position:absolute; bottom:-6px; left:50%; transform:translateX(-50%);
+    font-size:0.78rem; font-weight:700; color: var(--green); white-space:nowrap;
+  }
+  .node.diamond-outer .decision-loop{
+    position:absolute; left:100%; top:0; width:60px; height:200px; overflow:visible; pointer-events:none;
+  }
+  .check{
+    position:absolute; bottom: -8px; right: -8px; background: var(--green); color: white; border-radius: 50%;
+    width: 22px; height: 22px; display:none; align-items:center; justify-content:center; font-size: 0.8rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .node.correct .check{ display:flex; }
+
+  .final-msg{
+    margin-top: 18px; padding: 16px; border-radius: 12px; background: var(--green-bg); border: 2px solid var(--green);
+    text-align:center; max-width: 440px; display:none; font-size: 0.95rem;
+  }
+  .final-msg.show{ display:block; }
+
+  .reset-btn{
+    margin-top: 22px; background: transparent; border: 1px solid var(--line); color: var(--text-soft);
+    padding: 8px 16px; border-radius: 20px; font-size: 0.82rem; cursor: pointer;
+  }
+  .reset-btn:active{ opacity: 0.7; }
+
+  .score-chip{
+    display:inline-flex; align-items:center; gap: 3px; padding: 5px 12px; border-radius: 16px;
+    background: var(--diamond-bg); border: 1px solid var(--diamond-border);
+    font-size: 0.8rem; font-weight: 700; color: var(--text); white-space: nowrap;
+  }
+  .modal-head{ display:flex; justify-content:space-between; align-items:center; gap: 10px; margin-bottom: 6px; }
+  .modal-head .modal-kicker{ margin-bottom: 0; }
+  .modal-score{ padding: 3px 10px; font-size: 0.75rem; }
+  .score-chip #modalScoreValue{ color: var(--accent); font-size: 0.9rem; font-weight: 800; }
+  .score-chip #scoreValue{ color: var(--accent); font-size: 0.95rem; font-weight: 800; }
+  .score-chip.bump{ animation: scoreBump 0.6s ease; }
+  @keyframes scoreBump{ 0%{ transform: scale(1); } 40%{ transform: scale(1.25); } 100%{ transform: scale(1); } }
+
+  /* Animation affichée à côté de la question après une bonne réponse */
+  .modal.with-scene{ max-width: 920px; display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 0 18px; align-items:start; }
+  .modal.with-scene .modal-main{ min-width: 0; }
+  .modal-scene{ display:none; }
+  .modal.with-scene .modal-scene{
+    display:block; position: sticky; top: 0; padding: 8px; border-radius: 12px;
+    background: var(--bg); border: 1px solid var(--line);
+  }
+  .modal-scene .scene-wrap{ max-width: 100% !important; width: 100%; }
+  .modal-scene .caption{ margin: 6px 2px 0; min-height: 0; font-size: 0.8rem; }
+  .modal-scene-title{ font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 600; margin: 0 2px 6px; }
+  @media (max-width: 700px){
+    .modal.with-scene{ display:block; }
+    .modal.with-scene .modal-scene{ position: static; margin-top: 12px; }
+  }
+  .device-progress-wrap{ width:100%; max-width: 460px; display:none; flex-direction:column; align-items:center; margin-top: 4px; }
+  .device-progress-wrap.show{ display:flex; }
+
+  .device-chip{
+    margin-top: 8px; display:none; align-items:center; gap: 4px; justify-content:center;
+    font-size: 0.72rem; font-weight:600; color: var(--text-soft);
+    background: var(--locked-bg); border: 1px solid var(--locked-border); border-radius: 14px;
+    padding: 4px 10px; cursor:pointer; text-align:center; max-width: 92%;
+  }
+  .device-chip.show{ display:inline-flex; }
+  .device-chip .dchip-value{ font-weight:700; }
+  .device-chip.correct{ background: var(--green-bg); border-color: var(--green); color: var(--green); }
+
+  .toast{
+    position: fixed; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 20px; font-size: 0.82rem;
+    opacity: 0; pointer-events:none; transition: opacity 0.25s ease, transform 0.25s ease; z-index: 200; max-width: 88%; text-align:center;
+  }
+  .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Modal */
+  .overlay{
+    position: fixed; inset: 0; background: var(--overlay); display:none; align-items:flex-end; justify-content:center;
+    z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .overlay.open{ display:flex; }
+  @media (min-width: 560px){ .overlay{ align-items:center; } }
+  .modal{
+    background: var(--card-bg); width: 100%; max-width: 480px; border-radius: 18px 18px 0 0;
+    padding: 20px 18px calc(20px + env(safe-area-inset-bottom, 0px)); max-height: 78vh; overflow-y: auto;
+    animation: slideUp 0.2s ease;
+  }
+  @media (min-width: 560px){ .modal{ border-radius: 18px; margin: 16px; } }
+  @keyframes slideUp{ from{ transform: translateY(24px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
+  .modal-kicker{ font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+  .modal h2{ font-size: 1.05rem; margin: 0 0 14px; line-height: 1.35; }
+  .options{ display:flex; flex-direction:column; gap: 10px; }
+  .option{ text-align:left; background: var(--rect-bg); border: 2px solid transparent; border-radius: 10px; padding: 12px 14px; font-size: 0.9rem; color: var(--text); cursor:pointer; }
+  .option:active{ opacity: 0.8; }
+  .option.correct-pick{ background: var(--green-bg); border-color: var(--green); }
+  .option.wrong-pick{ background: var(--red-bg); border-color: var(--red); }
+  .feedback{ margin-top: 12px; font-size: 0.85rem; padding: 10px 12px; border-radius: 10px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.ok{ background: var(--green-bg); color: var(--green); }
+  .feedback.ko{ background: var(--red-bg); color: var(--red); }
+  .modal-actions{ display:flex; justify-content:flex-end; margin-top: 16px; }
+  .close-btn{ background: var(--accent); color: white; border: none; padding: 9px 18px; border-radius: 20px; font-size: 0.88rem; cursor: pointer; display:none; }
+  .close-btn.show{ display:inline-block; }
+
+  /* SVG scene elements */
+  #gateAmont, #gateAval{ transition: y 1s ease, height 1s ease; }
+  #sasWater{ transition: y 5s ease-in-out, height 5s ease-in-out; }
+  #boat, #boatNext{ transition: transform 1.5s ease, opacity 1s ease; }
+  #feuAmontLight, #feuAvalLight{ transition: fill 0.6s ease 1.05s; }
+  #vanneAmontIcon .valve-flow-group, #vanneAvalIcon .valve-flow-group{ transition: opacity 0.4s ease; }
+  #vanneAmontIcon .valve-wheel, #vanneAvalIcon .valve-wheel{ transition: fill 0.5s ease; }
+  #vanneAmontIcon .valve-plate, #vanneAvalIcon .valve-plate{ transition: y 0.8s ease, height 0.8s ease; }
+  @keyframes flowPulse{ 0%,100%{ opacity: 0; } 50%{ opacity: 1; } }
+  .flow-chevron{ animation: flowPulse 0.9s ease-in-out infinite; }
 </style>
 </head>
 <body>
-<div class="app" id="app" data-mode="auto">
-  <header>
-    <h1>Simulateur d'écluse</h1>
-    <p id="modeHint">Mode automatique : l'écluse gère elle-même portes, vannes et feux. Passez en manuel pour tout commander vous-même.</p>
-  </header>
 
-  <div class="layout">
-    <div class="scene-panel">
-      <svg id="scene" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+<div class="anim-sticky">
+  <div class="anim-inner">
+    <h1>🚢 Le fonctionnement d'une écluse</h1>
+    <div class="scene-row">
+    <div class="status-col tests" id="statusTests"></div>
+    <div class="scene-wrap">
+      <svg id="scene" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="70" width="180" height="120" fill="#7fb8dd"></rect>
+        <text x="14" y="55" font-size="15" fill="var(--text-soft)">Amont</text>
+        <rect x="420" y="130" width="180" height="60" fill="#7fb8dd"></rect>
+        <text x="500" y="115" font-size="15" fill="var(--text-soft)">Aval</text>
+        <rect x="180" y="40" width="240" height="150" fill="#f2e9d8" stroke="#b9ab8c" stroke-width="1"></rect>
+        <text x="270" y="55" font-size="13" fill="var(--text-soft)">Sas</text>
+        <rect id="sasWater" x="184" y="70" width="232" height="120" fill="#7fb8dd"></rect>
+        <rect x="0" y="190" width="600" height="30" fill="#c9bf9f"></rect>
         <defs>
-          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="var(--water-light)"/>
-            <stop offset="100%" stop-color="var(--water-deep)"/>
-          </linearGradient>
-          <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="5" result="b"/>
-            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
+          <clipPath id="pipeAmontClip"><rect x="144" y="170" width="61" height="12"></rect></clipPath>
+          <clipPath id="pipeAvalClip"><rect x="395" y="170" width="61" height="12"></rect></clipPath>
         </defs>
-
-        <!-- bedrock strip -->
-        <rect x="0" y="560" width="1000" height="40" fill="#3c454b"/>
-
-        <!-- amont reservoir -->
-        <rect x="0" y="140" width="260" height="420" fill="url(#waterGrad)"/>
-        <rect x="0" y="60" width="260" height="20" fill="var(--concrete)"/>
-        <text x="20" y="45" fill="var(--ink-dim)" font-size="16" font-weight="600">BIEF AMONT</text>
-        <text x="20" y="130" fill="#bfe3f2" font-size="11">niveau haut</text>
-        <line x1="0" y1="140" x2="260" y2="140" stroke="#bfe3f2" stroke-dasharray="4 4" stroke-width="1" opacity="0.5"/>
-
-        <!-- aval reservoir -->
-        <rect x="740" y="380" width="260" height="180" fill="url(#waterGrad)"/>
-        <rect x="740" y="60" width="260" height="20" fill="var(--concrete)"/>
-        <text x="850" y="45" fill="var(--ink-dim)" font-size="16" font-weight="600">BIEF AVAL</text>
-        <text x="850" y="372" fill="#bfe3f2" font-size="11">niveau bas</text>
-        <line x1="740" y1="380" x2="1000" y2="380" stroke="#bfe3f2" stroke-dasharray="4 4" stroke-width="1" opacity="0.5"/>
-
-        <!-- chamber (sas) -->
-        <rect id="chamberWater" x="300" y="380" width="400" height="180" fill="url(#waterGrad)"/>
-        <text x="460" y="595" fill="var(--ink-dim)" font-size="12" font-weight="600">SAS</text>
-
-        <!-- walkway over the chamber -->
-        <rect x="300" y="60" width="400" height="20" fill="var(--concrete)"/>
-        <rect x="330" y="80" width="8" height="470" fill="var(--concrete-dk)"/>
-        <rect x="662" y="80" width="8" height="470" fill="var(--concrete-dk)"/>
-
-        <!-- gate housings -->
-        <rect x="282" y="20" width="36" height="70" fill="var(--concrete-dk)" rx="3"/>
-        <rect x="682" y="20" width="36" height="70" fill="var(--concrete-dk)" rx="3"/>
-
-        <!-- AMONT gate -->
-        <rect id="gateAmont" x="292" y="90" width="16" height="470" fill="#c7d0d4" stroke="#8c959a" stroke-width="1"/>
-        <!-- AVAL gate -->
-        <rect id="gateAval" x="692" y="90" width="16" height="470" fill="#c7d0d4" stroke="#8c959a" stroke-width="1"/>
-
-        <!-- motors (gears) -->
-        <g id="gearAmont" transform="rotate(0,300,52)">
-          <circle cx="300" cy="52" r="15" fill="none" stroke="var(--amber)" stroke-width="4"/>
-          <line x1="300" y1="37" x2="300" y2="67" stroke="var(--amber)" stroke-width="3"/>
-          <line x1="285" y1="52" x2="315" y2="52" stroke="var(--amber)" stroke-width="3"/>
+        <rect id="gateAmont" x="176" y="40" width="8" height="150" fill="#5a4632"></rect>
+        <rect id="gateAval" x="416" y="40" width="8" height="150" fill="#5a4632"></rect>
+        <text x="180" y="35" font-size="9" fill="var(--text-soft)" text-anchor="middle">Porte amont</text>
+        <text x="420" y="35" font-size="9" fill="var(--text-soft)" text-anchor="middle">Porte aval</text>
+        <g id="vanneAmontIcon">
+          <text x="140" y="106" font-size="11" fill="var(--text-soft)" text-anchor="middle">Vanne amont</text>
+          <rect class="valve-pipe" x="144" y="170" width="61" height="12" rx="2" fill="#8a745a" stroke="#5b4a35" stroke-width="1"></rect>
+          <g class="valve-flow-group" clip-path="url(#pipeAmontClip)" opacity="0">
+            <path class="flow-chevron" d="M0,-4 L6,0 L0,4 Z" transform="translate(152,176)" fill="#e8f2fb" style="animation-delay:0s"></path>
+            <path class="flow-chevron" d="M0,-4 L6,0 L0,4 Z" transform="translate(168,176)" fill="#e8f2fb" style="animation-delay:0.2s"></path>
+            <path class="flow-chevron" d="M0,-4 L6,0 L0,4 Z" transform="translate(184,176)" fill="#e8f2fb" style="animation-delay:0.4s"></path>
+            <path class="flow-chevron" d="M0,-4 L6,0 L0,4 Z" transform="translate(200,176)" fill="#e8f2fb" style="animation-delay:0.6s"></path>
+          </g>
+          <line x1="140" y1="160" x2="140" y2="170" stroke="#5b6b76" stroke-width="3"></line>
+          <circle class="valve-wheel" cx="140" cy="148" r="12" fill="#8a97a1" stroke="#5b6b76" stroke-width="2"></circle>
+          <line x1="140" y1="138" x2="140" y2="158" stroke="#fff" stroke-width="2.5"></line>
+          <line x1="130" y1="148" x2="150" y2="148" stroke="#fff" stroke-width="2.5"></line>
+          <rect class="valve-plate" x="136" y="166" width="8" height="18" fill="#5b6b76" stroke="#3d4850" stroke-width="1"></rect>
         </g>
-        <g id="gearAval" transform="rotate(0,700,52)">
-          <circle cx="700" cy="52" r="15" fill="none" stroke="var(--amber)" stroke-width="4"/>
-          <line x1="700" y1="37" x2="700" y2="67" stroke="var(--amber)" stroke-width="3"/>
-          <line x1="685" y1="52" x2="715" y2="52" stroke="var(--amber)" stroke-width="3"/>
+        <g id="vanneAvalIcon">
+          <text x="460" y="106" font-size="11" fill="var(--text-soft)" text-anchor="middle">Vanne aval</text>
+          <rect class="valve-pipe" x="395" y="170" width="61" height="12" rx="2" fill="#8a745a" stroke="#5b4a35" stroke-width="1"></rect>
+          <g class="valve-flow-group" clip-path="url(#pipeAvalClip)" opacity="0">
+            <path class="flow-chevron" d="M0,-4 L6,0 L0,4 Z" transform="translate(402,176)" fill="#e8f2fb" style="animation-delay:0s"></path>
+            <path class="flow-chevron" d="M0,-4 L6,0 L0,4 Z" transform="translate(418,176)" fill="#e8f2fb" style="animation-delay:0.2s"></path>
+            <path class="flow-chevron" d="M0,-4 L6,0 L0,4 Z" transform="translate(434,176)" fill="#e8f2fb" style="animation-delay:0.4s"></path>
+            <path class="flow-chevron" d="M0,-4 L6,0 L0,4 Z" transform="translate(450,176)" fill="#e8f2fb" style="animation-delay:0.6s"></path>
+          </g>
+          <line x1="460" y1="160" x2="460" y2="170" stroke="#5b6b76" stroke-width="3"></line>
+          <circle class="valve-wheel" cx="460" cy="148" r="12" fill="#8a97a1" stroke="#5b6b76" stroke-width="2"></circle>
+          <line x1="460" y1="138" x2="460" y2="158" stroke="#fff" stroke-width="2.5"></line>
+          <line x1="450" y1="148" x2="470" y2="148" stroke="#fff" stroke-width="2.5"></line>
+          <rect class="valve-plate" x="456" y="166" width="8" height="18" fill="#5b6b76" stroke="#3d4850" stroke-width="1"></rect>
         </g>
-        <text x="300" y="15" text-anchor="middle" fill="var(--ink-dim)" font-size="10">moteur</text>
-        <text x="700" y="15" text-anchor="middle" fill="var(--ink-dim)" font-size="10">moteur</text>
-
-        <!-- vanne amont : pipe + flow + roue agrandie -->
-        <rect x="222" y="522" width="78" height="16" rx="5" fill="#0a151d"/>
-        <circle id="flowA1" cx="228" cy="530" r="5" fill="#3fa8d8"/>
-        <circle id="flowA2" cx="254" cy="530" r="5" fill="#3fa8d8"/>
-        <circle id="flowA3" cx="280" cy="530" r="5" fill="#3fa8d8"/>
-        <g id="valveAmont" transform="rotate(0,262,530)">
-          <circle cx="262" cy="530" r="19" fill="var(--panel-2)" stroke="var(--concrete)" stroke-width="3"/>
-          <line x1="248" y1="530" x2="276" y2="530" stroke="var(--concrete)" stroke-width="3"/>
-          <line x1="262" y1="516" x2="262" y2="544" stroke="var(--concrete)" stroke-width="3"/>
+        <circle id="feuAmontLight" cx="180" cy="20" r="8" fill="#cf4438"></circle>
+        <text x="180" y="11" font-size="9" fill="var(--text-soft)" text-anchor="middle">Feu amont</text>
+        <circle id="feuAvalLight" cx="420" cy="20" r="8" fill="#cf4438"></circle>
+        <text x="420" y="11" font-size="9" fill="var(--text-soft)" text-anchor="middle">Feu aval</text>
+        <g id="boatNext" opacity="0" transform="translate(520,120)">
+          <path d="M -20 0 L 20 0 L 14 10 L -14 10 Z" fill="#8a5a3a"></path>
+          <rect x="-4" y="-10" width="10" height="10" fill="#8a5a3a"></rect>
         </g>
-        <text x="262" y="504" text-anchor="middle" fill="var(--ink-dim)" font-size="11">vanne amont</text>
-
-        <!-- vanne aval -->
-        <rect x="700" y="522" width="78" height="16" rx="5" fill="#0a151d"/>
-        <circle id="flowV1" cx="706" cy="530" r="5" fill="#3fa8d8"/>
-        <circle id="flowV2" cx="732" cy="530" r="5" fill="#3fa8d8"/>
-        <circle id="flowV3" cx="758" cy="530" r="5" fill="#3fa8d8"/>
-        <g id="valveAval" transform="rotate(0,738,530)">
-          <circle cx="738" cy="530" r="19" fill="var(--panel-2)" stroke="var(--concrete)" stroke-width="3"/>
-          <line x1="724" y1="530" x2="752" y2="530" stroke="var(--concrete)" stroke-width="3"/>
-          <line x1="738" y1="516" x2="738" y2="544" stroke="var(--concrete)" stroke-width="3"/>
-        </g>
-        <text x="738" y="504" text-anchor="middle" fill="var(--ink-dim)" font-size="11">vanne aval</text>
-
-        <!-- traffic lights (agrandis) -->
-        <g transform="translate(238,80)">
-          <rect x="-13" y="-13" width="30" height="70" rx="6" fill="#0a151d" stroke="var(--concrete-dk)" stroke-width="2"/>
-          <circle id="feuAmontR" cx="2" cy="5" r="10.5" fill="var(--red)"/>
-          <circle id="feuAmontG" cx="2" cy="32" r="10.5" fill="var(--green-dim)"/>
-        </g>
-        <text x="238" y="60" text-anchor="middle" fill="var(--ink-dim)" font-size="11">feu amont</text>
-
-        <g transform="translate(742,80)">
-          <rect x="-13" y="-13" width="30" height="70" rx="6" fill="#0a151d" stroke="var(--concrete-dk)" stroke-width="2"/>
-          <circle id="feuAvalR" cx="2" cy="5" r="10.5" fill="var(--red)"/>
-          <circle id="feuAvalG" cx="2" cy="32" r="10.5" fill="var(--green-dim)"/>
-        </g>
-        <text x="742" y="60" text-anchor="middle" fill="var(--ink-dim)" font-size="11">feu aval</text>
-
-        <!-- boat (agrandi, coque redessinée) -->
-        <g id="boat">
-          <ellipse cx="0" cy="27" rx="46" ry="5" fill="#000" opacity="0.18"/>
-          <path d="M -48 18 L 48 18 L 52 6 C 52 1 46 -2 38 -2 L -38 -2 C -46 -2 -52 1 -52 6 Z" fill="#8a2f1f" stroke="#4a1810" stroke-width="2"/>
-          <rect x="-52" y="10" width="104" height="4" fill="#c9622f"/>
-          <rect x="-20" y="-20" width="40" height="19" rx="3" fill="#f2e3cf" stroke="#4a1810" stroke-width="2"/>
-          <rect x="-20" y="-24" width="44" height="5" rx="2" fill="#4a1810"/>
-          <rect x="-13" y="-15" width="10" height="9" rx="1" fill="#5b8fa8"/>
-          <rect x="5" y="-15" width="10" height="9" rx="1" fill="#5b8fa8"/>
-          <rect x="21" y="-33" width="8" height="14" rx="1.5" fill="#3a444a" stroke="#20262a" stroke-width="1"/>
-          <ellipse cx="25" cy="-33" rx="4.5" ry="2" fill="#57636a"/>
-          <line x1="-30" y1="-24" x2="-30" y2="-40" stroke="#4a1810" stroke-width="2"/>
-          <path d="M -30 -40 L -14 -34 L -30 -30 Z" fill="#d9541f"/>
+        <g id="boat" transform="translate(520,120)">
+          <path d="M -22 0 L 22 0 L 15 11 L -15 11 Z" fill="#c0392b" stroke="#7c241a" stroke-width="1"></path>
+          <rect x="-5" y="-12" width="12" height="12" fill="#c0392b" stroke="#7c241a" stroke-width="1"></rect>
         </g>
       </svg>
     </div>
-
-    <div class="control-panel">
-      <div class="card">
-        <h2>Mode de commande</h2>
-        <div class="mode-tabs">
-          <button id="tabAuto" class="mode-tab active">Automatique</button>
-          <button id="tabManuel" class="mode-tab">Manuel</button>
-        </div>
+    <div class="status-col actions" id="statusActions"></div>
+    </div>
+    <p class="caption" id="caption">Étape initiale : le sas est au niveau amont, un bateau attend côté aval. Les deux feux sont rouges.</p>
+    <div class="anim-actions">
+      <button class="replay-btn" id="replayBtn">▶ Revoir l'animation depuis le début</button>
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomOut" aria-label="Réduire l'animation">−</button>
+        <span class="zoom-level" id="zoomLevel">100 %</span>
+        <button class="zoom-btn" id="zoomIn" aria-label="Agrandir l'animation">+</button>
       </div>
+      <span class="score-chip" id="scoreBox" title="2 points du premier coup · 1 point au 2e essai · 0 ensuite">⭐ <span id="scoreValue">0</span> / <span id="scoreMax">76</span> pts</span>
+      <button class="fs-btn" id="fsBtn" type="button">⛶ Plein écran</button>
+    </div>
+  </div>
+</div>
 
-      <div class="card auto-only">
-        <h2>Transit automatique</h2>
-        <button id="btnMontee" class="primary wide" style="margin-bottom:6px;">Aval → Amont (faire monter)</button>
-        <button id="btnDescente" class="primary wide">Amont → Aval (faire descendre)</button>
-        <div class="status-line" id="boatStatus">Bateau : <b>côté aval</b></div>
-      </div>
+<main>
+  <p class="subtitle">Clique sur chaque case, dans l'ordre, pour choisir la bonne proposition : le schéma ci-dessus s'anime à chaque bonne réponse.<br><strong>Barème :</strong> 2 points du premier coup · 1 point au 2<sup>e</sup> essai · 0 ensuite.</p>
+  <div class="legend">
+    <div class="legend-item"><span class="swatch rect"></span> Action / état</div>
+    <div class="legend-item"><span class="swatch diamond"></span> Test</div>
+  </div>
+  <p class="subtitle">🔧 La <strong>vanne</strong> est une petite trappe placée dans un conduit entre le bief et le sas. Ouverte, elle laisse l'eau couler d'un côté à l'autre (on voit les petits chevrons) : c'est elle qui fait monter ou descendre le niveau du sas, sans avoir besoin d'ouvrir toute la porte.</p>
 
-      <div class="card manual-only">
-        <h2>Sens du transit &amp; score</h2>
-        <div class="mode-tabs" style="margin-bottom:10px;">
-          <button id="dirAval" class="mode-tab active">Aval → Amont</button>
-          <button id="dirAmont" class="mode-tab">Amont → Aval</button>
-        </div>
-        <div class="status-line">Score : <b id="txtScore">0</b> pts — chaque bonne manœuvre rapporte <b>+2</b>, chaque erreur coûte <b>-1</b>.</div>
-      </div>
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Progression</span>
+      <span id="progressText">0 / 19</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
 
-      <div class="card manual-only">
-        <h2>Feux de signalisation</h2>
-        <div class="row">
-          <span class="name"><span class="dot" id="dotFeuAmont"></span>Feu amont</span>
-          <span class="btns">
-            <button id="btnFeuAmontVert" class="go">Vert</button>
-            <button id="btnFeuAmontRouge" class="stop">Rouge</button>
-          </span>
-        </div>
-        <div class="row">
-          <span class="name"><span class="dot" id="dotFeuAval"></span>Feu aval</span>
-          <span class="btns">
-            <button id="btnFeuAvalVert" class="go">Vert</button>
-            <button id="btnFeuAvalRouge" class="stop">Rouge</button>
-          </span>
-        </div>
-        <div class="status-line">Le vert reste grisé tant que la porte correspondante n'est pas grande ouverte.</div>
-      </div>
+  <div class="flow-start">
+    <div class="start-oval">Début</div>
+    <div class="arrow">▼</div>
+  </div>
+  <div class="flow" id="flow"></div>
 
-      <div class="card manual-only">
-        <h2>Porte amont (moteur) <span class="sub" id="txtGateAmont"></span></h2>
-        <div class="row">
-          <span class="name"><span class="dot" id="dotGateAmont"></span>Vantail</span>
-          <span class="btns">
-            <button id="btnOpenGateAmont">Ouvrir</button>
-            <button id="btnCloseGateAmont">Fermer</button>
-          </span>
-        </div>
-      </div>
+  <div class="final-msg" id="finalMsg">
+    🎉 Bravo, tu as complété tout le cycle de l'écluse !<br>
+    Remonte maintenant en haut de l'organigramme : clique sur chaque case pour indiquer son capteur ou son actionneur.
+  </div>
 
-      <div class="card manual-only">
-        <h2>Porte aval (moteur) <span class="sub" id="txtGateAval"></span></h2>
-        <div class="row">
-          <span class="name"><span class="dot" id="dotGateAval"></span>Vantail</span>
-          <span class="btns">
-            <button id="btnOpenGateAval">Ouvrir</button>
-            <button id="btnCloseGateAval">Fermer</button>
-          </span>
-        </div>
+  <div class="device-progress-wrap" id="deviceProgressWrap">
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Capteurs / actionneurs placés</span>
+        <span id="progressText2">0 / 19</span>
       </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill2"></div></div>
+    </div>
+    <div class="final-msg" id="finalMsg2">
+      🏆 Bravo, tu as placé tous les capteurs et actionneurs ! Tu maîtrises le fonctionnement complet de l'écluse.
+    </div>
+  </div>
 
-      <div class="card manual-only">
-        <h2>Vannes de remplissage / vidange</h2>
-        <div class="row">
-          <span class="name"><span class="dot" id="dotVanneAmont"></span>Vanne amont</span>
-          <span class="btns">
-            <button id="btnOpenVanneAmont">Ouvrir</button>
-            <button id="btnCloseVanneAmont">Fermer</button>
-          </span>
-        </div>
-        <div class="row">
-          <span class="name"><span class="dot" id="dotVanneAval"></span>Vanne aval</span>
-          <span class="btns">
-            <button id="btnOpenVanneAval">Ouvrir</button>
-            <button id="btnCloseVanneAval">Fermer</button>
-          </span>
-        </div>
-        <div class="status-line">Niveau du sas : <b id="txtLevel">bas (aval)</b></div>
-      </div>
+  <button class="reset-btn" id="resetBtn">Réinitialiser ma progression</button>
+</main>
 
-      <div class="card">
-        <h2>Journal</h2>
-        <div class="log" id="log"></div>
-        <button id="btnReset" class="wide" style="margin-top:8px;">Réinitialiser</button>
-      </div>
+<div class="toast" id="toast"></div>
 
-      <div class="legend">
-        <span><i style="background:var(--green)"></i>Ouvert / vert</span>
-        <span><i style="background:var(--red)"></i>Fermé / rouge</span>
-        <span><i style="background:var(--amber)"></i>En mouvement</span>
+<div class="overlay" id="overlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-main">
+      <div class="modal-head">
+        <div class="modal-kicker" id="modalKicker">Question</div>
+        <span class="score-chip modal-score" id="modalScore">⭐ <span id="modalScoreValue">0</span> / <span class="score-max">76</span> pts</span>
       </div>
+      <h2 id="modalQuestion"></h2>
+      <div class="options" id="modalOptions"></div>
+      <div class="feedback" id="modalFeedback"></div>
+      <div class="modal-actions">
+        <button class="close-btn" id="modalClose">Continuer</button>
+      </div>
+    </div>
+    <div class="modal-scene" id="modalScene">
+      <div class="modal-scene-title">Ce qui se passe dans l'écluse</div>
     </div>
   </div>
 </div>
 
 <script>
-(function(){
-  const state = {
-    gateAmont: 1, gateAmontTarget: 1, gateAmontMoving:false, gearAmontAngle:0,
-    gateAval: 1, gateAvalTarget: 1, gateAvalMoving:false, gearAvalAngle:0,
-    vanneAmontOpen:false, valveAmontAngle:0, flowAmontPhase:0,
-    vanneAvalOpen:false, valveAvalAngle:0, flowAvalPhase:0,
-    feuAmont:'rouge', feuAval:'rouge',
-    waterLevel:0.5,
-    boatX:850, boatXTarget:850, boatSide:'aval',
-    cycleRunning:false,
-    mode:'auto',
-    manualDirection:'montee',
-    expectedStep:0,
-    score:0
+/* Liaison SCORM 1.2 avec ÉLÉA / Moodle (sans effet si la page est ouverte hors plateforme) */
+window.SCORM = (function(){
+  let api = null, ok = false;
+  function find(w){
+    let tries = 0;
+    while(w && tries < 10){
+      try{ if(w.API) return w.API; }catch(e){}
+      if(w.parent === w) break;
+      w = w.parent; tries++;
+    }
+    return null;
+  }
+  try{ api = find(window) || (window.opener ? find(window.opener) : null); }catch(e){ api = null; }
+  if(api){
+    try{ ok = String(api.LMSInitialize("")) === "true"; }catch(e){ ok = false; }
+    if(ok){
+      try{
+        const st = api.LMSGetValue("cmi.core.lesson_status");
+        if(st === "not attempted" || st === "") api.LMSSetValue("cmi.core.lesson_status", "incomplete");
+        api.LMSCommit("");
+      }catch(e){}
+    }
+  }
+  function get(k){ if(!ok) return ""; try{ return api.LMSGetValue(k) || ""; }catch(e){ return ""; } }
+  function set(k,v){ if(!ok) return; try{ api.LMSSetValue(k, String(v)); }catch(e){} }
+  function commit(){ if(!ok) return; try{ api.LMSCommit(""); }catch(e){} }
+  let finished = false;
+  function finish(){ if(!ok || finished) return; finished = true; try{ api.LMSCommit(""); api.LMSFinish(""); }catch(e){} }
+  window.addEventListener("pagehide", finish);
+  window.addEventListener("beforeunload", finish);
+  return {
+    active: function(){ return ok; },
+    load: function(){ const s = get("cmi.suspend_data"); try{ return s ? JSON.parse(s) : null; }catch(e){ return null; } },
+    save: function(state, answered, totalQuestions, points, maxPoints){
+      if(!ok) return;
+      set("cmi.suspend_data", JSON.stringify(state));
+      set("cmi.core.score.min", 0);
+      set("cmi.core.score.max", 100);
+      set("cmi.core.score.raw", Math.round(points / maxPoints * 100));
+      set("cmi.core.lesson_status", answered >= totalQuestions ? "completed" : "incomplete");
+      commit();
+    }
   };
-
-  const el = id => document.getElementById(id);
-  const logBox = el('log');
-  const appEl = el('app');
-  const modeHint = el('modeHint');
-
-  const MODE_HINTS = {
-    auto: "Mode automatique : l'écluse gère elle-même portes, vannes et feux. Passez en manuel pour tout commander vous-même.",
-    manuel: "Mode manuel : vous commandez chaque moteur de porte, chaque vanne et chaque feu. Les sécurités empêchent les manœuvres dangereuses."
-  };
-
-  function setMode(m){
-    if(state.cycleRunning) return;
-    state.mode = m;
-    appEl.setAttribute('data-mode', m);
-    el('tabAuto').classList.toggle('active', m==='auto');
-    el('tabManuel').classList.toggle('active', m==='manuel');
-    modeHint.textContent = MODE_HINTS[m];
-    log(m==='auto' ? 'Passage en mode automatique.' : 'Passage en mode manuel.');
-    updateUI();
-  }
-  el('tabAuto').onclick = ()=> setMode('auto');
-  el('tabManuel').onclick = ()=> setMode('manuel');
-
-  function log(msg){
-    const now = new Date();
-    const t = now.toLocaleTimeString('fr-FR',{hour12:false});
-    const line = document.createElement('div');
-    line.className = 'log-line';
-    line.innerHTML = '<span class="t">'+t+'</span>' + msg;
-    logBox.appendChild(line);
-    logBox.scrollTop = logBox.scrollHeight;
-  }
-
-  function setGateTarget(key, val){ state[key+'Target'] = val; }
-
-  function waitUntil(check){
-    return new Promise(resolve=>{
-      function poll(){ if(check()) resolve(); else requestAnimationFrame(poll); }
-      poll();
-    });
-  }
-  const waitForGate = key => waitUntil(()=> Math.abs(state[key]-state[key+'Target']) < 0.003);
-  const waitForBoat = () => waitUntil(()=> Math.abs(state.boatX-state.boatXTarget) < 0.4);
-  const waitForLevel = target => waitUntil(()=> Math.abs(state.waterLevel-target) < 0.003);
-  const wait = ms => new Promise(r=>setTimeout(r,ms));
-
-  function labelSide(s){ return s === 'amont' ? 'amont' : 'aval'; }
-
-  function setFeu(side, val, silent){
-    const key = side==='amont' ? 'feuAmont' : 'feuAval';
-    if(state[key] === val) return;
-    state[key] = val;
-    if(!silent) log('Feu ' + labelSide(side) + ' passé au ' + val + '.');
-  }
-
-  // ---- direction & scoring (mode manuel) ----
-  const SEQUENCES = {
-    montee:   ['ouvrirVanne_aval','ouvrirPorte_aval','feuVert_aval','fermerPorte_aval','ouvrirVanne_amont','ouvrirPorte_amont','feuVert_amont'],
-    descente: ['ouvrirVanne_amont','ouvrirPorte_amont','feuVert_amont','fermerPorte_amont','ouvrirVanne_aval','ouvrirPorte_aval','feuVert_aval']
-  };
-
-  function setupScenario(direction){
-    if(state.cycleRunning) return;
-    state.manualDirection = direction;
-    state.expectedStep = 0;
-    state.gateAmont=1; state.gateAmontTarget=1; state.gateAmontMoving=false;
-    state.gateAval=1; state.gateAvalTarget=1; state.gateAvalMoving=false;
-    state.waterLevel=0.5;
-    if(direction === 'montee'){
-      state.boatX=850; state.boatXTarget=850; state.boatSide='aval';
-    } else {
-      state.boatX=150; state.boatXTarget=150; state.boatSide='amont';
-    }
-    state.vanneAmontOpen=false; state.vanneAvalOpen=false;
-    state.feuAmont='rouge'; state.feuAval='rouge';
-    el('dirAval').classList.toggle('active', direction==='montee');
-    el('dirAmont').classList.toggle('active', direction==='descente');
-    log('Nouveau scénario : ' + (direction==='montee' ? 'aval → amont' : 'amont → aval') + '. Portes fermées, niveau du sas intermédiaire : mettez d\'abord la vanne à niveau.');
-    updateUI();
-  }
-  el('dirAval').onclick = ()=> setupScenario('montee');
-  el('dirAmont').onclick = ()=> setupScenario('descente');
-
-  const ALL_SEQUENCE_KEYS = new Set([...SEQUENCES.montee, ...SEQUENCES.descente]);
-
-  function attemptAction(actionKey, canFn, doFn){
-    if(!canFn()) return;
-    const seq = state.manualDirection ? SEQUENCES[state.manualDirection] : null;
-    const gated = seq && ALL_SEQUENCE_KEYS.has(actionKey) && state.expectedStep < seq.length;
-    if(gated){
-      const expected = seq[state.expectedStep];
-      if(actionKey !== expected){
-        state.score -= 1;
-        log('❌ Commande refusée : ce n\'est pas la bonne étape maintenant (-1). Score : ' + state.score + ' pts.');
-        el('txtScore').textContent = state.score;
-        return;
-      }
-    }
-    doFn();
-    if(gated){
-      state.score += 2;
-      state.expectedStep++;
-      log('✅ Bonne manœuvre (+2). Score : ' + state.score + ' pts.');
-      if(state.expectedStep === seq.length){
-        log('🏁 Transit réussi ! Choisissez un sens pour rejouer.');
-      }
-      el('txtScore').textContent = state.score;
-    }
-  }
-
-  // ---- interlocks ----
-  function canOpenGate(side){
-    if(state.cycleRunning) return false;
-    const gate = side==='amont' ? state.gateAmont : state.gateAval;
-    const vanne = side==='amont' ? state.vanneAmontOpen : state.vanneAvalOpen;
-    const otherGate = side==='amont' ? state.gateAval : state.gateAmont;
-    const targetLevel = side==='amont' ? 1 : 0;
-    if(gate < 0.02) return false;
-    if(vanne) return false;
-    if(otherGate < 0.98) return false;
-    if(Math.abs(state.waterLevel-targetLevel) > 0.01) return false;
-    return true;
-  }
-  function canCloseGate(side){
-    if(state.cycleRunning) return false;
-    const gate = side==='amont' ? state.gateAmont : state.gateAval;
-    return gate < 0.98;
-  }
-  function canOpenVanne(side){
-    if(state.cycleRunning) return false;
-    const gate = side==='amont' ? state.gateAmont : state.gateAval;
-    const already = side==='amont' ? state.vanneAmontOpen : state.vanneAvalOpen;
-    const other = side==='amont' ? state.vanneAvalOpen : state.vanneAmontOpen;
-    const targetLevel = side==='amont' ? 1 : 0;
-    if(gate < 0.98) return false;
-    if(already || other) return false;
-    if(Math.abs(state.waterLevel-targetLevel) < 0.01) return false;
-    return true;
-  }
-  function canCloseVanne(side){
-    if(state.cycleRunning) return false;
-    return side==='amont' ? state.vanneAmontOpen : state.vanneAvalOpen;
-  }
-  function canSetFeuVert(side){
-    if(state.cycleRunning) return false;
-    const gate = side==='amont' ? state.gateAmont : state.gateAval;
-    return gate < 0.02;
-  }
-  function canSetFeuRouge(side){
-    if(state.cycleRunning) return false;
-    const key = side==='amont' ? 'feuAmont' : 'feuAval';
-    return state[key] === 'vert';
-  }
-
-  // ---- manual actions ----
-  el('btnOpenGateAmont').onclick = ()=> attemptAction('ouvrirPorte_amont', ()=>canOpenGate('amont'), ()=>{
-    log('Ouverture de la porte amont.'); setGateTarget('gateAmont',0);
-  });
-  el('btnCloseGateAmont').onclick = ()=> attemptAction('fermerPorte_amont', ()=>canCloseGate('amont'), ()=>{
-    log('Fermeture de la porte amont.'); setFeu('amont','rouge',true); setGateTarget('gateAmont',1);
-  });
-  el('btnOpenGateAval').onclick = ()=> attemptAction('ouvrirPorte_aval', ()=>canOpenGate('aval'), ()=>{
-    log('Ouverture de la porte aval.'); setGateTarget('gateAval',0);
-  });
-  el('btnCloseGateAval').onclick = ()=> attemptAction('fermerPorte_aval', ()=>canCloseGate('aval'), ()=>{
-    log('Fermeture de la porte aval.'); setFeu('aval','rouge',true); setGateTarget('gateAval',1);
-  });
-
-  el('btnOpenVanneAmont').onclick = ()=> attemptAction('ouvrirVanne_amont', ()=>canOpenVanne('amont'), ()=>{
-    log('Ouverture de la vanne amont : remplissage du sas.'); state.vanneAmontOpen = true;
-  });
-  el('btnCloseVanneAmont').onclick = ()=>{ if(!canCloseVanne('amont')) return; log('Fermeture manuelle de la vanne amont.'); state.vanneAmontOpen = false; };
-  el('btnOpenVanneAval').onclick = ()=> attemptAction('ouvrirVanne_aval', ()=>canOpenVanne('aval'), ()=>{
-    log('Ouverture de la vanne aval : vidange du sas.'); state.vanneAvalOpen = true;
-  });
-  el('btnCloseVanneAval').onclick = ()=>{ if(!canCloseVanne('aval')) return; log('Fermeture manuelle de la vanne aval.'); state.vanneAvalOpen = false; };
-
-  el('btnFeuAmontVert').onclick = ()=> attemptAction('feuVert_amont', ()=>canSetFeuVert('amont'), ()=>{ setFeu('amont','vert'); });
-  el('btnFeuAmontRouge').onclick = ()=>{ if(!canSetFeuRouge('amont')) return; setFeu('amont','rouge'); };
-  el('btnFeuAvalVert').onclick = ()=> attemptAction('feuVert_aval', ()=>canSetFeuVert('aval'), ()=>{ setFeu('aval','vert'); });
-  el('btnFeuAvalRouge').onclick = ()=>{ if(!canSetFeuRouge('aval')) return; setFeu('aval','rouge'); };
-
-  // ---- automatic transit ----
-  async function transferBoat(from,to){
-    if(state.cycleRunning) return;
-    state.cycleRunning = true;
-
-    const fromGateKey = from==='amont' ? 'gateAmont' : 'gateAval';
-    const toGateKey = to==='amont' ? 'gateAmont' : 'gateAval';
-    const fromVanneKey = from==='amont' ? 'vanneAmontOpen' : 'vanneAvalOpen';
-    const toVanneKey = to==='amont' ? 'vanneAmontOpen' : 'vanneAvalOpen';
-    const fromLevel = from==='amont' ? 1 : 0;
-    const toLevel = to==='amont' ? 1 : 0;
-
-    if(Math.abs(state.waterLevel - fromLevel) > 0.01){
-      log('Mise à niveau du sas côté ' + labelSide(from) + ' avant l\'entrée du bateau.');
-      state[fromVanneKey] = true;
-      await waitForLevel(fromLevel);
-      log('Niveaux égalisés côté ' + labelSide(from) + '.');
-    }
-
-    if(state[fromGateKey] > 0.02){
-      log('Ouverture de la porte ' + labelSide(from) + '.');
-      setGateTarget(fromGateKey,0);
-      await waitForGate(fromGateKey);
-    }
-    setFeu(from,'vert',true); log('Feu ' + labelSide(from) + ' au vert : le bateau peut entrer.');
-
-    log('🚤 Bravo ! Le bateau entre dans le sas.');
-    state.boatXTarget = 500; state.boatSide = 'sas';
-    await waitForBoat();
-
-    setFeu(from,'rouge',true);
-    log('Fermeture de la porte ' + labelSide(from) + '.');
-    setGateTarget(fromGateKey,1);
-    await waitForGate(fromGateKey);
-
-    log(to==='amont' ? 'Ouverture de la vanne amont : remplissage du sas.' : 'Ouverture de la vanne aval : vidange du sas.');
-    state[toVanneKey] = true;
-    await waitForLevel(toLevel);
-    log('Niveaux égalisés, vanne fermée.');
-
-    log('Ouverture de la porte ' + labelSide(to) + '.');
-    setGateTarget(toGateKey,0);
-    await waitForGate(toGateKey);
-    setFeu(to,'vert',true); log('Feu ' + labelSide(to) + ' au vert : le bateau peut sortir.');
-
-    log('🚤 Bravo ! Le bateau sort du sas côté ' + labelSide(to) + '.');
-    state.boatXTarget = to==='amont' ? 150 : 850;
-    state.boatSide = to;
-    await waitForBoat();
-
-    await wait(400);
-    setFeu(to,'rouge',true);
-    state.cycleRunning = false;
-    log('Transit terminé.');
-  }
-
-  el('btnMontee').onclick = ()=>{ if(state.boatSide==='aval' && !state.cycleRunning) transferBoat('aval','amont'); };
-  el('btnDescente').onclick = ()=>{ if(state.boatSide==='amont' && !state.cycleRunning) transferBoat('amont','aval'); };
-
-  el('btnReset').onclick = ()=>{
-    state.gateAmont=1; state.gateAmontTarget=1; state.gateAmontMoving=false;
-    state.gateAval=1; state.gateAvalTarget=1; state.gateAvalMoving=false;
-    state.vanneAmontOpen=false; state.vanneAvalOpen=false;
-    state.feuAmont='rouge'; state.feuAval='rouge';
-    state.waterLevel=0.5;
-    state.boatX=850; state.boatXTarget=850; state.boatSide='aval';
-    state.cycleRunning=false;
-    state.manualDirection='montee'; state.expectedStep=0; state.score=0;
-    el('dirAval').classList.add('active');
-    el('dirAmont').classList.remove('active');
-    el('txtScore').textContent = '0';
-    logBox.innerHTML='';
-    log('Simulation réinitialisée. Portes fermées, niveau du sas intermédiaire.');
-  };
-
-  // ---- UI refresh ----
-  function updateUI(){
-    el('tabAuto').disabled = state.cycleRunning;
-    el('tabManuel').disabled = state.cycleRunning;
-    el('dirAval').disabled = state.cycleRunning;
-    el('dirAmont').disabled = state.cycleRunning;
-    el('btnOpenGateAmont').disabled = !canOpenGate('amont');
-    el('btnCloseGateAmont').disabled = !canCloseGate('amont');
-    el('btnOpenGateAval').disabled = !canOpenGate('aval');
-    el('btnCloseGateAval').disabled = !canCloseGate('aval');
-    el('btnOpenVanneAmont').disabled = !canOpenVanne('amont');
-    el('btnCloseVanneAmont').disabled = !canCloseVanne('amont');
-    el('btnOpenVanneAval').disabled = !canOpenVanne('aval');
-    el('btnCloseVanneAval').disabled = !canCloseVanne('aval');
-    el('btnFeuAmontVert').disabled = !canSetFeuVert('amont') || state.feuAmont==='vert';
-    el('btnFeuAmontRouge').disabled = !canSetFeuRouge('amont');
-    el('btnFeuAvalVert').disabled = !canSetFeuVert('aval') || state.feuAval==='vert';
-    el('btnFeuAvalRouge').disabled = !canSetFeuRouge('aval');
-    el('btnMontee').disabled = state.cycleRunning || state.boatSide!=='aval';
-    el('btnDescente').disabled = state.cycleRunning || state.boatSide!=='amont';
-
-    const dotG = (key)=> state[key] < 0.02 ? 'on' : (state[key+'Moving'] ? 'moving' : '');
-    el('dotGateAmont').className = 'dot ' + dotG('gateAmont');
-    el('dotGateAval').className = 'dot ' + dotG('gateAval');
-    el('dotVanneAmont').className = 'dot ' + (state.vanneAmontOpen ? 'on moving' : '');
-    el('dotVanneAval').className = 'dot ' + (state.vanneAvalOpen ? 'on moving' : '');
-    el('dotFeuAmont').className = 'dot ' + (state.feuAmont==='vert' ? 'on' : '');
-    el('dotFeuAval').className = 'dot ' + (state.feuAval==='vert' ? 'on' : '');
-
-    el('txtGateAmont').textContent = state.gateAmont < 0.02 ? '· ouverte' : (state.gateAmontMoving ? '· en mouvement' : '· fermée');
-    el('txtGateAval').textContent = state.gateAval < 0.02 ? '· ouverte' : (state.gateAvalMoving ? '· en mouvement' : '· fermée');
-
-    let levelTxt;
-    if(state.waterLevel < 0.02) levelTxt = 'bas (aval)';
-    else if(state.waterLevel > 0.98) levelTxt = 'haut (amont)';
-    else levelTxt = 'intermédiaire (' + Math.round(state.waterLevel*100) + '%)';
-    el('txtLevel').textContent = levelTxt;
-
-    const sideTxt = state.boatSide==='sas' ? 'dans le sas' : ('côté ' + state.boatSide);
-    el('boatStatus').innerHTML = 'Bateau : <b>' + sideTxt + '</b>' + (state.cycleRunning ? ' — transit en cours…' : '');
-  }
-
-  // ---- render loop ----
-  const gateAmontEl = el('gateAmont'), gateAvalEl = el('gateAval');
-  const chamberWater = el('chamberWater');
-  const gearAmont = el('gearAmont'), gearAval = el('gearAval');
-  const valveAmont = el('valveAmont'), valveAval = el('valveAval');
-  const boat = el('boat');
-  const feuAmontR = el('feuAmontR'), feuAmontG = el('feuAmontG');
-  const feuAvalR = el('feuAvalR'), feuAvalG = el('feuAvalG');
-  const flowA = [el('flowA1'), el('flowA2'), el('flowA3')];
-  const flowV = [el('flowV1'), el('flowV2'), el('flowV3')];
-
-  function checkBoatPassage(side){
-    if(state.cycleRunning) return;
-    if(side === 'aval'){
-      if(state.boatSide === 'aval'){
-        state.boatXTarget = 500; state.boatSide = 'sas';
-        log('🚤 Bravo ! Feu aval au vert : le bateau entre dans le sas.');
-      } else if(state.boatSide === 'sas'){
-        state.boatXTarget = 850; state.boatSide = 'aval';
-        log('🚤 Bravo ! Feu aval au vert : le bateau sort côté aval.');
-      }
-    } else {
-      if(state.boatSide === 'amont'){
-        state.boatXTarget = 500; state.boatSide = 'sas';
-        log('🚤 Bravo ! Feu amont au vert : le bateau entre dans le sas.');
-      } else if(state.boatSide === 'sas'){
-        state.boatXTarget = 150; state.boatSide = 'amont';
-        log('🚤 Bravo ! Feu amont au vert : le bateau sort côté amont.');
-      }
-    }
-  }
-  let prevAvalVert = state.feuAval === 'vert';
-  let prevAmontVert = state.feuAmont === 'vert';
-
-  let lastTs = null;
-  let frame = 0;
-
-  function step(ts){
-    if(lastTs===null) lastTs = ts;
-    const dt = Math.min((ts-lastTs)/1000, 0.05);
-    lastTs = ts;
-
-    ['gateAmont','gateAval'].forEach(key=>{
-      const target = state[key+'Target'];
-      const diff = target - state[key];
-      const speed = 0.55;
-      if(Math.abs(diff) > 0.001){
-        const s = Math.sign(diff) * Math.min(Math.abs(diff), speed*dt);
-        state[key] += s;
-        state[key+'Moving'] = true;
-      } else {
-        state[key] = target;
-        state[key+'Moving'] = false;
-      }
-    });
-
-    // safety fallback: force red if the gate is not fully open
-    if(state.gateAmont > 0.02 && state.feuAmont === 'vert') setFeu('amont','rouge',true);
-    if(state.gateAval > 0.02 && state.feuAval === 'vert') setFeu('aval','rouge',true);
-
-    const avalVertNow = state.feuAval === 'vert';
-    const amontVertNow = state.feuAmont === 'vert';
-    if(avalVertNow && !prevAvalVert) checkBoatPassage('aval');
-    if(amontVertNow && !prevAmontVert) checkBoatPassage('amont');
-    prevAvalVert = avalVertNow;
-    prevAmontVert = amontVertNow;
-
-    if(state.gateAmontMoving) state.gearAmontAngle = (state.gearAmontAngle + 320*dt) % 360;
-    if(state.gateAvalMoving) state.gearAvalAngle = (state.gearAvalAngle + 320*dt) % 360;
-
-    const fillRate = 0.085;
-    if(state.vanneAmontOpen){
-      state.waterLevel = Math.min(1, state.waterLevel + fillRate*dt);
-      state.valveAmontAngle = (state.valveAmontAngle + 140*dt) % 360;
-      state.flowAmontPhase = (state.flowAmontPhase + 0.55*dt) % 1;
-      if(state.waterLevel >= 0.999){ state.waterLevel = 1; state.vanneAmontOpen = false; log('Vanne amont fermée automatiquement : niveaux égalisés.'); }
-    }
-    if(state.vanneAvalOpen){
-      state.waterLevel = Math.max(0, state.waterLevel - fillRate*dt);
-      state.valveAvalAngle = (state.valveAvalAngle + 140*dt) % 360;
-      state.flowAvalPhase = (state.flowAvalPhase + 0.55*dt) % 1;
-      if(state.waterLevel <= 0.001){ state.waterLevel = 0; state.vanneAvalOpen = false; log('Vanne aval fermée automatiquement : niveaux égalisés.'); }
-    }
-
-    const bdiff = state.boatXTarget - state.boatX;
-    if(Math.abs(bdiff) > 0.3) state.boatX += Math.sign(bdiff) * Math.min(Math.abs(bdiff), 130*dt);
-    else state.boatX = state.boatXTarget;
-
-    render();
-    frame++;
-    if(frame % 6 === 0) updateUI();
-    requestAnimationFrame(step);
-  }
-
-  function render(){
-    const gTopAmont = -380 + 470*state.gateAmont;
-    const gTopAval = -380 + 470*state.gateAval;
-    gateAmontEl.setAttribute('y', gTopAmont);
-    gateAvalEl.setAttribute('y', gTopAval);
-
-    gearAmont.setAttribute('transform', 'rotate(' + state.gearAmontAngle + ',300,52)');
-    gearAval.setAttribute('transform', 'rotate(' + state.gearAvalAngle + ',700,52)');
-    valveAmont.setAttribute('transform', 'rotate(' + state.valveAmontAngle + ',262,530)');
-    valveAval.setAttribute('transform', 'rotate(' + state.valveAvalAngle + ',738,530)');
-
-    const chY = 380 - 240*state.waterLevel;
-    chamberWater.setAttribute('y', chY);
-    chamberWater.setAttribute('height', 560 - chY);
-
-    flowA.forEach((f,i)=>{
-      const x = 226 + ((state.flowAmontPhase + i/3) % 1) * 68;
-      f.setAttribute('cx', x);
-      f.setAttribute('opacity', state.vanneAmontOpen ? 1 : 0.15);
-    });
-    flowV.forEach((f,i)=>{
-      const x = 704 + ((state.flowAvalPhase + i/3) % 1) * 68;
-      f.setAttribute('cx', x);
-      f.setAttribute('opacity', state.vanneAvalOpen ? 1 : 0.15);
-    });
-
-    const amontVert = state.feuAmont === 'vert';
-    const avalVert = state.feuAval === 'vert';
-    feuAmontR.setAttribute('fill', amontVert ? 'var(--red-dim)' : 'var(--red)');
-    feuAmontR.setAttribute('filter', amontVert ? '' : 'url(#glow)');
-    feuAmontG.setAttribute('fill', amontVert ? 'var(--green)' : 'var(--green-dim)');
-    feuAmontG.setAttribute('filter', amontVert ? 'url(#glow)' : '');
-    feuAvalR.setAttribute('fill', avalVert ? 'var(--red-dim)' : 'var(--red)');
-    feuAvalR.setAttribute('filter', avalVert ? '' : 'url(#glow)');
-    feuAvalG.setAttribute('fill', avalVert ? 'var(--green)' : 'var(--green-dim)');
-    feuAvalG.setAttribute('filter', avalVert ? 'url(#glow)' : '');
-
-    let by;
-    if(state.boatX <= 300) by = 140;
-    else if(state.boatX >= 700) by = 380;
-    else by = chY;
-    boat.setAttribute('transform', 'translate(' + state.boatX + ',' + (by-8) + ')');
-  }
-
-  log('Bienvenue : portes fermées, niveau du sas intermédiaire. Bateau côté aval. Sens sélectionné : aval → amont (score : 0 pt).');
-  updateUI();
-  render();
-  requestAnimationFrame(step);
 })();
 </script>
+<script>
+(function(){
+  const nodes = [
+    { id:"n0", type:"diamond", kicker:"Étape 1", label:"Un bateau arrive-t-il ?",
+      device:{kind:"capteur", name:"Détecteur de présence du bateau"},
+      question:"Le sas est au repos, au niveau amont, les deux feux sont rouges. Que doit-on vérifier avant de démarrer le cycle ?",
+      options:[
+        "Qu'un bateau se présente bien côté aval",
+        "Que la vanne amont est ouverte",
+        "Que le niveau du sas est au niveau aval",
+        "Que la porte amont est ouverte"
+      ], correct:0 },
+    { id:"n1", type:"rect", kicker:"Étape 2", label:"Ouvrir la vanne (aval)",
+      device:{kind:"actionneur", name:"Moteur / vérin de la vanne aval"},
+      question:"Un bateau arrive depuis l'aval alors que le sas est encore au niveau amont. Quelle est la première action de l'éclusier ?",
+      options:[
+        "Ouvrir la vanne côté aval pour commencer à vidanger le sas",
+        "Ouvrir directement la porte aval",
+        "Ouvrir la vanne côté amont",
+        "Mettre le feu au vert immédiatement"
+      ], correct:0 },
+    { id:"n2", type:"diamond", kicker:"Étape 3", label:"L'eau est-elle au niveau bas ?",
+      device:{kind:"capteur", name:"Capteur de niveau bas (sas)"},
+      question:"La vanne aval vidange le sas. Que doit-on vérifier avant d'aller plus loin ?",
+      options:[
+        "Que le niveau de l'eau dans le sas a atteint le niveau bas (aval)",
+        "Que le bateau est déjà entré dans le sas",
+        "Que la porte amont est ouverte",
+        "Que le feu est passé au vert"
+      ], correct:0 },
+    { id:"n3", type:"rect", kicker:"Étape 4", label:"Fermer la vanne (aval)",
+      device:{kind:"actionneur", name:"Moteur / vérin de la vanne aval"},
+      question:"L'eau du sas a atteint le niveau bas. Quelle action doit-on faire maintenant ?",
+      options:[
+        "Fermer la vanne aval",
+        "Laisser la vanne aval ouverte",
+        "Ouvrir la vanne amont",
+        "Ouvrir directement la porte aval sans fermer la vanne"
+      ], correct:0 },
+    { id:"n4", type:"rect", kicker:"Étape 5", label:"Ouvrir la porte",
+      device:{kind:"actionneur", name:"Moteur / vérin de la porte aval"},
+      question:"L'eau du sas est au niveau bas et la vanne aval est refermée. Quelle action suit ?",
+      options:[
+        "Ouvrir la porte aval",
+        "Ouvrir la porte amont",
+        "Rouvrir la vanne aval",
+        "Ouvrir la vanne amont"
+      ], correct:0 },
+    { id:"n5", type:"diamond", kicker:"Étape 6", label:"La porte est-elle ouverte ?",
+      device:{kind:"capteur", name:"Capteur « porte ouverte »"},
+      question:"On vient de commander l'ouverture de la porte aval. Que doit-on vérifier avant de faire entrer le bateau ?",
+      options:[
+        "Que la porte est complètement ouverte",
+        "Que la vanne amont est ouverte",
+        "Que le niveau du sas est au niveau amont",
+        "Que le feu est resté rouge"
+      ], correct:0 },
+    { id:"n6", type:"rect", kicker:"Étape 7", label:"Faire entrer le bateau (feu aval vert)",
+      device:{kind:"actionneur", name:"Feu aval"},
+      question:"La porte aval est ouverte. Comment fait-on entrer le bateau dans le sas ?",
+      options:[
+        "On passe le feu aval au vert et le bateau avance dans le sas",
+        "On ouvre aussi la porte amont pour qu'il traverse directement",
+        "On garde le feu au rouge mais on laisse le bateau avancer",
+        "On ouvre la vanne amont pour l'aider à entrer"
+      ], correct:0 },
+    { id:"n7", type:"diamond", kicker:"Étape 8", label:"Le bateau est-il passé ?",
+      device:{kind:"capteur", name:"Détecteur de présence du bateau"},
+      question:"Le bateau avance dans le sas. Que doit-on vérifier avant de refermer la porte aval ?",
+      options:[
+        "Que le bateau a bien dépassé la porte aval et qu'il est amarré dans le sas",
+        "Que la vanne amont est ouverte",
+        "Que le niveau du sas est au niveau amont",
+        "Que le feu amont est vert"
+      ], correct:0 },
+    { id:"n8", type:"rect", kicker:"Étape 9", label:"Feu aval au rouge",
+      device:{kind:"actionneur", name:"Feu aval"},
+      question:"Le bateau est bien entré et s'est amarré dans le sas. Que fait-on d'abord, avant de refermer la porte ?",
+      options:[
+        "On repasse le feu aval au rouge, pour signaler que le passage n'est plus autorisé",
+        "On repasse le feu amont au rouge",
+        "On laisse le feu aval au vert",
+        "On ouvre la vanne amont avant de changer le feu"
+      ], correct:0 },
+    { id:"n9", type:"rect", kicker:"Étape 10", label:"Fermer la porte (aval)",
+      device:{kind:"actionneur", name:"Moteur / vérin de la porte aval"},
+      question:"Le feu aval est repassé au rouge. Quelle action peut-on faire maintenant ?",
+      options:[
+        "On referme la porte aval",
+        "On ouvre tout de suite la porte amont",
+        "On laisse la porte aval ouverte",
+        "On ouvre la vanne aval de nouveau"
+      ], correct:0 },
+    { id:"n10", type:"rect", kicker:"Étape 11", label:"Ouvrir la vanne (amont)",
+      device:{kind:"actionneur", name:"Moteur / vérin de la vanne amont"},
+      question:"Les deux portes sont fermées, le bateau est dans le sas. Comment fait-on monter l'eau jusqu'au niveau amont ?",
+      options:[
+        "En ouvrant la vanne côté amont",
+        "En ouvrant directement la porte amont",
+        "En ouvrant la vanne côté aval",
+        "En ouvrant les deux portes en même temps"
+      ], correct:0 },
+    { id:"n11", type:"diamond", kicker:"Étape 12", label:"L'eau est-elle au niveau haut ?",
+      device:{kind:"capteur", name:"Capteur de niveau haut (sas)"},
+      question:"La vanne amont remplit le sas. Que doit-on vérifier avant d'aller plus loin ?",
+      options:[
+        "Que le niveau de l'eau dans le sas a atteint le niveau haut (amont)",
+        "Que le bateau est ressorti du sas",
+        "Que la porte aval est ouverte",
+        "Que le feu est resté rouge"
+      ], correct:0 },
+    { id:"n12", type:"rect", kicker:"Étape 13", label:"Fermer la vanne (amont)",
+      device:{kind:"actionneur", name:"Moteur / vérin de la vanne amont"},
+      question:"L'eau du sas a atteint le niveau haut. Quelle action doit-on faire maintenant ?",
+      options:[
+        "Fermer la vanne amont",
+        "Laisser la vanne amont ouverte",
+        "Ouvrir la vanne aval",
+        "Ouvrir directement la porte amont sans fermer la vanne"
+      ], correct:0 },
+    { id:"n13", type:"rect", kicker:"Étape 14", label:"Ouvrir la porte (amont)",
+      device:{kind:"actionneur", name:"Moteur / vérin de la porte amont"},
+      question:"L'eau du sas est au niveau haut et la vanne amont est refermée. Quelle action suit ?",
+      options:[
+        "Ouvrir la porte amont",
+        "Ouvrir la porte aval",
+        "Rouvrir la vanne amont",
+        "Ouvrir la vanne aval"
+      ], correct:0 },
+    { id:"n14", type:"diamond", kicker:"Étape 15", label:"La porte est-elle ouverte ?",
+      device:{kind:"capteur", name:"Capteur « porte ouverte »"},
+      question:"On vient de commander l'ouverture de la porte amont. Que doit-on vérifier avant de faire sortir le bateau ?",
+      options:[
+        "Que la porte est complètement ouverte",
+        "Que la vanne aval est ouverte",
+        "Que le niveau du sas est au niveau aval",
+        "Que le feu est resté rouge"
+      ], correct:0 },
+    { id:"n15", type:"rect", kicker:"Étape 16", label:"Faire sortir le bateau (feu amont vert)",
+      device:{kind:"actionneur", name:"Feu amont"},
+      question:"La porte amont est ouverte. Comment fait-on sortir le bateau du sas ?",
+      options:[
+        "On passe le feu amont au vert et le bateau avance vers l'amont",
+        "On ouvre aussi la porte aval pour qu'il ressorte par là",
+        "On garde le feu au rouge mais on laisse le bateau avancer",
+        "On ouvre la vanne aval pour l'aider à sortir"
+      ], correct:0 },
+    { id:"n16", type:"diamond", kicker:"Étape 17", label:"Le bateau est-il passé ?",
+      device:{kind:"capteur", name:"Détecteur de présence du bateau"},
+      question:"Le bateau avance vers l'amont. Que doit-on vérifier avant de refermer la porte amont ?",
+      options:[
+        "Que le bateau a bien dépassé la porte amont et qu'il est sorti du sas",
+        "Que la vanne aval est ouverte",
+        "Que le niveau du sas est au niveau aval",
+        "Que le feu aval est vert"
+      ], correct:0 },
+    { id:"n17", type:"rect", kicker:"Étape 18", label:"Feu amont au rouge",
+      device:{kind:"actionneur", name:"Feu amont"},
+      question:"Le bateau est bien sorti du sas vers l'amont. Que fait-on d'abord, avant de refermer la porte ?",
+      options:[
+        "On repasse le feu amont au rouge, pour signaler que le passage n'est plus autorisé",
+        "On laisse le feu amont au vert",
+        "On rouvre la vanne amont",
+        "On ouvre la porte aval par sécurité"
+      ], correct:0 },
+    { id:"n18", type:"rect", kicker:"Étape 19", label:"Fermer la porte (amont)",
+      device:{kind:"actionneur", name:"Moteur / vérin de la porte amont"},
+      question:"Le feu amont est repassé au rouge. Comment se termine le cycle ?",
+      options:[
+        "On referme la porte amont : le sas est prêt pour un nouveau cycle",
+        "On ouvre tout de suite la vanne aval",
+        "On laisse la porte amont ouverte",
+        "On rouvre la porte aval"
+      ], correct:0 }
+  ];
+
+  function shuffleArray(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  nodes.forEach(n => {
+    const correctText = n.options[n.correct];
+    shuffleArray(n.options);
+    n.correct = n.options.indexOf(correctText);
+  });
+
+  const SENSORS = [
+    "Capteur de niveau bas (sas)",
+    "Capteur de niveau haut (sas)",
+    "Capteur « porte ouverte »",
+    "Capteur « porte fermée »",
+    "Détecteur de présence du bateau"
+  ];
+  const ACTUATORS = [
+    "Moteur / vérin de la vanne aval",
+    "Moteur / vérin de la vanne amont",
+    "Moteur / vérin de la porte aval",
+    "Moteur / vérin de la porte amont",
+    "Feu aval",
+    "Feu amont"
+  ];
+
+  const AMONT_Y = 70, AVAL_Y = 130, FLOOR_Y = 190;
+  const WAIT = {x:520,y:120}, IN_LOW = {x:300,y:120}, IN_HIGH = {x:300,y:60}, EXIT = {x:80,y:60}, GONE = {x:10,y:60};
+
+  const stages = [
+    { sasY:AMONT_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:WAIT.x,y:WAIT.y,op:0}, boatNextOp:0,
+      caption:"Aucun bateau pour l'instant : le sas est au niveau amont, les deux feux sont rouges." },
+    { sasY:AMONT_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:WAIT.x,y:WAIT.y,op:1}, boatNextOp:0,
+      caption:"Un bateau se présente côté aval : le cycle peut commencer." },
+    { sasY:AVAL_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:true, feuAmont:'red', feuAval:'red',
+      boat:{x:WAIT.x,y:WAIT.y,op:1}, boatNextOp:0,
+      caption:"La vanne aval s'ouvre : le sas commence à se vidanger." },
+    { sasY:AVAL_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:true, feuAmont:'red', feuAval:'red',
+      boat:{x:WAIT.x,y:WAIT.y,op:1}, boatNextOp:0,
+      caption:"L'eau a atteint le niveau bas. La vanne aval est encore ouverte." },
+    { sasY:AVAL_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:WAIT.x,y:WAIT.y,op:1}, boatNextOp:0,
+      caption:"La vanne aval se referme, maintenant que le niveau bas est atteint." },
+    { sasY:AVAL_Y, gateAmontOpen:false, gateAvalOpen:true, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:WAIT.x,y:WAIT.y,op:1}, boatNextOp:0,
+      caption:"La porte aval s'ouvre : le passage se dégage. Le feu aval reste rouge tant qu'elle est en mouvement." },
+    { sasY:AVAL_Y, gateAmontOpen:false, gateAvalOpen:true, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'green',
+      boat:{x:WAIT.x,y:WAIT.y,op:1}, boatNextOp:0,
+      caption:"La porte aval est bien ouverte et immobile : le feu aval passe alors au vert." },
+    { sasY:AVAL_Y, gateAmontOpen:false, gateAvalOpen:true, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'green',
+      boat:{x:IN_LOW.x,y:IN_LOW.y,op:1}, boatNextOp:0,
+      caption:"Le feu aval est vert, la porte ne bouge plus : le bateau avance et entre dans le sas." },
+    { sasY:AVAL_Y, gateAmontOpen:false, gateAvalOpen:true, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'green',
+      boat:{x:IN_LOW.x,y:IN_LOW.y,op:1}, boatNextOp:0,
+      caption:"Le bateau a bien dépassé la porte aval et s'est amarré dans le sas : on peut refermer le passage." },
+    { sasY:AVAL_Y, gateAmontOpen:false, gateAvalOpen:true, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:IN_LOW.x,y:IN_LOW.y,op:1}, boatNextOp:0,
+      caption:"Le bateau est amarré : le feu aval repasse d'abord au rouge, pour signaler que le passage n'est plus autorisé." },
+    { sasY:AVAL_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:IN_LOW.x,y:IN_LOW.y,op:1}, boatNextOp:0,
+      caption:"Le feu aval est rouge : la porte aval peut alors se refermer en toute sécurité." },
+    { sasY:AMONT_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:true, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:IN_HIGH.x,y:IN_HIGH.y,op:1}, boatNextOp:0,
+      caption:"La vanne amont s'ouvre : le sas se remplit, le bateau monte avec l'eau." },
+    { sasY:AMONT_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:true, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:IN_HIGH.x,y:IN_HIGH.y,op:1}, boatNextOp:0,
+      caption:"L'eau a atteint le niveau haut. La vanne amont est encore ouverte." },
+    { sasY:AMONT_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:IN_HIGH.x,y:IN_HIGH.y,op:1}, boatNextOp:0,
+      caption:"La vanne amont se referme, maintenant que le niveau haut est atteint." },
+    { sasY:AMONT_Y, gateAmontOpen:true, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:IN_HIGH.x,y:IN_HIGH.y,op:1}, boatNextOp:0,
+      caption:"La porte amont s'ouvre : le passage se dégage. Le feu amont reste rouge tant qu'elle est en mouvement." },
+    { sasY:AMONT_Y, gateAmontOpen:true, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'green', feuAval:'red',
+      boat:{x:IN_HIGH.x,y:IN_HIGH.y,op:1}, boatNextOp:0,
+      caption:"La porte amont est bien ouverte et immobile : le feu amont passe alors au vert." },
+    { sasY:AMONT_Y, gateAmontOpen:true, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'green', feuAval:'red',
+      boat:{x:EXIT.x,y:EXIT.y,op:1}, boatNextOp:0,
+      caption:"Le feu amont est vert, la porte ne bouge plus : le bateau avance et sort vers l'amont." },
+    { sasY:AMONT_Y, gateAmontOpen:true, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'green', feuAval:'red',
+      boat:{x:EXIT.x,y:EXIT.y,op:1}, boatNextOp:0,
+      caption:"Le bateau a bien dépassé la porte amont et il est sorti du sas : on peut refermer le passage." },
+    { sasY:AMONT_Y, gateAmontOpen:true, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:EXIT.x,y:EXIT.y,op:1}, boatNextOp:0,
+      caption:"Le bateau est sorti : le feu amont repasse d'abord au rouge, pour signaler que le passage n'est plus autorisé." },
+    { sasY:AMONT_Y, gateAmontOpen:false, gateAvalOpen:false, vanneAmontOpen:false, vanneAvalOpen:false, feuAmont:'red', feuAval:'red',
+      boat:{x:GONE.x,y:GONE.y,op:0}, boatNextOp:0.35,
+      caption:"Le feu amont est rouge : la porte amont peut alors se refermer. Le cycle est terminé !" }
+  ];
+
+  const els = {};
+  ["sasWater","gateAmont","gateAval","vanneAmontIcon","vanneAvalIcon","feuAmontLight","feuAvalLight","boat","boatNext","caption","statusTests","statusActions"].forEach(id=>{
+    els[id] = document.getElementById(id);
+  });
+  const valveEls = [
+    els.vanneAmontIcon.querySelector(".valve-wheel"),
+    els.vanneAmontIcon.querySelector(".valve-flow-group"),
+    els.vanneAmontIcon.querySelector(".valve-plate"),
+    els.vanneAvalIcon.querySelector(".valve-wheel"),
+    els.vanneAvalIcon.querySelector(".valve-flow-group"),
+    els.vanneAvalIcon.querySelector(".valve-plate")
+  ];
+
+  function applyStage(idx, animate){
+    const s = stages[idx];
+    [els.sasWater, els.gateAmont, els.gateAval, els.boat, els.boatNext, els.feuAmontLight, els.feuAvalLight, ...valveEls].forEach(el=>{
+      el.style.transition = animate ? "" : "none";
+    });
+
+    els.sasWater.setAttribute("y", s.sasY);
+    els.sasWater.setAttribute("height", FLOOR_Y - s.sasY);
+
+    els.gateAmont.setAttribute("y", 40);
+    els.gateAmont.setAttribute("height", s.gateAmontOpen ? 20 : 150);
+    els.gateAval.setAttribute("y", 40);
+    els.gateAval.setAttribute("height", s.gateAvalOpen ? 20 : 150);
+
+    els.vanneAmontIcon.querySelector(".valve-wheel").setAttribute("fill", s.vanneAmontOpen ? "#2d6ca3" : "#8a97a1");
+    els.vanneAmontIcon.querySelector(".valve-flow-group").setAttribute("opacity", s.vanneAmontOpen ? 1 : 0);
+    els.vanneAmontIcon.querySelector(".valve-plate").setAttribute("y", s.vanneAmontOpen ? 140 : 166);
+    els.vanneAmontIcon.querySelector(".valve-plate").setAttribute("height", s.vanneAmontOpen ? 6 : 18);
+    els.vanneAvalIcon.querySelector(".valve-wheel").setAttribute("fill", s.vanneAvalOpen ? "#2d6ca3" : "#8a97a1");
+    els.vanneAvalIcon.querySelector(".valve-flow-group").setAttribute("opacity", s.vanneAvalOpen ? 1 : 0);
+    els.vanneAvalIcon.querySelector(".valve-plate").setAttribute("y", s.vanneAvalOpen ? 140 : 166);
+    els.vanneAvalIcon.querySelector(".valve-plate").setAttribute("height", s.vanneAvalOpen ? 6 : 18);
+
+    els.feuAmontLight.setAttribute("fill", s.feuAmont === "green" ? "#2e9e5b" : "#cf4438");
+    els.feuAvalLight.setAttribute("fill", s.feuAval === "green" ? "#2e9e5b" : "#cf4438");
+
+    const prevBoatY = els.boat.dataset.y !== undefined ? parseFloat(els.boat.dataset.y) : s.boat.y;
+    if(animate){
+      els.boat.style.transition = (prevBoatY !== s.boat.y)
+        ? "transform 5s ease-in-out, opacity 1s ease"
+        : "";
+    }
+    els.boat.dataset.y = s.boat.y;
+    els.boat.setAttribute("transform", "translate(" + s.boat.x + "," + s.boat.y + ")");
+    els.boat.setAttribute("opacity", s.boat.op);
+    els.boatNext.setAttribute("opacity", s.boatNextOp);
+
+    els.caption.textContent = s.caption;
+    renderStatus(s);
+
+    if(!animate){
+      void els.sasWater.offsetHeight;
+      [els.sasWater, els.gateAmont, els.gateAval, els.boat, els.boatNext, els.feuAmontLight, els.feuAvalLight, ...valveEls].forEach(el=>{
+        el.style.transition = "";
+      });
+    }
+  }
+
+  function renderStatus(s){
+    const boatVisible = s.boat.op === 1;
+    const tests = [
+      ["Un bateau arrive-t-il ?", boatVisible && s.boat.x === WAIT.x],
+      ["L'eau est-elle au niveau bas ?", s.sasY === AVAL_Y],
+      ["La porte aval est-elle ouverte ?", s.gateAvalOpen],
+      ["Le bateau est-il dans le sas ?", boatVisible && (s.boat.x === IN_LOW.x)],
+      ["L'eau est-elle au niveau haut ?", s.sasY === AMONT_Y],
+      ["La porte amont est-elle ouverte ?", s.gateAmontOpen],
+      ["Le bateau est-il sorti du sas ?", s.boat.x === EXIT.x || s.boat.x === GONE.x]
+    ];
+    const actions = [
+      ["Vanne aval", s.vanneAvalOpen ? "ouverte" : "fermée", s.vanneAvalOpen],
+      ["Vanne amont", s.vanneAmontOpen ? "ouverte" : "fermée", s.vanneAmontOpen],
+      ["Porte aval", s.gateAvalOpen ? "ouverte" : "fermée", s.gateAvalOpen],
+      ["Porte amont", s.gateAmontOpen ? "ouverte" : "fermée", s.gateAmontOpen],
+      ["Feu aval", s.feuAval === "green" ? "vert" : "rouge", s.feuAval === "green"],
+      ["Feu amont", s.feuAmont === "green" ? "vert" : "rouge", s.feuAmont === "green"]
+    ];
+    const testsHtml = tests.map(t =>
+      '<div class="status-row"><span class="sname">' + t[0] + '</span>' +
+      '<span class="status-val' + (t[1] ? ' on' : '') + '">' + (t[1] ? 'Oui' : 'Non') + '</span></div>'
+    ).join("");
+    const actionsHtml = actions.map(a =>
+      '<div class="status-row"><span class="sname">' + a[0] + '</span>' +
+      '<span class="status-val' + (a[2] ? ' on' : '') + '">' + a[1] + '</span></div>'
+    ).join("");
+    els.statusTests.innerHTML = '<h3>Tests (capteurs)</h3>' + testsHtml;
+    els.statusActions.innerHTML = '<h3>Actions (actionneurs)</h3>' + actionsHtml;
+  }
+
+  const flow = document.getElementById("flow");
+  const overlay = document.getElementById("overlay");
+  const modalKicker = document.getElementById("modalKicker");
+  const modalQuestion = document.getElementById("modalQuestion");
+  const modalOptions = document.getElementById("modalOptions");
+  const modalFeedback = document.getElementById("modalFeedback");
+  const modalClose = document.getElementById("modalClose");
+  const progressText = document.getElementById("progressText");
+  const progressFill = document.getElementById("progressFill");
+  const finalMsg = document.getElementById("finalMsg");
+  const resetBtn = document.getElementById("resetBtn");
+  const replayBtn = document.getElementById("replayBtn");
+  const toast = document.getElementById("toast");
+  const deviceProgressWrap = document.getElementById("deviceProgressWrap");
+  const progressText2 = document.getElementById("progressText2");
+  const progressFill2 = document.getElementById("progressFill2");
+  const finalMsg2 = document.getElementById("finalMsg2");
+
+  const STORAGE_KEY = "ecluse-progress-v4";
+  let completedUpTo = 0;
+  let deviceDone = {};
+  let scores = {};   // question -> points obtenus (0, 1 ou 2)
+  let misses = {};   // question -> nombre d'essais ratés
+  const MAX_POINTS = nodes.length * 4;
+  function pointsFor(key){ const m = misses[key] || 0; return m === 0 ? 2 : (m === 1 ? 1 : 0); }
+  function refreshScore(){
+    const t = totalPoints();
+    const a = document.getElementById("scoreValue"), b = document.getElementById("modalScoreValue");
+    if(a) a.textContent = t;
+    if(b) b.textContent = t;
+    const m = document.getElementById("scoreMax"); if(m) m.textContent = MAX_POINTS;
+    document.querySelectorAll(".score-max").forEach(el => el.textContent = MAX_POINTS);
+  }
+  function totalPoints(){ return Object.keys(scores).reduce((s, k) => s + (scores[k] || 0), 0); }
+  function addMiss(key){ misses[key] = (misses[key] || 0) + 1; saveProgress(); }
+  function award(key){
+    if(scores[key] === undefined){
+      scores[key] = pointsFor(key);
+      refreshScore();
+      if(scores[key] > 0) setTimeout(bumpScore, 50);
+    }
+    return scores[key];
+  }
+  function ptsText(p){
+    return p === 2 ? "+2 points, du premier coup !" : (p === 1 ? "+1 point, au deuxième essai." : "0 point : il a fallu plus de deux essais.");
+  }
+
+  function loadProgress(){
+    try{
+      let parsed = window.SCORM.active() ? window.SCORM.load() : null;
+      if(!parsed && !window.SCORM.active()){
+        const raw = localStorage.getItem(STORAGE_KEY);
+        parsed = raw ? JSON.parse(raw) : {};
+      }
+      parsed = parsed || {};
+      const val = parseInt(parsed.completedUpTo, 10);
+      completedUpTo = isNaN(val) ? 0 : Math.max(0, Math.min(nodes.length, val));
+      deviceDone = (parsed.deviceDone && typeof parsed.deviceDone === "object") ? parsed.deviceDone : {};
+      scores = (parsed.scores && typeof parsed.scores === "object") ? parsed.scores : {};
+      misses = (parsed.misses && typeof parsed.misses === "object") ? parsed.misses : {};
+    }catch(e){ completedUpTo = 0; deviceDone = {}; scores = {}; misses = {}; }
+  }
+  function saveProgress(){
+    const state = {completedUpTo: completedUpTo, deviceDone: deviceDone, scores: scores, misses: misses};
+    if(window.SCORM.active()){
+      const answered = completedUpTo + Object.keys(deviceDone).filter(k => deviceDone[k]).length;
+      window.SCORM.save(state, answered, nodes.length * 2, totalPoints(), MAX_POINTS);
+    } else {
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    }
+    refreshScore();
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=> toast.classList.remove("show"), 1800);
+  }
+
+  function buildFlow(){
+    nodes.forEach((n, i) => {
+      if(i > 0){
+        const arrow = document.createElement("div");
+        arrow.className = "arrow";
+        arrow.textContent = "▼";
+        flow.appendChild(arrow);
+      }
+      const wrap = document.createElement("div");
+      wrap.className = "node-wrap";
+      const revealed = i < completedUpTo;
+      const rectPlaceholder = '<span class="placeholder-q">❓</span>Touche pour répondre';
+      const diamondPlaceholder = '<span class="placeholder-q">❓</span>?';
+      let el;
+      if(n.type === "rect"){
+        el = document.createElement("div");
+        el.className = "node rect";
+        el.innerHTML = '<span class="tag">Action ' + (i+1) + '</span><span class="label' + (revealed ? '' : ' placeholder') + '">' + (revealed ? n.label : rectPlaceholder) + '</span><span class="check">✓</span><span class="lock-icon">🔒</span>';
+      } else {
+        el = document.createElement("div");
+        el.className = "node diamond-outer";
+        el.innerHTML =
+          '<span class="tag">Test ' + (i+1) + '</span>' +
+          '<div class="diamond-shape"><span class="label' + (revealed ? '' : ' placeholder') + '">' + (revealed ? n.label : diamondPlaceholder) + '</span></div>' +
+          '<span class="check">✓</span><span class="lock-icon">🔒</span>' +
+          '<span class="decision-oui">Oui ↓</span>' +
+          '<svg class="decision-loop" viewBox="0 0 60 200" preserveAspectRatio="none">' +
+            '<path d="M-4,100 C36,100 36,10 -46,10" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"></path>' +
+            '<path d="M-46,10 L-37,4 L-37,16 Z" fill="var(--red)"></path>' +
+            '<text x="42" y="58" font-size="13" fill="var(--red)" font-weight="600">Non</text>' +
+          '</svg>';
+      }
+      el.dataset.id = n.id;
+      el.dataset.index = i;
+      el.addEventListener("click", () => handleNodeClick(n, i));
+      wrap.appendChild(el);
+
+      const chip = document.createElement("div");
+      chip.className = "device-chip";
+      chip.dataset.id = n.id;
+      const kindLabel = n.device.kind === "capteur" ? "Capteur" : "Actionneur";
+      chip.innerHTML = '<span class="dchip-label">' + kindLabel + ' : </span><span class="dchip-value">?</span>';
+      chip.addEventListener("click", () => openDeviceModal(n));
+      wrap.appendChild(chip);
+
+      flow.appendChild(wrap);
+    });
+  }
+
+  function updateNodeVisuals(){
+    nodes.forEach((n, i) => {
+      const el = flow.querySelector('[data-id="' + n.id + '"]');
+      if(!el) return;
+      el.classList.toggle("correct", i < completedUpTo);
+      el.classList.toggle("locked", i > completedUpTo);
+    });
+    progressText.textContent = completedUpTo + " / " + nodes.length;
+    progressFill.style.width = Math.round((completedUpTo / nodes.length) * 100) + "%";
+    finalMsg.classList.toggle("show", completedUpTo === nodes.length);
+    replayBtn.disabled = completedUpTo === 0;
+    refreshScore();
+    updateDeviceVisuals();
+  }
+
+  function updateDeviceVisuals(){
+    const total = nodes.length;
+    const unlocked = completedUpTo === total;
+    let done = 0;
+    nodes.forEach(n => {
+      const chip = flow.querySelector('.device-chip[data-id="' + n.id + '"]');
+      if(!chip) return;
+      chip.classList.toggle("show", unlocked);
+      const valueEl = chip.querySelector(".dchip-value");
+      if(deviceDone[n.id]){
+        done++;
+        chip.classList.add("correct");
+        valueEl.textContent = n.device.name;
+      } else {
+        chip.classList.remove("correct");
+        valueEl.textContent = "?";
+      }
+    });
+    progressText2.textContent = done + " / " + total;
+    progressFill2.style.width = Math.round((done / total) * 100) + "%";
+    deviceProgressWrap.classList.toggle("show", unlocked);
+    finalMsg2.classList.toggle("show", done === total);
+  }
+
+  function revealLabel(n){
+    const el = flow.querySelector('[data-id="' + n.id + '"] .label');
+    if(!el) return;
+    el.textContent = n.label;
+    el.classList.remove("placeholder");
+  }
+
+  let currentNode = null, currentIndex = null, currentDeviceNode = null;
+
+  const modalBox = document.getElementById("modalBox");
+  const modalScene = document.getElementById("modalScene");
+  const sceneWrapEl = document.querySelector(".scene-wrap");
+  const captionEl = document.getElementById("caption");
+  let scenePlaceholder = null, captionPlaceholder = null;
+  function showSceneInModal(){
+    if(modalBox.classList.contains("with-scene")) return;
+    scenePlaceholder = document.createElement("div");
+    scenePlaceholder.style.height = sceneWrapEl.offsetHeight + "px";
+    scenePlaceholder.style.gridArea = "scene";
+    captionPlaceholder = document.createElement("p");
+    captionPlaceholder.className = "caption";
+    captionPlaceholder.style.height = captionEl.offsetHeight + "px";
+    sceneWrapEl.replaceWith(scenePlaceholder);
+    captionEl.replaceWith(captionPlaceholder);
+    modalScene.appendChild(sceneWrapEl);
+    modalScene.appendChild(captionEl);
+    modalBox.classList.add("with-scene");
+    void sceneWrapEl.getBoundingClientRect();
+  }
+  function restoreScene(){
+    if(!modalBox.classList.contains("with-scene")) return;
+    modalBox.classList.remove("with-scene");
+    if(scenePlaceholder){ scenePlaceholder.replaceWith(sceneWrapEl); scenePlaceholder = null; }
+    if(captionPlaceholder){ captionPlaceholder.replaceWith(captionEl); captionPlaceholder = null; }
+  }
+  function closeModal(){
+    overlay.classList.remove("open");
+    restoreScene();
+    currentNode = null; currentIndex = null; currentDeviceNode = null;
+  }
+  function bumpScore(){
+    ["scoreBox","modalScore"].forEach(id => {
+      const chip = document.getElementById(id);
+      if(!chip) return;
+      chip.classList.remove("bump"); void chip.offsetWidth; chip.classList.add("bump");
+    });
+  }
+
+  function handleNodeClick(n, i){
+    if(i > completedUpTo){
+      showToast("Termine d'abord les étapes précédentes 🔒");
+      return;
+    }
+    openModal(n, i);
+  }
+
+  function openModal(n, i){
+    currentNode = n;
+    currentIndex = i;
+    modalKicker.textContent = n.kicker;
+    modalQuestion.textContent = n.question;
+    modalOptions.innerHTML = "";
+    modalFeedback.className = "feedback";
+    modalFeedback.textContent = "";
+    modalClose.classList.remove("show");
+
+    const alreadyDone = i < completedUpTo;
+
+    n.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.textContent = opt;
+      if(alreadyDone){
+        if(idx === n.correct) btn.classList.add("correct-pick");
+        btn.style.pointerEvents = "none";
+      } else {
+        btn.addEventListener("click", () => selectOption(idx, btn));
+      }
+      modalOptions.appendChild(btn);
+    });
+
+    if(alreadyDone){
+      modalFeedback.classList.add("show", "ok");
+      modalFeedback.textContent = "✅ Déjà validé — voici la bonne réponse en revue.";
+      modalClose.classList.add("show");
+    }
+
+    overlay.classList.add("open");
+  }
+
+  function selectOption(idx, btn){
+    if(!currentNode) return;
+    const options = Array.from(modalOptions.children);
+    options.forEach(o => o.style.pointerEvents = "none");
+
+    const qKey = "e:" + currentNode.id;
+    if(idx === currentNode.correct){
+      btn.classList.add("correct-pick");
+      modalFeedback.className = "feedback show ok";
+      const pts = award(qKey);
+      modalFeedback.textContent = "✅ Exact ! " + ptsText(pts) + " Regarde l'animation : c'est l'action qui vient de se produire.";
+      if(currentIndex === completedUpTo){
+        completedUpTo = currentIndex + 1;
+        saveProgress();
+        showSceneInModal();
+        applyStage(completedUpTo, true);
+      }
+      revealLabel(currentNode);
+      updateNodeVisuals();
+      modalClose.classList.add("show");
+    } else {
+      btn.classList.add("wrong-pick");
+      modalFeedback.className = "feedback show ko";
+      addMiss(qKey);
+      const left = pointsFor(qKey);
+      modalFeedback.textContent = "❌ Pas tout à fait. Réfléchis à l'état des portes et de la vanne à cette étape, puis réessaie." +
+        (left > 0 ? " (Encore " + left + " point à gagner.)" : " (Plus de point à gagner sur cette question.)");
+      setTimeout(() => {
+        options.forEach(o => { o.style.pointerEvents = "auto"; o.classList.remove("wrong-pick"); });
+      }, 700);
+    }
+  }
+
+  function openDeviceModal(n){
+    currentDeviceNode = n;
+    currentNode = null;
+    currentIndex = null;
+    const kindLabel = n.device.kind === "capteur" ? "Capteur" : "Actionneur";
+    modalKicker.textContent = kindLabel;
+    modalQuestion.textContent = "Quel " + kindLabel.toLowerCase() + " correspond à cette étape : « " + n.label + " » ?";
+    modalOptions.innerHTML = "";
+    modalFeedback.className = "feedback";
+    modalFeedback.textContent = "";
+    modalClose.classList.remove("show");
+
+    const alreadyDone = !!deviceDone[n.id];
+    const pool = n.device.kind === "capteur" ? SENSORS : ACTUATORS;
+    const opts = shuffleArray(pool.slice());
+
+    opts.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.textContent = opt;
+      if(alreadyDone){
+        if(opt.replace(/\s+/g," ").trim() === n.device.name.replace(/\s+/g," ").trim()) btn.classList.add("correct-pick");
+        btn.style.pointerEvents = "none";
+      } else {
+        btn.addEventListener("click", () => selectDeviceOption(opt, btn, n));
+      }
+      modalOptions.appendChild(btn);
+    });
+
+    if(alreadyDone){
+      modalFeedback.classList.add("show", "ok");
+      modalFeedback.textContent = "✅ Déjà validé — voici la bonne réponse en revue.";
+      modalClose.classList.add("show");
+    }
+
+    overlay.classList.add("open");
+  }
+
+  function selectDeviceOption(opt, btn, n){
+    const options = Array.from(modalOptions.children);
+    options.forEach(o => o.style.pointerEvents = "none");
+
+    if(opt.replace(/\s+/g," ").trim() === n.device.name.replace(/\s+/g," ").trim()){
+      btn.classList.add("correct-pick");
+      modalFeedback.className = "feedback show ok";
+      const pts = award("d:" + n.id);
+      modalFeedback.textContent = "✅ Exact ! " + ptsText(pts) + " Regarde la case : elle est maintenant complétée.";
+      deviceDone[n.id] = true;
+      saveProgress();
+      updateDeviceVisuals();
+      refreshScore();
+      modalClose.classList.add("show");
+    } else {
+      btn.classList.add("wrong-pick");
+      modalFeedback.className = "feedback show ko";
+      addMiss("d:" + n.id);
+      const left = pointsFor("d:" + n.id);
+      modalFeedback.textContent = "❌ Pas celui-ci. Aide-toi de la fiche ressource, puis réessaie." +
+        (left > 0 ? " (Encore " + left + " point à gagner.)" : " (Plus de point à gagner sur cette question.)");
+      setTimeout(() => {
+        options.forEach(o => { o.style.pointerEvents = "auto"; o.classList.remove("wrong-pick"); });
+      }, 700);
+    }
+  }
+
+  modalClose.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (e) => { if(e.target === overlay) closeModal(); });
+
+  resetBtn.addEventListener("click", () => {
+    completedUpTo = 0;
+    deviceDone = {};
+    scores = {};
+    misses = {};
+    saveProgress();
+    nodes.forEach(n => {
+      const el = flow.querySelector('[data-id="' + n.id + '"] .label');
+      if(!el) return;
+      el.innerHTML = n.type === "rect"
+        ? '<span class="placeholder-q">❓</span>Touche pour répondre'
+        : '<span class="placeholder-q">❓</span>?';
+      el.classList.add("placeholder");
+    });
+    updateNodeVisuals();
+    applyStage(0, true);
+  });
+
+  let replaying = false;
+  replayBtn.addEventListener("click", () => {
+    if(replaying || completedUpTo === 0) return;
+    replaying = true;
+    replayBtn.disabled = true;
+    applyStage(0, false);
+    let i = 1;
+    function step(){
+      if(i > completedUpTo){ replaying = false; updateNodeVisuals(); return; }
+      applyStage(i, true);
+      i++;
+      const waterMoves = i > 1 && stages[i - 1] && stages[i - 2] && stages[i - 1].sasY !== stages[i - 2].sasY;
+      setTimeout(step, waterMoves ? 5300 : 1700);
+    }
+    setTimeout(step, 300);
+  });
+
+  loadProgress();
+  buildFlow();
+  updateNodeVisuals();
+  applyStage(completedUpTo, false);
+
+  const animSticky = document.querySelector(".anim-sticky");
+  const mainEl = document.querySelector("main");
+  function syncSpacer(){
+    mainEl.style.paddingTop = (animSticky.offsetHeight + 12) + "px";
+  }
+  const ZOOM_LEVELS = [0.6, 0.8, 1, 1.25, 1.5, 1.75, 2, 2.5];
+  const ZOOM_KEY = "ecluse-zoom-v3";
+  const sceneWrap = document.querySelector(".scene-wrap");
+  const animInner = document.querySelector(".anim-inner");
+  const zoomInBtn = document.getElementById("zoomIn");
+  const zoomOutBtn = document.getElementById("zoomOut");
+  const zoomLevelEl = document.getElementById("zoomLevel");
+  let zoomIndex = 1;
+  try{
+    const saved = parseInt(localStorage.getItem(ZOOM_KEY), 10);
+    if(!isNaN(saved) && saved >= 0 && saved < ZOOM_LEVELS.length) zoomIndex = saved;
+  }catch(e){}
+
+  function applyZoom(){
+    const z = ZOOM_LEVELS[zoomIndex];
+    sceneWrap.style.maxWidth = "";
+    animInner.classList.remove("zoomed");
+    const baseWidth = sceneWrap.getBoundingClientRect().width || 460;
+    if(z > 1) animInner.classList.add("zoomed");
+    if(z !== 1) sceneWrap.style.maxWidth = Math.round(baseWidth * z) + "px";
+    zoomLevelEl.textContent = Math.round(z * 100) + " %";
+    zoomOutBtn.disabled = zoomIndex === 0;
+    zoomInBtn.disabled = zoomIndex === ZOOM_LEVELS.length - 1;
+    try{ localStorage.setItem(ZOOM_KEY, String(zoomIndex)); }catch(e){}
+    syncSpacer();
+  }
+  const fsBtn = document.getElementById("fsBtn");
+  const root = document.documentElement;
+  const fsEnabled = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement; }
+  function updateFsBtn(){
+    fsBtn.textContent = fsElement() ? "✕ Quitter le plein écran" : "⛶ Plein écran";
+    setTimeout(applyZoom, 150);
+  }
+  if(!fsEnabled){
+    fsBtn.hidden = true;
+  } else {
+    fsBtn.addEventListener("click", () => {
+      try{
+        if(fsElement()){
+          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        } else {
+          const req = root.requestFullscreen || root.webkitRequestFullscreen;
+          const r = req.call(root);
+          if(r && r.catch) r.catch(() => showToast("Le plein écran n'est pas autorisé ici : utilise la touche F11."));
+        }
+      }catch(e){ showToast("Le plein écran n'est pas autorisé ici : utilise la touche F11."); }
+    });
+    document.addEventListener("fullscreenchange", updateFsBtn);
+    document.addEventListener("webkitfullscreenchange", updateFsBtn);
+  }
+  zoomInBtn.addEventListener("click", () => { if(zoomIndex < ZOOM_LEVELS.length - 1){ zoomIndex++; applyZoom(); } });
+  zoomOutBtn.addEventListener("click", () => { if(zoomIndex > 0){ zoomIndex--; applyZoom(); } });
+  applyZoom();
+
+  syncSpacer();
+  window.addEventListener("resize", applyZoom);
+  window.addEventListener("orientationchange", syncSpacer);
+  if(window.ResizeObserver){
+    new ResizeObserver(syncSpacer).observe(animSticky);
+  }
+})();
+</script>
+
 </body>
 </html>
