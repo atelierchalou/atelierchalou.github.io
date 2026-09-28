@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quel type de mémoire ?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#151A2E;
+    --night-deep:#0F1322;
+    --panel:#1F2640;
+    --line:#333C5C;
+    --lav:#8C8CF2;
+    --lav-dim:#4E4E8C;
+    --coral:#F2836B;
+    --ink:#EDEFF7;
+    --ink-dim:#A7ADC9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at 20% 0%, #232B4C 0%, var(--night) 50%, var(--night-deep) 100%);
+    color:var(--ink);
+    font-family:'Inter', system-ui, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:28px 16px 56px;
+  }
+  .wrap{ width:100%; max-width:600px; }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; font-weight:600; margin:0; line-height:1.2; }
+
+  .masthead{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:30px; padding-bottom:14px; border-bottom:2px solid var(--lav-dim);
+  }
+  .masthead .title{ font-size:19px; color:var(--lav); font-family:'Space Grotesk'; font-weight:600; }
+  .masthead .sub{ font-size:13px; color:var(--ink-dim); }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  p.lead{ color:var(--ink-dim); font-size:15.5px; line-height:1.6; margin:0 0 24px; }
+
+  /* ---- INTRO ---- */
+  #screen-intro .hero-tag{
+    display:inline-block; font-size:13px; color:var(--coral); border:1px solid var(--coral);
+    padding:4px 12px; border-radius:999px; margin-bottom:18px;
+  }
+  #screen-intro h1{ font-size:32px; max-width:480px; margin-bottom:16px; }
+  .type-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:30px; }
+  .type-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 14px;
+  }
+  .type-card .name{ font-family:'Space Grotesk'; font-size:14.5px; color:var(--ink); margin-bottom:4px; }
+  .type-card .hint{ font-size:12.5px; color:var(--ink-dim); line-height:1.4; }
+
+  button.primary{
+    font-family:'Space Grotesk'; font-weight:600; font-size:16px; background:var(--lav);
+    color:#171833; border:none; padding:14px 26px; border-radius:8px; cursor:pointer;
+    transition:transform .15s ease;
+  }
+  button.primary:hover{ transform:translateY(-1px); }
+  button.primary:active{ transform:scale(0.98); }
+  button.ghost{
+    font-family:'Inter'; font-weight:600; font-size:14.5px; background:none; color:var(--ink-dim);
+    border:1px solid var(--line); padding:11px 20px; border-radius:8px; cursor:pointer;
+  }
+  button.ghost:hover{ border-color:var(--ink-dim); color:var(--ink); }
+  button:disabled{ opacity:.35; cursor:not-allowed; }
+
+  /* ---- QUIZ ---- */
+  .progress-row{ display:flex; align-items:center; gap:12px; margin-bottom:36px; }
+  .progress-track{ flex:1; height:2px; background:var(--line); position:relative; }
+  .progress-fill{ position:absolute; top:0; left:0; bottom:0; background:var(--coral); width:0%; transition:width .25s ease; }
+  .progress-label{ font-size:13px; color:var(--ink-dim); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .question-type{ font-family:'Space Grotesk'; font-size:13.5px; color:var(--coral); margin-bottom:10px; }
+  .question-text{ font-size:24px; line-height:1.32; margin-bottom:36px; min-height:100px; }
+  .scale{ display:flex; justify-content:space-between; gap:8px; margin-bottom:10px; }
+  .scale button{
+    flex:1; aspect-ratio:1; border-radius:50%; border:1.5px solid var(--line); background:var(--panel);
+    cursor:pointer; font-family:'Inter'; font-weight:600; font-size:15px; color:var(--ink-dim);
+    transition:all .15s ease;
+  }
+  .scale button:hover{ border-color:var(--lav); color:var(--ink); }
+  .scale button.selected{ background:var(--lav); border-color:var(--lav); color:#171833; }
+  .scale-labels{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-dim); margin-bottom:32px; }
+  .nav-row{ display:flex; justify-content:space-between; align-items:center; }
+
+  /* ---- RESULTS ---- */
+  .results-kicker{ font-family:'Space Grotesk'; color:var(--coral); font-size:14px; margin-bottom:8px; }
+  #screen-results h1{ font-size:28px; margin-bottom:24px; }
+  .strength-card{
+    background:var(--panel); border:1px solid var(--line); border-left:5px solid var(--lav);
+    padding:22px 24px; margin-bottom:16px; border-radius:4px;
+  }
+  .strength-card.secondary{ border-left-color:var(--coral); }
+  .strength-rank{ font-size:12.5px; color:var(--ink-dim); margin-bottom:4px; }
+  .strength-word{ font-family:'Space Grotesk'; font-size:26px; font-weight:600; margin-bottom:8px; }
+  .strength-text{ font-size:15px; color:var(--ink-dim); line-height:1.55; margin-bottom:14px; }
+  .tips-title{ font-size:13px; color:var(--ink); font-weight:600; margin-bottom:8px; }
+  .tips-list{ margin:0; padding-left:18px; color:var(--ink-dim); font-size:14px; line-height:1.7; }
+
+  .chart-section{ margin-top:36px; margin-bottom:32px; }
+  .chart-title{
+    font-size:13.5px; color:var(--ink-dim); margin-bottom:16px;
+    border-top:1px solid var(--line); padding-top:20px;
+  }
+  .bar-row{ display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+  .bar-label{ width:130px; font-size:13.5px; color:var(--ink); flex-shrink:0; }
+  .bar-track{ flex:1; height:10px; background:#292F4E; border-radius:999px; overflow:hidden; }
+  .bar-fill{ height:100%; background:var(--lav-dim); border-radius:999px; width:0%; transition:width .8s ease; }
+  .bar-fill.top{ background:var(--coral); }
+  .bar-value{ width:34px; text-align:right; font-size:13px; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
+  .bar-sub{ font-size:11.5px; color:var(--ink-dim); padding-left:142px; }
+  .restart-row{ margin-top:24px; }
+
+  @media print{
+    .masthead, #screen-results .restart-row{ display:none !important; }
+    body{ background:#fff !important; color:#151A2E; }
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    #screen-results h1, #screen-results .results-kicker{ color:#151A2E; }
+    #screen-results .lead{ color:#4B5A70; }
+    .strength-card{ background:#F7F7FA !important; border:1px solid #ccc; break-inside:avoid; }
+    .strength-word{ color:#151A2E; }
+    .strength-text, .tips-list{ color:#333; }
+    .bar-track{ background:#e4e4ea !important; }
+    .bar-label, .bar-value, .chart-title, .bar-sub{ color:#333; }
+  }
+
+  /* ---- GAMES ---- */
+  #screen-games-intro .hero-tag{ display:inline-block; font-size:13px; color:var(--coral); border:1px solid var(--coral); padding:4px 12px; border-radius:999px; margin-bottom:18px; }
+  #screen-games-intro h1{ font-size:28px; max-width:480px; margin-bottom:16px; }
+
+  .game-domain{ font-family:'Space Grotesk'; font-size:13.5px; color:var(--coral); margin-bottom:4px; }
+  .game-title{ font-size:24px; margin-bottom:14px; }
+  .game-instructions{ font-size:15px; color:var(--ink-dim); line-height:1.55; margin-bottom:24px; }
+  #game-content{ margin-bottom:24px; }
+  .game-feedback{ font-size:15px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px 16px; margin-bottom:20px; }
+  .game-feedback b{ color:var(--coral); }
+
+  .emoji-grid, .word-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .emoji-tile{
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:34px;
+    background:var(--panel); border:2px solid var(--line); border-radius:10px;
+  }
+  .word-chip{
+    padding:14px 8px; text-align:center; background:var(--panel); border:2px solid var(--line); border-radius:10px;
+    font-size:14px; cursor:pointer; user-select:none;
+  }
+  .word-chip.selected{ background:var(--lav); border-color:var(--lav); color:#171833; font-weight:600; }
+  .word-chip.locked{ cursor:default; opacity:.85; }
+  .word-chip.correct-hit{ border-color:var(--coral); }
+  .word-chip.missed{ border-color:#F2836B; opacity:.6; }
+
+  .tile-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; max-width:280px; margin:0 auto; }
+  .seq-tile{
+    aspect-ratio:1; border-radius:14px; border:2px solid var(--line); background:var(--panel);
+    display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-size:22px;
+    color:var(--ink-dim); cursor:pointer; transition:background .15s ease, transform .1s ease;
+  }
+  .seq-tile.lit{ background:var(--coral); color:#171833; transform:scale(1.04); }
+  .seq-tile.clicked{ background:var(--lav); color:#171833; }
+  .seq-tile:active{ transform:scale(0.96); }
+
+  .arrow-display{
+    font-size:72px; text-align:center; color:var(--coral); min-height:100px; display:flex; align-items:center; justify-content:center;
+  }
+  .arrow-pad{ display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:8px; max-width:220px; margin:0 auto; }
+  .arrow-btn{
+    aspect-ratio:1; border-radius:10px; border:2px solid var(--line); background:var(--panel); color:var(--ink-dim);
+    font-size:26px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .arrow-btn:active{ background:var(--lav); color:#171833; }
+
+  .write-word-display{
+    font-family:'Space Grotesk'; font-size:30px; text-align:center; letter-spacing:0.08em; color:var(--coral);
+    margin-bottom:16px;
+  }
+  .write-canvas-wrap{ text-align:center; }
+  canvas.write-canvas{ background:#fff; border-radius:10px; touch-action:none; max-width:100%; }
+  .write-counter{ font-size:13px; color:var(--ink-dim); margin-top:10px; }
+
+  .reading-passage{
+    font-size:16px; line-height:1.7; background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:18px 20px;
+  }
+  .mc-options{ display:flex; flex-direction:column; gap:10px; }
+  .mc-option{
+    text-align:left; padding:13px 16px; border-radius:8px; border:2px solid var(--line); background:var(--panel);
+    color:var(--ink); font-family:'Inter'; font-size:14.5px; cursor:pointer;
+  }
+  .mc-option.selected{ background:var(--lav); border-color:var(--lav); color:#171833; font-weight:600; }
+  .mc-option.locked{ opacity:0.6; }
+  .mc-question{ margin-bottom:22px; }
+  .mc-question .q-label{ font-size:14.5px; margin-bottom:10px; color:var(--ink-dim); }
+
+  @media (max-width:420px){
+    .emoji-grid, .word-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+
+  @media (max-width:420px){
+    .type-grid{ grid-template-columns:1fr; }
+    .question-text{ font-size:21px; min-height:80px; }
+    .bar-label{ width:96px; font-size:12px; }
+    .bar-sub{ padding-left:108px; font-size:10.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="title">Quel type de mémoire ?</div>
+    <div class="sub">40 questions</div>
+  </div>
+
+  <!-- INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="hero-tag">Test de mémoire</div>
+    <h1>Découvre comment ta mémoire fonctionne le mieux.</h1>
+    <p class="lead">On ne mémorise pas tous de la même façon : certains retiennent mieux en voyant, d'autres en entendant, en faisant, ou en écrivant. Réponds à 40 questions sur ta manière d'apprendre au quotidien. À la fin, tu découvriras ton ou tes types de mémoire dominants, avec des conseils concrets pour apprendre plus facilement.</p>
+    <div class="type-grid">
+      <div class="type-card"><div class="name">Visuelle</div><div class="hint">images, couleurs, schémas</div></div>
+      <div class="type-card"><div class="name">Auditive</div><div class="hint">sons, voix, répétition orale</div></div>
+      <div class="type-card"><div class="name">Kinesthésique</div><div class="hint">mouvement, manipulation</div></div>
+      <div class="type-card"><div class="name">Verbale-écrite</div><div class="hint">lecture, écriture, mots</div></div>
+    </div>
+    <button class="primary" onclick="startQuiz()">Commencer</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">1 / 40</div>
+    </div>
+    <div class="question-type" id="question-type"></div>
+    <div class="question-text" id="question-text"></div>
+    <div class="scale" id="scale"></div>
+    <div class="scale-labels">
+      <span>Pas du tout d'accord</span>
+      <span>Tout à fait d'accord</span>
+    </div>
+    <div class="nav-row">
+      <button class="ghost" id="btn-back" onclick="goBack()">Précédent</button>
+      <button class="ghost" id="btn-next" onclick="goNext()" disabled>Suivant</button>
+    </div>
+  </div>
+
+  <!-- GAMES INTRO -->
+  <div class="screen" id="screen-games-intro">
+    <div class="hero-tag">Étape 2</div>
+    <h1>Maintenant, quelques petits jeux de mémoire.</h1>
+    <p class="lead">En plus de tes réponses, ces 8 petits jeux (2 par type de mémoire) mesurent comment tu te souviens vraiment dans la pratique. Ton résultat final combinera tes réponses et ta performance à ces jeux.</p>
+    <button class="primary" onclick="startGames()">Commencer les jeux</button>
+  </div>
+
+  <!-- GAME (generic) -->
+  <div class="screen" id="screen-game">
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="game-progress-fill"></div></div>
+      <div class="progress-label" id="game-progress-label">1 / 8</div>
+    </div>
+    <div class="game-domain" id="game-domain"></div>
+    <div class="game-title" id="game-title"></div>
+    <div class="game-instructions" id="game-instructions"></div>
+    <div id="game-content"></div>
+    <div class="game-feedback" id="game-feedback" style="display:none;"></div>
+    <div class="nav-row">
+      <span></span>
+      <button class="primary" id="game-action-btn"></button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="screen" id="screen-results">
+    <div class="results-kicker">Résultat</div>
+    <h1>Voici comment ta mémoire fonctionne le mieux.</h1>
+    <p class="lead" style="margin-bottom:20px;">Ce résultat combine tes réponses au questionnaire et ta performance aux petits jeux.</p>
+    <div id="scorm-badge" style="display:none; font-size:13px; color:var(--lav); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 14px; margin-bottom:20px;"></div>
+    <div id="strength-cards"></div>
+
+    <div class="chart-section">
+      <div class="chart-title">Les 4 types de mémoire, du plus au moins marqué chez toi</div>
+      <div id="bars"></div>
+    </div>
+
+    <div class="restart-row" style="display:flex; flex-wrap:wrap; gap:12px;">
+      <button class="primary" onclick="window.print()">Télécharger en PDF</button>
+      <button class="ghost" onclick="restart()">Refaire le questionnaire</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===================== SCORM 1.2 =====================
+// Recherche l'API SCORM fournie par Éléa/Moodle dans les fenêtres parentes.
+let scormAPI = null;
+let scormAvailable = false;
+
+function findAPI(win){
+  let attempts = 0;
+  while(win && !win.API && win.parent && win.parent !== win && attempts < 10){
+    win = win.parent;
+    attempts++;
+  }
+  return win ? win.API : null;
+}
+
+function getAPI(){
+  let api = findAPI(window);
+  if(!api && window.opener){
+    api = findAPI(window.opener);
+  }
+  return api;
+}
+
+function scormInit(){
+  try{
+    scormAPI = getAPI();
+    if(scormAPI){
+      const result = scormAPI.LMSInitialize('');
+      scormAvailable = (result === 'true' || result === true);
+      if(scormAvailable){
+        scormAPI.LMSSetValue('cmi.core.lesson_status', 'incomplete');
+        scormAPI.LMSCommit('');
+      }
+    }
+  }catch(e){
+    scormAvailable = false;
+  }
+  updateScormBadge();
+}
+
+function scormSet(key, value){
+  if(!scormAvailable || !scormAPI) return;
+  try{ scormAPI.LMSSetValue(key, String(value)); }catch(e){}
+}
+
+function scormCommit(){
+  if(!scormAvailable || !scormAPI) return;
+  try{ scormAPI.LMSCommit(''); }catch(e){}
+}
+
+function scormFinish(){
+  if(!scormAvailable || !scormAPI) return;
+  try{ scormAPI.LMSCommit(''); scormAPI.LMSFinish(''); }catch(e){}
+}
+
+function updateScormBadge(){
+  const badge = document.getElementById('scorm-badge');
+  if(!badge) return;
+  if(scormAvailable){
+    badge.textContent = "Connecté à Éléa : ton résultat sera envoyé à ton professeur.";
+    badge.style.display = 'block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function sendResultsToScorm(ranked){
+  if(!scormAvailable) return;
+  const overallScore = Math.round(ranked.reduce((s,r) => s + r.pct, 0) / ranked.length);
+  scormSet('cmi.core.score.raw', overallScore);
+  scormSet('cmi.core.score.min', 0);
+  scormSet('cmi.core.score.max', 100);
+  scormSet('cmi.core.lesson_status', 'completed');
+
+  // Ordre toujours fixe (visuelle, auditive, kinesthésique, verbale) pour que les colonnes
+  // "Réponse 0/1/2/3" du rapport Éléa désignent toujours le même type de mémoire, quel que soit
+  // le classement personnel de l'élève.
+  const fixedOrder = ['visuelle','auditive','kinesthesique','verbale'];
+  const byKey = {};
+  ranked.forEach(r => { byKey[r.key] = r; });
+
+  fixedOrder.forEach((key, i) => {
+    const r = byKey[key];
+    const base = 'cmi.interactions.' + i;
+    scormSet(base + '.id', 'memoire_' + key);
+    scormSet(base + '.type', 'numeric');
+    scormSet(base + '.student_response', r.pct);
+    scormSet(base + '.result', r.pct >= 50 ? 'correct' : 'incorrect');
+  });
+
+  // Résumé lisible stocké dans suspend_data, pour une relecture ultérieure si besoin
+  const summary = 'Ordre fixe = Visuelle / Auditive / Kinesthésique / Verbale-écrite. ' +
+    fixedOrder.map(key => byKey[key].label + ':' + byKey[key].pct + '(rep:' + byKey[key].likertPct + '/jeux:' + byKey[key].gameAvg + ')').join(' | ');
+  scormSet('cmi.suspend_data', summary.slice(0, 4000));
+
+  scormCommit();
+}
+
+window.addEventListener('beforeunload', scormFinish);
+document.addEventListener('DOMContentLoaded', scormInit);
+if(document.readyState !== 'loading'){ scormInit(); }
+// ===================== FIN SCORM =====================
+
+const types = {
+  visuelle: {
+    label: "Visuelle",
+    text: "Ta mémoire s'appuie surtout sur ce que tu vois : images, couleurs, schémas, position des mots sur une page. Une information devient beaucoup plus facile à retenir pour toi dès qu'elle prend une forme visuelle.",
+    tips: [
+      "Transforme tes leçons en cartes mentales, schémas ou frises plutôt qu'en texte continu.",
+      "Utilise des couleurs différentes pour classer les idées (une couleur par thème, par exemple).",
+      "Relis tes notes en les regardant vraiment, pas seulement en les survolant : ferme les yeux et essaie de 'revoir' la page.",
+      "Privilégie les vidéos, schémas et illustrations quand tu as le choix du support."
+    ]
+  },
+  auditive: {
+    label: "Auditive",
+    text: "Ta mémoire s'appuie surtout sur ce que tu entends : explications à voix haute, sons, répétition orale. Une leçon devient plus facile à retenir pour toi quand elle passe par la voix, la tienne ou celle de quelqu'un d'autre.",
+    tips: [
+      "Récite tes leçons à voix haute plutôt que de les relire en silence.",
+      "Enregistre-toi en train d'expliquer une leçon, puis réécoute-toi.",
+      "Explique ce que tu apprends à quelqu'un (ou même à toi-même) : le fait de le dire aide à le fixer.",
+      "Si possible, écoute des podcasts ou vidéos explicatives sur ce que tu étudies."
+    ]
+  },
+  kinesthesique: {
+    label: "Kinesthésique",
+    text: "Ta mémoire s'appuie surtout sur le mouvement et l'action : manipuler, refaire, mimer, expérimenter. Une information devient beaucoup plus solide pour toi une fois que ton corps l'a physiquement pratiquée.",
+    tips: [
+      "Marche ou bouge légèrement pendant que tu révises à voix haute.",
+      "Manipule du matériel concret (cartes, objets, schémas à construire) plutôt que de rester seulement sur du papier.",
+      "Refais l'exercice toi-même plusieurs fois plutôt que de simplement relire la correction.",
+      "Écris à la main tes résumés : le geste d'écrire aide ta mémoire plus que de taper au clavier."
+    ]
+  },
+  verbale: {
+    label: "Verbale-écrite",
+    text: "Ta mémoire s'appuie surtout sur les mots écrits : lire, reformuler, résumer avec ton propre vocabulaire. Une information devient plus solide pour toi une fois qu'elle est passée par l'écriture, la tienne en particulier.",
+    tips: [
+      "Réécris tes notes de cours dans tes propres mots, sous forme de fiches ou de résumés courts.",
+      "Fais des listes pour organiser ce que tu dois apprendre ou retenir.",
+      "Lis un texte plusieurs fois plutôt qu'une seule, en reformulant chaque paragraphe après l'avoir lu.",
+      "Cherche le sens précis des mots ou définitions avant de chercher à les retenir par cœur."
+    ]
+  }
+};
+
+const questions = [
+  ["visuelle","Je me souviens mieux d'une leçon si j'ai vu un schéma, une carte mentale ou des images."],
+  ["visuelle","Je retiens plus facilement un mot si je visualise comment il s'écrit."],
+  ["visuelle","Je me repère bien dans un lieu si j'ai vu le plan ou le trajet une seule fois."],
+  ["visuelle","Je me rappelle facilement le visage des gens, même si j'oublie leur nom."],
+  ["visuelle","Quand je révise, j'aime surligner, utiliser des couleurs ou faire des schémas."],
+  ["visuelle","Je me souviens souvent de la position d'une information sur la page (en haut, à gauche...)."],
+  ["visuelle","Je préfère un cours avec des diagrammes, vidéos ou photos plutôt qu'un long texte."],
+  ["visuelle","Je me souviens bien des films ou des livres illustrés que j'ai vus ou lus."],
+  ["visuelle","Il m'arrive de 'revoir' une scène ou une page dans ma tête pour m'en souvenir."],
+  ["visuelle","Je me rappelle plus facilement d'une information si elle avait une couleur ou une forme particulière."],
+
+  ["auditive","Je retiens mieux une leçon si je l'ai entendue expliquée à voix haute."],
+  ["auditive","Je me souviens facilement des paroles d'une chanson que j'ai entendue plusieurs fois."],
+  ["auditive","Répéter une information à voix haute m'aide à la mémoriser."],
+  ["auditive","Je reconnais facilement une voix même si je ne vois pas la personne."],
+  ["auditive","J'apprends mieux en écoutant un enregistrement ou un podcast qu'en lisant un texte."],
+  ["auditive","Je me souviens bien de ce qu'on m'a dit dans une conversation, même longtemps après."],
+  ["auditive","Le ton ou le rythme d'une phrase m'aide à m'en souvenir."],
+  ["auditive","J'aime réciter une leçon à voix haute pour vérifier que je la connais."],
+  ["auditive","Je retiens facilement un numéro ou une liste si je la répète oralement."],
+  ["auditive","Discuter d'un sujet à voix haute m'aide plus à le retenir que de le relire en silence."],
+
+  ["kinesthesique","Je retiens mieux une leçon si j'ai pu la manipuler, la mimer ou la refaire moi-même."],
+  ["kinesthesique","J'apprends mieux en bougeant (marcher, écrire, gesticuler) qu'en restant assis sans rien faire."],
+  ["kinesthesique","Une fois que j'ai fait un geste ou un mouvement plusieurs fois, je ne l'oublie plus."],
+  ["kinesthesique","Je me souviens bien d'un trajet si je l'ai fait moi-même à pied ou à vélo, plus que si on me l'a juste décrit."],
+  ["kinesthesique","J'ai besoin de manipuler un objet (calculatrice, cartes, matériel) pour bien comprendre un exercice."],
+  ["kinesthesique","Je retiens mieux quand je peux mimer ou reproduire physiquement ce que j'apprends."],
+  ["kinesthesique","Rester longtemps assis à écouter sans bouger me fatigue plus qu'apprendre en faisant quelque chose."],
+  ["kinesthesique","J'apprends bien par l'expérience : essayer, me tromper, puis recommencer."],
+  ["kinesthesique","Écrire à la main, plutôt que taper, m'aide à mieux mémoriser."],
+  ["kinesthesique","Je me souviens d'un geste, d'une danse ou d'un mouvement sportif après l'avoir pratiqué une seule fois."],
+
+  ["verbale","Je retiens mieux une information si je l'ai écrite moi-même, sous forme de résumé ou de fiche."],
+  ["verbale","Faire des listes m'aide à mémoriser ce que je dois faire ou apprendre."],
+  ["verbale","Je comprends mieux une leçon en la lisant tranquillement qu'en l'écoutant."],
+  ["verbale","J'aime réécrire mes notes de cours pour mieux les retenir."],
+  ["verbale","Je retiens bien les définitions si je les ai lues et reformulées avec mes propres mots."],
+  ["verbale","J'apprends bien en lisant un texte plusieurs fois."],
+  ["verbale","Prendre des notes pendant un cours m'aide à mieux mémoriser, même si je ne les relis pas après."],
+  ["verbale","J'aime chercher le sens exact d'un mot ou d'une définition avant de le retenir."],
+  ["verbale","Je retiens mieux les informations écrites (livre, texte, note) que celles simplement expliquées à l'oral."],
+  ["verbale","Écrire une explication avec mes propres mots m'aide à comprendre et à m'en souvenir."]
+];
+
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+
+function startQuiz(){
+  document.getElementById('screen-intro').classList.remove('active');
+  document.getElementById('screen-quiz').classList.add('active');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const [typeKey, text] = questions[current];
+  document.getElementById('question-type').textContent = types[typeKey].label;
+  document.getElementById('question-text').textContent = text;
+  document.getElementById('progress-label').textContent = (current+1) + ' / ' + questions.length;
+  document.getElementById('progress-fill').style.width = ((current) / questions.length * 100) + '%';
+
+  const scale = document.getElementById('scale');
+  scale.innerHTML = '';
+  for(let i=1;i<=5;i++){
+    const b = document.createElement('button');
+    b.textContent = i;
+    if(answers[current] === i) b.classList.add('selected');
+    b.onclick = () => selectAnswer(i);
+    scale.appendChild(b);
+  }
+
+  document.getElementById('btn-back').disabled = (current === 0);
+  document.getElementById('btn-next').disabled = (answers[current] === null);
+  document.getElementById('btn-next').textContent = (current === questions.length - 1) ? 'Passer aux jeux' : 'Suivant';
+}
+
+function selectAnswer(value){
+  answers[current] = value;
+  renderQuestion();
+}
+
+function goNext(){
+  if(answers[current] === null) return;
+  if(current === questions.length - 1){
+    document.getElementById('screen-quiz').classList.remove('active');
+    document.getElementById('screen-games-intro').classList.add('active');
+  } else {
+    current++;
+    renderQuestion();
+  }
+}
+
+function goBack(){
+  if(current === 0) return;
+  current--;
+  renderQuestion();
+}
+
+// ===================== MINI-JEUX =====================
+const gameScores = {visuelle:[], auditive:[], kinesthesique:[], verbale:[]};
+let currentGameIndex = 0;
+let pendingTimeouts = [];
+let pendingWordRecall = null;
+
+function trackedTimeout(fn, ms){
+  const id = setTimeout(fn, ms);
+  pendingTimeouts.push(id);
+  return id;
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function setGameAction(label, fn, disabled){
+  const btn = document.getElementById('game-action-btn');
+  btn.textContent = label;
+  btn.disabled = !!disabled;
+  btn.onclick = fn;
+}
+
+function finishGame(scorePct, domain, onNext){
+  const fb = document.getElementById('game-feedback');
+  fb.style.display = 'block';
+  fb.innerHTML = "C'est noté ! Ton résultat pour ce jeu apparaîtra dans le bilan final.";
+  gameScores[domain].push(scorePct);
+  setGameAction('Jeu suivant', () => { currentGameIndex++; loadGame(); }, false);
+}
+
+// --- 1. Visuelle : Mémo images (reconnaissance) ---
+function renderVisualRecognition(content, domain){
+  document.getElementById('game-instructions').textContent = "Regarde bien ces 6 images pendant quelques secondes. Elles vont ensuite disparaître.";
+  const target = ["🍎","🚗","🌙","🎸","🐘","⚽"];
+  const distract = ["🍊","🚲","☀️","🎹","🐢","🏀"];
+  content.innerHTML = '<div class="emoji-grid">' + target.map(e => '<div class="emoji-tile">'+e+'</div>').join('') + '</div>';
+  setGameAction('Je les ai mémorisées', () => showRecall(), true);
+  pendingTimeouts.push(setTimeout(() => setGameAction('Je les ai mémorisées', () => showRecall(), false), 5000));
+
+  function showRecall(){
+    document.getElementById('game-instructions').textContent = "Clique sur toutes les images que tu as vues tout à l'heure.";
+    const pool = shuffle(target.concat(distract));
+    content.innerHTML = '<div class="emoji-grid">' + pool.map(e => '<div class="emoji-tile" data-e="'+e+'" onclick="this.classList.toggle(\'selected\')" style="cursor:pointer;">'+e+'</div>').join('') + '</div>';
+    setGameAction('Valider', () => {
+      const tiles = content.querySelectorAll('.emoji-tile');
+      let correct = 0, wrong = 0;
+      tiles.forEach(t => {
+        const isTarget = target.includes(t.dataset.e);
+        const isSel = t.classList.contains('selected');
+        if(isSel && isTarget) correct++;
+        if(isSel && !isTarget) wrong++;
+      });
+      const score = Math.max(0, (correct - wrong)) / target.length * 100;
+      finishGame(score, domain);
+    }, false);
+  }
+}
+
+// --- 2. Visuelle : Suite lumineuse (séquence visuelle) ---
+function renderVisualSequence(content, domain){
+  document.getElementById('game-instructions').textContent = "Regarde bien l'ordre dans lequel les cases s'allument.";
+  runSequenceGame(content, domain, 'visual');
+}
+
+// --- 3. Auditive : Suite de sons (séquence sonore) ---
+function renderAudioSequence(content, domain){
+  document.getElementById('game-instructions').textContent = "Écoute bien l'ordre des sons (les cases ne s'allument pas, seul le son compte).";
+  runSequenceGame(content, domain, 'audio');
+}
+
+let audioCtx = null;
+function playTone(freq){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+  }catch(e){}
+}
+
+function runSequenceGame(content, domain, mode){
+  const tones = [261, 329, 392, 523];
+  const length = 5;
+  const sequence = [];
+  for(let i=0;i<length;i++) sequence.push(Math.floor(Math.random()*4));
+
+  content.innerHTML = '<div class="tile-grid">' + [0,1,2,3].map(i => '<div class="seq-tile" data-i="'+i+'">'+(i+1)+'</div>').join('') + '</div>';
+  setGameAction('Lecture en cours...', () => {}, true);
+
+  let step = 0;
+  const tiles = content.querySelectorAll('.seq-tile');
+  function playStep(){
+    if(step >= sequence.length){ startInput(); return; }
+    const idx = sequence[step];
+    if(mode === 'visual'){
+      tiles[idx].classList.add('lit');
+      if(mode==='audio') playTone(tones[idx]);
+      setTimeout(() => { tiles[idx].classList.remove('lit'); step++; setTimeout(playStep, 300); }, 550);
+    } else {
+      playTone(tones[idx]);
+      tiles[idx].style.opacity = '0.6';
+      setTimeout(() => { tiles[idx].style.opacity = '1'; step++; setTimeout(playStep, 300); }, 550);
+    }
+  }
+  setTimeout(playStep, 600);
+
+  function startInput(){
+    document.getElementById('game-instructions').textContent = "À toi : clique les cases dans le même ordre.";
+    setGameAction('...', () => {}, true);
+    let inputIndex = 0;
+    let ended = false;
+    tiles.forEach(t => {
+      t.onclick = () => {
+        if(ended) return;
+        const idx = parseInt(t.dataset.i);
+        if(mode === 'audio') playTone(tones[idx]);
+        t.classList.add('clicked');
+        setTimeout(() => t.classList.remove('clicked'), 200);
+        if(idx === sequence[inputIndex]){
+          inputIndex++;
+          if(inputIndex === sequence.length){
+            ended = true;
+            finishGame(100, domain);
+          }
+        } else {
+          ended = true;
+          const score = inputIndex / sequence.length * 100;
+          finishGame(score, domain);
+        }
+      };
+    });
+  }
+}
+
+// --- 4. Auditive : Mots entendus (reconnaissance orale) ---
+function renderAudioRecognition(content, domain){
+  const target = ["table","montagne","crayon","rivière","nuage","tambour"];
+  const distract = ["chaise","colline","stylo","ruisseau","orage","tambourin"];
+  document.getElementById('game-instructions').textContent = "Écoute bien les 6 mots qui vont être lus à voix haute.";
+  content.innerHTML = '<div class="game-feedback" style="display:block;">Lecture à voix haute en cours...</div>';
+  setGameAction('Lecture en cours...', () => {}, true);
+
+  let i = 0;
+  function speakNext(){
+    if(i >= target.length){ setTimeout(showRecall, 500); return; }
+    const utter = new SpeechSynthesisUtterance(target[i]);
+    utter.lang = 'fr-FR';
+    utter.rate = 0.95;
+    utter.onend = () => { i++; setTimeout(speakNext, 400); };
+    window.speechSynthesis.speak(utter);
+  }
+  if(window.speechSynthesis){ speakNext(); } else { setTimeout(showRecall, 500); }
+
+  function showRecall(){
+    document.getElementById('game-instructions').textContent = "Clique sur tous les mots que tu as entendus.";
+    const pool = shuffle(target.concat(distract));
+    content.innerHTML = '<div class="word-grid">' + pool.map(w => '<div class="word-chip" data-w="'+w+'" onclick="this.classList.toggle(\'selected\')">'+w+'</div>').join('') + '</div>';
+    setGameAction('Valider', () => {
+      const chips = content.querySelectorAll('.word-chip');
+      let correct = 0, wrong = 0;
+      chips.forEach(c => {
+        const isTarget = target.includes(c.dataset.w);
+        const isSel = c.classList.contains('selected');
+        if(isSel && isTarget) correct++;
+        if(isSel && !isTarget) wrong++;
+      });
+      const score = Math.max(0, (correct - wrong)) / target.length * 100;
+      finishGame(score, domain);
+    }, false);
+  }
+}
+
+// --- 5. Kinesthésique : Écris le mot (geste répété) ---
+const writeWordSets = [
+  {word:"PARAPLUIE", distractors:["PARACHUTE","PARASOL","PARAVENT"]},
+  {word:"CROCODILE", distractors:["CROISSANT","CRAPAUD","CROISIÈRE"]},
+  {word:"PAPILLON", distractors:["PAVILLON","PAPETERIE","PAPYRUS"]},
+  {word:"TOBOGGAN", distractors:["TAMPON","TORNADE","TAMBOUR"]},
+  {word:"MONTAGNE", distractors:["MONTGOLFIÈRE","MONNAIE","MONUMENT"]},
+  {word:"TÉLÉPHONE", distractors:["TÉLESCOPE","TÉLÉGRAMME","TÉLÉVISION"]}
+];
+
+function renderWriteWord(content, domain){
+  const chosenSet = writeWordSets[Math.floor(Math.random()*writeWordSets.length)];
+  const word = chosenSet.word;
+  const options = shuffle([chosenSet.word].concat(chosenSet.distractors));
+  let rep = 1;
+  const totalReps = 3;
+
+  document.getElementById('game-instructions').textContent = "Écris ce mot avec ton doigt ou ta souris, comme si tu l'écrivais au crayon.";
+  drawStep();
+
+  function drawStep(){
+    content.innerHTML =
+      '<div class="write-word-display">' + word + '</div>' +
+      '<div class="write-canvas-wrap"><canvas class="write-canvas" id="write-canvas" width="320" height="140"></canvas></div>' +
+      '<div class="write-counter">Écriture ' + rep + ' / ' + totalReps + '</div>';
+    setupCanvas(document.getElementById('write-canvas'));
+    setGameAction(rep < totalReps ? 'Suivant' : "J'ai fini d'écrire", () => {
+      rep++;
+      if(rep <= totalReps){ drawStep(); } else { deferRecall(); }
+    }, false);
+  }
+
+  function setupCanvas(canvas){
+    const ctx = canvas.getContext('2d');
+    ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#151A2E';
+    let drawing = false;
+    function pos(e){
+      const rect = canvas.getBoundingClientRect();
+      const p = e.touches ? e.touches[0] : e;
+      return {x: p.clientX-rect.left, y: p.clientY-rect.top};
+    }
+    function start(e){ drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); }
+    function move(e){ if(!drawing) return; const p = pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); }
+    function end(){ drawing = false; }
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    canvas.addEventListener('touchstart', start);
+    canvas.addEventListener('touchmove', move);
+    canvas.addEventListener('touchend', end);
+  }
+
+  function deferRecall(){
+    pendingWordRecall = {word: word, options: options, domain: domain};
+    document.getElementById('game-instructions').textContent = "On te reposera la question à la toute fin du test, pour voir si tu t'en souviens vraiment.";
+    content.innerHTML = '';
+    const fb = document.getElementById('game-feedback');
+    fb.style.display = 'block';
+    fb.innerHTML = "Ce mot te sera redemandé à la fin, sans que tu puisses revoir tes écritures.";
+    setGameAction('Jeu suivant', () => { currentGameIndex++; loadGame(); }, false);
+  }
+}
+
+function showDelayedWordRecall(){
+  const r = pendingWordRecall;
+  document.getElementById('screen-game').classList.add('active');
+  document.getElementById('game-progress-label').textContent = "Dernière question";
+  document.getElementById('game-progress-fill').style.width = '100%';
+  document.getElementById('game-domain').textContent = types.kinesthesique.label;
+  document.getElementById('game-title').textContent = "Écris le mot — le retour";
+  document.getElementById('game-instructions').textContent = "Tu te souviens ? Quel était le mot que tu as écrit plusieurs fois tout à l'heure ? Choisis une réponse : elle sera définitive.";
+  document.getElementById('game-feedback').style.display = 'none';
+  const content = document.getElementById('game-content');
+  content.innerHTML = '<div class="mc-options">' + r.options.map(o => '<div class="mc-option" data-o="'+o+'">'+o+'</div>').join('') + '</div>';
+  setGameAction('Choisis une réponse ci-dessus', () => {}, true);
+
+  content.querySelectorAll('.mc-option').forEach(opt => {
+    opt.onclick = () => {
+      content.querySelectorAll('.mc-option').forEach(o => {
+        o.classList.add('locked');
+        o.onclick = null;
+        o.style.cursor = 'default';
+      });
+      opt.classList.add('selected');
+      const correct = opt.dataset.o === r.word;
+      gameScores[r.domain].push(correct ? 100 : 0);
+      pendingWordRecall = null;
+      const fb = document.getElementById('game-feedback');
+      fb.style.display = 'block';
+      fb.innerHTML = "C'est noté ! Ta réponse apparaîtra dans le bilan final.";
+      setGameAction('Voir mes résultats', () => {
+        document.getElementById('screen-game').classList.remove('active');
+        showResults();
+      }, false);
+    };
+  });
+}
+
+// --- 6. Kinesthésique : Reproduis le geste (séquence de directions) ---
+function renderGestureSequence(content, domain){
+  const dirs = [
+    {sym:'⬆️', key:'up'}, {sym:'⬇️', key:'down'}, {sym:'⬅️', key:'left'}, {sym:'➡️', key:'right'}
+  ];
+  const length = 5;
+  const sequence = [];
+  for(let i=0;i<length;i++) sequence.push(Math.floor(Math.random()*4));
+
+  document.getElementById('game-instructions').textContent = "Regarde bien la suite de flèches qui va s'afficher.";
+  content.innerHTML = '<div class="arrow-display" id="arrow-display"></div>';
+  setGameAction('Lecture en cours...', () => {}, true);
+
+  let step = 0;
+  const disp = document.getElementById('arrow-display');
+  function playStep(){
+    if(step >= sequence.length){ startInput(); return; }
+    disp.textContent = dirs[sequence[step]].sym;
+    setTimeout(() => { disp.textContent = ''; step++; setTimeout(playStep, 250); }, 600);
+  }
+  setTimeout(playStep, 500);
+
+  function startInput(){
+    document.getElementById('game-instructions').textContent = "À toi : appuie sur les flèches dans le même ordre.";
+    content.innerHTML =
+      '<div class="arrow-pad">' +
+        '<div></div><button class="arrow-btn" data-k="up">⬆️</button><div></div>' +
+        '<button class="arrow-btn" data-k="left">⬅️</button><div></div><button class="arrow-btn" data-k="right">➡️</button>' +
+        '<div></div><button class="arrow-btn" data-k="down">⬇️</button><div></div>' +
+      '</div>';
+    setGameAction('...', () => {}, true);
+    let inputIndex = 0;
+    let ended = false;
+    content.querySelectorAll('.arrow-btn').forEach(btn => {
+      btn.onclick = () => {
+        if(ended) return;
+        const k = btn.dataset.k;
+        const expectedKey = dirs[sequence[inputIndex]].key;
+        if(k === expectedKey){
+          inputIndex++;
+          if(inputIndex === sequence.length){ ended = true; finishGame(100, domain); }
+        } else {
+          ended = true;
+          finishGame(inputIndex / sequence.length * 100, domain);
+        }
+      };
+    });
+  }
+}
+
+// --- 7. Verbale : Lecture et rappel (compréhension écrite) ---
+function renderReadingRecall(content, domain){
+  document.getElementById('game-instructions').textContent = "Lis attentivement ce petit texte, à ton rythme.";
+  const passage = "Léa a retrouvé son chien Milo dans le jardin de sa voisine, madame Rivière, juste avant 18 heures. Il avait creusé un trou sous la clôture pour aller manger les trois pommes tombées de l'arbre. Léa a remercié madame Rivière avec un dessin qu'elle avait fait le matin même.";
+  content.innerHTML = '<div class="reading-passage">' + passage + '</div>';
+  setGameAction("J'ai fini de lire", showQuestions, false);
+
+  const questionsMC = [
+    {q:"Comment s'appelle le chien ?", opts:["Milo","Rex","Filou","Balto"], correct:"Milo"},
+    {q:"Où Léa a-t-elle retrouvé son chien ?", opts:["Dans le jardin de madame Rivière","Dans la rue","Chez le boulanger","Au parc"], correct:"Dans le jardin de madame Rivière"},
+    {q:"Combien de pommes le chien voulait-il manger ?", opts:["Trois","Deux","Cinq","Une"], correct:"Trois"}
+  ];
+  let answersMC = new Array(questionsMC.length).fill(null);
+
+  function showQuestions(){
+    document.getElementById('game-instructions').textContent = "Réponds sans revenir au texte.";
+    content.innerHTML = questionsMC.map((qq, qi) =>
+      '<div class="mc-question"><div class="q-label">' + qq.q + '</div><div class="mc-options">' +
+        qq.opts.map(o => '<div class="mc-option" data-qi="'+qi+'" data-o="'+o+'">'+o+'</div>').join('') +
+      '</div></div>'
+    ).join('');
+    content.querySelectorAll('.mc-option').forEach(opt => {
+      opt.onclick = () => {
+        const qi = parseInt(opt.dataset.qi);
+        content.querySelectorAll('.mc-option[data-qi="'+qi+'"]').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        answersMC[qi] = opt.dataset.o;
+        setGameAction('Valider', () => {
+          let correct = 0;
+          questionsMC.forEach((qq, i) => { if(answersMC[i] === qq.correct) correct++; });
+          finishGame(correct / questionsMC.length * 100, domain);
+        }, answersMC.includes(null));
+      };
+    });
+    setGameAction('Valider', () => {}, true);
+  }
+}
+
+// --- 8. Verbale : Mots lus (reconnaissance écrite) ---
+function renderWrittenRecognition(content, domain){
+  const target = ["lumière","jardin","voyage","silence","fenêtre","papier"];
+  const distract = ["lanterne","balcon","chemin","calme","porte","carton"];
+  document.getElementById('game-instructions').textContent = "Lis et mémorise cette liste de 6 mots.";
+  content.innerHTML = '<div class="word-grid">' + target.map(w => '<div class="word-chip">'+w+'</div>').join('') + '</div>';
+  setGameAction('Je les ai mémorisés', () => showRecall(), true);
+  pendingTimeouts.push(setTimeout(() => setGameAction('Je les ai mémorisés', () => showRecall(), false), 5000));
+
+  function showRecall(){
+    document.getElementById('game-instructions').textContent = "Clique sur tous les mots que tu as vus dans la liste.";
+    const pool = shuffle(target.concat(distract));
+    content.innerHTML = '<div class="word-grid">' + pool.map(w => '<div class="word-chip" data-w="'+w+'" onclick="this.classList.toggle(\'selected\')">'+w+'</div>').join('') + '</div>';
+    setGameAction('Valider', () => {
+      const chips = content.querySelectorAll('.word-chip');
+      let correct = 0, wrong = 0;
+      chips.forEach(c => {
+        const isTarget = target.includes(c.dataset.w);
+        const isSel = c.classList.contains('selected');
+        if(isSel && isTarget) correct++;
+        if(isSel && !isTarget) wrong++;
+      });
+      const score = Math.max(0, (correct - wrong)) / target.length * 100;
+      finishGame(score, domain);
+    }, false);
+  }
+}
+
+const gameList = [
+  {domain:'visuelle', title:'Mémo images', render: renderVisualRecognition},
+  {domain:'visuelle', title:'Suite lumineuse', render: renderVisualSequence},
+  {domain:'auditive', title:'Suite de sons', render: renderAudioSequence},
+  {domain:'auditive', title:'Mots entendus', render: renderAudioRecognition},
+  {domain:'kinesthesique', title:'Écris le mot', render: renderWriteWord},
+  {domain:'kinesthesique', title:'Reproduis le geste', render: renderGestureSequence},
+  {domain:'verbale', title:'Lecture et rappel', render: renderReadingRecall},
+  {domain:'verbale', title:'Mots lus', render: renderWrittenRecognition}
+];
+
+function startGames(){
+  document.getElementById('screen-games-intro').classList.remove('active');
+  document.getElementById('screen-game').classList.add('active');
+  currentGameIndex = 0;
+  loadGame();
+}
+
+function loadGame(){
+  pendingTimeouts.forEach(id => clearTimeout(id));
+  pendingTimeouts = [];
+  if(currentGameIndex >= gameList.length){
+    if(pendingWordRecall){
+      showDelayedWordRecall();
+      return;
+    }
+    document.getElementById('screen-game').classList.remove('active');
+    showResults();
+    return;
+  }
+  const g = gameList[currentGameIndex];
+  document.getElementById('game-progress-label').textContent = (currentGameIndex+1) + ' / ' + gameList.length;
+  document.getElementById('game-progress-fill').style.width = (currentGameIndex/gameList.length*100) + '%';
+  document.getElementById('game-domain').textContent = types[g.domain].label;
+  document.getElementById('game-title').textContent = g.title;
+  document.getElementById('game-feedback').style.display = 'none';
+  const content = document.getElementById('game-content');
+  content.innerHTML = '';
+  g.render(content, g.domain);
+}
+// ===================== FIN MINI-JEUX =====================
+
+function showResults(){
+  document.getElementById('screen-quiz').classList.remove('active');
+  document.getElementById('screen-results').classList.add('active');
+
+  const totals = {};
+  const counts = {};
+  Object.keys(types).forEach(k => { totals[k] = 0; counts[k] = 0; });
+  questions.forEach((q, i) => {
+    totals[q[0]] += answers[i];
+    counts[q[0]] += 1;
+  });
+
+  const ranked = Object.keys(types).map(k => {
+    const likertPct = Math.round((totals[k] / (counts[k]*5)) * 100);
+    const gScores = gameScores[k];
+    const gameAvg = gScores.length ? (gScores.reduce((a,b)=>a+b,0) / gScores.length) : likertPct;
+    const combined = Math.round(0.5*likertPct + 0.5*gameAvg);
+    return {
+      key: k,
+      label: types[k].label,
+      text: types[k].text,
+      tips: types[k].tips,
+      likertPct: likertPct,
+      gameAvg: Math.round(gameAvg),
+      pct: combined
+    };
+  }).sort((a,b) => b.pct - a.pct);
+
+  const top = ranked[0];
+  const second = ranked[1];
+  const showSecond = (top.pct - second.pct) <= 8;
+
+  const cardsEl = document.getElementById('strength-cards');
+  let html = '';
+  html += cardHtml(top, "Mémoire dominante", false);
+  if(showSecond){
+    html += cardHtml(second, "Mémoire associée", true);
+  }
+  cardsEl.innerHTML = html;
+
+  const barsEl = document.getElementById('bars');
+  barsEl.innerHTML = ranked.map((r, idx) =>
+    '<div style="margin-bottom:14px;">' +
+      '<div class="bar-row" style="margin-bottom:4px;">' +
+        '<div class="bar-label">' + r.label + '</div>' +
+        '<div class="bar-track"><div class="bar-fill' + (idx===0 ? ' top' : '') + '" style="width:' + r.pct + '%"></div></div>' +
+        '<div class="bar-value">' + r.pct + '%</div>' +
+      '</div>' +
+      '<div class="bar-sub">Réponses : ' + r.likertPct + '% · Jeux : ' + r.gameAvg + '%</div>' +
+    '</div>'
+  ).join('');
+
+  sendResultsToScorm(ranked);
+}
+
+function cardHtml(r, rankLabel, secondary){
+  return '<div class="strength-card' + (secondary ? ' secondary' : '') + '">' +
+    '<div class="strength-rank">' + rankLabel + '</div>' +
+    '<div class="strength-word">' + r.label + '</div>' +
+    '<div class="strength-text">' + r.text + '</div>' +
+    '<div style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;">Réponses : ' + r.likertPct + '% · Jeux : ' + r.gameAvg + '%</div>' +
+    '<div class="tips-title">Pour apprendre plus facilement :</div>' +
+    '<ul class="tips-list">' + r.tips.map(t => '<li>' + t + '</li>').join('') + '</ul>' +
+  '</div>';
+}
+
+function restart(){
+  current = 0;
+  answers = new Array(questions.length).fill(null);
+  Object.keys(gameScores).forEach(k => gameScores[k] = []);
+  currentGameIndex = 0;
+  pendingWordRecall = null;
+  document.getElementById('screen-results').classList.remove('active');
+  document.getElementById('screen-intro').classList.add('active');
+}
+</script>
+</body>
+</html>

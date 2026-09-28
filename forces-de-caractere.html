@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les 24 forces de caractère</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EAF0F6;
+    --paper-card:#FFFFFF;
+    --ink:#1B2A41;
+    --ink-soft:#4B5A70;
+    --line:#C9D6E4;
+    --gold:#C98A2A;
+    --rule:#B9C7D6;
+    /* virtue colors, inspired by the source sheet */
+    --v-sagesse:#3E7CB1;
+    --v-courage:#D98A3D;
+    --v-humanite:#D4A72C;
+    --v-justice:#8E5EA8;
+    --v-temperance:#C1503F;
+    --v-transcendance:#5B9A6F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'Work Sans', system-ui, sans-serif;
+    min-height:100vh; display:flex; justify-content:center;
+    padding:32px 16px 64px;
+  }
+  .sheet{ width:100%; max-width:640px; }
+  h1,h2,h3{ font-family:'Newsreader', Georgia, serif; font-weight:600; margin:0; line-height:1.15; }
+
+  .masthead{
+    border-bottom:2px solid var(--ink); padding-bottom:14px; margin-bottom:28px;
+    display:flex; align-items:baseline; justify-content:space-between;
+  }
+  .masthead .mark{ font-family:'Newsreader', serif; font-style:italic; font-size:15px; color:var(--ink-soft); }
+  .masthead .title{ font-size:19px; }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  /* ---------- INTRO ---------- */
+  #screen-intro .hero-num{ font-family:'Newsreader', serif; font-size:64px; font-weight:500; color:var(--gold); line-height:1; margin-bottom:6px; }
+  #screen-intro h1{ font-size:30px; max-width:480px; margin-bottom:16px; }
+  #screen-intro p{ font-size:15.5px; color:var(--ink-soft); max-width:480px; line-height:1.55; margin-bottom:20px; }
+  .virtue-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:30px; }
+  .virtue-card{ border-radius:10px; padding:12px 14px; color:#fff; }
+  .virtue-card .vname{ font-family:'Newsreader'; font-size:15px; font-weight:600; margin-bottom:2px; }
+  .virtue-card .vdesc{ font-size:12px; opacity:0.92; }
+
+  button.primary{
+    font-family:'Work Sans', sans-serif; font-weight:600; font-size:16px; background:var(--ink); color:var(--paper);
+    border:none; padding:14px 26px; border-radius:6px; cursor:pointer; transition:transform .15s ease, background .15s ease;
+  }
+  button.primary:hover{ background:#243654; }
+  button.primary:active{ transform:scale(0.98); }
+  button.ghost{
+    font-family:'Work Sans', sans-serif; font-weight:500; font-size:15px; background:none; color:var(--ink-soft);
+    border:1px solid var(--line); padding:12px 22px; border-radius:6px; cursor:pointer;
+  }
+  button.ghost:hover{ border-color:var(--ink-soft); color:var(--ink); }
+  button:disabled{ opacity:.35; cursor:not-allowed; }
+
+  /* ---------- QUIZ ---------- */
+  .progress-row{ display:flex; align-items:center; gap:12px; margin-bottom:36px; }
+  .progress-track{ flex:1; height:2px; background:var(--line); position:relative; }
+  .progress-fill{ position:absolute; top:0; left:0; bottom:0; background:var(--gold); width:0%; transition:width .25s ease; }
+  .progress-label{ font-size:13px; color:var(--ink-soft); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .question-virtue{ font-family:'Newsreader', serif; font-style:italic; font-size:13.5px; margin-bottom:4px; }
+  .question-force{ font-family:'Work Sans'; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:14px; }
+  .question-text{ font-size:25px; line-height:1.3; margin-bottom:36px; min-height:100px; }
+  .scale{ display:flex; justify-content:space-between; gap:8px; margin-bottom:10px; }
+  .scale button{
+    flex:1; aspect-ratio:1; border-radius:50%; border:1.5px solid var(--rule); background:var(--paper-card);
+    cursor:pointer; font-family:'Work Sans'; font-weight:600; font-size:15px; color:var(--ink-soft); transition:all .15s ease;
+  }
+  .scale button:hover{ border-color:var(--ink); color:var(--ink); }
+  .scale button.selected{ background:var(--ink); border-color:var(--ink); color:var(--paper); }
+  .scale-labels{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-soft); margin-bottom:32px; }
+  .nav-row{ display:flex; justify-content:space-between; align-items:center; }
+
+  /* ---------- RESULTS ---------- */
+  .results-kicker{ font-family:'Newsreader', serif; font-style:italic; font-size:15px; margin-bottom:8px; color:var(--ink-soft); }
+  #screen-results h1{ font-size:28px; margin-bottom:8px; }
+  #screen-results .intro-note{ font-size:14.5px; color:var(--ink-soft); margin-bottom:26px; line-height:1.5; }
+
+  .force-card{
+    background:var(--paper-card); border:1px solid var(--line); border-left:6px solid var(--ink);
+    padding:18px 20px; margin-bottom:14px; border-radius:2px;
+  }
+  .force-card .rank{ font-size:12px; color:var(--ink-soft); margin-bottom:2px; }
+  .force-card .fname{ font-family:'Newsreader'; font-size:22px; font-weight:600; margin-bottom:6px; }
+  .force-card .fvirtue{ display:inline-block; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#fff; padding:2px 9px; border-radius:999px; margin-bottom:10px; }
+  .force-card .ftext{ font-size:14.5px; color:var(--ink-soft); line-height:1.55; margin-bottom:10px; }
+  .force-card .ftip{ font-size:13.5px; color:var(--ink); background:var(--paper); border-radius:6px; padding:9px 12px; line-height:1.5; }
+  .force-card .ftip b{ color:var(--gold); }
+  .plan-box{ margin-top:14px; }
+  .plan-box label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; }
+  .plan-box textarea{
+    width:100%; font-family:'Work Sans', sans-serif; font-size:14px; color:var(--ink); background:var(--paper);
+    border:1.5px solid var(--line); border-radius:6px; padding:10px 12px; min-height:80px; line-height:1.6; resize:vertical;
+  }
+  .plan-box textarea:focus{ outline:2px solid var(--ink-soft); }
+  .results-actions{ display:flex; flex-wrap:wrap; gap:12px; margin-top:10px; }
+
+  .chart-section{ margin-top:40px; margin-bottom:20px; }
+  .chart-title{ font-size:14px; color:var(--ink-soft); margin-bottom:14px; border-top:1px solid var(--line); padding-top:20px; }
+  .legend{ display:flex; flex-wrap:wrap; gap:8px 14px; margin-bottom:18px; }
+  .legend-item{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); }
+  .legend-dot{ width:10px; height:10px; border-radius:50%; }
+  .bar-row{ display:flex; align-items:center; gap:12px; margin-bottom:9px; }
+  .bar-label{ width:135px; font-size:12.5px; color:var(--ink); flex-shrink:0; }
+  .bar-track{ flex:1; height:9px; background:#DCE6EF; border-radius:999px; overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:999px; width:0%; transition:width .8s ease; }
+  .bar-value{ width:32px; text-align:right; font-size:12px; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+
+  .worksheet-note{
+    margin-top:30px; padding:16px 18px; background:var(--paper-card); border:1px dashed var(--rule); border-radius:8px;
+    font-size:13.5px; color:var(--ink-soft); line-height:1.55;
+  }
+  .restart-row{ margin-top:24px; }
+
+  @media print{
+    .masthead, .chart-section, .worksheet-note, .results-actions, .intro-note{ display:none !important; }
+    body{ background:#fff; }
+    .force-card{ break-inside:avoid; border:1px solid #999; }
+    .plan-box textarea{ border:none; background:none; padding:2px 0; }
+  }
+
+  @media (max-width:420px){
+    .virtue-grid{ grid-template-columns:1fr; }
+    .question-text{ font-size:21px; min-height:80px; }
+    .bar-label{ width:100px; font-size:11.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="title">Les 24 forces de caractère</div>
+    <div class="mark">48 questions</div>
+  </div>
+
+  <!-- INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="hero-num">24</div>
+    <h1>Découvre tes forces de caractère parmi les 24 forces réparties en 6 grandes qualités.</h1>
+    <p>Réponds à 48 petites questions (2 par force). À la fin, tu découvriras tes 5 forces principales, avec une explication et une idée concrète pour t'en servir au quotidien — comme le propose la fiche dont s'inspire ce test.</p>
+    <div class="virtue-grid">
+      <div class="virtue-card" style="background:var(--v-sagesse);"><div class="vname">Sagesse</div><div class="vdesc">Acquérir et utiliser des connaissances</div></div>
+      <div class="virtue-card" style="background:var(--v-transcendance);"><div class="vname">Transcendance</div><div class="vdesc">Donner un sens à sa vie</div></div>
+      <div class="virtue-card" style="background:var(--v-courage);"><div class="vname">Courage</div><div class="vdesc">Atteindre ses objectifs</div></div>
+      <div class="virtue-card" style="background:var(--v-temperance);"><div class="vname">Tempérance</div><div class="vdesc">Ne pas aller trop loin</div></div>
+      <div class="virtue-card" style="background:var(--v-humanite);"><div class="vname">Humanité</div><div class="vdesc">Cultiver ses relations</div></div>
+      <div class="virtue-card" style="background:var(--v-justice);"><div class="vname">Justice</div><div class="vdesc">Vivre en communauté</div></div>
+    </div>
+    <button class="primary" onclick="startQuiz()">Commencer</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">1 / 48</div>
+    </div>
+    <div class="question-virtue" id="question-virtue"></div>
+    <div class="question-force" id="question-force"></div>
+    <div class="question-text" id="question-text"></div>
+    <div class="scale" id="scale"></div>
+    <div class="scale-labels">
+      <span>Pas du tout d'accord</span>
+      <span>Tout à fait d'accord</span>
+    </div>
+    <div class="nav-row">
+      <button class="ghost" id="btn-back" onclick="goBack()">Précédent</button>
+      <button class="ghost" id="btn-next" onclick="goNext()" disabled>Suivant</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="screen" id="screen-results">
+    <div class="results-kicker">Résultat</div>
+    <h1>Tes 5 forces principales</h1>
+    <p class="intro-note">D'après tes réponses, voici les forces qui ressortent le plus chez toi, de la plus marquée à la moins marquée.</p>
+    <div id="scorm-badge" style="display:none; font-size:13px; color:#fff; background:var(--ink); border-radius:8px; padding:10px 14px; margin-bottom:20px;"></div>
+    <div id="force-cards"></div>
+
+    <div class="chart-section">
+      <div class="chart-title">Les 24 forces, du plus au moins marqué chez toi</div>
+      <div class="legend" id="legend"></div>
+      <div id="bars"></div>
+    </div>
+
+    <div class="worksheet-note">
+      Comme sur la fiche papier : pour chacune de tes 5 forces principales, essaie de noter 2 ou 3 idées concrètes pour l'utiliser davantage dans ta semaine. Utiliser ses forces est la plus petite chose que l'on puisse faire pour faire la plus grande différence.
+    </div>
+
+    <div class="restart-row results-actions">
+      <button class="primary" id="scorm-send-btn" onclick="manualSendPlans()" style="display:none;">Envoyer mon bilan à mon professeur</button>
+      <button class="ghost" onclick="printAndSend()">Imprimer / Enregistrer en PDF</button>
+      <button class="ghost" onclick="restart()">Refaire le questionnaire</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===================== SCORM 1.2 =====================
+// Recherche l'API SCORM fournie par Éléa/Moodle dans les fenêtres parentes.
+let scormAPI = null;
+let scormAvailable = false;
+
+function findAPI(win){
+  let attempts = 0;
+  while(win && !win.API && win.parent && win.parent !== win && attempts < 10){
+    win = win.parent;
+    attempts++;
+  }
+  return win ? win.API : null;
+}
+
+function getAPI(){
+  let api = findAPI(window);
+  if(!api && window.opener){
+    api = findAPI(window.opener);
+  }
+  return api;
+}
+
+function scormInit(){
+  try{
+    scormAPI = getAPI();
+    if(scormAPI){
+      const result = scormAPI.LMSInitialize('');
+      scormAvailable = (result === 'true' || result === true);
+      if(scormAvailable){
+        scormAPI.LMSSetValue('cmi.core.lesson_status', 'incomplete');
+        scormAPI.LMSCommit('');
+      }
+    }
+  }catch(e){
+    scormAvailable = false;
+  }
+  updateScormBadge();
+}
+
+function scormSet(key, value){
+  if(!scormAvailable || !scormAPI) return;
+  try{ scormAPI.LMSSetValue(key, String(value)); }catch(e){}
+}
+
+function scormCommit(){
+  if(!scormAvailable || !scormAPI) return;
+  try{ scormAPI.LMSCommit(''); }catch(e){}
+}
+
+function scormFinish(){
+  if(!scormAvailable || !scormAPI) return;
+  try{ scormAPI.LMSCommit(''); scormAPI.LMSFinish(''); }catch(e){}
+}
+
+function updateScormBadge(){
+  const badge = document.getElementById('scorm-badge');
+  const sendBtn = document.getElementById('scorm-send-btn');
+  if(scormAvailable){
+    if(badge){
+      badge.textContent = "Connecté à Éléa : ton résultat sera envoyé à ton professeur.";
+      badge.style.display = 'block';
+    }
+    if(sendBtn) sendBtn.style.display = 'inline-block';
+  } else {
+    if(badge) badge.style.display = 'none';
+    if(sendBtn) sendBtn.style.display = 'none';
+  }
+}
+
+// Ordre toujours fixe des 24 forces pour que les colonnes "Réponse 0/1/2/3..." du rapport Éléa
+// désignent toujours la même force, quel que soit le classement personnel de l'élève.
+const scormForceOrder = [
+  'creativite','curiosite','esprit_critique','soif_connaissance','sagacite',
+  'bravoure','perseverance','honnetete','enthousiasme',
+  'amour','generosite','prevenance',
+  'loyaute','equite','influence',
+  'indulgence','humilite','prudence','autodiscipline',
+  'emerveillement','gratitude','esperance','humour','spiritualite'
+];
+
+let lastTop5 = null;
+
+function sendResultsToScorm(ranked, top5){
+  lastTop5 = top5;
+  if(!scormAvailable) return;
+  const overallScore = Math.round(ranked.reduce((s,r) => s + r.pct, 0) / ranked.length);
+  scormSet('cmi.core.score.raw', overallScore);
+  scormSet('cmi.core.score.min', 0);
+  scormSet('cmi.core.score.max', 100);
+  scormSet('cmi.core.lesson_status', 'completed');
+
+  const byKey = {};
+  ranked.forEach(r => { byKey[r.key] = r; });
+
+  scormForceOrder.forEach((key, i) => {
+    const r = byKey[key];
+    const base = 'cmi.interactions.' + i;
+    scormSet(base + '.id', 'force_' + key);
+    scormSet(base + '.type', 'numeric');
+    scormSet(base + '.student_response', r.pct);
+    scormSet(base + '.result', r.pct >= 50 ? 'correct' : 'incorrect');
+  });
+
+  scormCommit();
+  sendPlansToScorm(); // envoie ce qui est déjà écrit (probablement vide à ce stade), sans bloquer
+}
+
+// Envoie (ou met à jour) le résumé des 5 forces + ce que l'élève a écrit vouloir en faire.
+// Appelée à nouveau à chaque étape clé (bouton dédié, impression, fermeture de la page)
+// pour capturer le texte au fur et à mesure qu'il est rédigé.
+function sendPlansToScorm(){
+  if(!scormAvailable || !lastTop5) return;
+  const top5Summary = lastTop5.map((r, i) => {
+    const planEl = document.getElementById('plan-' + r.key);
+    const plan = planEl ? planEl.value.trim() : '';
+    return (i+1) + '. ' + r.label + ' (' + r.pct + '%)' + (plan ? ' — ' + plan : '');
+  }).join(' | ');
+  const summary = 'TOP 5 : ' + top5Summary;
+  scormSet('cmi.suspend_data', summary.slice(0, 4000));
+  scormCommit();
+}
+
+window.addEventListener('beforeunload', () => { sendPlansToScorm(); scormFinish(); });
+document.addEventListener('DOMContentLoaded', scormInit);
+if(document.readyState !== 'loading'){ scormInit(); }
+
+function manualSendPlans(){
+  sendPlansToScorm();
+  const btn = document.getElementById('scorm-send-btn');
+  if(btn){
+    const original = btn.textContent;
+    btn.textContent = 'Envoyé !';
+    setTimeout(() => { btn.textContent = original; }, 2000);
+  }
+}
+
+function printAndSend(){
+  sendPlansToScorm();
+  window.print();
+}
+// ===================== FIN SCORM =====================
+
+const virtues = {
+  sagesse: {label:"Sagesse", color:"var(--v-sagesse)"},
+  courage: {label:"Courage", color:"var(--v-courage)"},
+  humanite: {label:"Humanité", color:"var(--v-humanite)"},
+  justice: {label:"Justice", color:"var(--v-justice)"},
+  temperance: {label:"Tempérance", color:"var(--v-temperance)"},
+  transcendance: {label:"Transcendance", color:"var(--v-transcendance)"}
+};
+
+const forces = {
+  creativite: {label:"Créativité", virtue:"sagesse",
+    text:"Tu aimes trouver des façons nouvelles et utiles de penser ou d'agir, plutôt que de suivre toujours le même chemin.",
+    tip:"Essaie une méthode différente pour un exercice ou un projet cette semaine, juste pour voir ce que ça donne."},
+  curiosite: {label:"Curiosité", virtue:"sagesse",
+    text:"Tu prends plaisir à découvrir des choses nouvelles, et cette envie d'apprendre te pousse naturellement à explorer.",
+    tip:"Choisis un sujet qui t'intrigue et cherche à en savoir un peu plus, même si ce n'est pas demandé."},
+  esprit_critique: {label:"Esprit critique", virtue:"sagesse",
+    text:"Tu aimes analyser les choses de façon rationnelle, et tu es capable de te remettre en question plutôt que de t'accrocher à une idée.",
+    tip:"La prochaine fois qu'on te dit quelque chose d'étonnant, prends le temps de vérifier avant d'y croire."},
+  soif_connaissance: {label:"Soif de connaissance", virtue:"sagesse",
+    text:"Tu cherches activement à apprendre et à progresser dans de nouvelles compétences, au-delà de ce qui est demandé.",
+    tip:"Fixe-toi un petit objectif d'apprentissage cette semaine, dans un domaine qui te plaît."},
+  sagacite: {label:"Sagacité", virtue:"sagesse",
+    text:"Tu as une vision claire des situations et tu sais donner des conseils qui aident vraiment les autres.",
+    tip:"La prochaine fois qu'un ami a un problème, prends le temps de l'écouter avant de donner ton avis."},
+
+  bravoure: {label:"Bravoure", virtue:"courage",
+    text:"Tu agis selon ce que tu penses juste, même quand la peur, la douleur ou la difficulté pourraient te retenir.",
+    tip:"La prochaine fois que tu as peur de dire quelque chose d'important, dis-le quand même, calmement."},
+  perseverance: {label:"Persévérance", virtue:"courage",
+    text:"Tu cherches à aller jusqu'au bout de ce que tu entreprends, même quand les obstacles s'accumulent.",
+    tip:"Choisis une chose difficile que tu as laissée de côté et avance dessus, même un petit peu."},
+  honnetete: {label:"Honnêteté", virtue:"courage",
+    text:"Tu agis de façon sincère et responsable, et tu dis la vérité même quand c'est inconfortable.",
+    tip:"La prochaine fois que tu te trompes, dis-le clairement plutôt que de le cacher."},
+  enthousiasme: {label:"Enthousiasme", virtue:"courage",
+    text:"Tu te lances dans les choses avec joie et dynamisme, ce qui donne de l'énergie à ceux qui t'entourent.",
+    tip:"Aborde ta prochaine tâche, même ennuyeuse, en te donnant un peu plus d'énergie que d'habitude."},
+
+  amour: {label:"Amour", virtue:"humanite",
+    text:"Tu cherches à rendre tes relations proches plus profondes et plus fortes, et à prendre soin des gens que tu aimes.",
+    tip:"Prends un moment cette semaine pour montrer à quelqu'un que tu aimes que tu tiens à lui ou elle."},
+  generosite: {label:"Générosité", virtue:"humanite",
+    text:"Tu offres ton temps ou ton aide aux autres et tu prends soin d'eux, souvent sans qu'on te le demande.",
+    tip:"Propose ton aide à quelqu'un sans attendre qu'on te la demande."},
+  prevenance: {label:"Prévenance", virtue:"humanite",
+    text:"Tu fais attention aux sentiments des autres avant d'agir, tout en restant fidèle à ce que toi tu ressens.",
+    tip:"Avant de réagir à quelqu'un, demande-toi comment il ou elle pourrait se sentir."},
+
+  loyaute: {label:"Loyauté", virtue:"justice",
+    text:"Tu restes fidèle à tes engagements et tu respectes les droits des autres, même quand ce n'est pas facile.",
+    tip:"Tiens une promesse que tu as faite, même si c'est devenu compliqué."},
+  equite: {label:"Équité", virtue:"justice",
+    text:"Tu agis en respectant ce qui est dû à chacun, même quand tes sentiments personnels pourraient t'influencer.",
+    tip:"La prochaine fois qu'il faut partager ou décider, assure-toi que ce soit juste pour tout le monde."},
+  influence: {label:"Influence", virtue:"justice",
+    text:"Tu sais encourager un groupe à avancer dans une bonne direction, tout en gardant de bonnes relations avec tout le monde.",
+    tip:"Dans ton prochain travail de groupe, aide le groupe à avancer sans écraser les idées des autres."},
+
+  indulgence: {label:"Indulgence", virtue:"temperance",
+    text:"Tu sais pardonner à ceux qui ont mal agi et donner de nouvelles chances plutôt que de garder rancune.",
+    tip:"Si quelqu'un t'a déçu récemment, essaie de lui laisser une nouvelle chance."},
+  humilite: {label:"Humilité", virtue:"temperance",
+    text:"Tu reconnais tes actes sans chercher à te mettre en avant ni à faire preuve d'orgueil.",
+    tip:"La prochaine fois que tu réussis quelque chose, savoure-le sans en faire trop devant les autres."},
+  prudence: {label:"Prudence", virtue:"temperance",
+    text:"Tu évites de prendre des risques excessifs et tu réfléchis aux conséquences avant d'agir.",
+    tip:"Avant une décision importante, prends le temps de réfléchir aux conséquences."},
+  autodiscipline: {label:"Autodiscipline", virtue:"temperance",
+    text:"Tu gardes le contrôle de ton comportement, même sous la pression des émotions ou des autres.",
+    tip:"Choisis une petite habitude à tenir cette semaine, même quand tu n'en as pas envie."},
+
+  emerveillement: {label:"Émerveillement", virtue:"transcendance",
+    text:"Tu remarques et tu apprécies la beauté, l'excellence et la performance autour de toi.",
+    tip:"Prends le temps de remarquer une chose belle ou impressionnante aujourd'hui."},
+  gratitude: {label:"Gratitude", virtue:"transcendance",
+    text:"Tu te montres reconnaissant pour les bonnes choses qui t'arrivent, et tu penses à remercier.",
+    tip:"Dis merci à quelqu'un aujourd'hui pour quelque chose que tu n'avais jamais vraiment remercié."},
+  esperance: {label:"Espérance", virtue:"transcendance",
+    text:"Tu agis de façon à ce que les choses positives que tu attends de l'avenir aient plus de chances d'arriver.",
+    tip:"Face à une difficulté, cherche une action concrète qui peut améliorer la situation."},
+  humour: {label:"Humour", virtue:"transcendance",
+    text:"Tu aimes rire, faire rire et souligner ce qu'il y a d'amusant dans une situation.",
+    tip:"Utilise l'humour pour détendre une situation un peu tendue cette semaine."},
+  spiritualite: {label:"Spiritualité", virtue:"transcendance",
+    text:"Tu cherches à donner un sens cohérent et positif à ce que tu fais, à ta vie ou à tes actions.",
+    tip:"Prends un moment pour réfléchir à ce qui compte vraiment pour toi."}
+};
+
+const questions = [
+  ["creativite","J'aime trouver des façons différentes et utiles de faire les choses."],
+  ["creativite","Quand quelque chose ne marche pas, j'aime inventer une nouvelle façon de m'y prendre."],
+  ["curiosite","J'aime découvrir des choses que je ne connaissais pas."],
+  ["curiosite","Je pose beaucoup de questions parce que ça m'intéresse vraiment de comprendre."],
+  ["esprit_critique","Avant de croire quelque chose, j'aime vérifier si c'est vraiment vrai."],
+  ["esprit_critique","Je suis capable de changer d'avis si on me montre que j'avais tort."],
+  ["soif_connaissance","J'aime apprendre de nouvelles choses, même quand ce n'est pas obligatoire."],
+  ["soif_connaissance","Je cherche à progresser dans des compétences qui m'intéressent."],
+  ["sagacite","On me demande souvent des conseils parce que je vois clair dans les situations."],
+  ["sagacite","J'arrive à donner du recul aux autres sur leurs problèmes."],
+
+  ["bravoure","Je fais ce qui me semble juste, même si j'ai peur ou que c'est difficile."],
+  ["bravoure","Je n'évite pas une situation difficile juste parce qu'elle me fait peur."],
+  ["perseverance","Je vais jusqu'au bout de ce que j'ai commencé, même quand c'est dur."],
+  ["perseverance","Les obstacles ne me font pas abandonner facilement."],
+  ["honnetete","Je dis la vérité même quand ce serait plus simple de mentir."],
+  ["honnetete","J'assume mes actes, même quand j'ai fait une erreur."],
+  ["enthousiasme","Je me lance dans les projets avec énergie et bonne humeur."],
+  ["enthousiasme","J'aborde les nouvelles activités avec envie plutôt qu'avec réticence."],
+
+  ["amour","Je tiens à créer des liens forts avec les gens que j'aime."],
+  ["amour","J'aime entretenir mes relations proches et les rendre plus fortes."],
+  ["generosite","J'aime donner de mon temps ou de mes affaires pour aider les autres."],
+  ["generosite","Je prends soin des gens autour de moi sans rien attendre en retour."],
+  ["prevenance","Je fais attention aux sentiments des autres avant d'agir."],
+  ["prevenance","J'essaie de ne pas blesser quelqu'un, tout en restant fidèle à ce que je ressens."],
+
+  ["loyaute","Je tiens mes promesses, même quand ça me demande un effort."],
+  ["loyaute","Je respecte les autres même quand je ne suis pas d'accord avec eux."],
+  ["equite","Je traite les gens de façon juste, même ceux que j'aime moins."],
+  ["equite","Je trouve important que tout le monde ait sa chance, sans favoritisme."],
+  ["influence","J'aime encourager un groupe à avancer dans la bonne direction."],
+  ["influence","Je sais motiver les autres tout en gardant une bonne ambiance."],
+
+  ["indulgence","Je pardonne facilement à quelqu'un qui a fait une erreur envers moi."],
+  ["indulgence","Je donne une seconde chance plutôt que de garder rancune."],
+  ["humilite","Je reconnais mes erreurs sans chercher d'excuses."],
+  ["humilite","Je n'ai pas besoin de me vanter de ce que je réussis."],
+  ["prudence","Je réfléchis avant d'agir pour éviter des conséquences qui pourraient être graves."],
+  ["prudence","J'évite de prendre des risques inutiles."],
+  ["autodiscipline","Je garde le contrôle de moi-même même quand je suis énervé ou stressé."],
+  ["autodiscipline","Je résiste à la tentation quand je sais que ce n'est pas une bonne idée."],
+
+  ["emerveillement","Je remarque et j'apprécie les belles choses autour de moi."],
+  ["emerveillement","Je suis souvent impressionné par la performance ou le talent de quelqu'un."],
+  ["gratitude","Je pense souvent à remercier les gens qui font quelque chose pour moi."],
+  ["gratitude","Je me rends compte de la chance que j'ai dans certaines situations."],
+  ["esperance","Je reste optimiste et j'agis pour que les choses se passent bien."],
+  ["esperance","Même dans une période difficile, je garde espoir que ça va s'arranger."],
+  ["humour","J'aime faire rire les autres."],
+  ["humour","Je trouve facilement le côté amusant d'une situation."],
+  ["spiritualite","Je réfléchis à ce qui donne du sens à ce que je fais."],
+  ["spiritualite","J'aime comprendre pourquoi je fais les choses, pas juste les faire."]
+];
+
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+
+function startQuiz(){
+  document.getElementById('screen-intro').classList.remove('active');
+  document.getElementById('screen-quiz').classList.add('active');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const [forceKey, text] = questions[current];
+  const force = forces[forceKey];
+  const virtue = virtues[force.virtue];
+  const vEl = document.getElementById('question-virtue');
+  vEl.textContent = virtue.label;
+  vEl.style.color = virtue.color;
+  document.getElementById('question-force').textContent = force.label;
+  document.getElementById('question-text').textContent = text;
+  document.getElementById('progress-label').textContent = (current+1) + ' / ' + questions.length;
+  document.getElementById('progress-fill').style.width = ((current) / questions.length * 100) + '%';
+
+  const scale = document.getElementById('scale');
+  scale.innerHTML = '';
+  for(let i=1;i<=5;i++){
+    const b = document.createElement('button');
+    b.textContent = i;
+    if(answers[current] === i) b.classList.add('selected');
+    b.onclick = () => selectAnswer(i);
+    scale.appendChild(b);
+  }
+
+  document.getElementById('btn-back').disabled = (current === 0);
+  document.getElementById('btn-next').disabled = (answers[current] === null);
+  document.getElementById('btn-next').textContent = (current === questions.length - 1) ? 'Voir mes résultats' : 'Suivant';
+}
+
+function selectAnswer(value){
+  answers[current] = value;
+  renderQuestion();
+}
+
+function goNext(){
+  if(answers[current] === null) return;
+  if(current === questions.length - 1){
+    showResults();
+  } else {
+    current++;
+    renderQuestion();
+  }
+}
+
+function goBack(){
+  if(current === 0) return;
+  current--;
+  renderQuestion();
+}
+
+function showResults(){
+  document.getElementById('screen-quiz').classList.remove('active');
+  document.getElementById('screen-results').classList.add('active');
+
+  const totals = {};
+  const counts = {};
+  Object.keys(forces).forEach(k => { totals[k] = 0; counts[k] = 0; });
+  questions.forEach((q, i) => {
+    totals[q[0]] += answers[i];
+    counts[q[0]] += 1;
+  });
+
+  const ranked = Object.keys(forces).map(k => ({
+    key:k,
+    label:forces[k].label,
+    text:forces[k].text,
+    tip:forces[k].tip,
+    virtue:forces[k].virtue,
+    pct: Math.round((totals[k] / (counts[k]*5)) * 100)
+  })).sort((a,b) => b.pct - a.pct);
+
+  const top5 = ranked.slice(0,5);
+  const cardsEl = document.getElementById('force-cards');
+  cardsEl.innerHTML = top5.map((r, i) => {
+    const v = virtues[r.virtue];
+    return '<div class="force-card" style="border-left-color:' + v.color + ';">' +
+      '<div class="rank">Force n°' + (i+1) + '</div>' +
+      '<div class="fname">' + r.label + '</div>' +
+      '<div class="fvirtue" style="background:' + v.color + ';">' + v.label + '</div>' +
+      '<div class="ftext">' + r.text + '</div>' +
+      '<div class="ftip"><b>Piste pour cette semaine —</b> ' + r.tip + '</div>' +
+      '<div class="plan-box">' +
+        '<label for="plan-' + r.key + '">Comment comptes-tu l\'utiliser au quotidien ?</label>' +
+        '<textarea id="plan-' + r.key + '" placeholder="- ...&#10;- ...&#10;- ..."></textarea>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  const legendEl = document.getElementById('legend');
+  legendEl.innerHTML = Object.keys(virtues).map(k =>
+    '<div class="legend-item"><span class="legend-dot" style="background:' + virtues[k].color + ';"></span>' + virtues[k].label + '</div>'
+  ).join('');
+
+  const barsEl = document.getElementById('bars');
+  barsEl.innerHTML = ranked.map(r => {
+    const v = virtues[r.virtue];
+    return '<div class="bar-row">' +
+      '<div class="bar-label">' + r.label + '</div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + r.pct + '%; background:' + v.color + ';"></div></div>' +
+      '<div class="bar-value">' + r.pct + '%</div>' +
+    '</div>';
+  }).join('');
+
+  sendResultsToScorm(ranked, top5);
+}
+
+function restart(){
+  if(!confirm("Refaire le questionnaire effacera ce que tu as écrit sur tes forces. Pense à l'imprimer avant si tu veux le garder. Continuer ?")) return;
+  current = 0;
+  answers = new Array(questions.length).fill(null);
+  document.getElementById('screen-results').classList.remove('active');
+  document.getElementById('screen-intro').classList.add('active');
+}
+</script>
+</body>
+</html>
