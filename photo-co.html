@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<title>Photo-O</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Mise en page : un seul écran mobile à la fois (départ, course, résultat), esthétique carte d'orientation : papier clair, tracé magenta, cercles de poste numérotés. */
+:root{
+  --paper:#f5f4ea;
+  --card:#fffef8;
+  --ink:#1c2a23;
+  --muted:#5b6a61;
+  --line:#d8dbc9;
+  --course:#c1147a;
+  --course-ink:#ffffff;
+  --forest:#2c6e4b;
+  --warn:#a5480b;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121815;--card:#1a221e;--ink:#e9eee7;--muted:#9aa89f;--line:#2b372f;
+    --course:#ff5db4;--course-ink:#1a0a13;--forest:#7ccb9c;--warn:#f0a066;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121815;--card:#1a221e;--ink:#e9eee7;--muted:#9aa89f;--line:#2b372f;
+  --course:#ff5db4;--course-ink:#1a0a13;--forest:#7ccb9c;--warn:#f0a066;
+  color-scheme:dark;
+}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45}
+*{box-sizing:border-box}
+.wrap{max-width:34rem;margin-inline:auto;padding-inline:16px;padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3,p{margin:0}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:2.2rem;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+.brand svg{width:34px;height:34px;flex:none}
+.lead{color:var(--muted);max-width:60ch}
+label.field{display:flex;flex-direction:column;gap:6px;font-weight:600}
+input[type=text],input[type=number],textarea{font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:6px;padding:12px 14px;width:100%;min-width:0}
+textarea{line-height:1.5;resize:vertical}
+input[type=text]:focus-visible,input[type=number]:focus-visible,textarea:focus-visible,.btn:focus-visible,.card:focus-visible,summary:focus-visible,label.btn:focus-within{outline:3px solid var(--course);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 20px;border-radius:6px;border:2px solid var(--course);font:700 1.05rem var(--f-body);letter-spacing:.01em;cursor:pointer;position:relative;text-align:center}
+.btn.main{background:var(--course);color:var(--course-ink)}
+.btn.ghost{background:transparent;color:var(--course)}
+.btn.quiet{border-color:var(--line);color:var(--ink);background:var(--card)}
+.btn.small{min-height:44px;font-size:.95rem}
+.sr{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
+details{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+summary{cursor:pointer;font-weight:600}
+details .in{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.hint{font-size:.9rem;color:var(--muted)}
+.tag{font:600 .75rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+
+/* Course en cours */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:2;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--paper);padding-block:10px;border-bottom:2px solid var(--course)}
+.who{font-family:var(--f-display);font-weight:700;font-size:1.5rem;line-height:1.1;overflow-wrap:anywhere}
+.prog{font-size:.9rem;color:var(--muted)}
+.chrono{font:600 1.9rem var(--f-mono);font-variant-numeric:tabular-nums;color:var(--course)}
+.gps{display:flex;gap:8px;align-items:center;font-size:.88rem;color:var(--muted)}
+.gps::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
+.gps[data-state=on]::before{background:var(--forest)}
+.gps[data-state=off]::before{background:var(--warn)}
+ol.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.obj{display:flex;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px}
+.no{flex:none;width:34px;height:34px;border-radius:50%;border:2.5px solid var(--course);color:var(--course);display:grid;place-items:center;font:700 .95rem var(--f-mono)}
+.obj.done .no{background:var(--course);color:var(--course-ink)}
+.obj .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.obj .txt{font-weight:600;font-size:1.08rem;overflow-wrap:anywhere}
+.thumb{width:100%;max-width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:var(--line)}
+.finish{display:flex;flex-direction:column;gap:10px}
+.confirm{background:var(--card);border:1.5px solid var(--warn);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px}
+
+/* Résultat */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-block:2px solid var(--ink)}
+.stats div{padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.stats div+div{border-left:1px solid var(--line)}
+.stats .v{font:600 1.35rem var(--f-mono);font-variant-numeric:tabular-nums}
+.mapsvg{display:block;width:100%;height:auto;background:var(--card);border:1px solid var(--line);border-radius:6px}
+.mapsvg .grid line{stroke:var(--line);stroke-width:1}
+.mapsvg .route{fill:none;stroke:var(--course);stroke-width:3;stroke-linejoin:round;stroke-linecap:round;opacity:.9}
+.mapsvg .route.leg{stroke-dasharray:6 6;stroke-width:2}
+.mapsvg .mk{cursor:pointer}
+.mapsvg .mk:focus-visible .ring{stroke-width:4}
+.mapsvg .ring{fill:var(--card);fill-opacity:.9;stroke:var(--course);stroke-width:2.5}
+.mapsvg .mk text{font:700 12px var(--f-mono);fill:var(--course);text-anchor:middle;pointer-events:none}
+.mapsvg .mk.on .ring{fill:var(--course)}
+.mapsvg .mk.on text{fill:var(--course-ink)}
+.mapsvg .hit{fill:transparent}
+.mapsvg .start,.mapsvg .fin{fill:none;stroke:var(--course);stroke-width:2.5}
+.mapsvg .sb line{stroke:var(--ink);stroke-width:2}
+.mapsvg .sb text,.mapsvg .nt text{font:11px var(--f-mono);fill:var(--muted)}
+.mapsvg .nt path{fill:var(--ink)}
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:6px;padding:18px;color:var(--muted)}
+.legend{font-size:.85rem;color:var(--muted)}
+.detail{display:flex;flex-direction:column;gap:8px}
+.detail img{width:100%;max-width:100%;border-radius:6px;background:var(--line)}
+.detail h3,.sec{font-family:var(--f-display);font-weight:700;font-size:1.35rem;letter-spacing:.02em}
+.gal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{display:flex;flex-direction:column;text-align:left;padding:0;background:var(--card);border:1.5px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;font:inherit;color:inherit}
+.card.on{border-color:var(--course)}
+.card img,.card .ph{width:100%;aspect-ratio:4/3;object-fit:cover;display:grid;place-items:center;background:var(--line);color:var(--muted);font-size:.85rem}
+.card .meta{display:flex;align-items:center;gap:8px;padding:8px;min-width:0}
+.card .no{width:26px;height:26px;font-size:.75rem;border-width:2px}
+.card .lbl{flex:1;min-width:0;font-size:.85rem;line-height:1.25;overflow-wrap:anywhere}
+.card .t{font:600 .78rem var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.cam{position:fixed;inset:0;z-index:20;background:#000;color:#fff;display:flex;flex-direction:column}
+.cam video{flex:1;min-height:0;width:100%;object-fit:cover;background:#000}
+.cam .top{margin:0;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));font-weight:600}
+.cam .ctrl{display:flex;flex-direction:column;gap:10px;padding:14px 16px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));background:#000}
+.cam .camMsg{margin:0;font-size:.95rem}
+.cam .camMsg:empty{display:none}
+input[type=number]{-moz-appearance:textfield}
+.err{margin:0;color:var(--warn);font-weight:600}
+.err:empty{display:none}
+#lmap{position:relative;z-index:0;height:min(70vh,440px);min-height:300px;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+.lmk span{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid #c1147a;color:#c1147a;font:700 13px "IBM Plex Mono",ui-monospace,monospace;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.lmk.on span{background:#c1147a;color:#fff}
+.stulist{display:flex;flex-direction:column;gap:12px}
+fieldset.stu{border:1px solid var(--line);border-radius:8px;background:var(--card);padding:6px 14px 14px;margin:0;min-width:0;display:flex;flex-direction:column;gap:10px}
+fieldset.stu legend{font:700 1.2rem var(--f-display);letter-spacing:.03em;padding-inline:6px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stuFoot{display:flex;gap:10px;align-items:flex-end}
+.stuFoot .field{flex:1;min-width:0}
+label.field.sm{font-size:.9rem}
+.stu input[type=text]{padding:10px 12px}
+.roster{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;color:var(--muted);font-size:.95rem}
+@media (prefers-reduced-motion:no-preference){.btn{transition:transform .08s}.btn:active{transform:translateY(1px)}}
+</style>
+
+<style>body{margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+
+<script>
+(function(){
+'use strict';
+
+var KEY_RUN='photoo.course';
+
+function load(k,d){try{var s=localStorage.getItem(k);return s?JSON.parse(s):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
+
+var run=load(KEY_RUN,null);
+var photoErr=null, saveErr=false;
+var sel=null, busy=null, confirming=null, tick=null, lastView=null;
+var gpsState='wait', lastFix=null, watchId=null, wake=null, pt=null;
+
+var $=function(s){return document.querySelector(s)};
+function h(tag,attrs){
+  var e=document.createElement(tag); attrs=attrs||{};
+  Object.keys(attrs).forEach(function(k){
+    var v=attrs[k];
+    if(k==='class') e.className=v;
+    else if(k.indexOf('on')===0) e.addEventListener(k.slice(2),v);
+    else if(v!==false&&v!=null) e.setAttribute(k,v===true?'':v);
+  });
+  for(var i=2;i<arguments.length;i++){
+    [].concat(arguments[i]).forEach(function(c){ if(c==null||c===false) return; e.append(c.nodeType?c:document.createTextNode(c)); });
+  }
+  return e;
+}
+function fmt(ms){
+  var s=Math.max(0,Math.floor(ms/1000)),hh=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60;
+  var p=function(n){return String(n).padStart(2,'0')};
+  return hh?hh+':'+p(m)+':'+p(r):p(m)+':'+p(r);
+}
+function dist(a,b){
+  var R=6371000,rad=Math.PI/180,dLa=(b.lat-a.lat)*rad,dLo=(b.lon-a.lon)*rad;
+  var x=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLo/2)*Math.sin(dLo/2);
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+function fmtDist(d){return d<1000?Math.round(d)+' m':(d/1000).toFixed(2).replace('.',',')+' km'}
+function persist(now){
+  clearTimeout(pt);
+  if(now) saveErr=!save(KEY_RUN,run); else pt=setTimeout(function(){saveErr=!save(KEY_RUN,run)},3000);
+}
+
+/* ---------- GPS (si l'appareil l'autorise) ---------- */
+function gpsLabel(){
+  if(gpsState==='on') return 'GPS actif'+(lastFix?' · ± '+Math.round(lastFix.acc)+' m':'');
+  if(gpsState==='off') return "GPS indisponible. La position sera lue dans les photos.";
+  return 'Recherche du GPS…';
+}
+function paintGps(){var g=$('#gps'); if(g){g.textContent=gpsLabel(); g.setAttribute('data-state',gpsState)}}
+function startGps(){
+  if(watchId!==null) return;
+  try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(function(l){wake=l}).catch(function(){}); }catch(e){}
+  if(!('geolocation' in navigator)){gpsState='off';paintGps();return}
+  try{
+    watchId=navigator.geolocation.watchPosition(function(p){
+      lastFix={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,t:Date.now()};
+      gpsState='on';
+      var last=run.track[run.track.length-1];
+      if(!last||dist(last,lastFix)>4){run.track.push({t:lastFix.t,lat:lastFix.lat,lon:lastFix.lon});persist()}
+      paintGps();
+    },function(){gpsState='off';paintGps()},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+  }catch(e){gpsState='off'}
+}
+function stopGps(){
+  try{if(watchId!==null) navigator.geolocation.clearWatch(watchId)}catch(e){}
+  watchId=null;
+  try{if(wake) wake.release()}catch(e){}
+  wake=null;
+}
+
+/* ---------- Lecture de la position dans l'EXIF d'une photo JPEG ---------- */
+function exifGps(buf){
+  var v=new DataView(buf); if(v.byteLength<12||v.getUint16(0)!==0xFFD8) return null;
+  var o=2;
+  while(o+4<v.byteLength){
+    var m=v.getUint16(o), len=v.getUint16(o+2);
+    if(m===0xFFE1&&v.getUint32(o+4)===0x45786966) return readTiff(v,o+10);
+    if((m&0xFF00)!==0xFF00||m===0xFFDA) break;
+    o+=2+len;
+  }
+  return null;
+}
+function readTiff(v,t){
+  var le=v.getUint16(t)===0x4949;
+  var u16=function(p){return v.getUint16(p,le)}, u32=function(p){return v.getUint32(p,le)};
+  var ifd=function(off){var n=u16(off),out={};for(var k=0;k<n;k++){var e=off+2+k*12;out[u16(e)]=e}return out};
+  var i0=ifd(t+u32(t+4)); if(!i0[0x8825]) return null;
+  var g=ifd(t+u32(i0[0x8825]+8)); if(!g[2]||!g[4]) return null;
+  var rat=function(e){var p=t+u32(e+8),s=0;for(var k=0;k<3;k++){var d=u32(p+k*8+4);s+=(d?u32(p+k*8)/d:0)/Math.pow(60,k)}return s};
+  var lat=rat(g[2]), lon=rat(g[4]);
+  if(g[1]&&String.fromCharCode(v.getUint8(g[1]+8))==='S') lat=-lat;
+  if(g[3]&&String.fromCharCode(v.getUint8(g[3]+8))==='W') lon=-lon;
+  if(!lat&&!lon) return null;
+  return {lat:lat,lon:lon};
+}
+function shrink(file){
+  return new Promise(function(res,rej){
+    var u=URL.createObjectURL(file), im=new Image();
+    im.onload=function(){
+      var s=Math.min(1,800/Math.max(im.naturalWidth,im.naturalHeight));
+      var c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*s); c.height=Math.round(im.naturalHeight*s);
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg',.7));
+    };
+    im.onerror=function(){URL.revokeObjectURL(u);rej(new Error('image'))};
+    im.src=u;
+  });
+}
+function onPhoto(i,file){
+  busy=i; render();
+  var exif=null;
+  file.arrayBuffer().then(function(b){try{exif=exifGps(b)}catch(e){}}).catch(function(){})
+  .then(function(){return shrink(file)})
+  .then(function(img){
+    var fix=exif||(lastFix&&Date.now()-lastFix.t<60000?{lat:lastFix.lat,lon:lastFix.lon}:null);
+    run.shots[i]={t:Date.now(),lat:fix?fix.lat:null,lon:fix?fix.lon:null,src:exif?'photo':(fix?'gps':null),img:img};
+    busy=null; photoErr=null; persist(true); render();
+  }).catch(function(){busy=null;photoErr="La photo n'a pas pu être traitée (format ou mémoire de l'appareil). Réessaie avec « Refaire la photo ».";render()});
+}
+
+
+/* ---------- Caméra intégrée : la page reste ouverte pendant la prise de vue ---------- */
+var camStream=null;
+function closeCam(){
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop()});camStream=null}
+  var c=$('#cam'); if(c) c.remove();
+}
+function openCam(i){
+  closeCam();
+  var msg=h('p',{class:'camMsg'},'');
+  var video=h('video',{playsinline:true,autoplay:true});
+  video.muted=true;
+  var shoot=h('button',{class:'btn main',type:'button',disabled:true},'Prendre la photo');
+  var cancel=h('button',{class:'btn quiet',type:'button',onclick:closeCam},'Annuler');
+  var ctrl=h('div',{class:'ctrl'},msg,shoot,cancel);
+  var overlay=h('div',{class:'cam',id:'cam'},h('p',{class:'top'},run.obj[i]),video,ctrl);
+  shoot.addEventListener('click',function(){
+    if(!video.videoWidth) return;
+    var k=Math.min(1,800/Math.max(video.videoWidth,video.videoHeight));
+    var c=document.createElement('canvas'); c.width=Math.round(video.videoWidth*k); c.height=Math.round(video.videoHeight*k);
+    c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+    var img=c.toDataURL('image/jpeg',.7);
+    var fix=lastFix&&Date.now()-lastFix.t<120000?lastFix:null;
+    run.shots[i]={t:Date.now(),lat:fix?fix.lat:null,lon:fix?fix.lon:null,src:fix?'gps':null,img:img};
+    closeCam(); photoErr=null; persist(true); render();
+  });
+  var fallback=function(){
+    shoot.hidden=true; video.hidden=true;
+    msg.textContent="La caméra intégrée n'est pas disponible. Utilise l'appareil photo du téléphone :";
+    ctrl.insertBefore(h('label',{class:'btn main'},"Ouvrir l'appareil photo",
+      h('input',{type:'file',accept:'image/*',capture:'environment',class:'sr',onchange:function(e){var f=e.target.files[0];if(f){closeCam();onPhoto(i,f)}}})),cancel);
+  };
+  document.body.append(overlay);
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){fallback();return}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false}).then(function(st){
+    if(!$('#cam')){st.getTracks().forEach(function(t){t.stop()});return}
+    camStream=st; video.srcObject=st;
+    var p=video.play(); if(p&&p.catch) p.catch(function(){});
+    shoot.disabled=false;
+  }).catch(fallback);
+}
+
+/* ---------- Vues ---------- */
+function brand(){
+  return h('h1',{class:'brand'},
+    (function(){var d=document.createElement('div');d.innerHTML='<svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="13" fill="none" stroke="var(--course)" stroke-width="3"/><circle cx="17" cy="17" r="2.5" fill="var(--course)"/></svg>';return d.firstChild})(),
+    'Photo-O');
+}
+var setupData={team:'',count:'',students:[{},{},{}]};
+function readSetup(){
+  var g=function(id){var e=$('#'+id);return e?e.value:''};
+  setupData.team=g('name'); setupData.count=g('count');
+  setupData.students=setupData.students.map(function(_,i){return {nom:g('s-nom-'+i),prenom:g('s-pre-'+i),classe:g('s-cla-'+i)}});
+}
+function addStudent(){
+  readSetup(); setupData.students.push({}); render();
+  var e=$('#s-pre-'+(setupData.students.length-1)); if(e) e.focus();
+}
+function removeStudent(i){readSetup(); setupData.students.splice(i,1); render()}
+function setupErr(msg,focusId){
+  var e=$('#err'); if(e) e.textContent=msg;
+  var f=focusId&&$('#'+focusId); if(f) f.focus();
+}
+function studentRow(st,i){
+  var f=function(id,label,val){
+    return h('label',{class:'field sm',for:id},label,h('input',{type:'text',id:id,autocomplete:'off',value:val||''}));
+  };
+  return h('fieldset',{class:'stu'},
+    h('legend',{},'Élève '+(i+1)),
+    h('div',{class:'g2'},f('s-pre-'+i,'Prénom',st.prenom),f('s-nom-'+i,'Nom',st.nom)),
+    h('div',{class:'stuFoot'},f('s-cla-'+i,'Classe',st.classe),
+      setupData.students.length>1?h('button',{class:'btn quiet small',type:'button',onclick:function(){removeStudent(i)}},'Retirer'):null));
+}
+function setupView(){
+  return h('div',{class:'wrap',style:'padding:0'},
+    brand(),
+    h('p',{class:'lead'},"Rejoins chaque objectif, prends-le en photo, puis retrouve ton parcours sur la carte."),
+    h('div',{class:'stulist'},
+      setupData.students.map(studentRow),
+      h('button',{class:'btn ghost',type:'button',onclick:addStudent},'+ Ajouter un élève')),
+    h('label',{class:'field',for:'name'},"Nom de l'équipe (facultatif)",
+      h('input',{type:'text',id:'name',autocomplete:'off',placeholder:'Ex. Les Renards',value:setupData.team||''})),
+    h('label',{class:'field',for:'count'},"Nombre d'objectifs",
+      h('input',{type:'number',id:'count',inputmode:'numeric',min:'1',max:'30',placeholder:'Ex. 6',value:setupData.count||''})),
+    h('p',{class:'err',id:'err',role:'alert'}),
+    h('button',{class:'btn main',type:'button',onclick:startRun},'Départ'),
+    h('p',{class:'hint'},"Autorise la caméra et la localisation quand le navigateur te le demande. Garde cette page ouverte pendant toute la course et ne la recharge pas."));
+}
+function startRun(){
+  readSetup();
+  var students=[], partial=null;
+  setupData.students.forEach(function(st,i){
+    var o={nom:(st.nom||'').trim(),prenom:(st.prenom||'').trim(),classe:(st.classe||'').trim()};
+    if(!o.nom&&!o.prenom&&!o.classe) return;
+    if(!o.nom||!o.prenom||!o.classe){ if(partial===null) partial=i; return }
+    students.push(o);
+  });
+  if(partial!==null){setupErr("Complète le prénom, le nom et la classe de l'élève "+(partial+1)+", ou laisse la ligne vide.",'s-pre-'+partial);return}
+  if(!students.length){setupErr("Ajoute au moins un élève : prénom, nom et classe.",'s-pre-0');return}
+  var n=parseInt((setupData.count||'').trim(),10);
+  if(!(n>=1&&n<=30)){setupErr("Indique un nombre d'objectifs entre 1 et 30.",'count');return}
+  var team=(setupData.team||'').trim();
+  var name=team||students.map(function(s){return s.prenom}).join(', ');
+  var obj=[]; for(var i=1;i<=n;i++) obj.push('Objectif '+i);
+  run={name:name,students:students,start:Date.now(),end:null,obj:obj,shots:[],track:[]};
+  setupData={team:'',count:'',students:[{},{},{}]};
+  gpsState='wait'; lastFix=null; sel=null; confirming=null; photoErr=null; saveErr=false;
+  persist(true); render();
+}
+function runView(){
+  var done=run.obj.filter(function(_,i){return run.shots[i]}).length, missing=run.obj.length-done;
+  var items=run.obj.map(function(text,i){
+    var s=run.shots[i];
+    return h('li',{class:'obj'+(s?' done':'')},
+      h('span',{class:'no'},i+1),
+      h('div',{class:'body'},
+        h('p',{class:'txt'},text),
+        s&&h('img',{class:'thumb',src:s.img,alt:'Photo de l\'objectif '+(i+1)}),
+        h('button',{class:'btn '+(s?'ghost':'main'),type:'button',onclick:function(){openCam(i)}},busy===i?'Traitement…':(s?'Refaire la photo':'Prendre la photo'))));
+  });
+  var fin;
+  if(confirming){
+    fin=h('div',{class:'confirm'},
+      h('p',{},missing===1?'Il manque 1 photo. Terminer quand même ?':'Il manque '+missing+' photos. Terminer quand même ?'),
+      h('button',{class:'btn main',type:'button',onclick:finish},'Oui, terminer'),
+      h('button',{class:'btn quiet',type:'button',onclick:function(){confirming=null;render()}},'Continuer la course'));
+  }else{
+    fin=h('button',{class:'btn '+(missing?'quiet':'main'),type:'button',onclick:function(){if(missing){confirming=true;render()}else finish()}},'Terminer la course');
+  }
+  return h('div',{class:'wrap',style:'padding:0'},
+    h('header',{class:'bar'},
+      h('div',{},h('p',{class:'who'},run.name),h('p',{class:'prog'},done+' / '+run.obj.length+' objectifs')),
+      h('div',{class:'chrono',id:'chrono'},fmt(Date.now()-run.start))),
+    h('p',{class:'gps',id:'gps','data-state':gpsState},gpsLabel()),
+    (photoErr||saveErr)&&h('p',{class:'confirm'},photoErr||"Mémoire du navigateur pleine : les photos risquent d'être perdues si tu recharges la page. Termine la course pour voir le résultat."),
+    h('ol',{class:'list'},items),
+    h('div',{class:'finish'},fin));
+}
+function finish(){
+  run.end=Date.now(); confirming=null; stopGps();
+  var f=run.shots.map(function(s,i){return s?i:-1}).filter(function(i){return i>=0});
+  sel=f.length?f[0]:null;
+  persist(true); exportMsg=''; render(); exportJpg();
+}
+function newRun(){run=null;save(KEY_RUN,null);sel=null;confirming=null;render()}
+
+function located(){return run.shots.map(function(s,i){return s&&s.lat!=null?{lat:s.lat,lon:s.lon,i:i}:null}).filter(Boolean)}
+function totalDist(){
+  var pts=run.track.length>=2?run.track:located(), d=0;
+  for(var i=1;i<pts.length;i++) d+=dist(pts[i-1],pts[i]);
+  return d;
+}
+function resultView(){
+  var done=run.obj.filter(function(_,i){return run.shots[i]}).length;
+  var cards=run.obj.map(function(text,i){
+    var s=run.shots[i];
+    return h('button',{class:'card',type:'button','data-i':i,onclick:function(){selectShot(i)}},
+      s?h('img',{src:s.img,alt:'Photo de l\'objectif '+(i+1)}):h('div',{class:'ph'},'Non photographié'),
+      h('div',{class:'meta'},h('span',{class:'no'},i+1),h('span',{class:'lbl'},text),s&&h('span',{class:'t'},fmt(s.t-run.start))));
+  });
+  var box=h('div',{id:'mapbox'});
+  box.addEventListener('click',function(e){var g=e.target.closest('[data-i]');if(g)selectShot(+g.getAttribute('data-i'))});
+  box.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){var g=e.target.closest('[data-i]');if(g){e.preventDefault();selectShot(+g.getAttribute('data-i'))}}});
+  var routeNote=run.track.length>=2?'Ligne pleine : trajet enregistré par le GPS.':'Ligne pointillée : trajet reconstitué à partir de la position des photos.';
+  return h('div',{class:'wrap',style:'padding:0'},
+    h('div',{},h('p',{class:'tag'},'Parcours terminé'),h('h2',{class:'brand'},run.name),
+      h('ul',{class:'roster'},(run.students||[]).map(function(st){return h('li',{},(st.prenom+' '+st.nom).trim()+(st.classe?' · '+st.classe:''))}))),
+    h('div',{class:'stats'},
+      h('div',{},h('span',{class:'tag'},'Temps'),h('span',{class:'v'},fmt(run.end-run.start))),
+      h('div',{},h('span',{class:'tag'},'Objectifs'),h('span',{class:'v'},done+' / '+run.obj.length)),
+      h('div',{},h('span',{class:'tag'},'Distance'),h('span',{class:'v'},totalDist()>0?fmtDist(totalDist()):'—'))),
+    h('div',{class:'finish'},
+      h('button',{class:'btn main',type:'button',onclick:function(){exportJpg()}},"Télécharger l'image du résultat"),
+      h('p',{class:'hint',id:'expmsg'},exportMsg)),
+    box,
+    h('p',{class:'legend',id:'legend'},routeNote),
+    h('div',{class:'detail',id:'detail'}),
+    h('h2',{class:'sec'},'Toutes les photos'),
+    h('div',{class:'gal',id:'gal'},cards),
+    h('button',{class:'btn quiet',type:'button',onclick:function(){
+      if(confirming){newRun()}else{confirming=true;var b=this;b.textContent='Effacer ce parcours et recommencer ?'}
+    }},'Nouvelle course'));
+}
+function selectShot(i){sel=i;paintResult()}
+function paintResult(){
+  paintMap(); paintDetail();
+  var cs=document.querySelectorAll('#gal .card');
+  for(var k=0;k<cs.length;k++) cs[k].classList.toggle('on',+cs[k].getAttribute('data-i')===sel);
+}
+function paintDetail(){
+  var d=$('#detail'); if(!d) return; d.replaceChildren();
+  if(sel==null||!run.shots[sel]) return;
+  var s=run.shots[sel];
+  var pos=s.src==='photo'?'position lue dans la photo':(s.src==='gps'?'position GPS':'sans position');
+  d.append(h('h3',{},run.obj[sel]),
+    h('img',{src:s.img,alt:'Photo de l\'objectif '+(sel+1)}),
+    h('p',{class:'hint'},'Atteint après '+fmt(s.t-run.start)+' · '+pos));
+}
+var lmap=null, lmarks={};
+function numIcon(n,on){return L.divIcon({className:'lmk'+(on?' on':''),html:'<span>'+n+'</span>',iconSize:[30,30],iconAnchor:[15,15]})}
+function paintLeaflet(box,loc,trk){
+  if(lmap&&lmap.getContainer().isConnected){
+    Object.keys(lmarks).forEach(function(k){lmarks[k].setIcon(numIcon(+k+1,+k===sel))});
+    return;
+  }
+  if(lmap){try{lmap.remove()}catch(e){} lmap=null}
+  box.replaceChildren(h('div',{id:'lmap'}));
+  lmap=L.map('lmap');
+  var tiles=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(lmap);
+  var ll=function(p){return [p.lat,p.lon]}, bounds=trk.concat(loc).map(ll);
+  if(trk.length>=2){
+    L.polyline(trk.map(ll),{color:'#c1147a',weight:4,opacity:.9}).addTo(lmap);
+    L.circleMarker(ll(trk[0]),{radius:8,color:'#ffffff',weight:3,fillColor:'#1a7f37',fillOpacity:1}).addTo(lmap);
+    L.circleMarker(ll(trk[trk.length-1]),{radius:8,color:'#ffffff',weight:3,fillColor:'#222222',fillOpacity:1}).addTo(lmap);
+  }else if(loc.length>=2){
+    L.polyline(loc.map(ll),{color:'#c1147a',weight:3,opacity:.9,dashArray:'6 8'}).addTo(lmap);
+  }
+  lmarks={};
+  loc.forEach(function(s){
+    var m=L.marker([s.lat,s.lon],{icon:numIcon(s.i+1,s.i===sel),keyboard:true}).addTo(lmap);
+    m.on('click',function(){selectShot(s.i)});
+    lmarks[s.i]=m;
+  });
+  if(bounds.length===1) lmap.setView(bounds[0],18); else lmap.fitBounds(bounds,{padding:[30,30],maxZoom:19});
+  setTimeout(function(){if(lmap)lmap.invalidateSize()},60);
+  var warned=false;
+  tiles.on('tileerror',function(){if(warned)return;warned=true;var l=$('#legend');if(l)l.textContent="Fond de carte indisponible (pas de connexion). Le tracé reste affiché."});
+}
+function paintMap(){
+  var box=$('#mapbox'); if(!box) return;
+  var loc=located(), trk=run.track, all=trk.concat(loc);
+  if(all.length&&window.L&&L.map){paintLeaflet(box,loc,trk);return}
+  if(!all.length){
+    box.replaceChildren(h('p',{class:'empty'},"Aucune position enregistrée. Active la localisation dans les réglages de l'appareil photo, puis refais une course pour voir le parcours."));
+    return;
+  }
+  var lat0=all.reduce(function(a,p){return a+p.lat},0)/all.length, lon0=all.reduce(function(a,p){return a+p.lon},0)/all.length;
+  var kx=111320*Math.cos(lat0*Math.PI/180), ky=110540;
+  var P=function(p){return {x:(p.lon-lon0)*kx,y:-(p.lat-lat0)*ky}};
+  var xs=all.map(function(p){return P(p).x}), ys=all.map(function(p){return P(p).y});
+  var minX=Math.min.apply(null,xs),maxX=Math.max.apply(null,xs),minY=Math.min.apply(null,ys),maxY=Math.max.apply(null,ys);
+  var W=360,pad=34,spanX=Math.max(maxX-minX,40),spanY=Math.max(maxY-minY,40);
+  var H=Math.round(Math.min(480,Math.max(240,(W-2*pad)*spanY/spanX+2*pad)));
+  var sc=Math.min((W-2*pad)/spanX,(H-2*pad)/spanY), cx=(minX+maxX)/2, cy=(minY+maxY)/2;
+  var X=function(x){return W/2+(x-cx)*sc}, Y=function(y){return H/2+(y-cy)*sc};
+  var T=function(p){var q=P(p);return [X(q.x),Y(q.y)]};
+  var steps=[5,10,20,25,50,100,200,250,500,1000,2000,5000], step=5000;
+  for(var k=0;k<steps.length;k++){if(steps[k]*sc>=44){step=steps[k];break}}
+  var g='', xl=cx-W/2/sc, xr=cx+W/2/sc, yt=cy-H/2/sc, yb=cy+H/2/sc, m;
+  for(m=Math.ceil(xl/step)*step;m<=xr;m+=step){var px=X(m).toFixed(1);g+='<line x1="'+px+'" y1="0" x2="'+px+'" y2="'+H+'"/>'}
+  for(m=Math.ceil(yt/step)*step;m<=yb;m+=step){var py=Y(m).toFixed(1);g+='<line x1="0" y1="'+py+'" x2="'+W+'" y2="'+py+'"/>'}
+  var pl=function(a){return a.map(function(p){return T(p).map(function(n){return n.toFixed(1)}).join(',')}).join(' ')};
+  var route='';
+  if(trk.length>=2) route='<polyline class="route" points="'+pl(trk)+'"/>';
+  else if(loc.length>=2) route='<polyline class="route leg" points="'+pl(loc)+'"/>';
+  var extra='';
+  if(trk.length>=2){
+    var a=T(trk[0]), z=T(trk[trk.length-1]);
+    extra+='<path class="start" d="M'+a[0].toFixed(1)+','+(a[1]-10).toFixed(1)+' L'+(a[0]-9).toFixed(1)+','+(a[1]+6).toFixed(1)+' L'+(a[0]+9).toFixed(1)+','+(a[1]+6).toFixed(1)+'Z"/>';
+    extra+='<circle class="fin" cx="'+z[0].toFixed(1)+'" cy="'+z[1].toFixed(1)+'" r="9"/><circle class="fin" cx="'+z[0].toFixed(1)+'" cy="'+z[1].toFixed(1)+'" r="5.5"/>';
+  }
+  var marks=loc.map(function(s){
+    var c=T(s), x=c[0].toFixed(1), y=c[1].toFixed(1);
+    return '<g class="mk'+(s.i===sel?' on':'')+'" data-i="'+s.i+'" tabindex="0" role="button" aria-label="Objectif '+(s.i+1)+'"><circle class="hit" cx="'+x+'" cy="'+y+'" r="20"/><circle class="ring" cx="'+x+'" cy="'+y+'" r="12"/><text x="'+x+'" y="'+y+'" dy=".35em">'+(s.i+1)+'</text></g>';
+  }).join('');
+  var sb='<g class="sb"><line x1="12" y1="'+(H-14)+'" x2="'+(12+step*sc).toFixed(1)+'" y2="'+(H-14)+'"/><text x="12" y="'+(H-20)+'">'+step+' m</text></g>';
+  var nt='<g class="nt" transform="translate('+(W-22)+',26)"><path d="M0,-12 L6,6 L0,2 L-6,6Z"/><text y="20" text-anchor="middle">N</text></g>';
+  box.innerHTML='<svg class="mapsvg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Carte du parcours"><g class="grid">'+g+'</g>'+route+extra+marks+sb+nt+'</svg>';
+}
+
+
+/* ---------- Export du résultat en image JPG ---------- */
+var exportMsg='';
+function setExp(t){exportMsg=t;var e=$('#expmsg');if(e)e.textContent=t}
+function loadImg(src,cors){
+  return new Promise(function(res){
+    var im=new Image(); if(cors) im.crossOrigin='anonymous';
+    im.onload=function(){res(im)}; im.onerror=function(){res(null)}; im.src=src;
+  });
+}
+function withTimeout(p,ms){return Promise.race([p,new Promise(function(r){setTimeout(function(){r(null)},ms)})])}
+function mer(lat,lon,z){
+  var n=256*Math.pow(2,z), sn=Math.sin(lat*Math.PI/180);
+  return {x:(lon+180)/360*n, y:(0.5-Math.log((1+sn)/(1-sn))/(4*Math.PI))*n};
+}
+function saveBlob(blob,name){
+  var u=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=u; a.download=name; document.body.append(a); a.click(); a.remove();
+  setTimeout(function(){URL.revokeObjectURL(u)},4000);
+}
+/* Carte dessinée sur le canvas : fond OpenStreetMap si le réseau répond, sinon grille. */
+function drawMap(x,X,Y,w,h,loc,trk,noTiles){
+  var pts=trk.concat(loc);
+  x.save(); x.beginPath(); x.rect(X,Y,w,h); x.clip();
+  x.fillStyle='#f5f4ea'; x.fillRect(X,Y,w,h);
+  if(!pts.length){
+    x.fillStyle='#5b6a61'; x.font='500 28px "Source Sans 3",sans-serif'; x.textAlign='center'; x.textBaseline='middle';
+    x.fillText('Aucune position enregistrée',X+w/2,Y+h/2); x.restore(); return Promise.resolve();
+  }
+  var pad=80, z, b;
+  var bb=function(z){var xs=[],ys=[];pts.forEach(function(p){var m=mer(p.lat,p.lon,z);xs.push(m.x);ys.push(m.y)});
+    return {x0:Math.min.apply(null,xs),x1:Math.max.apply(null,xs),y0:Math.min.apply(null,ys),y1:Math.max.apply(null,ys)}};
+  for(z=18;z>=1;z--){b=bb(z);if(b.x1-b.x0<=w-2*pad&&b.y1-b.y0<=h-2*pad)break}
+  b=bb(z);
+  var cx=(b.x0+b.x1)/2, cy=(b.y0+b.y1)/2, left=cx-w/2, top=cy-h/2;
+  var P=function(p){var m=mer(p.lat,p.lon,z);return [X+m.x-left,Y+m.y-top]};
+  var n2=Math.pow(2,z), tx0=Math.floor(left/256), tx1=Math.floor((left+w)/256), ty0=Math.floor(top/256), ty1=Math.floor((top+h)/256);
+  var jobs=[];
+  if(!noTiles&&(tx1-tx0+1)*(ty1-ty0+1)<=42){
+    for(var tx=tx0;tx<=tx1;tx++){for(var ty=ty0;ty<=ty1;ty++){
+      if(ty<0||ty>=n2) continue;
+      (function(tx,ty){
+        var wx=((tx%n2)+n2)%n2;
+        jobs.push(withTimeout(loadImg('https://tile.openstreetmap.org/'+z+'/'+wx+'/'+ty+'.png',true),5000).then(function(im){return {im:im,tx:tx,ty:ty}}));
+      })(tx,ty);
+    }}
+  }
+  return Promise.all(jobs).then(function(res){
+    var got=0;
+    res.forEach(function(r){if(r.im){got++;x.drawImage(r.im,X+r.tx*256-left,Y+r.ty*256-top,256,256)}});
+    if(!got){
+      x.strokeStyle='#d8dbc9'; x.lineWidth=2;
+      for(var gx=X+((-left%128)+128)%128;gx<X+w;gx+=128){x.beginPath();x.moveTo(gx,Y);x.lineTo(gx,Y+h);x.stroke()}
+      for(var gy=Y+((-top%128)+128)%128;gy<Y+h;gy+=128){x.beginPath();x.moveTo(X,gy);x.lineTo(X+w,gy);x.stroke()}
+    }
+    x.lineJoin='round'; x.lineCap='round'; x.strokeStyle='#c1147a';
+    var line=trk.length>=2?trk:(loc.length>=2?loc:null);
+    if(line){
+      x.lineWidth=trk.length>=2?7:5; if(trk.length<2) x.setLineDash([16,14]);
+      x.beginPath(); line.forEach(function(p,k){var q=P(p);if(k)x.lineTo(q[0],q[1]);else x.moveTo(q[0],q[1])}); x.stroke(); x.setLineDash([]);
+    }
+    var dot=function(q,col){x.beginPath();x.arc(q[0],q[1],13,0,7);x.fillStyle=col;x.fill();x.lineWidth=5;x.strokeStyle='#ffffff';x.stroke()};
+    if(trk.length>=2){dot(P(trk[0]),'#1a7f37');dot(P(trk[trk.length-1]),'#222222')}
+    loc.forEach(function(sh){
+      var q=P(sh);
+      x.beginPath();x.arc(q[0],q[1],24,0,7);x.fillStyle='#ffffff';x.fill();x.lineWidth=6;x.strokeStyle='#c1147a';x.stroke();
+      x.fillStyle='#c1147a';x.font='700 26px "IBM Plex Mono",monospace';x.textAlign='center';x.textBaseline='middle';x.fillText(String(sh.i+1),q[0],q[1]+1);
+    });
+    if(got){
+      x.font='500 18px sans-serif'; var t='© OpenStreetMap', tw=x.measureText(t).width;
+      x.fillStyle='rgba(255,255,255,.85)'; x.fillRect(X+w-tw-20,Y+h-30,tw+20,30);
+      x.fillStyle='#333333'; x.textAlign='right'; x.textBaseline='middle'; x.fillText(t,X+w-10,Y+h-15);
+    }
+    x.restore();
+  });
+}
+function exportJpg(noTiles){
+  if(!run||!run.end) return;
+  setExp("Création de l'image…");
+  var W=1080, M=40, cols=3, gap=16, n=run.obj.length, rows=Math.ceil(n/cols);
+  var cw=Math.floor((W-2*M-(cols-1)*gap)/cols), ih=Math.round(cw*0.75), ch=ih+128;
+  var INK='#1c2a23', MUTED='#5b6a61', LINE='#d8dbc9', COURSE='#c1147a';
+  var DISP='"Barlow Condensed","Arial Narrow",sans-serif', MONO='"IBM Plex Mono",ui-monospace,monospace', BODY='"Source Sans 3",system-ui,sans-serif';
+  var roster=(run.students||[]).map(function(st){return (st.prenom+' '+st.nom).trim()+(st.classe?' ('+st.classe+')':'')});
+  var RF='500 26px '+BODY, mc=document.createElement('canvas').getContext('2d'), lines=[], cur='';
+  mc.font=RF;
+  roster.forEach(function(it){
+    var t=cur?cur+'  ·  '+it:it;
+    if(cur&&mc.measureText(t).width>W-2*M){lines.push(cur);cur=it}else cur=t;
+  });
+  if(cur) lines.push(cur);
+  var stTop=lines.length?262+(lines.length-1)*34+26:245, headH=stTop+105;
+  var mapY=headH+10, mapH=660, gridTitleY=mapY+mapH+80, gridY=gridTitleY+30;
+  var H=gridY+rows*(ch+gap)+70;
+  var c=document.createElement('canvas'); c.width=W; c.height=H;
+  var x=c.getContext('2d');
+  var T=function(t,px,py,font,col,al){x.font=font;x.fillStyle=col;x.textAlign=al||'left';x.textBaseline='alphabetic';x.fillText(t,px,py)};
+  x.fillStyle='#f5f4ea'; x.fillRect(0,0,W,H);
+  /* en-tête */
+  x.beginPath(); x.arc(M+22,M+28,18,0,7); x.lineWidth=5; x.strokeStyle=COURSE; x.stroke();
+  x.beginPath(); x.arc(M+22,M+28,4,0,7); x.fillStyle=COURSE; x.fill();
+  T('PHOTO-O',M+56,M+44,'700 44px '+DISP,INK);
+  var size=88; x.font='700 '+size+'px '+DISP;
+  while(size>40&&x.measureText(run.name).width>W-2*M){size-=4;x.font='700 '+size+'px '+DISP}
+  T(run.name,M,175,'700 '+size+'px '+DISP,INK);
+  var when=''; try{when=new Date(run.end).toLocaleString('fr-FR',{dateStyle:'long',timeStyle:'short'})}catch(e){when=new Date(run.end).toLocaleString()}
+  T(when,M,215,'500 26px '+MONO,MUTED);
+  lines.forEach(function(l,k){T(l,M,262+k*34,RF,INK)});
+  var done=run.obj.filter(function(_,i){return run.shots[i]}).length, d=totalDist();
+  var stats=[['TEMPS',fmt(run.end-run.start)],['OBJECTIFS',done+' / '+n],['DISTANCE',d>0?fmtDist(d):'—']];
+  x.strokeStyle=INK; x.lineWidth=3; x.beginPath(); x.moveTo(M,stTop); x.lineTo(W-M,stTop); x.moveTo(M,headH-5); x.lineTo(W-M,headH-5); x.stroke();
+  var sw=(W-2*M)/3;
+  stats.forEach(function(st,k){
+    var px=M+k*sw+(k?20:0);
+    if(k){x.strokeStyle=LINE;x.lineWidth=2;x.beginPath();x.moveTo(M+k*sw,stTop+10);x.lineTo(M+k*sw,headH-15);x.stroke()}
+    T(st[0],px,stTop+38,'600 20px '+MONO,MUTED);
+    T(st[1],px,stTop+85,'600 44px '+MONO,INK);
+  });
+  /* carte + photos */
+  var imgs=[]; for(var i=0;i<n;i++){imgs.push(run.shots[i]?loadImg(run.shots[i].img):Promise.resolve(null))}
+  var mapP=drawMap(x,M,mapY,W-2*M,mapH,located(),run.track,noTiles);
+  return Promise.all([mapP,Promise.all(imgs)]).then(function(r){
+    var photos=r[1];
+    x.strokeStyle=LINE; x.lineWidth=2; x.strokeRect(M,mapY,W-2*M,mapH);
+    T('Toutes les photos',M,gridTitleY,'700 48px '+DISP,INK);
+    run.obj.forEach(function(label,i){
+      var sh=run.shots[i], im=photos[i], col=i%cols, row=Math.floor(i/cols);
+      var px=M+col*(cw+gap), py=gridY+row*(ch+gap);
+      x.fillStyle='#fffef8'; x.fillRect(px,py,cw,ch); x.strokeStyle=LINE; x.lineWidth=2; x.strokeRect(px,py,cw,ch);
+      if(im){
+        var ar=cw/ih, sw2=im.width, sh2=im.height, sx=0, sy=0;
+        if(sw2/sh2>ar){sw2=sh2*ar;sx=(im.width-sw2)/2}else{sh2=sw2/ar;sy=(im.height-sh2)/2}
+        x.drawImage(im,sx,sy,sw2,sh2,px,py,cw,ih);
+      }else{
+        x.fillStyle='#e4e6d8'; x.fillRect(px,py,cw,ih);
+        T('Non photographié',px+cw/2,py+ih/2+8,'500 26px '+BODY,MUTED,'center');
+      }
+      T(label,px+14,py+ih+40,'700 30px '+BODY,INK);
+      if(sh){
+        T(fmt(sh.t-run.start)+' depuis le départ',px+14,py+ih+76,'500 21px '+MONO,MUTED);
+        T(sh.lat!=null?sh.lat.toFixed(5)+', '+sh.lon.toFixed(5):'position inconnue',px+14,py+ih+106,'500 19px '+MONO,MUTED);
+      }
+    });
+    T('Photo-O · résultat de course',W/2,H-28,'500 20px '+MONO,MUTED,'center');
+    return new Promise(function(res,rej){
+      try{
+        c.toBlob(function(b){b?res(b):rej(new Error('blob'))},'image/jpeg',0.88);
+      }catch(e){rej(e)}
+    });
+  }).then(function(b){
+    var nm=(run.name||'equipe').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'equipe';
+    var dt=new Date(run.end), p2=function(v){return String(v).padStart(2,'0')};
+    saveBlob(b,'Photo-O_'+nm+'_'+dt.getFullYear()+p2(dt.getMonth()+1)+p2(dt.getDate())+'-'+p2(dt.getHours())+p2(dt.getMinutes())+'.jpg');
+    setExp("Image enregistrée dans les téléchargements. Si rien ne s'est téléchargé, appuie sur le bouton ci-dessus.");
+  }).catch(function(){
+    if(!noTiles){exportJpg(true)}
+    else setExp("Impossible de créer l'image. Fais une capture d'écran du résultat.");
+  });
+}
+
+/* ---------- Rendu ---------- */
+function render(){
+  clearInterval(tick);
+  var app=$('#app'), v;
+  app.replaceChildren();
+  if(!run){v='setup';app.append(setupView())}
+  else if(!run.end){v='run';app.append(runView());startGps();tick=setInterval(function(){var c=$('#chrono');if(c&&run)c.textContent=fmt(Date.now()-run.start)},1000)}
+  else{v='result';app.append(resultView());paintResult()}
+  if(v!==lastView){window.scrollTo(0,0);lastView=v}
+}
+render();
+})();
+</script>
+</body>
+</html>
