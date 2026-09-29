@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier construction électronique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout : établi de technicien. Bandeau d'objets, plaque de montage + tiroir à gauche, parcours en 3 étapes à droite, fiche de fabrication pleine largeur en bas. */
+:root{
+  --paper:#EEF2EC; --board:#FBFCF8; --panel:#FFFFFF; --ink:#16242A; --muted:#566870; --line:#D2DBD3;
+  --accent:#16775A; --accent-soft:#DCEFE6; --current:#E4A800; --led:#E0342B; --ledw:#FFF6C8;
+  --ok:#1D8A4B; --bad:#C3322A; --bad-soft:#FBE4E1; --ok-soft:#E0F2E6; --warn-soft:#FFF4D1; --grid:rgba(22,119,90,.07); --scrim:rgba(16,28,24,.55);
+  --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0D1512; --board:#121D19; --panel:#16231E; --ink:#E3ECE6; --muted:#94A69D; --line:#2A3A33;
+  --accent:#42C08F; --accent-soft:#1B3A2E; --current:#FFD13B; --led:#FF5A4E; --ledw:#FFFBEA;
+  --ok:#52C47D; --bad:#FF6F63; --bad-soft:#3A1E1C; --ok-soft:#173826; --warn-soft:#3A3217; --grid:rgba(66,192,143,.07); --scrim:rgba(0,0,0,.65); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0D1512; --board:#121D19; --panel:#16231E; --ink:#E3ECE6; --muted:#94A69D; --line:#2A3A33;
+  --accent:#42C08F; --accent-soft:#1B3A2E; --current:#FFD13B; --led:#FF5A4E; --ledw:#FFFBEA;
+  --ok:#52C47D; --bad:#FF6F63; --bad-soft:#3A1E1C; --ok-soft:#173826; --warn-soft:#3A3217; --grid:rgba(66,192,143,.07); --scrim:rgba(0,0,0,.65); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:24px 48px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;line-height:1.05}
+h2{font-size:1.5rem;font-weight:800}
+h3{font-size:1.08rem;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+header .intro{display:flex;flex-direction:column;gap:6px;max-width:64ch}
+header .intro p{color:var(--muted)}
+.progress{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.85rem;color:var(--muted)}
+.bar{width:140px;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .4s}
+
+/* Objets */
+.objects{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+@media (max-width:1100px){.objects{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:460px){.objects{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.obj{all:unset;box-sizing:border-box;cursor:pointer;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;min-width:0;position:relative}
+.obj:hover{border-color:var(--accent)}
+.obj:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.obj[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.obj svg{flex:none;width:34px;height:34px;color:var(--ink)}
+.obj .t{display:flex;flex-direction:column;min-width:0}
+.obj b{font-size:.92rem;line-height:1.2}
+.dots{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.1em}
+.obj .done{position:absolute;top:6px;right:8px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--ok);color:var(--panel);display:grid;place-items:center;font-size:.66rem;font-weight:700;font-family:var(--mono)}
+.obj .done.partial{background:var(--current);color:#1a1400}
+
+/* Espace de travail */
+.work{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.work{grid-template-columns:minmax(0,1fr)}}
+.left{display:flex;flex-direction:column;gap:16px;min-width:0}
+.boardcard{background:var(--board);border:1.5px solid var(--line);border-radius:14px;overflow:hidden;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px}
+.boardhead{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;border-bottom:1.5px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.boardhead .eyebrow{color:var(--muted)}
+.state{font-family:var(--mono);font-size:.78rem;padding:3px 10px;border-radius:99px;background:var(--line);color:var(--ink)}
+.state.on{background:var(--current);color:#1a1400}
+#board{display:block;width:100%;height:auto}
+#board .wire{fill:none;stroke:var(--ink);stroke-width:3;stroke-linejoin:round}
+#board .flow{fill:none;stroke:var(--current);stroke-width:4;stroke-dasharray:8 16;opacity:0}
+#board.powered .flow{opacity:1;animation:flow .7s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+#board .gap{fill:var(--board)}
+#board .slot{cursor:pointer;outline:none}
+#board .frame{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 5}
+#board .slot:hover .frame,#board .slot:focus-visible .frame{stroke:var(--accent);stroke-width:2.5}
+#board .slot.sel .frame{stroke:var(--accent);stroke-width:3;stroke-dasharray:none;fill:var(--accent-soft)}
+#board .slot.ok .frame{stroke:var(--ok);stroke-width:2.5;stroke-dasharray:none}
+#board .slot.bad .frame{stroke:var(--bad);stroke-width:2.5;stroke-dasharray:none;fill:var(--bad-soft)}
+#board .q{font-family:var(--display);font-weight:800;font-size:26px;fill:var(--muted)}
+#board .lbl{font-family:var(--body);font-weight:700;font-size:13px;fill:var(--ink)}
+#board .lbl.spec{font-family:var(--mono);font-weight:500;font-size:11px;fill:var(--muted)}
+.sym{stroke:var(--ink);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sym .fillink{fill:var(--ink)}
+.sym .thick{stroke-width:6;stroke-linecap:butt}
+.sym text{fill:var(--ink);stroke:none;font-family:var(--display);font-weight:800;font-size:17px}
+.sym .glow{fill:none}
+#board.powered .sym .glow.lamp{fill:var(--current);filter:drop-shadow(0 0 8px var(--current))}
+#board.powered .sym .glow.ledw{fill:var(--ledw);filter:drop-shadow(0 0 7px var(--current)) drop-shadow(0 0 3px var(--current))}
+#board.powered .sym .glow.led{fill:var(--led);stroke:var(--led);filter:drop-shadow(0 0 6px var(--led))}
+.sym .waves,.sym .spin{opacity:0}
+#board.powered .sym .waves{opacity:1;animation:pulse .5s ease-in-out infinite alternate}
+#board.powered .sym .spin{opacity:1}
+.sym .waves path,.sym .spin path{stroke:var(--accent)}
+@keyframes pulse{from{opacity:.25}to{opacity:1}}
+
+/* Tiroir */
+.drawer{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.drawerhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.drawerhead p{color:var(--muted);font-size:.9rem}
+.toggle{display:flex;align-items:center;gap:8px;font-size:.88rem;cursor:pointer;user-select:none}
+.toggle input{width:18px;height:18px;accent-color:var(--accent)}
+.parts{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media (max-width:700px){.parts{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:420px){.parts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.part{all:unset;box-sizing:border-box;cursor:grab;border:1.5px solid var(--line);border-radius:10px;padding:8px 6px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:0;background:var(--board)}
+.part:hover{border-color:var(--accent);background:var(--accent-soft)}
+.part:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.part svg{width:100%;max-width:84px;height:auto}
+.part b{font-size:.78rem;line-height:1.15}
+.part small{font-family:var(--mono);font-size:.66rem;color:var(--muted)}
+.expert .part b{visibility:hidden}
+
+/* Panneau */
+.panel{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.steps li{display:flex;flex-direction:column;gap:2px;padding:7px 9px;border-radius:9px;border:1.5px solid var(--line);font-size:.8rem;line-height:1.2;min-width:0}
+.steps li span{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.steps li.cur{border-color:var(--accent);background:var(--accent-soft)}
+.steps li.done{border-color:var(--ok);background:var(--ok-soft)}
+.steps li.lock{opacity:.55}
+.mission{display:flex;gap:14px;align-items:flex-start}
+.mission svg{flex:none;width:54px;height:54px;color:var(--accent)}
+.mission .t{display:flex;flex-direction:column;gap:6px}
+.need{font-size:.9rem;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;font-weight:700;font-size:.95rem;padding:10px 16px;border-radius:10px;border:1.5px solid var(--line);background:var(--board);color:var(--ink);text-align:center}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.on{background:var(--current);border-color:var(--current);color:#1a1400}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.feedback{display:flex;flex-direction:column;gap:8px}
+.feedback:empty{display:none}
+.msg{border-radius:10px;padding:10px 12px;font-size:.93rem;border-left:4px solid var(--muted);background:var(--board)}
+.msg.bad{border-color:var(--bad);background:var(--bad-soft)}
+.msg.ok{border-color:var(--ok);background:var(--ok-soft)}
+.msg.info{border-color:var(--accent)}
+.block{display:flex;flex-direction:column;gap:10px;border-top:1.5px dashed var(--line);padding-top:14px}
+.status{font-size:.93rem;color:var(--muted)}
+.status.on{color:var(--ink);font-weight:700}
+.tip{font-size:.88rem;color:var(--muted)}
+
+/* Quiz */
+.quizhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.score{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.qcard{display:flex;flex-direction:column;gap:8px;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--board)}
+.qcard.solved{border-color:var(--ok)}
+.qcard p.qq{font-weight:700;font-size:.95rem}
+.qcard .qn{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;padding:8px 11px;border-radius:9px;border:1.5px solid var(--line);background:var(--panel);font-size:.9rem;line-height:1.35}
+.opt:hover{border-color:var(--accent)}
+.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.opt.right{border-color:var(--ok);background:var(--ok-soft);font-weight:700;cursor:default}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);text-decoration:line-through;cursor:default}
+.opt[disabled]{cursor:default}
+.qexp{font-size:.86rem;color:var(--muted)}
+.qexp.bad{color:var(--bad)}
+
+/* Fabrication */
+.fab{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:18px}
+.fabhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.fabhead .t{display:flex;flex-direction:column;gap:4px;max-width:64ch}
+.fabhead p{color:var(--muted)}
+.fabgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.fabgrid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.phase{display:flex;flex-direction:column;gap:8px}
+.phase h3 .n{font-family:var(--mono);font-size:.78rem;color:var(--accent);margin-right:6px}
+ol.list{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px;font-size:.93rem}
+ol.list li::marker{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+ul.plain{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:5px;font-size:.92rem}
+.joint{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--board);font-size:.92rem}
+.joint b.k{font-family:var(--mono);font-size:.74rem;background:var(--accent-soft);color:var(--accent);padding:3px 7px;border-radius:6px;white-space:nowrap}
+.joint small{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+.joints{display:flex;flex-direction:column;gap:6px}
+.safety{border:2px solid var(--bad);border-radius:12px;padding:16px;background:var(--bad-soft);display:flex;flex-direction:column;gap:10px}
+.safety h3{color:var(--bad)}
+.safety ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.safety .burn{font-size:.9rem;font-weight:700;border-top:1.5px solid var(--bad);padding-top:8px}
+.tools{border:1.5px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--board)}
+.hot{background:var(--warn-soft);border-left:4px solid var(--current);border-radius:8px;padding:8px 11px;font-size:.88rem}
+footer{font-size:.82rem;color:var(--muted)}
+
+/* Nomenclature */
+.modal{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:max(24px, env(safe-area-inset-top, 0px)) 16px 24px;overflow-y:auto;z-index:10}
+.sheet{background:var(--panel);color:var(--ink);border-radius:14px;border:1.5px solid var(--line);width:100%;max-width:640px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.sheethead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.close{all:unset;cursor:pointer;font-size:1.4rem;line-height:1;padding:4px 8px;border-radius:8px;color:var(--muted)}
+.close:hover,.close:focus-visible{background:var(--accent-soft);color:var(--ink)}
+.tablewrap{overflow-x:auto;border:1.5px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+th{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--board);font-weight:500}
+td.q{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:500}
+td.r{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+td.d{color:var(--muted);font-size:.85rem}
+.field{display:flex;flex-direction:column;gap:4px;font-size:.88rem;font-weight:700}
+.field input{font:inherit;font-weight:400;padding:9px 11px;border-radius:9px;border:1.5px solid var(--line);background:var(--board);color:var(--ink)}
+.field input:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+#copyArea{width:100%;min-height:120px;font-family:var(--mono);font-size:.78rem;padding:10px;border-radius:9px;border:1.5px solid var(--line);background:var(--board);color:var(--ink)}
+.copied{font-size:.86rem;color:var(--ok);font-weight:700}
+@media (prefers-reduced-motion: reduce){#board.powered .flow,#board.powered .sym .waves{animation:none}.bar i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="intro">
+      <span class="eyebrow">Technologie · du schéma à la soudure</span>
+      <h1>Atelier construction électronique</h1>
+      <p>Choisis l'objet que tu vas fabriquer. Dessine son circuit avec les bons composants, réponds au quiz sur leurs fonctions, puis suis les étapes pour le souder toi-même.</p>
+    </div>
+    <div class="progress"><div class="bar"><i id="barFill"></i></div><span id="progressText">0 / 7 prêts à fabriquer</span></div>
+  </header>
+
+  <nav class="objects" id="objects" aria-label="Objets à fabriquer"></nav>
+
+  <section class="work">
+    <div class="left">
+      <div class="boardcard">
+        <div class="boardhead"><span class="eyebrow">Étape 1 · Schéma du circuit (en série)</span><span class="state" id="stateTag">Circuit ouvert</span></div>
+        <svg id="board" viewBox="36 16 568 318" role="img" aria-label="Schéma du circuit"></svg>
+      </div>
+      <div class="drawer" id="drawer">
+        <div class="drawerhead">
+          <div><h3>Le tiroir à composants</h3><p>Clique un emplacement « ? » puis un composant, ou fais glisser la pièce.</p></div>
+          <label class="toggle"><input type="checkbox" id="expert"> Mode expert : cacher les noms</label>
+        </div>
+        <div class="parts" id="parts"></div>
+      </div>
+    </div>
+
+    <aside class="panel" id="panel">
+      <ol class="steps" id="steps" aria-label="Ton parcours"></ol>
+      <div class="mission">
+        <svg id="missionIcon" viewBox="0 0 48 48" aria-hidden="true"></svg>
+        <div class="t">
+          <span class="eyebrow" id="missionLevel"></span>
+          <h2 id="missionName"></h2>
+        </div>
+      </div>
+      <p id="missionStory"></p>
+      <p class="need" id="missionNeed"></p>
+      <div class="actions" id="schemaActions">
+        <button class="btn primary" id="checkBtn">Vérifier le schéma</button>
+        <button class="btn" id="removeBtn" hidden>Retirer la pièce</button>
+        <button class="btn" id="clearBtn">Tout vider</button>
+      </div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <div class="block" id="test" hidden>
+        <h3>Simule ton objet</h3>
+        <div class="actions" id="controls"></div>
+        <p class="status" id="status" aria-live="polite"></p>
+        <label class="toggle" id="soundRow"><input type="checkbox" id="sound" checked> Activer le son du buzzer</label>
+      </div>
+      <div class="block" id="quiz" hidden>
+        <div class="quizhead"><h3>Étape 2 · Quiz sur les composants</h3><span class="score" id="quizScore"></span></div>
+        <p class="tip">Réponds à toutes les questions pour débloquer la fabrication.</p>
+        <div id="quizList" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div id="quizEnd" hidden class="msg ok"></div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="fab" id="fab" hidden aria-labelledby="fabTitle">
+    <div class="fabhead">
+      <div class="t">
+        <span class="eyebrow">Étape 3 · Fabrication</span>
+        <h2 id="fabTitle"></h2>
+        <p>Demande tes composants au professeur, lis les consignes de sécurité, puis soude ton circuit dans l'ordre indiqué.</p>
+      </div>
+      <button class="btn primary" id="bomBtn">Nomenclature : demander les composants</button>
+    </div>
+    <div class="fabgrid">
+      <div class="col">
+        <div class="phase">
+          <h3><span class="n">A</span>Préparer</h3>
+          <ol class="list" id="prep"></ol>
+        </div>
+        <div class="phase">
+          <h3><span class="n">B</span>Les soudures de ton circuit</h3>
+          <p class="tip">Dans l'ordre du courant : de la borne + des piles jusqu'à la borne −.</p>
+          <div class="joints" id="joints"></div>
+        </div>
+        <div class="phase">
+          <h3><span class="n">C</span>Réussir chaque soudure</h3>
+          <ol class="list" id="howto"></ol>
+          <div id="hotTips" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+        <div class="phase">
+          <h3><span class="n">D</span>Tester et dépanner</h3>
+          <ol class="list" id="testSteps"></ol>
+        </div>
+      </div>
+      <div class="col">
+        <div class="safety" id="safety">
+          <h3>Consignes de sécurité</h3>
+          <ul id="safetyList"></ul>
+          <p class="burn">En cas de brûlure : passe tout de suite la zone sous l'eau froide pendant 10 minutes et préviens le professeur.</p>
+        </div>
+        <div class="tools">
+          <h3>Outillage du poste de soudure</h3>
+          <ul class="plain" id="toolList"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Tous les montages fonctionnent avec 1 ou 2 piles AA de 1,5 V. Symboles conformes aux schémas utilisés au collège.</footer>
+</div>
+
+<div class="modal" id="bomModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="bomTitle">
+    <div class="sheethead">
+      <div><span class="eyebrow">Nomenclature · demande au professeur</span><h2 id="bomTitle"></h2></div>
+      <button class="close" id="bomClose" aria-label="Fermer">×</button>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Rep.</th><th>Qté</th><th>Désignation</th><th>Caractéristiques</th></tr></thead>
+      <tbody id="bomBody"></tbody>
+    </table></div>
+    <p class="tip">L'outillage de soudure (fer, étain, pinces, lunettes) reste au poste de soudure : pas besoin de le demander.</p>
+    <label class="field" for="groupName">Nom(s) ou numéro du groupe
+      <input id="groupName" type="text" placeholder="Ex. : groupe 3, Léa et Yanis" autocomplete="off">
+    </label>
+    <div class="actions">
+      <button class="btn primary" id="copyBtn">Copier la demande</button>
+      <span class="copied" id="copied" hidden></span>
+    </div>
+    <textarea id="copyArea" readonly hidden aria-label="Texte de la demande"></textarea>
+  </div>
+</div>
+
+<script>
+(function(){
+const $=s=>document.getElementById(s);
+
+/* ---------- Composants ---------- */
+// fn : clé de fonction utilisée par le quiz ; q : question du quiz
+const C={
+  pile1:{name:'1 pile 1,5 V',spec:'AA · 1,5 V',art:'La pile de 1,5 V',role:'Alimenter',fn:'alim',q:'À quoi sert la pile ?',info:'Une seule pile AA fournit une tension de 1,5 V. Le grand trait du symbole est la borne +.'},
+  pile2:{name:'2 piles 1,5 V',spec:'en série · 3 V',art:'Le boîtier de 2 piles',role:'Alimenter',fn:'alim',q:'À quoi servent les 2 piles ?',info:'Deux piles AA l’une derrière l’autre (en série) : leurs tensions s’additionnent, 1,5 V + 1,5 V = 3 V.'},
+  inter:{name:'Interrupteur',spec:'marche/arrêt',art:'L’interrupteur',role:'Commander',fn:'inter',q:'À quoi sert l’interrupteur ?',info:'Il ouvre ou ferme le circuit et reste dans la position choisie.'},
+  bp:{name:'Bouton poussoir',spec:'contact bref',art:'Le bouton poussoir',role:'Commander',fn:'bp',q:'À quoi sert le bouton poussoir ?',info:'Il ferme le circuit seulement tant qu’on appuie dessus, puis revient tout seul.'},
+  ils:{name:'ILS',spec:'lame souple',art:'L’ILS',role:'Détecter',fn:'ils',q:'À quoi sert l’ILS ?',info:'Interrupteur à lame souple : deux lames dans une ampoule de verre qui se touchent quand un aimant s’approche.'},
+  res100:{name:'Résistance',spec:'100 Ω',art:'La résistance de 100 Ω',role:'Protéger',fn:'res',q:'À quoi sert la résistance ?',info:'Elle limite l’intensité du courant pour protéger la DEL. Code couleur : marron-noir-marron.'},
+  res10:{name:'Résistance',spec:'10 Ω',art:'La résistance de 10 Ω',role:'Protéger',fn:'res',q:'À quoi sert la résistance ?',info:'Petite résistance qui limite un peu le courant de la DEL. Code couleur : marron-noir-noir.'},
+  delr:{name:'DEL rouge',spec:'5 mm · ≈ 2 V',art:'La DEL rouge',role:'Convertir',fn:'light',q:'À quoi sert la DEL rouge ?',info:'Elle convertit l’énergie électrique en lumière, à partir d’environ 2 V, si le courant la traverse dans le bon sens.'},
+  delb:{name:'DEL blanche',spec:'5 mm · ≈ 3 V',art:'La DEL blanche',role:'Convertir',fn:'light',q:'À quoi sert la DEL blanche ?',info:'Elle convertit l’énergie électrique en lumière blanche. Elle a besoin d’environ 3 V et ne s’allume que dans le bon sens.'},
+  lampe:{name:'Lampe',spec:'E10 · 2,5 V',art:'La lampe',role:'Convertir',fn:'light',q:'À quoi sert la lampe ?',info:'Son filament chauffe et convertit l’énergie électrique en lumière (et en chaleur).'},
+  moteur:{name:'Moteur',spec:'1,5 – 3 V',art:'Le moteur',role:'Convertir',fn:'motor',q:'À quoi sert le moteur ?',info:'Il convertit l’énergie électrique en mouvement de rotation.'},
+  buzzer:{name:'Buzzer',spec:'actif · 3 V',art:'Le buzzer',role:'Convertir',fn:'sound',q:'À quoi sert le buzzer ?',info:'Il convertit l’énergie électrique en son.'}
+};
+const FN={
+  alim:'Fournir l’énergie électrique au circuit',
+  inter:'Ouvrir ou fermer le circuit, et rester dans la position choisie',
+  bp:'Fermer le circuit seulement pendant qu’on appuie dessus',
+  ils:'Fermer le circuit quand un aimant passe tout près',
+  res:'Limiter le courant pour que la DEL ne grille pas',
+  light:'Transformer l’énergie électrique en lumière',
+  motor:'Transformer l’énergie électrique en mouvement de rotation',
+  sound:'Transformer l’énergie électrique en son'
+};
+const ORDER=['pile1','pile2','inter','bp','ils','res100','res10','delr','delb','lampe','moteur','buzzer'];
+
+/* Bornes pour les étapes de soudure : [entrée côté +, sortie côté −] */
+const TERM={
+  inter:['une borne de l’interrupteur','l’autre borne de l’interrupteur'],
+  bp:['une borne du bouton poussoir','l’autre borne du bouton poussoir'],
+  ils:['une patte de l’ILS','l’autre patte de l’ILS'],
+  res100:['une patte de la résistance','l’autre patte de la résistance'],
+  res10:['une patte de la résistance','l’autre patte de la résistance'],
+  delr:['la patte longue (+) de la DEL','la patte courte (−) de la DEL'],
+  delb:['la patte longue (+) de la DEL','la patte courte (−) de la DEL'],
+  lampe:['une borne de la douille','l’autre borne de la douille'],
+  moteur:['une languette du moteur','l’autre languette du moteur'],
+  buzzer:['le fil rouge (+) du buzzer','le fil noir (−) du buzzer']
+};
+const WIRED=['buzzer']; // composants livrés avec des fils
+
+/* ---------- Nomenclature ---------- */
+const B={
+  pile2:[['2','Piles AA','1,5 V alcaline (LR6)'],['1','Boîtier pour 2 piles AA, avec fils','sortie 3 V · fil rouge = +']],
+  pile1:[['1','Pile AA','1,5 V alcaline (LR6)'],['1','Boîtier pour 1 pile AA, avec fils','sortie 1,5 V · fil rouge = +']],
+  inter:[['1','Interrupteur à bascule','2 bornes à souder · marche/arrêt']],
+  bp:[['1','Bouton poussoir','contact momentané, 2 bornes à souder']],
+  lampe:[['1','Ampoule à vis E10','2,5 V · 0,3 A'],['1','Douille E10','avec 2 bornes à souder']],
+  moteur:[['1','Moteur à courant continu','type 130 · 1,5 à 3 V']],
+  buzzer:[['1','Buzzer actif, avec fils','3 V · fil rouge = +']],
+  res100:[['1','Résistance','100 Ω · ¼ W (marron-noir-marron)']],
+  res10:[['1','Résistance','10 Ω · ¼ W (marron-noir-noir)']],
+  delr:[['1','DEL rouge','5 mm · patte longue = +']],
+  delb:[['1','DEL blanche','5 mm · patte longue = +']],
+  ils:[['1','ILS (interrupteur à lame souple)','normalement ouvert'],['1','Aimant','petit aimant néodyme']]
+};
+
+/* ---------- Objets ---------- */
+const ICONS={
+  torche:'<path d="M6 20h20v8H6z"/><path d="M26 18l8-5v22l-8-5"/><path d="M38 16l6-3M39 24h7M38 32l6 3"/><path d="M12 20v8"/>',
+  sonnette:'<rect x="10" y="6" width="28" height="36" rx="5"/><circle cx="24" cy="24" r="8"/><circle cx="24" cy="24" r="3"/>',
+  ventilo:'<circle cx="24" cy="18" r="13"/><circle cx="24" cy="18" r="2.5"/><path d="M24 15.5c-2-5 0-9 3-9M26.5 19c5 1 7 5 5 8M21.5 19.5c-3 4-7 4-9 1"/><path d="M24 31v12M18 43h12"/>',
+  brosse:'<rect x="6" y="30" width="36" height="7" rx="3"/><path d="M10 37v6M16 37v6M22 37v6M28 37v6M34 37v6M40 37v4"/><rect x="14" y="16" width="16" height="14" rx="3"/><path d="M30 23h6"/><circle cx="38" cy="21" r="3"/><path d="M8 12l-3-2M10 8l-1-4"/>',
+  frontale:'<ellipse cx="24" cy="26" rx="18" ry="11"/><rect x="17" y="10" width="14" height="10" rx="3"/><path d="M20 6l-2-3M24 5V1M28 6l2-3"/>',
+  lecture:'<path d="M8 44h22"/><path d="M19 44V28l11-13"/><path d="M25 11l14-5 3 15z"/><path d="M36 25l2 7M42 23l5 5"/>',
+  velo:'<circle cx="11" cy="32" r="8"/><circle cx="37" cy="32" r="8"/><path d="M11 32l8-13h13l5 13M19 19l7 13H11M26 32l6-13M16 15h6"/><rect x="33" y="24" width="3" height="4" rx="1"/>'
+};
+const OBJ=[
+  {id:'torche',name:'Lampe torche',lvl:1,
+   story:'Tu vas fabriquer une lampe torche pour le camping. Elle fonctionne avec des piles AA et une petite ampoule de 2,5 V, et on doit pouvoir l’allumer sans garder le doigt appuyé.',
+   need:[{ok:['pile2'],hint:'Il manque une source d’énergie assez forte pour une ampoule de 2,5 V.'},{ok:['inter'],hint:'Il manque de quoi allumer et éteindre la lampe sans garder le doigt appuyé.'},{ok:['lampe'],hint:'Il manque le composant qui produit la lumière.'}],
+   anchors:['L','T2','R'],ctrl:['sw'],out:'la lampe éclaire',
+   wrong:{pile1:'Avec une seule pile de 1,5 V, l’ampoule de 2,5 V brille à peine. Il faut environ 3 V.',bp:'Avec un bouton poussoir, il faudrait garder le doigt appuyé tout le temps pour éclairer.',delr:'Une DEL branchée sans résistance risque de griller. Cette lampe torche utilise une ampoule.',delb:'Une DEL branchée sans résistance risque de griller. Cette lampe torche utilise une ampoule.'},
+   extraQ:{q:'Pourquoi utilise-t-on 2 piles de 1,5 V ?',a:'Pour obtenir 3 V, la tension dont l’ampoule a besoin',d:['Pour que la lampe s’éteigne toute seule','Parce qu’une pile ne peut jamais être utilisée seule'],e:'En série, les tensions s’additionnent : 1,5 V + 1,5 V = 3 V.'},
+   hot:['Soude vite sur les bornes de la douille, puis visse l’ampoule une fois la douille refroidie.'],
+   learn:'Quand l’interrupteur est fermé, le courant sort par la borne + des piles, traverse la lampe et revient à la borne −.'},
+  {id:'sonnette',name:'Sonnette',lvl:1,
+   story:'Fabrique une sonnette pour la porte de ta chambre. Son buzzer a besoin d’environ 3 V, et elle ne doit sonner que pendant qu’on appuie.',
+   need:[{ok:['pile2'],hint:'Il manque une source d’énergie de 3 V.'},{ok:['bp'],hint:'Il manque ce sur quoi le visiteur appuie, et qui revient tout seul quand on le relâche.'},{ok:['buzzer'],hint:'Il manque le composant qui produit le son.'}],
+   anchors:['L','T2','R'],ctrl:['push'],out:'le buzzer sonne',
+   wrong:{pile1:'Le buzzer actif a besoin d’environ 3 V : une seule pile de 1,5 V ne suffit pas.',inter:'Avec un interrupteur, la sonnette sonnerait sans arrêt jusqu’à ce que quelqu’un revienne l’éteindre.',moteur:'Un moteur tourne mais ne sonne pas.'},
+   extraQ:{q:'Que se passe-t-il quand le visiteur relâche le bouton ?',a:'Le circuit s’ouvre et le buzzer s’arrête',d:['Le buzzer continue de sonner','Les piles se rechargent'],e:'Le bouton poussoir revient tout seul en position ouverte : plus de courant, plus de son.'},
+   hot:['Le buzzer a un sens : son fil rouge doit être relié du côté du + des piles.'],
+   learn:'Le bouton poussoir ne ferme le circuit que pendant l’appui.'},
+  {id:'ventilo',name:'Ventilateur de poche',lvl:2,
+   story:'Fabrique un petit ventilateur à emporter l’été. Il fonctionne avec 2 piles AA pour souffler fort.',
+   need:[{ok:['pile2'],hint:'Il manque la réserve d’énergie : relis combien de piles utilise ce ventilateur.'},{ok:['inter'],hint:'Il manque la commande marche/arrêt.'},{ok:['moteur'],hint:'Il manque ce qui fait tourner l’hélice.'}],
+   anchors:['L','T2','R'],ctrl:['sw'],out:'l’hélice tourne',
+   wrong:{pile1:'Avec une seule pile, le moteur tourne deux fois moins vite : ce ventilateur utilise 2 piles pour souffler plus fort.',bp:'Avec un bouton poussoir, il faudrait garder le doigt appuyé pour avoir de l’air.'},
+   extra:[['1','Hélice','pour axe de 2 mm']],
+   extraQ:{q:'Comment faire tourner l’hélice dans l’autre sens ?',a:'Inverser les deux fils du moteur',d:['Ajouter une troisième pile','Retourner l’interrupteur'],e:'Le sens de rotation d’un moteur dépend du sens du courant qui le traverse.'},
+   hot:['Soude rapidement sur les languettes du moteur : elles sont fixées dans du plastique qui fond.','Monte l’hélice seulement à la fin, et garde les doigts loin quand elle tourne.'],
+   learn:'Le moteur convertit l’énergie électrique en énergie mécanique : l’hélice tourne.'},
+  {id:'brosse',name:'Robot brosse',lvl:2,
+   story:'Fabrique un petit robot qui avance tout seul en vibrant sur une brosse. Il ne porte qu’une seule pile AA pour rester léger.',
+   need:[{ok:['pile1'],hint:'Il manque la source d’énergie : relis combien de piles porte le robot.'},{ok:['inter'],hint:'Il manque la commande marche/arrêt.'},{ok:['moteur'],hint:'Il manque ce qui fait vibrer le robot.'}],
+   anchors:['L','T2','R'],ctrl:['sw'],out:'le robot vibre et avance',
+   wrong:{pile2:'Deux piles rendraient le robot trop lourd : une seule pile de 1,5 V suffit pour faire vibrer le moteur.',buzzer:'Un buzzer fait du bruit, mais il ne fait pas bouger le robot.',bp:'Avec un bouton poussoir, il faudrait tenir le robot pour qu’il avance.'},
+   extra:[['1','Brosse à récurer','le corps du robot'],['1','Masselotte','gros écrou ou goutte de colle, fixé de travers sur l’axe']],
+   extraQ:{q:'Qu’est-ce qui fait vibrer le robot ?',a:'Une masse fixée de travers sur l’axe du moteur',d:['Le courant qui secoue la pile','L’interrupteur qui s’ouvre et se ferme très vite'],e:'La masse décentrée déséquilibre la rotation : tout le robot tremble, et les poils de la brosse le font avancer.'},
+   hot:['Soude rapidement sur les languettes du moteur : elles sont fixées dans du plastique qui fond.'],
+   learn:'Un moteur tourne dès 1,5 V. Les téléphones vibrent grâce au même principe.'},
+  {id:'frontale',name:'Lampe frontale',lvl:3,
+   story:'Fabrique une lampe frontale pour la randonnée de nuit. Elle éclaire avec une DEL rouge, qui a besoin d’environ 2 V et doit être protégée.',
+   need:[{ok:['pile2'],hint:'Il manque une source d’énergie de plus de 2 V.'},{ok:['inter'],hint:'Il manque la commande marche/arrêt.'},{ok:['res100'],hint:'Il manque le composant qui limite le courant pour que la DEL rouge ne grille pas.'},{ok:['delr'],hint:'Il manque la source de lumière rouge qui consomme très peu.'}],
+   anchors:['L','T1','T3','R'],ctrl:['sw'],out:'la DEL éclaire',
+   wrong:{pile1:'Une DEL rouge a besoin d’environ 2 V pour s’allumer : une pile de 1,5 V ne suffit pas.',lampe:'Cette lampe frontale utilise une DEL : elle consomme beaucoup moins d’énergie qu’une ampoule.',res10:'Avec 10 Ω, le courant dans la DEL rouge serait trop fort : (3 V − 2 V) ÷ 10 Ω = 0,1 A, dix fois trop. Elle grillerait.',delb:'La lampe frontale utilise une DEL rouge : sa lumière n’éblouit pas les autres randonneurs la nuit.'},
+   extraQ:{q:'Comment reconnaître la patte + de la DEL ?',a:'C’est la patte la plus longue',d:['C’est la patte la plus courte','Les deux pattes sont identiques'],e:'La patte longue (anode) se relie du côté du + des piles. Le côté plat du boîtier de la DEL indique la patte −.'},
+   hot:['DEL : soude en moins de 3 secondes et tiens la patte avec une pince plate entre la DEL et la soudure : la pince absorbe la chaleur.','Repère la patte longue de la DEL avant de couper quoi que ce soit.'],
+   learn:'La résistance de 100 Ω limite le courant : (3 V − 2 V) ÷ 100 Ω = 0,01 A, soit 10 mA.'},
+  {id:'lecture',name:'Lampe de lecture',lvl:3,
+   story:'Fabrique une petite lampe pour lire le soir. Elle éclaire avec une DEL blanche, qui a besoin d’environ 3 V. Attention au choix de la résistance.',
+   need:[{ok:['pile2'],hint:'Il manque une source d’énergie d’environ 3 V.'},{ok:['inter'],hint:'Il manque la commande marche/arrêt.'},{ok:['res10'],hint:'Il manque une petite résistance de protection. Compare les deux valeurs du tiroir.'},{ok:['delb'],hint:'Il manque la source de lumière blanche.'}],
+   anchors:['L','T1','T3','R'],ctrl:['sw'],out:'la DEL blanche éclaire',
+   wrong:{pile1:'Une DEL blanche a besoin d’environ 3 V : avec une seule pile de 1,5 V, elle reste éteinte.',res100:'Avec 100 Ω, la DEL blanche brillerait à peine. Les piles donnent 3 V et la DEL en utilise déjà environ 3 V : il ne reste presque rien pour pousser le courant à travers une grosse résistance.',delr:'Pour lire, on veut une lumière blanche : la lumière rouge déforme les couleurs des pages.',lampe:'Cette lampe utilise une DEL blanche : elle chauffe moins et consomme moins qu’une ampoule.'},
+   extraQ:{q:'Pourquoi la résistance ne fait-elle que 10 Ω ?',a:'La DEL blanche utilise déjà presque tous les 3 V des piles',d:['Pour que la DEL chauffe davantage','Parce que les résistances de 100 Ω n’existent pas'],e:'Il reste très peu de tension pour la résistance : une grosse valeur empêcherait presque tout le courant de passer.'},
+   hot:['DEL : soude en moins de 3 secondes et tiens la patte avec une pince plate entre la DEL et la soudure : la pince absorbe la chaleur.','Repère la patte longue de la DEL avant de couper quoi que ce soit.'],
+   learn:'La lumière baisse vite quand les piles s’usent, car la DEL blanche a besoin de presque toute leur tension.'},
+  {id:'velo',name:'Compteur de vélo',lvl:3,
+   story:'Fabrique un compteur de tours pour ton vélo. Un aimant fixé sur un rayon passe devant un capteur fixé sur la fourche, et le compteur fait « bip » à chaque tour. Le buzzer a besoin de 3 V.',
+   need:[{ok:['pile2'],hint:'Il manque une source d’énergie de 3 V.'},{ok:['inter'],hint:'Il manque de quoi mettre le compteur en marche ou l’arrêter.'},{ok:['ils'],hint:'Il manque le capteur qui réagit à l’aimant fixé sur la roue.'},{ok:['buzzer'],hint:'Il manque le composant qui fait « bip ».'}],
+   anchors:['L','T1','T3','R'],ctrl:['sw','wheel'],out:'le buzzer bipe',
+   wrong:{pile1:'Le buzzer actif a besoin d’environ 3 V : une seule pile de 1,5 V ne suffit pas.',bp:'Un bouton poussoir doit être appuyé par quelqu’un. Ici, c’est l’aimant de la roue qui doit fermer le circuit.',lampe:'Une lampe ne ferait pas de bip.'},
+   extraQ:{q:'Quand le buzzer bipe-t-il ?',a:'Chaque fois que l’aimant passe devant l’ILS',d:['Tout le temps, dès qu’on met en marche','Seulement quand le vélo s’arrête'],e:'L’aimant ferme l’ILS une fraction de seconde à chaque tour : un bip par tour de roue.'},
+   hot:['ILS : l’ampoule est en verre. Plie ses pattes avec une pince plate, à au moins 3 mm du verre, et soude vite.','Le buzzer a un sens : son fil rouge du côté du + des piles.'],
+   learn:'Un vrai compteur de vélo compte ces impulsions pour calculer la vitesse et la distance.'}
+];
+const A={L:{x:110,y:185,r:-90},T1:{x:230,y:70,r:0},T2:{x:320,y:70,r:0},T3:{x:410,y:70,r:0},R:{x:530,y:185,r:90}};
+const LOOP=['L','T1','T2','T3','R'];
+
+/* ---------- Fabrication : textes communs ---------- */
+const HOWTO=[
+  'Allume le fer, pose-le sur son support et attends qu’il soit chaud (environ 2 minutes). Humidifie l’éponge.',
+  'Nettoie la pointe du fer (la panne) en la frottant sur l’éponge humide.',
+  'Immobilise les pièces dans la troisième main : elles ne doivent pas bouger pendant la soudure.',
+  'Pose la panne contre la patte et la borne en même temps, pendant 2 secondes, pour les chauffer toutes les deux.',
+  'Approche le fil d’étain de l’autre côté, contre les pièces chaudes et non contre la panne. Laisse fondre un peu d’étain.',
+  'Retire d’abord l’étain, puis le fer. Ne bouge plus rien pendant 3 secondes, le temps que l’étain se solidifie.',
+  'Contrôle : une bonne soudure est brillante, en forme de petit cône. Si elle est terne ou en boule, recommence.',
+  'Coupe les pattes qui dépassent avec la pince coupante, en tenant le bout pour qu’il ne saute pas.'
+];
+const SAFETY=[
+  'Porte des lunettes de protection pendant la soudure et quand tu coupes des pattes.',
+  'La panne du fer dépasse 300 °C : tiens le fer uniquement par le manche, ne touche jamais la panne ni la soudure qui vient d’être faite.',
+  'Repose toujours le fer sur son support, jamais sur la table, même pour une seconde.',
+  'Attache tes cheveux, relève tes manches, enlève écharpe et bracelets.',
+  'Ne respire pas la fumée : travaille avec l’aspirateur de fumées ou la fenêtre ouverte, et recule la tête.',
+  'Les piles restent hors du boîtier pendant toute la soudure. Ne soude jamais directement sur une pile.',
+  'Fais passer le câble du fer loin du passage, pour que personne ne l’accroche.',
+  'Lave-toi les mains après avoir touché l’étain, et ne mange pas au poste de soudure.',
+  'À la fin, éteins et débranche le fer, puis laisse-le refroidir sur son support.'
+];
+const TOOLS=['Fer à souder avec support et éponge','Étain sans plomb, Ø 0,8 mm','Troisième main (support avec pinces)','Pince à dénuder','Pince coupante','Pince plate','Lunettes de protection','Aspirateur de fumées ou fenêtre ouverte','Décapeur thermique ou briquet (manipulé par le professeur) pour la gaine'];
+
+/* ---------- Symboles ---------- */
+const ln=(x1,y1,x2,y2,c)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"${c?` class="${c}"`:''}/>`;
+const leads=a=>ln(-45,0,-a,0)+ln(a,0,45,0);
+function arrow(x1,y1,x2,y2){const ang=Math.atan2(y2-y1,x2-x1),h=6;
+  const p1=[x2-h*Math.cos(ang-0.5),y2-h*Math.sin(ang-0.5)],p2=[x2-h*Math.cos(ang+0.5),y2-h*Math.sin(ang+0.5)];
+  return ln(x1,y1,x2,y2)+`<path d="M${p1[0].toFixed(1)},${p1[1].toFixed(1)} L${x2},${y2} L${p2[0].toFixed(1)},${p2[1].toFixed(1)}"/>`;}
+const plus=(x,y)=>`<g style="stroke-width:1.8">${ln(x-4,y,x+4,y)+ln(x,y-4,x,y+4)}</g>`;
+function sym(id,st){st=st||{};
+  switch(id){
+    case 'pile1': return ln(-45,0,-6,0)+ln(6,0,45,0)+ln(-6,-10,-6,10,'thick')+ln(6,-20,6,20)+plus(18,-18);
+    case 'pile2': return ln(-45,0,-18,0)+ln(18,0,45,0)+ln(-18,-9,-18,9,'thick')+ln(-8,-18,-8,18)+ln(8,-9,8,9,'thick')+ln(18,-18,18,18)+ln(-8,0,8,0)+plus(28,-18);
+    case 'inter': return leads(15)+'<circle cx="-15" r="2.5" class="fillink"/><circle cx="15" r="2.5" class="fillink"/>'+(st.closed?ln(-15,0,15,0):ln(-15,0,12,-17));
+    case 'bp': {const y=st.closed?0:-10;return leads(15)+'<circle cx="-15" r="2.5" class="fillink"/><circle cx="15" r="2.5" class="fillink"/>'+ln(-17,y,17,y)+ln(0,y,0,y-14)+ln(-7,y-14,7,y-14);}
+    case 'ils': return leads(16)+'<ellipse rx="28" ry="14"/>'+(st.closed?ln(-16,0,16,0):ln(-16,0,10,-8)+ln(4,0,16,0));
+    case 'res100': case 'res10': return leads(20)+'<rect x="-20" y="-8" width="40" height="16"/>';
+    case 'delr': case 'delb': return leads(10)+ln(-10,0,10,0)+'<path class="glow '+(id==='delb'?'ledw':'led')+'" d="M-10,-12 L-10,12 L10,0 Z"/>'+ln(10,-12,10,12)+arrow(2,-14,14,-28)+arrow(10,-10,22,-24);
+    case 'lampe': return leads(16)+'<circle r="16" class="glow lamp"/>'+ln(-11.3,-11.3,11.3,11.3)+ln(-11.3,11.3,11.3,-11.3);
+    case 'moteur': return leads(16)+'<circle r="16"/><text x="0" y="6" text-anchor="middle">M</text>'+
+      '<g class="spin"><path d="M-10,-21 A23,23 0 0 1 21,-10"/><path d="M10,21 A23,23 0 0 1 -21,10"/><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="0.8s" repeatCount="indefinite"/></g>';
+    case 'buzzer': return leads(16)+'<path d="M-16,0 A16,16 0 0 1 16,0 Z"/>'+'<g class="waves"><path d="M-12,-24 A20,20 0 0 1 12,-24"/><path d="M-18,-32 A28,28 0 0 1 18,-32"/></g>';
+  }
+  return '';
+}
+
+/* ---------- État ---------- */
+const KEY='atelier-circuits-v3';
+let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+const state={obj:'torche',placed:{},sel:null,result:null,success:false,sw:false,push:false,wheel:false,mag:false,turns:0,fb:[],
+  done:new Set(saved.done||[]),quizDone:new Set(saved.quizDone||[]),expert:!!saved.expert,group:saved.group||'',quiz:{}};
+OBJ.forEach(o=>{const s=(saved.placed||{})[o.id];state.placed[o.id]=Array.isArray(s)&&s.length===o.need.length?s.map(x=>C[x]?x:null):new Array(o.need.length).fill(null);});
+if(!saved.placed)state.placed.torche[0]='pile2';
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({done:[...state.done],quizDone:[...state.quizDone],expert:state.expert,group:state.group,placed:state.placed}));}catch(e){}}
+const cur=()=>OBJ.find(o=>o.id===state.obj);
+
+/* ---------- Son ---------- */
+let actx=null,osc=null;
+function sound(on){
+  const want=on&&$('sound').checked;
+  if(want&&!osc){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    osc=actx.createOscillator();const g=actx.createGain();osc.type='square';osc.frequency.value=state.obj==='velo'?1200:660;g.gain.value=0.035;
+    osc.connect(g).connect(actx.destination);osc.start();}catch(e){osc=null;}}
+  if(!want&&osc){try{osc.stop();}catch(e){} osc=null;}
+}
+
+/* ---------- Roue ---------- */
+let wheelTimer=null;
+function stopWheel(){clearInterval(wheelTimer);wheelTimer=null;state.wheel=false;state.mag=false;}
+function startWheel(){stopWheel();state.wheel=true;
+  wheelTimer=setInterval(()=>{state.mag=true;state.turns++;renderBoard();renderStatus();
+    setTimeout(()=>{state.mag=false;renderBoard();renderStatus();},220);},1000);}
+
+/* ---------- Vérification du schéma ---------- */
+function perms(a){if(a.length<=1)return[a];const r=[];a.forEach((x,i)=>perms(a.slice(0,i).concat(a.slice(i+1))).forEach(p=>r.push([x].concat(p))));return r;}
+function evaluate(){
+  const o=cur(),pl=state.placed[o.id],n=o.need.length;
+  let best=null,bs=-1;
+  perms([...Array(n).keys()]).forEach(p=>{let s=0;p.forEach((k,i)=>{if(pl[i]&&o.need[k].ok.includes(pl[i]))s++;});if(s>bs){bs=s;best=p;}});
+  const res=pl.map((c,i)=>c&&o.need[best[i]].ok.includes(c)?'ok':(c?'bad':null));
+  const missing=best.filter((k,i)=>res[i]!=='ok').map(k=>o.need[k]);
+  return {res,missing,success:bs===n};
+}
+function check(){
+  const o=cur(),pl=state.placed[o.id];
+  const ev=evaluate();state.result=ev.res;state.success=ev.success;
+  const fb=[];
+  if(ev.success){
+    fb.push({c:'ok',t:'Bravo, ton schéma est correct ! Simule ton objet, puis réponds au quiz juste en dessous.'});
+    state.done.add(o.id);persist();
+  }else{
+    const empty=pl.filter(x=>!x).length;
+    if(empty) fb.push({c:'info',t:`Il reste ${empty} emplacement${empty>1?'s':''} vide${empty>1?'s':''}.`});
+    const seen=new Set();pl.forEach((c,i)=>{if(c&&ev.res[i]==='ok')seen.add(c);});
+    pl.forEach((c,i)=>{ if(!c||ev.res[i]!=='bad')return;
+      let t;
+      if(seen.has(c)) t=`${C[c].name} : il y en a déjà un dans le circuit, un seul suffit.`;
+      else if(o.wrong[c]) t=`${C[c].name} : ${o.wrong[c]}`;
+      else t=`${C[c].art} n’a pas sa place ici. Rappel : ${C[c].info.charAt(0).toLowerCase()+C[c].info.slice(1)}`;
+      fb.push({c:'bad',t});
+    });
+    ev.missing.forEach(m=>fb.push({c:'info',t:'Indice : '+m.hint}));
+  }
+  state.fb=fb;render();
+  if(window.innerWidth<900){try{$('feedback').scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}}
+}
+
+/* ---------- Quiz ---------- */
+function seeded(str){let h=2166136261;for(const ch of str){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return()=>{h=Math.imul(h^(h>>>15),2246822507)>>>0;h^=h>>>13;return (h>>>0)/4294967296;};}
+function shuffle(arr,rnd){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildQuiz(o){
+  const pl=state.placed[o.id],qs=[];const rnd=seeded(o.id+pl.join());
+  const order=['Alimenter','Commander','Détecter','Protéger','Convertir'];
+  const comps=[...new Set(pl)].sort((a,b)=>order.indexOf(C[a].role)-order.indexOf(C[b].role));
+  const inMontage=comps.map(c=>C[c].fn);
+  comps.forEach(c=>{
+    const right=FN[C[c].fn];
+    const near=shuffle(inMontage.filter(f=>f!==C[c].fn),rnd);
+    const far=shuffle(Object.keys(FN).filter(f=>f!==C[c].fn&&!inMontage.includes(f)),rnd);
+    const d=near.concat(far).slice(0,2).map(f=>FN[f]);
+    qs.push({q:C[c].q,opts:shuffle([right,...d],rnd),a:right,e:C[c].info});
+  });
+  const x=o.extraQ;qs.push({q:x.q,opts:shuffle([x.a,...x.d],rnd),a:x.a,e:x.e});
+  return {qs,ans:qs.map(()=>({wrong:[],ok:false,first:null}))};
+}
+function getQuiz(){const o=cur();if(!state.quiz[o.id]){state.quiz[o.id]=buildQuiz(o);
+  if(state.quizDone.has(o.id))state.quiz[o.id].ans.forEach(a=>{a.ok=true;a.first=true;});}
+  return state.quiz[o.id];}
+function renderQuiz(){
+  const o=cur();if(!state.success){$('quiz').hidden=true;return;}
+  $('quiz').hidden=false;const Q=getQuiz();
+  const solved=Q.ans.filter(a=>a.ok).length,first=Q.ans.filter(a=>a.first===true).length;
+  $('quizScore').textContent=`${solved} / ${Q.qs.length} trouvées`;
+  $('quizList').innerHTML=Q.qs.map((q,i)=>{const a=Q.ans[i];
+    return `<div class="qcard ${a.ok?'solved':''}"><span class="qn">Question ${i+1}</span><p class="qq">${q.q}</p>
+      ${q.opts.map((t,j)=>{const cls=a.ok&&t===q.a?'right':a.wrong.includes(t)?'wrong':'';const dis=a.ok||a.wrong.includes(t);
+        return `<button class="opt ${cls}" data-q="${i}" data-o="${j}" ${dis?'disabled':''}>${t}</button>`;}).join('')}
+      ${a.ok?`<p class="qexp">${q.e}</p>`:a.wrong.length?'<p class="qexp bad">Ce n’est pas ça. Relis le rôle de ce composant dans ton objet et essaie une autre réponse.</p>':''}
+    </div>`;}).join('');
+  const end=$('quizEnd');
+  if(solved===Q.qs.length){
+    end.hidden=false;end.innerHTML=`Quiz terminé : ${first} / ${Q.qs.length} du premier coup. ${o.learn} <br><br><button class="btn primary" id="goFab">Passer à la fabrication</button>`;
+  }else end.hidden=true;
+}
+$('quizList').addEventListener('click',e=>{
+  const b=e.target.closest('.opt');if(!b||b.disabled)return;
+  const Q=getQuiz(),i=+b.dataset.q,q=Q.qs[i],a=Q.ans[i],t=q.opts[+b.dataset.o];
+  if(t===q.a){a.ok=true;if(a.first===null)a.first=true;}else{a.wrong.push(t);if(a.first===null)a.first=false;}
+  if(Q.ans.every(x=>x.ok)){state.quizDone.add(state.obj);persist();}
+  render();
+  const card=$('quizList').children[i];card&&card.querySelector('.opt:not([disabled])')?.focus?.();
+});
+$('quizEnd').addEventListener('click',e=>{if(e.target.id==='goFab'){try{$('fab').scrollIntoView({behavior:'smooth',block:'start'});}catch(err){}}});
+
+/* ---------- Fabrication ---------- */
+function loopOrder(){
+  const o=cur(),pl=state.placed[o.id];
+  const idx=o.anchors.map((a,i)=>i).sort((a,b)=>LOOP.indexOf(o.anchors[a])-LOOP.indexOf(o.anchors[b]));
+  const seq=idx.map(i=>pl[i]);const p=seq.findIndex(c=>c==='pile1'||c==='pile2');
+  return seq.slice(p).concat(seq.slice(0,p));
+}
+const isDirect=(a,b)=>(a.startsWith('res')&&b.startsWith('del'))||(a.startsWith('del')&&b.startsWith('res'));
+function wiresNeeded(others){let n=0;for(let k=0;k<others.length-1;k++)if(!isDirect(others[k],others[k+1]))n++;return n;}
+function bomRows(){
+  const o=cur(),seq=loopOrder(),others=seq.slice(1);
+  let rows=[];seq.forEach(c=>rows=rows.concat(B[c]));
+  if(o.extra)rows=rows.concat(o.extra);
+  const wires=wiresNeeded(others);
+  if(wires)rows.push([String(wires),'Fil de câblage souple','10 cm chacun']);
+  rows.push([String(seq.length),'Gaine thermorétractable','morceaux de 2 cm, Ø 3 mm']);
+  return rows;
+}
+function renderFab(){
+  const o=cur(),on=state.success&&state.quizDone.has(o.id);
+  $('fab').hidden=!on;if(!on)return;
+  $('fabTitle').textContent={torche:'Fabrique ta lampe torche',sonnette:'Fabrique ta sonnette',ventilo:'Fabrique ton ventilateur de poche',brosse:'Fabrique ton robot brosse',frontale:'Fabrique ta lampe frontale',lecture:'Fabrique ta lampe de lecture',velo:'Fabrique ton compteur de vélo'}[o.id];
+  const seq=loopOrder(),others=seq.slice(1),pileName=seq[0]==='pile1'?'du boîtier de pile':'du boîtier de piles';
+  $('prep').innerHTML=[
+    'Ouvre la nomenclature et demande tes composants au professeur. Vérifie que tout est là.',
+    'Enlève les piles du boîtier : elles ne seront remises qu’au test final.',
+    `Coupe ${wiresNeeded(others)} morceau${wiresNeeded(others)>1?'x':''} de fil de câblage de 10 cm et dénude 5 mm à chaque bout. Torsade les brins pour qu’ils ne s’écartent pas.`,
+    'Pour protéger chaque soudure, enfile un morceau de gaine sur le fil avant de souder. Une fois la soudure froide, fais glisser la gaine dessus et demande au professeur de la chauffer : elle se rétracte.',
+    'Pose tes composants sur la table dans l’ordre du schéma, pour ne pas te tromper de branchement.'
+  ].map(t=>`<li>${t}</li>`).join('');
+  const J=[];
+  const first=others[0],last=others[others.length-1];
+  J.push({t:`Relie le fil rouge (+) ${pileName} à ${TERM[first][0]}.`,w:WIRED.includes(first)});
+  for(let k=0;k<others.length-1;k++){
+    const a=others[k],b=others[k+1];
+    const direct=isDirect(a,b);
+    J.push({t:direct?`Soude directement ${TERM[a][1]} à ${TERM[b][0]} (pas besoin de fil : torsade les deux pattes ensemble).`
+                 :`Avec un fil de câblage, relie ${TERM[a][1]} à ${TERM[b][0]}.`,w:WIRED.includes(a)||WIRED.includes(b)});
+  }
+  J.push({t:`Relie ${TERM[last][1]} au fil noir (−) ${pileName}.`,w:WIRED.includes(last)});
+  $('joints').innerHTML=J.map((j,i)=>`<div class="joint"><b class="k">Soudure ${i+1}</b><div>${j.t.replace(/ à le /g,' au ')}${j.w?'<small>Soudure fil contre fil : enfile la gaine avant de souder.</small>':''}</div></div>`).join('');
+  $('howto').innerHTML=HOWTO.map(t=>`<li>${t}</li>`).join('');
+  $('hotTips').innerHTML=(o.hot||[]).map(t=>`<p class="hot">${t}</p>`).join('');
+  const act={torche:'Ferme l’interrupteur : la lampe doit s’allumer.',sonnette:'Appuie sur le bouton : le buzzer doit sonner, puis s’arrêter quand tu relâches.',ventilo:'Ferme l’interrupteur : l’hélice doit tourner.',brosse:'Ferme l’interrupteur et pose le robot sur une table : il doit vibrer et avancer.',frontale:'Ferme l’interrupteur : la DEL rouge doit s’allumer.',lecture:'Ferme l’interrupteur : la DEL blanche doit s’allumer.',velo:'Ferme l’interrupteur et passe l’aimant devant l’ILS : le buzzer doit biper.'}[o.id];
+  const tr=['Si rien ne se passe, retire les piles avant de chercher la panne.','Vérifie chaque soudure : tire doucement sur les fils, aucun ne doit bouger.'];
+  if(seq.some(c=>c.startsWith('del')))tr.push('Vérifie le sens de la DEL : la patte longue doit être du côté du + des piles.');
+  if(seq.includes('buzzer'))tr.push('Vérifie le sens du buzzer : son fil rouge doit être du côté du + des piles.');
+  if(seq.includes('lampe'))tr.push('Vérifie que l’ampoule est bien vissée au fond de la douille.');
+  tr.push('Essaie avec des piles neuves.','Si un composant ou un fil chauffe, retire tout de suite les piles et appelle le professeur : il y a un court-circuit.');
+  $('testSteps').innerHTML=[`Contrôle ton montage avec le professeur avant de mettre les piles.`,`Mets les piles dans le boîtier, en respectant les signes + et −.`,act].concat(tr).map(t=>`<li>${t}</li>`).join('');
+  $('safetyList').innerHTML=SAFETY.map(t=>`<li>${t}</li>`).join('');
+  $('toolList').innerHTML=TOOLS.map(t=>`<li>${t}</li>`).join('');
+}
+
+/* ---------- Rendu ---------- */
+function powered(){const o=cur();if(!state.success)return false;
+  return o.ctrl.every(k=>k==='sw'?state.sw:k==='push'?state.push:k==='wheel'?state.mag:true);}
+function renderObjects(){
+  $('objects').innerHTML=OBJ.map(o=>{const q=state.quizDone.has(o.id),d=state.done.has(o.id);
+    return `<button class="obj" data-id="${o.id}" aria-pressed="${o.id===state.obj}">
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[o.id]}</svg>
+    <span class="t"><b>${o.name}</b><span class="dots" aria-label="Niveau ${o.lvl} sur 3">${'●'.repeat(o.lvl)}${'○'.repeat(3-o.lvl)}</span></span>
+    ${q?'<span class="done" title="Prêt à fabriquer" aria-label="prêt à fabriquer">✓</span>':d?'<span class="done partial" title="Schéma réussi, quiz à faire" aria-label="quiz à faire">1/2</span>':''}</button>`;}).join('');
+  const d=state.quizDone.size;$('barFill').style.width=(d/OBJ.length*100)+'%';$('progressText').textContent=`${d} / ${OBJ.length} prêts à fabriquer`;
+}
+function renderParts(){
+  $('parts').innerHTML=ORDER.map(id=>`<button class="part" draggable="true" data-id="${id}" aria-label="${C[id].name} ${C[id].spec}">
+    <svg viewBox="-50 -46 100 70" aria-hidden="true"><g class="sym">${sym(id)}</g></svg><b>${C[id].name}</b><small>${C[id].spec}</small></button>`).join('');
+  $('drawer').classList.toggle('expert',state.expert);$('expert').checked=state.expert;
+}
+function renderBoard(){
+  const o=cur(),pl=state.placed[o.id],pw=powered();
+  const svg=$('board');svg.classList.toggle('powered',pw);
+  let h='<path class="wire" d="M110,70 H530 V300 H110 Z"/><path class="flow" d="M110,70 H530 V300 H110 Z"/>';
+  o.anchors.forEach((ak,i)=>{const a=A[ak],c=pl[i];
+    const cls=['slot'];if(state.sel===i)cls.push('sel');if(state.result&&state.result[i])cls.push(state.result[i]);
+    const st={closed:c==='inter'?(state.success&&state.sw):c==='bp'?(state.success&&state.push):c==='ils'?(state.success&&state.mag):false};
+    let lx=0,ly=54,anc='middle';if(ak==='L'){lx=52;ly=-4;anc='start';}if(ak==='R'){lx=-52;ly=-4;anc='end';}
+    h+=`<g class="${cls.join(' ')}" data-i="${i}" transform="translate(${a.x},${a.y})" tabindex="0" role="button" aria-label="Emplacement ${i+1}${c?' : '+C[c].name:' vide'}">
+      <rect class="gap" x="-48" y="-34" width="96" height="68"/>
+      <g transform="rotate(${a.r})"><rect class="frame" x="-46" y="-32" width="92" height="64" rx="10"/>${c?`<g class="sym">${sym(c,st)}</g>`:''}</g>
+      ${c?`<text class="lbl" x="${lx}" y="${ly}" text-anchor="${anc}">${C[c].name}</text><text class="lbl spec" x="${lx}" y="${ly+14}" text-anchor="${anc}">${C[c].spec}</text>`
+         :`<text class="q" x="0" y="9" text-anchor="middle">?</text>`}
+    </g>`;});
+  h+=`<text class="lbl spec" x="320" y="262" text-anchor="middle">${o.name.toUpperCase()}</text>`;
+  if(state.success&&o.ctrl.includes('wheel'))h+=`<text class="lbl spec" x="320" y="280" text-anchor="middle">${state.wheel?(state.mag?'l’aimant passe devant l’ILS':'la roue tourne…'):'roue à l’arrêt'}</text>`;
+  svg.innerHTML=h;
+  const tag=$('stateTag');tag.textContent=pw?'Le courant circule':'Circuit ouvert';tag.classList.toggle('on',pw);
+  sound(pw&&pl.includes('buzzer'));
+}
+function renderStatus(){
+  const o=cur();if(!state.success)return;const pw=powered(),st=$('status');
+  let t=pw?`Le circuit est fermé : le courant circule et ${o.out}.`:'Le circuit est ouvert : aucun courant ne circule.';
+  if(o.id==='velo'&&state.wheel)t=(state.sw?'La roue tourne : un bip à chaque passage de l’aimant. ':'La roue tourne, mais le compteur est éteint. ')+`Tours de roue : ${state.turns}.`;
+  st.textContent=t;st.classList.toggle('on',pw||(o.id==='velo'&&state.wheel&&state.sw));
+}
+function renderSteps(){
+  const o=cur(),s1=state.success,s2=state.quizDone.has(o.id)&&s1;
+  const items=[['Étape 1','Schéma',s1?'done':'cur'],['Étape 2','Quiz',s2?'done':s1?'cur':'lock'],['Étape 3','Fabrication',s2?'cur':'lock']];
+  $('steps').innerHTML=items.map(([a,b,c])=>`<li class="${c}"><span>${a}</span>${b}${c==='done'?' ✓':''}</li>`).join('');
+}
+function renderPanel(){
+  const o=cur(),pl=state.placed[o.id];
+  $('missionIcon').innerHTML=`<g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ICONS[o.id]}</g>`;
+  $('missionLevel').textContent=['','Niveau 1 · découverte','Niveau 2 · intermédiaire','Niveau 3 · expert'][o.lvl];
+  $('missionName').textContent=o.name;$('missionStory').textContent=o.story;
+  $('missionNeed').textContent=`Ton circuit a besoin de ${o.need.length} composants, à choisir parmi les ${ORDER.length} du tiroir.`+(o.id==='torche'&&pl[0]==='pile2'&&!state.result&&!state.success?' Les piles sont déjà en place pour te montrer l’exemple.':'');
+  $('removeBtn').hidden=!(state.sel!==null&&pl[state.sel]);
+  $('feedback').innerHTML=(state.fb||[]).map(m=>`<div class="msg ${m.c}">${m.t}</div>`).join('');
+  $('test').hidden=!state.success;
+  if(state.success){
+    const ctr=[];
+    if(o.ctrl.includes('sw'))ctr.push(`<button class="btn ${state.sw?'on':''}" data-ctrl="sw">${state.sw?'Ouvrir l’interrupteur (arrêt)':'Fermer l’interrupteur (marche)'}</button>`);
+    if(o.ctrl.includes('push'))ctr.push(`<button class="btn ${state.push?'on':''}" data-ctrl="push">Maintenir appuyé pour sonner</button>`);
+    if(o.ctrl.includes('wheel'))ctr.push(`<button class="btn" data-ctrl="wheel">${state.wheel?'Arrêter la roue':'Faire tourner la roue'}</button>`);
+    $('controls').innerHTML=ctr.join('');
+    renderStatus();
+    $('soundRow').hidden=!pl.includes('buzzer');
+  }
+}
+function render(){renderObjects();renderBoard();renderSteps();renderPanel();renderQuiz();renderFab();}
+
+/* ---------- Nomenclature ---------- */
+function bomText(){
+  const o=cur(),g=state.group.trim()||'(nom du groupe)';
+  return `Demande de composants – ${o.name}\nGroupe : ${g}\n\n`+bomRows().map((r,i)=>`${i+1}. ${r[0]} × ${r[1]} (${r[2]})`).join('\n')+`\n\nMerci !`;
+}
+function openBom(){
+  const o=cur();
+  $('bomTitle').textContent=o.name;
+  $('bomBody').innerHTML=bomRows().map((r,i)=>`<tr><td class="r">${i+1}</td><td class="q">${r[0]}</td><td>${r[1]}</td><td class="d">${r[2]}</td></tr>`).join('');
+  $('groupName').value=state.group;$('copied').hidden=true;$('copyArea').hidden=true;
+  $('bomModal').hidden=false;$('bomClose').focus();
+}
+function closeBom(){$('bomModal').hidden=true;$('bomBtn').focus();}
+$('bomBtn').addEventListener('click',openBom);
+$('bomClose').addEventListener('click',closeBom);
+$('bomModal').addEventListener('click',e=>{if(e.target===$('bomModal'))closeBom();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('bomModal').hidden)closeBom();});
+$('groupName').addEventListener('input',e=>{state.group=e.target.value;persist();});
+$('copyBtn').addEventListener('click',()=>{
+  const t=bomText(),ta=$('copyArea');ta.value=t;
+  const fallback=()=>{ta.hidden=false;ta.focus();ta.select();$('copied').textContent='Sélectionne le texte ci-dessous et copie-le (Ctrl + C).';$('copied').hidden=false;};
+  try{navigator.clipboard.writeText(t).then(()=>{$('copied').textContent='Demande copiée. Colle-la dans un message au professeur.';$('copied').hidden=false;ta.hidden=true;},fallback);}catch(e){fallback();}
+});
+
+/* ---------- Actions ---------- */
+function reset(){stopWheel();state.turns=0;state.result=null;state.success=false;state.sw=false;state.push=false;state.fb=[];state.sel=null;}
+function restore(){ // objet déjà réussi : on retrouve directement l'état validé
+  const o=cur();if(state.done.has(o.id)){const ev=evaluate();if(ev.success){state.success=true;state.result=ev.res;}}
+}
+function place(id,idx){
+  const o=cur(),pl=state.placed[o.id];
+  if(idx==null)idx=state.sel!=null?state.sel:pl.indexOf(null);
+  if(idx<0){state.fb=[{c:'info',t:'Tous les emplacements sont occupés. Clique sur une pièce du schéma pour la remplacer.'}];render();return;}
+  pl[idx]=id;reset();delete state.quiz[o.id];persist();
+  const next=pl.indexOf(null);state.sel=next>=0?next:null;render();
+}
+$('objects').addEventListener('click',e=>{const b=e.target.closest('.obj');if(!b)return;reset();state.obj=b.dataset.id;sound(false);restore();
+  const pl=state.placed[state.obj];const n=pl.indexOf(null);state.sel=state.success?null:(n>=0?n:null);render();});
+$('parts').addEventListener('click',e=>{const b=e.target.closest('.part');if(b)place(b.dataset.id);});
+$('parts').addEventListener('dragstart',e=>{const b=e.target.closest('.part');if(b){e.dataTransfer.setData('text/plain',b.dataset.id);e.dataTransfer.effectAllowed='copy';}});
+const board=$('board');
+board.addEventListener('dragover',e=>{if(e.target.closest('.slot'))e.preventDefault();});
+board.addEventListener('drop',e=>{const s=e.target.closest('.slot');if(!s)return;e.preventDefault();const id=e.dataTransfer.getData('text/plain');if(C[id])place(id,+s.dataset.i);});
+function slotAct(s){
+  const i=+s.dataset.i,o=cur(),c=state.placed[o.id][i];
+  if(state.success&&c==='inter'){state.sw=!state.sw;render();return;}
+  if(state.success&&(c==='bp'||c==='ils'))return;
+  state.sel=state.sel===i?null:i;render();
+}
+board.addEventListener('click',e=>{const s=e.target.closest('.slot');if(s)slotAct(s);});
+board.addEventListener('keydown',e=>{const s=e.target.closest('.slot');if(s&&(e.key==='Enter'||e.key===' ')){e.preventDefault();const i=s.dataset.i;slotAct(s);const n=board.querySelector(`.slot[data-i="${i}"]`);n&&n.focus();}});
+board.addEventListener('pointerdown',e=>{const s=e.target.closest('.slot');if(!s||!state.success)return;if(state.placed[state.obj][+s.dataset.i]==='bp'){state.push=true;render();}});
+$('checkBtn').addEventListener('click',check);
+$('removeBtn').addEventListener('click',()=>{const o=cur(),pl=state.placed[o.id];if(state.sel!=null){const i=state.sel;pl[i]=null;reset();delete state.quiz[o.id];persist();state.sel=i;render();}});
+$('clearBtn').addEventListener('click',()=>{const o=cur();state.placed[o.id].fill(null);reset();delete state.quiz[o.id];persist();state.sel=0;render();});
+$('expert').addEventListener('change',e=>{state.expert=e.target.checked;persist();renderParts();});
+$('sound').addEventListener('change',()=>renderBoard());
+const ctrls=$('controls');
+ctrls.addEventListener('click',e=>{const b=e.target.closest('[data-ctrl]');if(!b)return;const k=b.dataset.ctrl;
+  if(k==='push')return;
+  if(k==='wheel'){state.wheel?stopWheel():startWheel();render();return;}
+  state[k]=!state[k];render();});
+ctrls.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-ctrl="push"]');if(b){e.preventDefault();state.push=true;render();}});
+ctrls.addEventListener('keydown',e=>{const b=e.target.closest('[data-ctrl="push"]');if(b&&(e.key===' '||e.key==='Enter')&&!state.push){e.preventDefault();state.push=true;render();ctrls.querySelector('[data-ctrl="push"]').focus();}});
+ctrls.addEventListener('keyup',e=>{if(state.push&&(e.key===' '||e.key==='Enter')){state.push=false;render();ctrls.querySelector('[data-ctrl="push"]').focus();}});
+window.addEventListener('pointerup',()=>{if(state.push){state.push=false;render();}});
+window.addEventListener('pointercancel',()=>{if(state.push){state.push=false;render();}});
+
+restore();{const n=state.placed.torche.indexOf(null);state.sel=state.success?null:(n>=0?n:null);}
+renderParts();render();
+})();
+</script>
+</body>
+</html>
