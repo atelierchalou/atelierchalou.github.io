@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>body{margin:0}</style>
+<title>Chaînes d'information et d'énergie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: schéma normalisé en deux voies. L'information en haut, l'énergie en dessous, un seul lien d'ordres entre les deux. Les voies passent en colonnes sur téléphone. */
+:root{
+  --bg:#f2f4f8;--panel:#ffffff;--fg:#141d2b;--muted:#586479;--line:#cfd6e1;
+  --info:#2563d8;--info-ink:#1b4db3;--info-bg:#e6eefc;
+  --energy:#e3731c;--energy-ink:#a74400;--energy-bg:#fdeddc;
+  --ok:#187a43;--ok-bg:#dff3e7;--bad:#b42a2a;--bad-bg:#fbe4e4;
+  --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --body:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1420;--panel:#152033;--fg:#e8edf6;--muted:#9aa8bd;--line:#2b3a52;
+    --info:#6b9fff;--info-ink:#8db5ff;--info-bg:#172a4b;
+    --energy:#ff9445;--energy-ink:#ffab70;--energy-bg:#3b2514;
+    --ok:#55c987;--ok-bg:#153a26;--bad:#ff8080;--bad-bg:#421c1c;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1420;--panel:#152033;--fg:#e8edf6;--muted:#9aa8bd;--line:#2b3a52;
+  --info:#6b9fff;--info-ink:#8db5ff;--info-bg:#172a4b;
+  --energy:#ff9445;--energy-ink:#ffab70;--energy-bg:#3b2514;
+  --ok:#55c987;--ok-bg:#153a26;--bad:#ff8080;--bad-bg:#421c1c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--info);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:16px;padding-block:20px 44px;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,5vw,2.4rem);line-height:1.1;margin:0;text-wrap:balance}
+h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+.kicker{font:500 .72rem/1 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 8px}
+.lede{margin:8px 0 0;color:var(--muted);max-width:60ch}
+
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tab,.seg{padding:9px 14px;border:1.5px solid var(--line);background:var(--panel);border-radius:6px;font-weight:700}
+.tab[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.modebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.segs{display:inline-flex}
+.seg{border-radius:0}
+.seg:first-child{border-radius:6px 0 0 6px}
+.seg:last-child{border-radius:0 6px 6px 0}
+.seg+.seg{border-left:0}
+.seg[aria-pressed="true"]{background:var(--info-bg);border-color:var(--info);color:var(--info-ink)}
+.seg[aria-pressed="true"]+.seg{border-left:0}
+.modehint{color:var(--muted);font-size:.9rem;margin:0}
+
+.scenecard{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1.5px solid var(--line);background:var(--panel);border-radius:8px;overflow:hidden}
+.scene{background:var(--bg);border-bottom:1.5px solid var(--line);padding:8px}
+.scene svg{display:block;width:100%;height:auto;max-height:190px;margin:0 auto}
+.sit{padding:14px 16px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.sit h2{font-size:1.3rem}
+.sit p{margin:0;color:var(--muted)}
+@media (min-width:760px){
+  .scenecard{grid-template-columns:minmax(0,300px) minmax(0,1fr)}
+  .scene{border-bottom:0;border-right:1.5px solid var(--line)}
+}
+
+/* Schéma */
+.diagram{display:grid;grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr);margin-block:4px}
+.lane{font:500 .7rem/1.35 var(--mono);text-transform:uppercase;letter-spacing:.08em;padding-bottom:8px}
+.lane small{display:none;font:inherit;text-transform:none;letter-spacing:0;color:var(--muted)}
+.lane-i{grid-column:1;grid-row:1;color:var(--info-ink)}
+.lane-e{grid-column:3;grid-row:1;color:var(--energy-ink)}
+.bi{grid-column:1;grid-row:calc(var(--k)*2 + 2)}
+.ci{grid-column:1;grid-row:calc(var(--k)*2 + 3)}
+.be,.ba{grid-column:3;grid-row:calc(var(--k)*2 + 2)}
+.ce{grid-column:3;grid-row:calc(var(--k)*2 + 3)}
+.link{grid-column:2;grid-row:4}
+@media (min-width:760px){
+  .diagram{grid-template-columns:repeat(4,minmax(0,1fr) 34px) minmax(0,1fr)}
+  .lane small{display:block}
+  .lane-i{grid-column:1/-1;grid-row:1}
+  .lane-e{grid-column:1/4;grid-row:3;align-self:center;padding:0}
+  .bi{grid-column:calc(var(--k)*2 + 1);grid-row:2}
+  .ci{grid-column:calc(var(--k)*2 + 2);grid-row:2}
+  .be,.ba{grid-column:calc(var(--k)*2 + 1);grid-row:4}
+  .ce{grid-column:calc(var(--k)*2 + 2);grid-row:4}
+  .link{grid-column:3;grid-row:3;min-height:64px}
+}
+
+.b{position:relative;text-align:left;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:5px;min-width:0;transition:opacity .4s,border-color .4s,background .4s,box-shadow .4s}
+.bi{--c:var(--info);--ci:var(--info-ink);--cbg:var(--info-bg)}
+.be,.ba{--c:var(--energy);--ci:var(--energy-ink);--cbg:var(--energy-bg)}
+.b .fn{font:500 .68rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.09em;color:var(--ci)}
+.b .comp{font-weight:700;font-size:.93rem;line-height:1.25;overflow-wrap:anywhere}
+.b .gr{font:500 .68rem/1.35 var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.b.dim{opacity:.55}
+.b.vis{border-color:var(--c);background:var(--cbg)}
+.b.now{border-color:var(--c);background:var(--cbg);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 32%,transparent)}
+.b.picked{outline:2px solid var(--fg);outline-offset:2px}
+.ba{background:var(--cbg);border-color:var(--c)}
+.ba .comp{font-family:var(--display);font-size:1rem}
+.b .ph{color:var(--muted);font-weight:400;font-style:italic}
+.b.target{border-style:dashed;border-color:var(--c)}
+.b.ok{border-color:var(--ok);background:var(--ok-bg)}
+.b.bad{border-color:var(--bad);background:var(--bad-bg)}
+
+/* Connecteurs : verticaux sur téléphone, horizontaux dès 760 px. Le lien d'ordres fait l'inverse. */
+.conn,.link{position:relative;min-height:28px;min-width:0}
+.ci,.link{--c:var(--info);--ci:var(--info-ink)}
+.ce{--c:var(--energy)}
+.conn::before,.link::before{content:"";position:absolute;background:var(--line);transition:background .3s}
+.conn::after,.link::after{content:"";position:absolute;width:8px;height:8px;border:solid var(--line);border-width:0 2px 2px 0;transition:border-color .3s}
+.conn.on::before,.link.on::before{background:var(--c)}
+.conn.on::after,.link.on::after{border-color:var(--c)}
+.conn::before{left:calc(50% - 1px);top:0;bottom:4px;width:2px}
+.conn::after{left:calc(50% - 4px);bottom:1px;transform:rotate(45deg)}
+.link::before{top:calc(50% - 1px);left:0;right:4px;height:2px}
+.link::after{top:calc(50% - 4px);right:1px;transform:rotate(-45deg)}
+.link small{display:none;font:500 .68rem/1 var(--mono);color:var(--info-ink);position:absolute;left:calc(50% + 12px);top:50%;transform:translateY(-50%)}
+.dot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--c);opacity:0}
+.conn .dot{left:calc(50% - 4px);top:0}
+.link .dot{top:calc(50% - 4px);left:0}
+.conn.on .dot{animation:flowY 1.3s linear infinite}
+.link.on .dot{animation:flowX 1.3s linear infinite}
+.dot:nth-of-type(2){animation-delay:.43s!important}
+.dot:nth-of-type(3){animation-delay:.86s!important}
+@keyframes flowY{0%{top:0;opacity:0}15%,85%{opacity:1}100%{top:calc(100% - 8px);opacity:0}}
+@keyframes flowX{0%{left:0;opacity:0}15%,85%{opacity:1}100%{left:calc(100% - 8px);opacity:0}}
+@media (min-width:760px){
+  .conn::before{top:calc(50% - 1px);left:0;right:4px;bottom:auto;height:2px;width:auto}
+  .conn::after{top:calc(50% - 4px);left:auto;bottom:auto;right:1px;transform:rotate(-45deg)}
+  .link::before{left:calc(50% - 1px);top:0;bottom:4px;right:auto;width:2px;height:auto}
+  .link::after{left:calc(50% - 4px);bottom:1px;top:auto;right:auto;transform:rotate(45deg)}
+  .conn .dot{top:calc(50% - 4px);left:0}
+  .link .dot{left:calc(50% - 4px);top:0}
+  .conn.on .dot{animation-name:flowX}
+  .link.on .dot{animation-name:flowY}
+  .link small{display:block}
+}
+
+/* Panneau */
+.panel{border:1.5px solid var(--line);background:var(--panel);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+.btn{padding:9px 14px;border:1.5px solid var(--line);background:var(--bg);border-radius:6px;display:inline-flex;gap:8px;align-items:center;font-weight:700}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn svg{width:16px;height:16px;fill:currentColor;flex:none}
+.pips{display:flex;gap:6px}
+.pip{flex:1;min-width:0;padding:6px 0;font:500 .75rem/1 var(--mono);border:1.5px solid var(--line);border-radius:4px;background:var(--bg);color:var(--muted)}
+.pip.done{background:var(--info-bg);border-color:var(--info);color:var(--info-ink)}
+.pip.cur{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.caption{min-height:9.5rem}
+.caption p{margin:0 0 6px;max-width:70ch}
+.caption .stepno{display:block;font:500 .72rem/1 var(--mono);text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:8px}
+.caption .out{color:var(--muted);font-size:.92rem}
+.f-i{color:var(--info-ink)}.f-e{color:var(--energy-ink)}
+@media (min-width:760px){.caption{min-height:6.5rem}}
+
+.bankhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.bankhead h3{font-size:1.05rem}
+.bankhead label{display:inline-flex;gap:8px;align-items:center;color:var(--muted);font-size:.92rem}
+.bank{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
+.chip{padding:8px 12px;border:1.5px solid var(--line);background:var(--bg);border-radius:6px;font-weight:700;font-size:.9rem;text-align:left}
+.chip.sel{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.bank .none{color:var(--muted);margin:0}
+.result{margin:0;padding:10px 12px;border-radius:6px;border:1.5px solid var(--line);background:var(--bg);min-height:3rem}
+.result.good{border-color:var(--ok);background:var(--ok-bg)}
+.result.warn{border-color:var(--bad);background:var(--bad-bg)}
+
+.rappel{border:1.5px solid var(--line);background:var(--panel);border-radius:8px;padding:12px 16px}
+.rappel summary{font-weight:700;cursor:pointer}
+.rap-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;margin-top:12px}
+@media (min-width:760px){.rap-grid{grid-template-columns:1fr 1fr}}
+.rap-grid h3{font-size:1rem;margin-bottom:6px}
+.rap-grid dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
+.rap-grid dt{font:500 .75rem/1.6 var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.rap-grid dd{margin:0}
+
+/* Scènes */
+.g-line{fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round}
+.g-line.thin{stroke-width:1.5;opacity:.7}
+.g-panel{fill:var(--panel);stroke:var(--muted);stroke-width:2}
+.scene .sky{fill:var(--info-bg)}
+.scene .slat{fill:var(--panel);stroke:var(--muted);stroke-width:2}
+.scene .fence{fill:var(--line);opacity:.6}
+.scene .gate{transition:transform 1.6s ease}
+.scene.st6 .gate{transform:translateX(48px)}
+.scene.st7 .gate{transform:translateX(96px)}
+.scene .beacon{fill:var(--line);stroke:var(--muted);stroke-width:1.5}
+.scene.st3 .beacon{fill:var(--energy);animation:blink .8s steps(2,start) infinite}
+.scene.st7 .beacon{animation:none;fill:var(--line)}
+@keyframes blink{50%{opacity:.25}}
+.scene .wave{stroke:var(--info);fill:none;stroke-width:2;stroke-linecap:round;opacity:0;transition:opacity .4s}
+.scene.st1 .wave{opacity:1}
+.scene.st3 .wave{opacity:.25}
+.scene .person{transform:translateX(-210px);transition:transform 2s ease}
+.scene.st1 .person{transform:translateX(0)}
+.scene .detect{stroke:var(--info);stroke-dasharray:4 4;fill:none;stroke-width:2;opacity:0;transition:opacity .4s}
+.scene.st1 .detect{opacity:.8}
+.scene.st3 .detect{opacity:.25}
+.scene .pir-led{fill:var(--line)}
+.scene.st3 .pir-led{fill:var(--info)}
+.scene .lampglow{fill:var(--line)}
+.scene.st5 .lampglow{fill:var(--energy)}
+.scene .cone1,.scene .cone2{fill:var(--energy);opacity:0;transition:opacity .8s}
+.scene.st5 .cone1{opacity:.28}
+.scene.st6 .cone2{opacity:.2}
+.scene .wl{fill:none;stroke:var(--muted);stroke-width:2}
+.scene .wl path{stroke-width:1.5}
+.scene .wr{transform-origin:60px 88px}
+.scene .wf{transform-origin:180px 88px}
+.scene.st6 .wl{animation:spin 1.3s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scene .frame{fill:none;stroke:var(--fg);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.scene .speed{fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;opacity:0;transition:opacity .5s}
+.scene.st6 .speed{opacity:.6}
+.scene .battery{fill:var(--line);stroke:var(--muted);stroke-width:1.5}
+.scene.st4 .battery{fill:var(--energy)}
+.scene .hub{fill:var(--line);stroke:var(--muted);stroke-width:1.5}
+.scene.st5 .hub{fill:var(--energy)}
+.scene .disp{fill:var(--line);stroke:var(--muted);stroke-width:1.5}
+.scene.st3 .disp{fill:var(--info)}
+.scene .crank{transform-origin:105px 88px}
+.scene.st1 .crank{animation:spin 2s linear infinite}
+.scene .shutter{transform-origin:120px 18px;transition:transform 1.8s ease}
+.scene.st6 .shutter{transform:scaleY(.55)}
+.scene.st7 .shutter{transform:scaleY(.12)}
+.scene .btn-w,.scene .led-w,.scene .mot{fill:var(--line);stroke:var(--muted);stroke-width:1.5}
+.scene.st1 .btn-w{fill:var(--info)}
+.scene.st3 .led-w{fill:var(--info)}
+.scene.st5 .mot{fill:var(--energy)}
+
+[hidden]{display:none!important}
+
+/* Évaluation */
+.test{display:flex;flex-direction:column;gap:16px}
+.tintro,.tresult,.tex{border:1.5px solid var(--line);background:var(--panel);border-radius:8px;padding:14px 16px}
+.tintro h2{font-size:1.3rem;margin-bottom:6px}
+.tintro p{margin:0 0 4px;color:var(--muted)}
+.tbest{font:500 .8rem/1.4 var(--mono);color:var(--info-ink)!important}
+.tresult.good{border-color:var(--ok);background:var(--ok-bg)}
+.tresult.warn{border-color:var(--bad);background:var(--bad-bg)}
+.tresult h2{font-size:1.6rem}
+.tresult p{margin:4px 0 0}
+.tex{display:flex;flex-direction:column;gap:12px}
+.tex>h2{font-size:1.15rem;display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
+.tex .sub{font:500 .8rem/1.4 var(--mono);color:var(--muted)}
+.tex .consigne{margin:0;color:var(--muted)}
+.qq{border:1.5px solid var(--line);border-radius:6px;padding:10px 12px;background:var(--bg);display:flex;flex-direction:column;gap:8px;min-width:0}
+.ql{margin:0;font-weight:700}
+.ql .pt{font:500 .72rem/1 var(--mono);color:var(--muted);margin-left:10px;white-space:nowrap}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1.5px solid var(--line);border-radius:6px;background:var(--panel);cursor:pointer}
+.opt input{margin-top:.35em;flex:none}
+.qq select{font:inherit;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;max-width:100%;min-width:0}
+.qq.ok{border-color:var(--ok);background:var(--ok-bg)}
+.qq.bad{border-color:var(--bad);background:var(--bad-bg)}
+.fb{margin:0;font-size:.92rem}
+.qq.ok .fb{color:var(--ok)}
+.qq.bad .fb{color:var(--bad)}
+.tbar{position:sticky;bottom:0;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--panel);border:1.5px solid var(--line);border-radius:8px;padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.tcount{font:500 .85rem/1.4 var(--mono)}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+
+<main class="wrap">
+  <header>
+    <p class="kicker">Technologie · Cycle 4</p>
+    <h1>Chaînes d'information et d'énergie</h1>
+    <p class="lede">Choisis un objet du quotidien. Suis le trajet de l'information et de l'énergie, étape par étape, puis vérifie ce que tu as retenu.</p>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="Objets techniques"></nav>
+
+  <div class="modebar">
+    <div class="segs" role="group" aria-label="Mode">
+      <button type="button" class="seg" data-mode="observe" data-f="m-o">Observer</button>
+      <button type="button" class="seg" data-mode="train" data-f="m-t">S'entraîner</button>
+      <button type="button" class="seg" data-mode="test" data-f="m-e">Évaluation</button>
+    </div>
+    <p class="modehint" id="modehint"></p>
+  </div>
+
+  <section class="scenecard">
+    <div class="scene" id="scene"></div>
+    <div class="sit"><h2 id="scName"></h2><p id="scSit"></p></div>
+  </section>
+
+  <section class="diagram" id="diagram" aria-label="Schéma des deux chaînes"></section>
+
+  <section class="panel" id="panel"></section>
+
+  <section class="test" id="test" aria-label="Évaluation" hidden></section>
+
+  <details class="rappel">
+    <summary>Rappel de cours : les fonctions de chaque chaîne</summary>
+    <div class="rap-grid">
+      <div>
+        <h3 class="f-i">Chaîne d'information</h3>
+        <dl>
+          <dt class="f-i">Acquérir</dt><dd>Prélever une information. Exemples : capteur, bouton, télécommande.</dd>
+          <dt class="f-i">Traiter</dt><dd>Analyser et décider. Exemples : carte électronique, microcontrôleur.</dd>
+          <dt class="f-i">Communiquer</dt><dd>Donner une information à l'utilisateur. Exemples : écran, voyant, buzzer.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3 class="f-e">Chaîne d'énergie</h3>
+        <dl>
+          <dt class="f-e">Alimenter</dt><dd>Fournir l'énergie. Exemples : pile, batterie, réseau électrique.</dd>
+          <dt class="f-e">Distribuer</dt><dd>Envoyer l'énergie au bon moment. Exemples : interrupteur, relais, variateur.</dd>
+          <dt class="f-e">Convertir</dt><dd>Changer la forme de l'énergie. Exemples : moteur, lampe, résistance chauffante.</dd>
+          <dt class="f-e">Transmettre</dt><dd>Adapter et transmettre le mouvement. Exemples : engrenages, courroie, vis.</dd>
+        </dl>
+      </div>
+    </div>
+  </details>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const STEP_OF = {i0:1,i1:2,i2:3,e0:4,e1:4,e2:5,e3:6,a:7};
+const KEYS = ['i0','i1','i2','e0','e1','e2','e3'];
+const FN = {i:['Acquérir','Traiter','Communiquer'], e:['Alimenter','Distribuer','Convertir','Transmettre']};
+const get = (s,key) => (key[0]==='i' ? s.info : s.en)[+key[1]];
+const fnOf = key => FN[key[0]][+key[1]];
+
+const SVG = {
+portail:`<svg viewBox="0 0 240 130" role="img" aria-label="Portail coulissant avec télécommande et feu orange"><line class="g-line" x1="8" y1="112" x2="232" y2="112"/><rect class="fence" x="130" y="54" width="100" height="52" rx="2"/><g class="gate"><rect class="g-panel" x="30" y="50" width="100" height="56" rx="2"/><path class="g-line thin" d="M50 50v56M70 50v56M90 50v56M110 50v56"/></g><rect class="g-panel" x="14" y="40" width="16" height="72" rx="2"/><circle class="beacon" cx="22" cy="28" r="6"/><rect class="g-panel" x="204" y="14" width="14" height="24" rx="3"/><path class="wave" d="M198 20a9 9 0 0 0 0 12M192 16a16 16 0 0 0 0 20"/></svg>`,
+eclairage:`<svg viewBox="0 0 240 130" role="img" aria-label="Couloir avec détecteur de présence, lampe et personne"><line class="g-line" x1="8" y1="112" x2="232" y2="112"/><line class="g-line" x1="8" y1="14" x2="232" y2="14"/><polygon class="cone1" points="134,28 146,28 176,112 104,112"/><polygon class="cone2" points="132,28 148,28 214,112 66,112"/><path class="detect" d="M63 28L14 112M63 28L112 112"/><rect class="g-panel" x="50" y="14" width="26" height="12" rx="3"/><circle class="pir-led" cx="63" cy="20" r="2.6"/><rect class="g-panel" x="128" y="14" width="24" height="10" rx="3"/><rect class="lampglow" x="133" y="24" width="14" height="4" rx="2"/><g class="person"><circle class="g-panel" cx="190" cy="80" r="8"/><rect class="g-panel" x="181" y="90" width="18" height="22" rx="7"/></g></svg>`,
+velo:`<svg viewBox="0 0 240 130" role="img" aria-label="Vélo à assistance électrique avec batterie, moteur et écran"><line class="g-line" x1="8" y1="114" x2="232" y2="114"/><path class="speed" d="M8 70h26M14 82h22M6 94h26"/><g class="wl wr"><circle cx="60" cy="88" r="26"/><path d="M60 62v52M34 88h52M42 70l36 36M78 70l-36 36"/></g><g class="wl wf"><circle cx="180" cy="88" r="26"/><path d="M180 62v52M154 88h52M162 70l36 36M198 70l-36 36"/></g><path class="frame" d="M60 88L105 88L88 44L60 88M88 44L150 44L105 88M150 44L180 88M150 44L146 30M140 30h14"/><rect class="battery" x="78" y="50" width="8" height="24" rx="2"/><circle class="hub" cx="60" cy="88" r="7"/><rect class="disp" x="140" y="14" width="20" height="11" rx="2"/><g class="crank"><circle class="g-panel" cx="105" cy="88" r="5"/><path class="g-line" d="M105 88v14"/></g></svg>`,
+volet:`<svg viewBox="0 0 240 130" role="img" aria-label="Volet roulant avec bouton de commande"><rect class="g-panel" x="66" y="8" width="108" height="10" rx="2"/><circle class="mot" cx="78" cy="13" r="3.5"/><rect class="sky" x="72" y="18" width="96" height="94"/><rect class="g-panel" x="66" y="112" width="108" height="5" rx="1"/><g class="shutter"><rect class="slat" x="72" y="18" width="96" height="94"/><path class="g-line thin" d="M72 30h96M72 42h96M72 54h96M72 66h96M72 78h96M72 90h96M72 102h96"/></g><rect class="g-panel" x="196" y="46" width="16" height="36" rx="3"/><circle class="btn-w" cx="204" cy="56" r="4.5"/><circle class="led-w" cx="204" cy="72" r="3"/></svg>`
+};
+
+const S = [
+{ id:'portail', nom:'Portail automatique',
+  situation:"Tu arrives devant chez toi et tu appuies sur la télécommande : le portail s'ouvre tout seul.",
+  declencheur:"Tu appuies sur le bouton de la télécommande.",
+  info:[
+    {c:"Télécommande et récepteur radio", g:"onde radio → signal électrique", d:"Le récepteur capte l'onde radio envoyée par la télécommande et la transforme en signal électrique."},
+    {c:"Carte de commande", g:"signal électrique → ordre", d:"La carte électronique traite le signal. Elle vérifie que rien ne bloque le portail, puis elle décide d'ouvrir."},
+    {c:"Feu orange clignotant", g:"lumière", d:"Le feu clignote pour prévenir les personnes proches que le portail va bouger."}],
+  en:[
+    {c:"Réseau électrique 230 V", g:"énergie électrique", d:"L'installation de la maison fournit l'énergie électrique, adaptée par un transformateur."},
+    {c:"Relais de puissance", g:"énergie électrique", d:"Le relais se ferme quand la carte le commande. Le courant peut alors passer vers le moteur."},
+    {c:"Moteur électrique", g:"énergie mécanique de rotation", d:"Le moteur convertit l'énergie électrique en énergie mécanique : il tourne."},
+    {c:"Réducteur et crémaillère", g:"énergie mécanique de translation", d:"Le réducteur ralentit la rotation. La crémaillère la transforme en déplacement en ligne droite du portail."}],
+  action:"Le portail s'ouvre", pieges:["Écran de bord","Batterie lithium 36 V"] },
+
+{ id:'eclairage', nom:'Éclairage automatique',
+  situation:"Le soir, tu entres dans le couloir de ton immeuble et la lumière s'allume toute seule.",
+  declencheur:"Une personne entre dans le couloir.",
+  info:[
+    {c:"Détecteur de présence infrarouge", g:"chaleur du corps → signal électrique", d:"Le détecteur repère la chaleur d'une personne qui bouge dans son champ de détection."},
+    {c:"Module de temporisation", g:"signal électrique → ordre", d:"Le module traite le signal. Il décide d'allumer, puis d'éteindre après quelques minutes sans mouvement."},
+    {c:"Voyant rouge du détecteur", g:"lumière", d:"Un petit voyant s'allume pour indiquer que le détecteur a bien repéré quelqu'un."}],
+  en:[
+    {c:"Réseau électrique 230 V", g:"énergie électrique", d:"Le réseau de l'immeuble fournit l'énergie électrique."},
+    {c:"Relais commandé", g:"énergie électrique", d:"Le relais est un interrupteur commandé par le module. Il se ferme et le courant circule."},
+    {c:"Lampe LED", g:"énergie lumineuse", d:"La lampe convertit l'énergie électrique en énergie lumineuse, avec un peu de chaleur."},
+    {c:"Diffuseur", g:"lumière répartie", d:"Le diffuseur répartit la lumière dans tout le couloir."}],
+  action:"Le couloir est éclairé", pieges:["Moteur électrique","Bouton-poussoir"] },
+
+{ id:'velo', nom:'Vélo à assistance électrique',
+  situation:"Tu pédales dans une montée et le vélo t'aide : le moteur prend le relais de tes jambes.",
+  declencheur:"Tu commences à pédaler.",
+  info:[
+    {c:"Capteur de pédalage", g:"rotation du pédalier → signal électrique", d:"Le capteur détecte que tu pédales et à quelle vitesse."},
+    {c:"Contrôleur électronique", g:"signaux → ordre de puissance", d:"Le contrôleur traite les mesures et le niveau d'assistance choisi. Il calcule la puissance à envoyer au moteur."},
+    {c:"Écran de bord", g:"affichage", d:"L'écran affiche la vitesse, le niveau d'assistance et la charge restante de la batterie."}],
+  en:[
+    {c:"Batterie lithium 36 V", g:"énergie électrique", d:"La batterie stocke l'énergie et la fournit sous forme d'énergie électrique."},
+    {c:"Variateur de puissance", g:"énergie électrique dosée", d:"Le variateur dose l'énergie envoyée au moteur, selon l'ordre du contrôleur."},
+    {c:"Moteur dans le moyeu", g:"énergie mécanique de rotation", d:"Le moteur convertit l'énergie électrique en énergie mécanique de rotation."},
+    {c:"Réducteur à engrenages", g:"rotation adaptée à la roue", d:"Le réducteur adapte la vitesse de rotation et transmet le mouvement à la roue arrière."}],
+  action:"Le vélo avance avec de l'aide", pieges:["Réseau électrique 230 V","Feu orange clignotant"] },
+
+{ id:'volet', nom:'Volet roulant',
+  situation:"Le matin, tu appuies sur le bouton du mur et le volet roulant de ta chambre monte.",
+  declencheur:"Tu appuies sur le bouton « montée ».",
+  info:[
+    {c:"Bouton montée / descente", g:"appui → signal électrique", d:"Ton doigt appuie sur le bouton : c'est lui qui transmet ta demande."},
+    {c:"Module de commande", g:"signal électrique → ordre et sens", d:"Le module traite la demande. Il décide de faire monter le volet et arrête le moteur en haut."},
+    {c:"Voyant de la commande", g:"lumière", d:"Le voyant s'allume pendant le mouvement pour montrer que la demande est prise en compte."}],
+  en:[
+    {c:"Réseau électrique 230 V", g:"énergie électrique", d:"Le réseau de la maison fournit l'énergie électrique."},
+    {c:"Contacteur inverseur", g:"énergie électrique", d:"Le contacteur envoie le courant dans le bon sens. C'est lui qui décide si le volet monte ou descend."},
+    {c:"Moteur tubulaire", g:"énergie mécanique de rotation", d:"Le moteur, placé dans le tube, convertit l'énergie électrique en rotation."},
+    {c:"Tube d'enroulement", g:"rotation → lames enroulées", d:"Le tube tourne avec le moteur et enroule les lames du volet autour de lui."}],
+  action:"Le volet monte", pieges:["Batterie lithium 36 V","Lampe LED"] }
+];
+
+const ICON = {
+  prev:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 2 4 8l7 6z"/></svg>',
+  next:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5 2 7 6-7 6z"/></svg>',
+  play:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z"/></svg>',
+  pause:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>',
+  reset:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2a6 6 0 1 0 6 6h-2a4 4 0 1 1-4-4v3l4-4-4-4z"/></svg>'
+};
+
+let sc = 0, mode = 'observe', step = 7, playing = false, timer = null, sel = null;
+let placed = {}, chipSel = null, checked = false, bank = [], hints = true, msg = {t:'', k:''};
+
+function shuffle(a){ a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function chipText(id){ const c = bank.find(x=>x.id===id); return c ? c.t : ''; }
+function newBank(){
+  const s = S[sc];
+  bank = shuffle(KEYS.map(k=>({id:k,t:get(s,k).c})).concat(s.pieges.map((t,i)=>({id:'p'+i,t}))));
+  placed = {}; chipSel = null; checked = false; msg = {t:'', k:''};
+}
+function keepFocus(fn){
+  const a = document.activeElement, f = a && a.dataset && a.dataset.f;
+  fn();
+  if (f){ const el = document.querySelector('[data-f="'+f+'"]'); if (el) el.focus({preventScroll:true}); }
+}
+
+/* Construction */
+function buildTabs(){
+  $('#tabs').innerHTML = S.map((s,i)=>`<button type="button" class="tab" data-tab="${i}" data-f="t${i}" aria-pressed="false">${s.nom}</button>`).join('');
+}
+const DOTS = '<i class="dot"></i><i class="dot"></i><i class="dot"></i>';
+function block(key, cls, k){
+  const s = S[sc], d = get(s,key), tr = mode==='train';
+  let inner = `<span class="fn">${fnOf(key)}</span>`;
+  if (!tr){
+    inner += `<span class="comp">${d.c}</span><span class="gr">${d.g}</span>`;
+  } else {
+    const id = placed[key];
+    inner += id ? `<span class="comp">${chipText(id)}</span>` : `<span class="comp ph">Touche pour placer</span>`;
+    if (hints) inner += `<span class="gr">${d.g}</span>`;
+  }
+  let st = '';
+  if (tr && checked && placed[key]) st = placed[key]===key ? ' ok' : ' bad';
+  if (tr && chipSel) st += ' target';
+  const label = tr ? `${fnOf(key)} : ${placed[key] ? chipText(placed[key]) : 'case vide'}` : `${fnOf(key)} : ${d.c}`;
+  return `<button type="button" class="b ${cls}${st}" style="--k:${k}" data-key="${key}" data-f="b-${key}" aria-label="${label}"${tr?'':` data-s="${STEP_OF[key]}"`}>${inner}</button>`;
+}
+function buildDiagram(){
+  const s = S[sc], tr = mode==='train';
+  const ds = n => tr ? '' : ` data-s="${n}"`;
+  let h = `<div class="lane lane-i">Chaîne d'information<small>capter, décider, informer</small></div>`;
+  h += `<div class="lane lane-e">Chaîne d'énergie<small>fournir, envoyer, convertir, transmettre</small></div>`;
+  ['i0','i1','i2'].forEach((key,k)=>{
+    h += block(key,'bi',k);
+    if (k<2) h += `<div class="conn ci" style="--k:${k}"${ds(STEP_OF['i'+(k+1)])}>${DOTS}</div>`;
+  });
+  h += `<div class="link"${ds(3)}><small>ordres</small>${DOTS}</div>`;
+  const nextStep = [4,5,6,7];
+  ['e0','e1','e2','e3'].forEach((key,k)=>{
+    h += block(key,'be',k);
+    h += `<div class="conn ce" style="--k:${k}"${ds(nextStep[k])}>${DOTS}</div>`;
+  });
+  h += `<div class="b ba" style="--k:4"${ds(7)}><span class="fn">Action</span><span class="comp">${s.action}</span></div>`;
+  $('#diagram').innerHTML = h;
+}
+function pips(){
+  let h = '';
+  for (let i=1;i<=7;i++) h += `<button type="button" class="pip" data-pip="${i}" data-f="p${i}" aria-label="Étape ${i}">${i}</button>`;
+  return h;
+}
+function buildPanel(){
+  const p = $('#panel');
+  if (mode==='observe'){
+    p.innerHTML = `<div class="controls">
+        <button type="button" class="btn" data-act="prev" data-f="prev">${ICON.prev}Précédent</button>
+        <button type="button" class="btn primary" data-act="play" data-f="play" id="playbtn"></button>
+        <button type="button" class="btn" data-act="next" data-f="next">Suivant${ICON.next}</button>
+        <button type="button" class="btn" data-act="restart" data-f="restart">${ICON.reset}Revenir au début</button>
+      </div>
+      <div class="pips" role="group" aria-label="Aller à l'étape">${pips()}</div>
+      <div class="caption" id="caption" aria-live="polite"></div>`;
+  } else {
+    const used = Object.values(placed);
+    const free = bank.filter(c=>!used.includes(c.id));
+    p.innerHTML = `<div class="bankhead"><h3>Composants à placer dans le schéma</h3>
+        <label><input type="checkbox" id="hints" data-f="hints"${hints?' checked':''}> Afficher les indices</label></div>
+      <div class="bank">${free.length ? free.map(c=>`<button type="button" class="chip${chipSel===c.id?' sel':''}" data-chip="${c.id}" data-f="c-${c.id}">${c.t}</button>`).join('') : '<p class="none">Tous les composants sont placés. Tu peux vérifier.</p>'}</div>
+      <div class="controls">
+        <button type="button" class="btn primary" data-act="check" data-f="check">Vérifier</button>
+        <button type="button" class="btn" data-act="solution" data-f="solution">Voir la solution</button>
+        <button type="button" class="btn" data-act="newbank" data-f="newbank">${ICON.reset}Recommencer</button>
+      </div>
+      <p class="result ${msg.k}" id="result" aria-live="polite">${msg.t || 'Deux composants ne servent pas dans cet objet. Touche un composant, puis la case où il doit aller.'}</p>`;
+  }
+}
+function buildScene(){
+  const s = S[sc];
+  $('#scene').innerHTML = SVG[s.id];
+  $('#scName').textContent = s.nom;
+  $('#scSit').textContent = s.situation;
+}
+function renderTrain(){ keepFocus(()=>{ buildDiagram(); buildPanel(); }); }
+function buildAll(){
+  stop();
+  sel = null;
+  const isTest = mode==='test';
+  ['#tabs','.scenecard','#diagram','#panel','.rappel'].forEach(q=>{ $(q).hidden = isTest; });
+  $('#test').hidden = !isTest;
+  if (isTest){
+    $('#modehint').textContent = "Évaluation sur 20 points." + (scorm.ok ? " Ta note est envoyée à ton professeur." : "");
+    buildTest();
+    sync();
+    return;
+  }
+  if (mode==='train') newBank(); else step = 7;
+  buildScene(); buildDiagram(); buildPanel();
+  $('#modehint').textContent = mode==='observe'
+    ? "Lance la lecture pour voir la situation se dérouler. Touche une case pour lire son rôle."
+    : "Replace chaque composant dans la bonne case du schéma.";
+  sync();
+}
+
+/* Mise à jour (mode observer) */
+function updateClasses(){
+  document.querySelectorAll('#diagram [data-s]').forEach(el=>{
+    const n = +el.dataset.s;
+    el.classList.toggle('vis', step>n);
+    el.classList.toggle('now', step===n);
+    el.classList.toggle('dim', step<n);
+    el.classList.toggle('on', step>=n);
+  });
+  document.querySelectorAll('#diagram [data-key]').forEach(el=>el.classList.toggle('picked', el.dataset.key===sel));
+}
+function caption(){
+  const s = S[sc];
+  if (sel){
+    const d = get(s,sel);
+    return `<span class="stepno">${fnOf(sel)}</span><p><b class="f-${sel[0]}">${d.c}</b></p><p>${d.d}</p><p class="out">Sortie : ${d.g}</p>`;
+  }
+  if (step===0) return `<span class="stepno">Situation de départ</span><p>${s.declencheur}</p><p class="out">Appuie sur Lecture, ou avance pas à pas avec Suivant.</p>`;
+  const groups = {1:['i0'],2:['i1'],3:['i2'],4:['e0','e1'],5:['e2'],6:['e3']};
+  let h = `<span class="stepno">Étape ${step} sur 7</span>`;
+  if (step===7) return h + `<p><b>Action</b> · ${s.action}.</p><p class="out">La chaîne d'information a commandé, la chaîne d'énergie a agi. Appuie sur Lecture pour rejouer la scène.</p>`;
+  groups[step].forEach(k=>{ h += `<p><b class="f-${k[0]}">${fnOf(k)}</b> · ${get(s,k).d}</p>`; });
+  if (step===3) h += `<p class="out">L'information traitée devient un ordre, envoyé à la chaîne d'énergie.</p>`;
+  if (step===4) h += `<p class="out">L'énergie n'est distribuée que lorsque l'ordre est arrivé.</p>`;
+  return h;
+}
+function updatePanel(){
+  document.querySelectorAll('.pip').forEach(b=>{
+    const n = +b.dataset.pip;
+    b.classList.toggle('done', n<step);
+    b.classList.toggle('cur', n===step);
+  });
+  $('#playbtn').innerHTML = playing ? ICON.pause+'Pause' : ICON.play+'Lecture';
+  $('#caption').innerHTML = caption();
+}
+function sync(){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.setAttribute('aria-pressed', i===sc));
+  document.querySelectorAll('.seg').forEach(b=>b.setAttribute('aria-pressed', b.dataset.mode===mode));
+  const n = mode==='observe' ? step : 0;
+  $('#scene').className = 'scene' + Array.from({length:n},(_,i)=>' st'+(i+1)).join('');
+  if (mode==='observe'){ updateClasses(); updatePanel(); }
+}
+
+/* Lecture */
+function stop(){ playing = false; if (timer){ clearInterval(timer); timer = null; } }
+function tick(){
+  if (step<7){ step++; sel = null; sync(); }
+  if (step>=7){ stop(); sync(); }
+}
+function play(){
+  if (playing){ stop(); sync(); return; }
+  if (step>=7) step = 0;
+  sel = null; playing = true;
+  tick();
+  if (playing) timer = setInterval(tick, 2400);
+  sync();
+}
+
+/* Entraînement */
+function place(key){
+  if (chipSel){
+    Object.keys(placed).forEach(k=>{ if (placed[k]===chipSel) delete placed[k]; });
+    placed[key] = chipSel; chipSel = null;
+  } else if (placed[key]){
+    delete placed[key];
+  }
+  checked = false; msg = {t:'', k:''};
+  renderTrain();
+}
+function check(){
+  const n = Object.keys(placed).length;
+  if (n < KEYS.length){
+    msg = {t:`Il reste ${KEYS.length-n} case${KEYS.length-n>1?'s':''} à remplir avant de vérifier.`, k:''};
+    checked = false;
+  } else {
+    const good = KEYS.filter(k=>placed[k]===k).length;
+    checked = true;
+    msg = good===KEYS.length
+      ? {t:"Tout est bon. Tu sais suivre l'information et l'énergie dans cet objet.", k:'good'}
+      : {t:`${good} sur ${KEYS.length} bien placés. Relis la fonction de chaque case rouge et la grandeur indiquée, puis change de composant.`, k:'warn'};
+  }
+  renderTrain();
+}
+
+/* ---------- SCORM 1.2 ---------- */
+const scorm = (function(){
+  function find(win){
+    let n = 0;
+    while (win && n < 10){
+      try { if (win.API) return win.API; } catch (e) {}
+      if (win.parent === win) break;
+      win = win.parent; n++;
+    }
+    return null;
+  }
+  let api = null;
+  try { api = find(window) || (window.opener ? find(window.opener) : null); } catch (e) { api = null; }
+  const t0 = Date.now();
+  let ok = false, finished = false, status = 'incomplete';
+  function fmtTime(ms){
+    const s = Math.floor(ms/1000), p = (n,l)=>String(n).padStart(l,'0');
+    return p(Math.floor(s/3600),4)+':'+p(Math.floor(s%3600/60),2)+':'+p(s%60,2);
+  }
+  return {
+    get ok(){ return ok; },
+    init(){
+      if (!api) return;
+      try {
+        ok = String(api.LMSInitialize('')) === 'true';
+        if (!ok) return;
+        const st = api.LMSGetValue('cmi.core.lesson_status');
+        if (!st || st === 'not attempted'){ status = 'incomplete'; api.LMSSetValue('cmi.core.lesson_status','incomplete'); }
+        else status = st;
+        api.LMSCommit('');
+      } catch (e) { ok = false; }
+    },
+    getSuspend(){
+      if (!ok) return null;
+      try { return JSON.parse(api.LMSGetValue('cmi.suspend_data') || 'null'); } catch (e) { return null; }
+    },
+    set(k,v){ if (ok){ try { api.LMSSetValue(k, String(v)); } catch (e) {} } },
+    commit(){ if (ok){ try { api.LMSCommit(''); } catch (e) {} } },
+    setStatus(s){ status = s; this.set('cmi.core.lesson_status', s); },
+    finish(){
+      if (!ok || finished) return;
+      finished = true;
+      try {
+        api.LMSSetValue('cmi.core.session_time', fmtTime(Date.now()-t0));
+        api.LMSSetValue('cmi.core.exit', status==='incomplete' ? 'suspend' : '');
+        api.LMSCommit('');
+        api.LMSFinish('');
+      } catch (e) {}
+    }
+  };
+})();
+window.addEventListener('pagehide', ()=>scorm.finish());
+window.addEventListener('beforeunload', ()=>scorm.finish());
+
+/* ---------- Évaluation ---------- */
+const TOTAL = 20, SEUIL = 10, LETTRES = 'abcdefghij';
+const CHOIX_PORTAIL = ["Télécommande et récepteur radio","Carte de commande","Feu orange clignotant","Réseau électrique 230 V","Relais de puissance","Moteur électrique","Réducteur et crémaillère","Écran de bord","Batterie lithium 36 V"];
+const EX = [
+  { t:"Exercice 1 · Vocabulaire", c:"Choisis la bonne réponse. Une seule est correcte.", q:[
+    {p:"Quelle fonction de la chaîne d'énergie change la forme de l'énergie ?", o:["Alimenter","Distribuer","Convertir","Transmettre"], a:2, e:"Un moteur ou une lampe change la forme de l'énergie."},
+    {p:"Quelle fonction de la chaîne d'information analyse les données et prend la décision ?", o:["Acquérir","Traiter","Communiquer","Distribuer"], a:1, e:"La carte électronique analyse les informations et décide."},
+    {p:"Un capteur de présence remplit quelle fonction ?", o:["Acquérir","Traiter","Communiquer","Alimenter"], a:0, e:"Un capteur prélève une information sur son environnement."},
+    {p:"Un relais qui laisse passer le courant vers le moteur remplit quelle fonction ?", o:["Alimenter","Distribuer","Convertir","Traiter"], a:1, e:"Le relais envoie l'énergie au bon moment."},
+    {p:"Un écran ou un voyant remplit quelle fonction ?", o:["Acquérir","Traiter","Communiquer","Convertir"], a:2, e:"Il donne une information à l'utilisateur."},
+    {p:"Une batterie remplit quelle fonction ?", o:["Alimenter","Distribuer","Convertir","Transmettre"], a:0, e:"Elle fournit l'énergie à l'objet."}
+  ]},
+  { t:"Exercice 2 · Le portail automatique", c:"Pour chaque fonction, choisis le composant du portail qui la réalise. Deux composants ne servent pas.", sel:true,
+    q: KEYS.map(k=>({ p: fnOf(k) + (k[0]==='i' ? " · chaîne d'information" : " · chaîne d'énergie"), o:CHOIX_PORTAIL, a:CHOIX_PORTAIL.indexOf(get(S[0],k).c), e:get(S[0],k).d })) },
+  { t:"Exercice 3 · Le vélo à assistance électrique", c:"Choisis la bonne réponse.", q:[
+    {p:"Le moteur du vélo reçoit de l'énergie électrique. Quelle énergie fournit-il ?", o:["Énergie lumineuse","Énergie mécanique de rotation","Énergie chimique","Énergie sonore"], a:1, e:"Le moteur convertit l'énergie électrique en rotation."},
+    {p:"À quelle chaîne appartient l'écran de bord ?", o:["À la chaîne d'énergie","À la chaîne d'information"], a:1, e:"Il affiche des informations : c'est la fonction Communiquer."},
+    {p:"Qui envoie l'ordre au variateur de puissance ?", o:["Le capteur de pédalage","La batterie","Le contrôleur électronique","Le réducteur"], a:2, e:"Le contrôleur traite les informations et commande le variateur."},
+    {p:"Le capteur de pédalage tombe en panne. Que se passe-t-il ?", o:["Le moteur tourne à pleine puissance","L'assistance ne se déclenche pas, car le contrôleur ne reçoit plus l'information","La batterie se vide plus vite","Le réducteur se bloque"], a:1, e:"Sans information du capteur, le contrôleur ne donne aucun ordre."}
+  ]},
+  { t:"Exercice 4 · Éclairage automatique et volet roulant", c:"Choisis la bonne réponse.", q:[
+    {p:"Dans l'éclairage automatique, la lampe LED convertit l'énergie électrique en énergie…", o:["mécanique","lumineuse","chimique","sonore"], a:1, e:"La lampe fournit de l'énergie lumineuse."},
+    {p:"Dans le volet roulant, quel composant décide du sens de rotation du moteur ?", o:["Le tube d'enroulement","Le voyant de la commande","Le contacteur inverseur","Le réseau électrique"], a:2, e:"Le contacteur envoie le courant dans le bon sens."},
+    {p:"Dans l'éclairage automatique, quel est l'ordre du trajet de l'information ?", o:["Module de temporisation, détecteur, voyant","Détecteur, module de temporisation, voyant","Voyant, détecteur, module de temporisation","Détecteur, voyant, module de temporisation"], a:1, e:"Acquérir (détecteur), Traiter (module), Communiquer (voyant)."}
+  ]}
+];
+const QN = [];
+EX.forEach((ex,i)=>ex.q.forEach(q=>{ q.ex = i; q.pts = 1; QN.push(q); }));
+
+let tans = {}, tdone = false, tbest = 0, ttries = 0, tlast = 0;
+
+function loadTestState(){
+  const s = scorm.getSuspend();
+  if (s && typeof s === 'object'){ tbest = +s.b || 0; ttries = +s.t || 0; }
+}
+function countText(){
+  const c = Object.keys(tans).filter(k=>tans[k] !== '').length;
+  return c + ' réponse' + (c>1?'s':'') + ' sur ' + QN.length;
+}
+function tbar(){
+  $('#tbar').innerHTML = tdone
+    ? `<span class="tcount">Note : <b>${tlast} / ${TOTAL}</b></span><button type="button" class="btn primary" data-act="tretry" data-f="tretry">${ICON.reset}Refaire le test</button>`
+    : `<span class="tcount" id="tcount">${countText()}</span><button type="button" class="btn primary" data-act="tvalid" data-f="tvalid">Valider le test</button>`;
+}
+function buildTest(){
+  tans = {}; tdone = false;
+  let n = 0;
+  let h = `<div class="tintro"><h2>Évaluation</h2><p>${TOTAL} points, 1 point par question. Il faut ${SEUIL} points pour valider. Réponds à toutes les questions, puis valide.</p>${ttries ? `<p class="tbest">Meilleure note enregistrée : ${tbest} / ${TOTAL} · ${ttries} essai${ttries>1?'s':''}</p>` : ''}</div>`;
+  h += `<div class="tresult" id="tresult" tabindex="-1" hidden></div>`;
+  EX.forEach((ex,i)=>{
+    h += `<section class="tex"><h2>${ex.t}<span class="sub" id="sub${i}">${ex.q.length} point${ex.q.length>1?'s':''}</span></h2><p class="consigne">${ex.c}</p>`;
+    ex.q.forEach(q=>{
+      const opts = shuffle(q.o.map((t,idx)=>({t,idx})));
+      if (ex.sel){
+        h += `<div class="qq" id="qq${n}"><label class="ql" for="q${n}">${q.p}</label><select id="q${n}" data-q="${n}"><option value="">Choisir un composant…</option>${opts.map(o=>`<option value="${o.idx}">${o.t}</option>`).join('')}</select><p class="fb" hidden></p></div>`;
+      } else {
+        h += `<div class="qq" id="qq${n}" role="radiogroup" aria-labelledby="ql${n}"><p class="ql" id="ql${n}">${q.p}<span class="pt">1 pt</span></p>${opts.map(o=>`<label class="opt"><input type="radio" name="q${n}" data-q="${n}" value="${o.idx}"><span>${o.t}</span></label>`).join('')}<p class="fb" hidden></p></div>`;
+      }
+      n++;
+    });
+    h += `</section>`;
+  });
+  h += `<div class="tbar" id="tbar"></div>`;
+  $('#test').innerHTML = h;
+  tbar();
+}
+function noteMessage(t){
+  if (t >= 16) return "Très bien. Tu sais suivre l'information et l'énergie dans un objet technique.";
+  if (t >= SEUIL) return "Test validé. Relis les questions en rouge pour progresser.";
+  return "Test non validé. Retourne en mode Observer pour revoir les chaînes, puis recommence.";
+}
+function reportScore(){
+  if (!scorm.ok) return;
+  const pct = Math.round(tbest / TOTAL * 100);
+  scorm.set('cmi.core.score.min', 0);
+  scorm.set('cmi.core.score.max', 100);
+  scorm.set('cmi.core.score.raw', pct);
+  scorm.setStatus(tbest >= SEUIL ? 'passed' : 'failed');
+  QN.forEach((q,n)=>{
+    const g = tans[n], answered = g !== undefined && g !== '';
+    const b = 'cmi.interactions.' + n + '.';
+    scorm.set(b+'id', 'q' + (n+1));
+    scorm.set(b+'type', 'choice');
+    if (answered) scorm.set(b+'student_response', LETTRES[+g]);
+    scorm.set(b+'result', answered && +g === q.a ? 'correct' : 'wrong');
+    scorm.set(b+'weighting', q.pts);
+    scorm.set(b+'correct_responses.0.pattern', LETTRES[q.a]);
+  });
+  scorm.set('cmi.suspend_data', JSON.stringify({b:tbest, t:ttries}));
+  scorm.commit();
+}
+function scrollTo_(el){
+  if (!el || !el.scrollIntoView) return;
+  const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({behavior: calm ? 'auto' : 'smooth', block:'start'});
+}
+function validerTest(){
+  if (tdone) return;
+  let total = 0;
+  const sub = EX.map(()=>0);
+  QN.forEach((q,n)=>{
+    const g = tans[n], answered = g !== undefined && g !== '';
+    const ok = answered && +g === q.a;
+    if (ok){ total += q.pts; sub[q.ex] += q.pts; }
+    const box = $('#qq'+n);
+    box.classList.add(ok ? 'ok' : 'bad');
+    box.querySelectorAll('input,select').forEach(x=>{ x.disabled = true; });
+    const fb = box.querySelector('.fb');
+    fb.hidden = false;
+    fb.textContent = ok
+      ? 'Juste. ' + (q.e || '')
+      : (answered ? 'Faux. ' : 'Sans réponse. ') + 'Bonne réponse : ' + q.o[q.a] + '. ' + (q.e || '');
+  });
+  EX.forEach((ex,i)=>{ $('#sub'+i).textContent = sub[i] + ' / ' + ex.q.length + ' points'; });
+  tlast = total; ttries++; tbest = Math.max(tbest, total); tdone = true;
+  const res = $('#tresult');
+  res.className = 'tresult ' + (total >= SEUIL ? 'good' : 'warn');
+  res.hidden = false;
+  res.innerHTML = `<h2>${total} / ${TOTAL}</h2><p>${noteMessage(total)}</p><p class="out">${scorm.ok ? 'Ta meilleure note (' + tbest + ' / ' + TOTAL + ') est enregistrée sur la plateforme.' : 'Cette note n\'est pas enregistrée : ouvre l\'évaluation depuis ta plateforme pour qu\'elle soit transmise.'}</p>`;
+  tbar();
+  reportScore();
+  scrollTo_(res);
+  if (res.focus) res.focus({preventScroll:true});
+}
+
+document.addEventListener('click', e=>{
+  const t = e.target.closest('[data-tab],[data-mode],[data-pip],[data-act],[data-key],[data-chip]');
+  if (!t) return;
+  const d = t.dataset;
+  if (d.tab !== undefined){ sc = +d.tab; buildAll(); return; }
+  if (d.mode){ if (mode!==d.mode){ mode = d.mode; buildAll(); } return; }
+  if (d.pip){ stop(); step = +d.pip; sel = null; sync(); return; }
+  if (d.chip){ chipSel = chipSel===d.chip ? null : d.chip; renderTrain(); return; }
+  if (d.key){
+    if (mode==='train') place(d.key);
+    else { stop(); sel = sel===d.key ? null : d.key; sync(); }
+    return;
+  }
+  switch (d.act){
+    case 'prev': stop(); step = Math.max(0, step-1); sel = null; sync(); break;
+    case 'next': stop(); step = Math.min(7, step+1); sel = null; sync(); break;
+    case 'play': play(); break;
+    case 'restart': stop(); step = 0; sel = null; sync(); break;
+    case 'check': check(); break;
+    case 'solution':
+      placed = {}; KEYS.forEach(k=>placed[k]=k); chipSel = null; checked = true;
+      msg = {t:"Voici la solution. Reviens en mode Observer pour voir le rôle de chaque composant.", k:''};
+      renderTrain(); break;
+    case 'newbank': newBank(); renderTrain(); break;
+    case 'tvalid': validerTest(); break;
+    case 'tretry': buildTest(); scrollTo_($('#test')); break;
+  }
+});
+document.addEventListener('change', e=>{
+  const t = e.target;
+  if (t.id==='hints'){ hints = t.checked; renderTrain(); return; }
+  if (t.dataset && t.dataset.q !== undefined && !tdone){
+    tans[t.dataset.q] = t.value;
+    const c = $('#tcount'); if (c) c.textContent = countText();
+  }
+});
+
+scorm.init();
+loadTestState();
+buildTabs();
+buildAll();
+</script>
+
+</html>
