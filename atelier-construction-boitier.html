@@ -198,12 +198,14 @@ footer{font-size:.8rem;color:var(--muted)}
 
         <details class="sec" id="chessSec" open hidden><summary>Jeu d’échecs</summary><div class="secbody">
           <p class="tip">Plateau gravé posé sur un coffret ; le tiroir glisse dessous pour ranger les 32 pièces. Chaque pièce = un socle avec une fente rectangulaire + un corps plat qui s’y emboîte.</p>
+          <fieldset class="make" style="border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;margin:0;display:flex;flex-wrap:wrap;gap:6px 16px"><legend class="tip" style="padding:0 4px">À fabriquer</legend>
+            <label class="tg"><input type="checkbox" id="mk_pieces"> Pièces</label><label class="tg"><input type="checkbox" id="mk_plateau"> Plateau</label><label class="tg"><input type="checkbox" id="mk_tiroir"> Tiroir (avec son coffret)</label></fieldset>
           <div class="field"><label for="ch_c">Taille des cases (mm)</label><input type="number" id="ch_c" min="18" max="60" step="1"></div>
           <div class="field"><label for="ch_b">Bordure du plateau (mm)</label><input type="number" id="ch_b" min="5" max="40" step="1"></div>
           <div class="field"><label for="ch_Hw">Hauteur du coffret (mm)</label><input type="number" id="ch_Hw" min="25" max="90" step="1"></div>
           <div class="field"><label for="ch_jt">Jeu du tiroir (mm)</label><input type="number" id="ch_jt" min="0.1" max="2" step="0.1"></div>
           <label class="tg"><input type="checkbox" id="ch_marks"> Graver les repères a à h et 1 à 8</label>
-          <h3 style="margin-top:6px">Pièces</h3>
+          <h3 style="margin-top:6px" id="ch_piecesH">Pièces</h3>
           <div class="field"><label for="ch_K">Hauteur du roi (mm)</label><input type="number" id="ch_K" min="30" max="120" step="1"></div>
           <div class="field"><label for="ch_soc">Forme du socle</label><select id="ch_soc"><option value="rond">Rond</option><option value="carre">Carré</option></select></div>
           <div class="field"><label for="ch_D">Taille du socle (mm)</label><input type="number" id="ch_D" min="12" max="60" step="1"></div>
@@ -345,7 +347,7 @@ const RECO={
 };
 
 /* ================= État ================= */
-const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp:0.1},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1};
+const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp:0.1},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1};
 function loadPreset(id){
   const p=PRESETS[id];state.obj=id;state.mode=p.reco;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.sel=-1;
   state.holes=p.holes.map(([type,face,fu,fv])=>{const t=HT[type];return {type,label:t.label,face,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu,fv};});
@@ -620,15 +622,20 @@ function chessDims(){
 }
 const fr=(U,V,N,O)=>({U,V,N,O});
 function chessBoardPanels(cd){
-  const {t,S,Hw,c,b,j,Wd,Dd,Hd}=cd,d={t},P=[];
+  const {t,S,Hw,c,b,j,Wd,Dd,Hd}=cd,d={t},P=[],M=state.chess.make;
+  if(M.tiroir){
   P.push({part:'coffret',name:'Coffret – fond',frame:fr([1,0,0],[0,1,0],[0,0,1],[0,0,0]),outline:outline(S,S,[null,'B','B','B'],d),holes:[],depth:t});
   P.push({part:'coffret',name:'Coffret – arrière',frame:fr([-1,0,0],[0,0,1],[0,-1,0],[S,S,0]),outline:outline(S,Hw,['A','B',null,'B'],d),holes:[],depth:t});
   P.push({part:'coffret',name:'Coffret – côté gauche',frame:fr([0,-1,0],[0,0,1],[1,0,0],[0,S,0]),outline:outline(S,Hw,['A',null,null,'A'],d),holes:[],depth:t});
   P.push({part:'coffret',name:'Coffret – côté droit',frame:fr([0,1,0],[0,0,1],[-1,0,0],[S,0,0]),outline:outline(S,Hw,['A','A',null,null],d),holes:[],depth:t});
+  }
+  if(M.plateau){
   const engr=[];for(let i=0;i<8;i++)for(let k=0;k<8;k++)if((i+k)%2===0)engr.push({r:[b+i*c,b+k*c,b+(i+1)*c,b+(k+1)*c]});
   engr.push({l:[b,b,b+8*c,b+8*c]});
   if(state.chess.marks){const fs=Math.min(b*0.55,c*0.35);for(let i=0;i<8;i++){engr.push({tx:'abcdefgh'[i],u:b+(i+.5)*c,v:b/2,size:fs});engr.push({tx:String(i+1),u:b/2,v:b+(i+.5)*c,size:fs});}}
-  P.push({part:'plateau',name:'Plateau',frame:fr([1,0,0],[0,1,0],[0,0,-1],[0,0,Hw+t]),outline:rect(0,0,S,S),holes:[],depth:t,engr});
+  P.push({part:'plateau',name:'Plateau',frame:fr([1,0,0],[0,1,0],[0,0,-1],[0,0,(M.tiroir?Hw:0)+t]),outline:rect(0,0,S,S),holes:[],depth:t,engr});
+  }
+  if(!M.tiroir)return P;
   // tiroir : boîte à créneaux (même principe que les boîtiers) + façade collée devant
   const O=[t+j,0,t],off=F=>({U:F.U,V:F.V,N:F.N,O:[F.O[0]+O[0],F.O[1]+O[1],F.O[2]+O[2]]}),Fd=frames({L:Wd,W:Dd,H:Hd,t});
   const fh=Math.min(cd.finger,Hd-2*t-4);
@@ -655,35 +662,40 @@ function socleGeos(cd){ // géométrie locale d'un socle, base à z = 0
 function bodyGeo(k,cd){const s=new THREE.Shape(),p=pieceOutline(k,cd);p.forEach((q,i)=>i?s.lineTo(q[0],q[1]):s.moveTo(q[0],q[1]));return new THREE.ExtrudeGeometry(s,{depth:cd.tb,bevelEnabled:false});}
 function buildChess(){
   const cd=chessDims(),panels=chessBoardPanels(cd);
-  const res=[],W=[];
+  const W=[],M=state.chess.make;let cap=0;
+  if(!M.pieces&&!M.plateau&&!M.tiroir)W.push(['bad','Coche au moins un élément à fabriquer : pièces, plateau ou tiroir.']);
+  if(M.pieces){
   if(cd.D>cd.c-1)W.push(['bad',`Les socles (${fmt(cd.D)} mm) sont plus larges que les cases (${fmt(cd.c)} mm) : réduis le diamètre du socle ou agrandis les cases.`]);
   if(cd.slotW>cd.D*(state.chess.soc==='rond'?0.86:0.95)-3)W.push(['bad',`La fente (${fmt(cd.slotW)} mm) est trop longue pour le socle de ${fmt(cd.D)} mm : réduis la hauteur du roi ou agrandis le socle.`]);
-  const nx=Math.floor((cd.Wd-2*cd.t)/(cd.D+1)),ny=Math.floor((cd.Dd-2*cd.t)/(cd.D+1)),cap=Math.max(0,nx*ny);
+  if(!cd.laserP&&cd.slotDepth<2)W.push(['bad','Socle trop bas pour une fente solide : augmente sa hauteur (au moins 5 mm).']);
+  if(cd.laserP&&cd.t<2)W.push(['info',`Plaque de ${fmt(cd.t)} mm : les pièces seront fines et fragiles. 3 mm est un bon compromis.`]);
+  }
+  if(M.tiroir){const nx=Math.floor((cd.Wd-2*cd.t)/(cd.D+1)),ny=Math.floor((cd.Dd-2*cd.t)/(cd.D+1));cap=Math.max(0,nx*ny);}
+  if(M.tiroir&&M.pieces){
   if(cap<32)W.push(['info',`Le tiroir contient ${cap} socles posés à plat sur 32 : empile-les ou agrandis les cases.`]);
   const kingL=100*cd.s+cd.tabD;if(kingL>cd.Dd-2*cd.t-2)W.push(['info',`Le roi (${fmt(kingL)} mm avec sa languette) ne tient pas couché dans le tiroir : réduis sa hauteur.`]);
   if(cd.Hd-cd.t<cd.socH+cd.tb+1)W.push(['bad',`Le tiroir est trop bas pour ranger les pièces : augmente la hauteur du coffret.`]);
-  if(!cd.laserP&&cd.slotDepth<2)W.push(['bad','Socle trop bas pour une fente solide : augmente sa hauteur (au moins 5 mm).']);
-  if(cd.laserP&&cd.t<2)W.push(['info',`Plaque de ${fmt(cd.t)} mm : les pièces seront fines et fragiles. 3 mm est un bon compromis.`]);
-  if(cd.S>400)W.push(['info',`Le plateau fait ${Math.ceil(cd.S)} mm de côté : vérifie la taille du plateau de ta découpeuse laser.`]);
-  if(state.chess.jt<0.3)W.push(['info','Jeu du tiroir très faible : il risque de coincer. 0,5 mm est conseillé.']);
-  return {chess:true,cd,panels,W,cap,d:{t:cd.t,L:cd.S,W:cd.S,H:cd.Hw}};
+  }
+  if((M.plateau||M.tiroir)&&cd.S>400)W.push(['info',`Le plateau fait ${Math.ceil(cd.S)} mm de côté : vérifie la taille du plateau de ta découpeuse laser.`]);
+  if(M.tiroir&&state.chess.jt<0.3)W.push(['info','Jeu du tiroir très faible : il risque de coincer. 0,5 mm est conseillé.']);
+  return {chess:true,cd,panels,W,cap,make:{...M},d:{t:cd.t,L:cd.S,W:cd.S,H:cd.Hw}};
 }
 function rebuildChess3D(m){
   const cd=m.cd,col=v=>new THREE.Color(css(v)),edge=new THREE.Color(0x1a2a24);
   const add=(g,c,off)=>{const me=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:c,roughness:.75,metalness:0,side:THREE.DoubleSide}));
     const ln=new THREE.LineSegments(new THREE.EdgesGeometry(g,25),new THREE.LineBasicMaterial({color:edge,transparent:true,opacity:.3}));
     if(off){me.position.set(...off);ln.position.set(...off);}group.add(me,ln);};
-  const pull=state.explode?[0,-cd.Dd*0.6,0]:null;
+  const M=m.make,pull=state.explode?[0,-cd.Dd*0.6,0]:null;
   m.panels.forEach(p=>add(panelGeo(p),col(p.part==='plateau'?'--wood2':'--wood'),p.part==='tiroir'?pull:null));
   // cases foncées gravées
-  const top=cd.Hw+cd.t,dark=col('--wood').multiplyScalar(0.6);
-  for(let i=0;i<8;i++)for(let k=0;k<8;k++)if((i+k)%2===0){const g=new THREE.BoxGeometry(cd.c,cd.c,0.3);g.translate(cd.b+(i+.5)*cd.c,cd.b+(k+.5)*cd.c,top+0.15);group.add(new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:dark,roughness:.9})));}
-  if(!state.lidShow)return;
+  const top=(M.tiroir?cd.Hw:0)+(M.plateau?cd.t:0),dark=col('--wood').multiplyScalar(0.6);
+  if(M.plateau)for(let i=0;i<8;i++)for(let k=0;k<8;k++)if((i+k)%2===0){const g=new THREE.BoxGeometry(cd.c,cd.c,0.3);g.translate(cd.b+(i+.5)*cd.c,cd.b+(k+.5)*cd.c,top+0.15);group.add(new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:dark,roughness:.9})));}
+  if(!state.lidShow||!M.pieces){needs=true;return;}
   const light=new THREE.Color('#EFDDB6'),darkP=new THREE.Color('#5B3A24'),soc=socleGeos(cd),bodies={};Object.keys(PIECES).forEach(k=>bodies[k]=bodyGeo(k,cd));
-  const put=(k,i,row,black)=>{const cx=cd.b+(i+.5)*cd.c,cy=cd.b+(row+.5)*cd.c,z0=top+0.3,c=black?darkP:light;
+  const put=(k,i,row,black)=>{const cx=cd.b+(i+.5)*cd.c,cy=cd.b+(row+.5)*cd.c,z0=top+(M.plateau?0.3:0),c=black?darkP:light;
     soc.forEach(g=>{const h=g.clone();h.translate(cx,cy,z0);add(h,c);});
-    const M=black?new THREE.Matrix4().set(-1,0,0,cx, 0,0,-1,cy+cd.tb/2, 0,1,0,z0+cd.socH-cd.tabD, 0,0,0,1):new THREE.Matrix4().set(1,0,0,cx, 0,0,1,cy-cd.tb/2, 0,1,0,z0+cd.socH-cd.tabD, 0,0,0,1);
-    add(place(bodies[k].clone(),M),c);};
+    const Mx=black?new THREE.Matrix4().set(-1,0,0,cx, 0,0,-1,cy+cd.tb/2, 0,1,0,z0+cd.socH-cd.tabD, 0,0,0,1):new THREE.Matrix4().set(1,0,0,cx, 0,0,1,cy-cd.tb/2, 0,1,0,z0+cd.socH-cd.tabD, 0,0,0,1);
+    add(place(bodies[k].clone(),Mx),c);};
   BACK.forEach((k,i)=>{put(k,i,0,false);put('pion',i,1,false);put('pion',i,6,true);put(k,i,7,true);});
   needs=true;
 }
@@ -721,39 +733,53 @@ function chessSheets(m){
   const cd=m.cd;
   const get=n=>m.panels.find(p=>p.name===n),mr=Math.max(300,cd.S+8);
   const groups=[['plateau','Plateau',['Plateau']],['coffret','Coffret',['Coffret – fond','Coffret – arrière','Coffret – côté gauche','Coffret – côté droit']],['tiroir','Tiroir',['Tiroir – fond','Tiroir – façade','Tiroir – avant','Tiroir – arrière','Tiroir – côté gauche','Tiroir – côté droit']]];
-  const board=groups.map(([key,label,names])=>({key,label,sheet:packSheet(names.map(get),mr)}));
+  const board=groups.map(([key,label,names])=>({key,label,list:names.map(get).filter(Boolean)})).filter(g=>g.list.length).map(g=>({key:g.key,label:g.label,sheet:packSheet(g.list,mr)}));
   let pieces=null;
-  if(cd.laserP){const list=[];Object.entries(PIECES).forEach(([k,P])=>{for(let i=0;i<P.n;i++)list.push({name:P.nom,outline:pieceOutline(k,cd),holes:[],noLabel:true});});
+  if(cd.laserP&&m.make.pieces){const list=[];Object.entries(PIECES).forEach(([k,P])=>{for(let i=0;i<P.n;i++)list.push({name:P.nom,outline:pieceOutline(k,cd),holes:[],noLabel:true});});
     const L=state.chess.layers;for(let i=0;i<16;i++)for(let k=0;k<L;k++){const slot=!(L>=2&&k===0);const r=cd.D/2;
       list.push({name:'socle',noLabel:true,outline:state.chess.soc==='rond'?circlePts(r):rect(-r,-r,r,r),circ:state.chess.soc==='rond'?r:0,holes:slot?[{shape:'rect',u:0,v:0,w:cd.slotW,h:cd.slotH}]:[]});}
     pieces=packSheet(list,300);}
   return {board,pieces};
 }
 function chessNotice(m){
-  const cd=m.cd,C=state.chess;
-  let s=`JEU D'ÉCHECS À TIROIR\nAtelier construction électronique – Modeleur de boîtiers (projet sans électronique)\n\nPlateau : ${fmt(cd.S)} × ${fmt(cd.S)} mm, cases de ${fmt(cd.c)} mm, bordure de ${fmt(cd.b)} mm\nCoffret : hauteur ${fmt(cd.Hw+cd.t)} mm avec le plateau ; tiroir de ${fmt(cd.Wd)} × ${fmt(cd.Dd)} × ${fmt(cd.Hd)} mm (jeu ${fmt(C.jt)} mm)\nPlaque : ${fmt(cd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n\nPLATEAU, COFFRET ET TIROIR (découpe laser : 1-plateau, 2-coffret, 3-tiroir, en .svg et .dxf)\n- Rouge = découpe ; bleu = gravure (cases foncées${C.marks?', lettres a à h et chiffres 1 à 8':''}). Grave avant de découper.\n- Coffret : colle le fond, l'arrière et les deux côtés (créneaux). L'avant reste ouvert pour le tiroir.\n- Colle le plateau sur le coffret, cases gravées vers le haut, la case a1 (foncée) en bas à gauche, côté tiroir.\n- Tiroir : colle le fond et les 4 côtés, puis la façade devant, centrée et à fleur du bas. Le trou sert de poignée.\n- Laisse sécher avant d'essayer le tiroir. S'il frotte, ponce légèrement ses côtés.\n\nPIÈCES (32 = 16 claires + 16 foncées)\nPar couleur : 1 roi, 1 dame, 2 tours, 2 fous, 2 cavaliers, 8 pions, et 16 socles.\nChaque pièce = un socle avec une fente rectangulaire (${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm) + un corps plat dont la languette s'enfonce de ${fmt(cd.tabD)} mm.\n`;
+  const cd=m.cd,C=state.chess,M=m.make,parts=[M.pieces&&'pièces',M.plateau&&'plateau',M.tiroir&&'tiroir et coffret'].filter(Boolean);
+  const files=chessSheets(m).board.map((g,i)=>`${i+1}-${g.key}`).join(', ');
+  let s=`JEU D'ÉCHECS – ${parts.join(', ').toUpperCase()}\nAtelier construction électronique – Modeleur de boîtiers (projet sans électronique)\n\nCases de ${fmt(cd.c)} mm ; plaque de ${fmt(cd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n`;
+  if(M.plateau||M.tiroir)s+=`\n${M.plateau&&M.tiroir?'PLATEAU, COFFRET ET TIROIR':M.plateau?'PLATEAU':'COFFRET ET TIROIR'} (découpe laser : ${files}, en .svg et .dxf)\n- Rouge = découpe ; bleu = gravure.\n`;
+  if(M.plateau)s+=`- Plateau de ${fmt(cd.S)} × ${fmt(cd.S)} mm : grave les cases foncées${C.marks?', les lettres a à h et les chiffres 1 à 8':''} avant de le découper.\n`;
+  if(M.tiroir)s+=`- Coffret de ${fmt(cd.S)} × ${fmt(cd.S)} × ${fmt(cd.Hw)} mm : colle le fond, l'arrière et les deux côtés (créneaux). L'avant reste ouvert pour le tiroir.\n- Tiroir de ${fmt(cd.Wd)} × ${fmt(cd.Dd)} × ${fmt(cd.Hd)} mm (jeu ${fmt(C.jt)} mm) : colle le fond et les 4 côtés, puis la façade devant, centrée et à fleur du bas. Le trou sert de poignée.\n- Laisse sécher avant d'essayer le tiroir. S'il frotte, ponce légèrement ses côtés.\n`;
+  if(M.plateau&&M.tiroir)s+=`- Colle le plateau sur le coffret, cases gravées vers le haut, la case a1 (foncée) en bas à gauche, côté tiroir.\n`;
+  if(M.tiroir&&!M.plateau)s+=`- Sans plateau, le coffret reste ouvert en haut : pose ton propre plateau dessus ou colle une plaque de ${fmt(cd.S)} × ${fmt(cd.S)} mm.\n`;
+  if(!M.pieces)return s;
+  s+=`\nPIÈCES (32 = 16 claires + 16 foncées)\nPar couleur : 1 roi, 1 dame, 2 tours, 2 fous, 2 cavaliers, 8 pions, et 16 socles.\nChaque pièce = un socle avec une fente rectangulaire (${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm) + un corps plat dont la languette s'enfonce de ${fmt(cd.tabD)} mm.\n`;
   if(cd.laserP)s+=`- pieces-a-decouper-2-fois.svg : une couleur. Découpe la planche une fois dans un bois clair et une fois dans un bois foncé (ou peins la deuxième série).\n- Socles : ${C.layers} couche${C.layers>1?'s':''} de ${fmt(cd.t)} mm à coller ensemble${C.layers>=2?' (la couche sans fente en dessous)':''}.\n- L'emboîtement doit être serré : fais un essai et ajuste le jeu d'emboîtement (${fmt(C.jp)} mm) si besoin.\n`;
   else s+=`- Impression 3D : socle.stl (à imprimer 32 fois) et un fichier par corps (corps-roi.stl, etc.), à imprimer en 2 couleurs.\n- Corps de ${fmt(cd.tb)} mm d'épaisseur, posés à plat ; socles de ${fmt(cd.socH)} mm, fente de ${fmt(cd.slotDepth)} mm de profondeur. PLA, couche 0,2 mm, sans support.\n- Quantités par couleur : roi 1, dame 1, tour 2, fou 2, cavalier 2, pion 8.\n`;
   return s;
 }
-function renderChessWarns(m){const W=m.W.length?m.W:[['ok','Tout est en ordre : les pièces tiennent sur les cases et rentrent dans le tiroir.']];$('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');}
+function renderChessWarns(m){const W=m.W.length?m.W:[['ok',m.make.pieces&&m.make.tiroir?'Tout est en ordre : les pièces tiennent sur les cases et rentrent dans le tiroir.':'Tout est en ordre.']];$('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');}
 function renderChessStats(m){
-  const cd=m.cd,sh=chessSheets(m);let s=[['Plateau',`${fmt(cd.S)} × ${fmt(cd.S)} mm`],['Hauteur totale',`${fmt(cd.Hw+cd.t)} mm`]];
-  sh.board.forEach(g=>s.push(['Plaque '+g.label.toLowerCase(),`${Math.ceil(g.sheet.W)} × ${Math.ceil(g.sheet.H)} mm`]));s.push(['Tiroir',`${m.cap} socles à plat`]);
+  const cd=m.cd,M=m.make,sh=chessSheets(m);let s=[];
+  if(M.plateau||M.tiroir)s.push([M.plateau?'Plateau':'Coffret',`${fmt(cd.S)} × ${fmt(cd.S)} mm`]);
+  if(M.tiroir)s.push(['Hauteur totale',`${fmt(cd.Hw+(M.plateau?cd.t:0))} mm`]);
+  sh.board.forEach(g=>s.push(['Plaque '+g.label.toLowerCase(),`${Math.ceil(g.sheet.W)} × ${Math.ceil(g.sheet.H)} mm`]));
+  if(M.tiroir)s.push(['Tiroir',`${m.cap} socles à plat`]);
   if(sh.pieces)s.push(['Plaque pièces (× 2)',`${Math.ceil(sh.pieces.W)} × ${Math.ceil(sh.pieces.H)} mm`]);
-  else{const v=Math.abs(signedVolume(socleGeos(cd)))*32+Object.entries(PIECES).reduce((acc,[k,P])=>acc+Math.abs(signedVolume([bodyGeo(k,cd)]))*P.n*2,0);s.push(['Plastique pièces',`≈ ${Math.round(v/1000*1.24)} g de PLA au maximum`]);}
+  else if(M.pieces){const v=Math.abs(signedVolume(socleGeos(cd)))*32+Object.entries(PIECES).reduce((acc,[k,P])=>acc+Math.abs(signedVolume([bodyGeo(k,cd)]))*P.n*2,0);s.push(['Plastique pièces',`≈ ${Math.round(v/1000*1.24)} g de PLA au maximum`]);}
   $('stats').innerHTML=s.map(([x,y])=>`<div class="stat"><span>${x}</span><b>${y}</b></div>`).join('');
-  $('expInfo').textContent=cd.laserP?'Un .zip avec 3 plans (plateau, coffret, tiroir), la planche de pièces à découper deux fois, en SVG et DXF, et la notice de montage.':'Un .zip avec les 3 plans laser (plateau, coffret, tiroir), les STL du socle et des 6 corps de pièces, et la notice.';
+  const inc=[];if(sh.board.length)inc.push(`${sh.board.length===1?'le plan':'les '+sh.board.length+' plans'} laser (${sh.board.map(g=>g.label.toLowerCase()).join(', ')})`);if(M.pieces)inc.push(cd.laserP?'la planche de pièces à découper deux fois':'les STL du socle et des 6 corps de pièces');
+  $('expInfo').textContent=inc.length?`Un .zip avec ${inc.join(' et ')}, en ${cd.laserP||!M.pieces?'SVG et DXF':'SVG, DXF et STL'}, et la notice de montage.`:'Coche au moins un élément à fabriquer.';
+  const b1=$('exCh'),b2=$('exChSvg');if(b1)b1.disabled=!inc.length;if(b2)b2.hidden=!M.plateau;
 }
 async function exportChess(){
   const m=buildModel(),sh=chessSheets(m),z=new JSZip();
+  if(!m.make.pieces&&!m.make.plateau&&!m.make.tiroir){$('dlStatus').textContent='Coche au moins un élément à fabriquer.';return;}
   sh.board.forEach((g,i)=>{z.file(`${i+1}-${g.key}.svg`,sheetSVG(g.sheet,true,state.engrave).svg);z.file(`${i+1}-${g.key}.dxf`,sheetDXF(g.sheet));});
   if(sh.pieces){z.file('pieces-a-decouper-2-fois.svg',sheetSVG(sh.pieces,true,false).svg);z.file('pieces-a-decouper-2-fois.dxf',sheetDXF(sh.pieces));}
-  else{z.file('socle.stl',stlOf(socleGeos(m.cd),'Socle').buf);Object.keys(PIECES).forEach(k=>z.file(`corps-${k}.stl`,stlOf([bodyGeo(k,m.cd)],PIECES[k].nom).buf));}
+  else if(m.make.pieces){z.file('socle.stl',stlOf(socleGeos(m.cd),'Socle').buf);Object.keys(PIECES).forEach(k=>z.file(`corps-${k}.stl`,stlOf([bodyGeo(k,m.cd)],PIECES[k].nom).buf));}
   z.file('LISEZ-MOI.txt',chessNotice(m));
-  await saveFile('jeu-d-echecs-a-tiroir.zip',await z.generateAsync({type:'blob'}),'application/zip');
+  await saveFile('jeu-d-echecs'+(m.make.pieces?'-pieces':'')+(m.make.plateau?'-plateau':'')+(m.make.tiroir?'-tiroir':'')+'.zip',await z.generateAsync({type:'blob'}),'application/zip');
 }
-async function exportChessBoardSVG(){const m=buildModel();await saveFile('jeu-d-echecs-plateau-grave.svg',sheetSVG(chessSheets(m).board[0].sheet,true,false).svg,'image/svg+xml');}
+async function exportChessBoardSVG(){const m=buildModel(),g=chessSheets(m).board.find(x=>x.key==='plateau');if(g)await saveFile('jeu-d-echecs-plateau-grave.svg',sheetSVG(g.sheet,true,false).svg,'image/svg+xml');}
 
 /* ================= Banc de stop motion (sans électronique) ================= */
 const PAPER={A5:[210,148],A4:[297,210],A3:[420,297]};
@@ -879,7 +905,10 @@ function renderControls(){
   if(isS){const S=state.sm;['pw','pd','tw','td','ca','cb','win','hc','fov'].forEach(k=>$('sm_'+k).value=S[k]);$('sm_paper').value=S.paper;$('sm_dev').value=S.dev;$('sm_winShape').value=S.winShape;$('sm_cable').value=S.cable;$('sm_stops').checked=S.stops;
     $('sm_pwF').hidden=S.paper!=='perso';$('sm_pdF').hidden=S.paper!=='perso';}
   if(isC){const C=state.chess;['c','b','Hw','jt','K','D','tb3','hs3','jp'].forEach(k=>$('ch_'+k).value=C[k]);$('ch_marks').checked=C.marks;$('ch_soc').value=C.soc;$('ch_layers').value=String(C.layers);
-    $('ch_layersF').hidden=state.mode!=='laser';$('ch_layersTip').hidden=state.mode!=='laser';$('ch_tb3F').hidden=state.mode!=='3d';$('ch_hs3F').hidden=state.mode!=='3d';}
+    const M=C.make;['pieces','plateau','tiroir'].forEach(k=>$('mk_'+k).checked=M[k]);$('modeSeg').hidden=!M.pieces;
+    const show=(id,on)=>{const el=$(id).closest('.field')||$(id).closest('label');el.hidden=!on;};show('ch_b',M.plateau||M.tiroir);show('ch_Hw',M.tiroir);show('ch_jt',M.tiroir);show('ch_marks',M.plateau);
+    ['ch_K','ch_soc','ch_D','ch_jp'].forEach(id=>show(id,M.pieces));$('ch_piecesH').hidden=!M.pieces;
+    $('ch_layersF').hidden=state.mode!=='laser'||!M.pieces;$('ch_layersTip').hidden=state.mode!=='laser';$('ch_tb3F').hidden=state.mode!=='3d'||!M.pieces;$('ch_hs3F').hidden=state.mode!=='3d'||!M.pieces;$('ch_layersTip').hidden=state.mode!=='laser'||!M.pieces;}
   const r=$('reco');if(isS){r.textContent='Découpe laser : grand cadre plat en contreplaqué de 4 ou 5 mm, assemblé par tenons et mortaises. Les fentes sont compensées pour que les languettes tiennent serrées.';r.classList.remove('other');}
   else if(isC){r.textContent=state.mode==='laser'?'Plateau, coffret et tiroir en découpe laser (gravure des cases). Pièces aussi en découpe laser : corps et socles dans la même plaque, rapide et sans plastique.':'Plateau, coffret et tiroir en découpe laser. Pièces en impression 3D : socles plus lourds et plus stables, fente borgne qui cache la languette.';r.classList.remove('other');}
   else r.textContent=state.mode===p.reco?RECO[p.reco]:RECO[p.reco]+' Tu as choisi l’autre technique : c’est possible, vérifie les avertissements.';r.classList.toggle('other',state.mode!==p.reco);
@@ -894,7 +923,7 @@ function renderControls(){
   $('explode').checked=state.explode;$('lidShow').checked=state.lidShow;
   $('addType').innerHTML=Object.entries(HT).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
   $('addFace').innerHTML=FACES.map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
-  $('expBtns').innerHTML=isS?'<button class="btn primary" id="exSM">Télécharger le banc de stop motion (.zip)</button>':isC?'<button class="btn primary" id="exCh">Télécharger tout le projet (.zip)</button><button class="btn" id="exChSvg">Plateau gravé seul (SVG)</button>':state.mode==='3d'?'<button class="btn primary" id="ex3d">Télécharger les fichiers STL (.zip)</button>':
+  $('expBtns').innerHTML=isS?'<button class="btn primary" id="exSM">Télécharger le banc de stop motion (.zip)</button>':isC?'<button class="btn primary" id="exCh">Télécharger la sélection (.zip)</button><button class="btn" id="exChSvg">Plateau gravé seul (SVG)</button>':state.mode==='3d'?'<button class="btn primary" id="ex3d">Télécharger les fichiers STL (.zip)</button>':
     '<button class="btn primary" id="exSvg">Télécharger le plan SVG</button><button class="btn" id="exZip">SVG + DXF + notice (.zip)</button>';
   if(!isC&&!isS)renderHoles();
 }
@@ -976,6 +1005,7 @@ $('sm_winShape').addEventListener('change',e=>{state.sm.winShape=e.target.value;
 $('sm_cable').addEventListener('change',e=>{state.sm.cable=e.target.value;update(false);});
 $('sm_stops').addEventListener('change',e=>{state.sm.stops=e.target.checked;update(false);});
 $('sm_adv').addEventListener('click',()=>{state.sm.hc=smAdvised();$('sm_hc').value=state.sm.hc;resetView();update(false);});
+['pieces','plateau','tiroir'].forEach(k=>$('mk_'+k).addEventListener('change',e=>{state.chess.make[k]=e.target.checked;renderControls();resetView();update(false);}));
 $('ch_marks').addEventListener('change',e=>{state.chess.marks=e.target.checked;update(false);});
 $('ch_soc').addEventListener('change',e=>{state.chess.soc=e.target.value;update(false);});
 $('ch_layers').addEventListener('change',e=>{state.chess.layers=+e.target.value;update(false);});
