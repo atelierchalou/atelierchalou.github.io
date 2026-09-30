@@ -13,6 +13,7 @@
   --paper:#EEF2EC; --board:#FBFCF8; --panel:#FFFFFF; --ink:#16242A; --muted:#566870; --line:#D2DBD3;
   --accent:#16775A; --accent-soft:#DCEFE6; --current:#E4A800; --led:#E0342B; --ledw:#FFF6C8;
   --ok:#1D8A4B; --bad:#C3322A; --bad-soft:#FBE4E1; --ok-soft:#E0F2E6; --warn-soft:#FFF4D1; --grid:rgba(22,119,90,.07); --scrim:rgba(16,28,24,.55);
+  --tin:#A3ADB3; --compb:#E6DFCF; --water:#3F95D6; --darkc:#2E3438; --copper:#C27A3A; --wred:#D23B2E; --wblack:#1B1B1B; --wire:#E07B1A; --glass:#CDE6EE; --cell:#3F7FD0;
   --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
   --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
@@ -20,11 +21,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --paper:#0D1512; --board:#121D19; --panel:#16231E; --ink:#E3ECE6; --muted:#94A69D; --line:#2A3A33;
   --accent:#42C08F; --accent-soft:#1B3A2E; --current:#FFD13B; --led:#FF5A4E; --ledw:#FFFBEA;
-  --ok:#52C47D; --bad:#FF6F63; --bad-soft:#3A1E1C; --ok-soft:#173826; --warn-soft:#3A3217; --grid:rgba(66,192,143,.07); --scrim:rgba(0,0,0,.65); color-scheme:dark}}
+  --ok:#52C47D; --bad:#FF6F63; --bad-soft:#3A1E1C; --ok-soft:#173826; --warn-soft:#3A3217; --grid:rgba(66,192,143,.07); --scrim:rgba(0,0,0,.65);
+  --tin:#8E999F; --compb:#3A4A43; --water:#5AA9E6; --darkc:#3D4A52; --copper:#D08A48; --wred:#E4574A; --wblack:#6E767C; --wire:#EE8B2C; --glass:#557985; --cell:#4F8FE0; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#0D1512; --board:#121D19; --panel:#16231E; --ink:#E3ECE6; --muted:#94A69D; --line:#2A3A33;
   --accent:#42C08F; --accent-soft:#1B3A2E; --current:#FFD13B; --led:#FF5A4E; --ledw:#FFFBEA;
-  --ok:#52C47D; --bad:#FF6F63; --bad-soft:#3A1E1C; --ok-soft:#173826; --warn-soft:#3A3217; --grid:rgba(66,192,143,.07); --scrim:rgba(0,0,0,.65); color-scheme:dark}
+  --ok:#52C47D; --bad:#FF6F63; --bad-soft:#3A1E1C; --ok-soft:#173826; --warn-soft:#3A3217; --grid:rgba(66,192,143,.07); --scrim:rgba(0,0,0,.65);
+  --tin:#8E999F; --compb:#3A4A43; --water:#5AA9E6; --darkc:#3D4A52; --copper:#D08A48; --wred:#E4574A; --wblack:#6E767C; --wire:#EE8B2C; --glass:#557985; --cell:#4F8FE0; color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -246,6 +249,25 @@ td.chk input{width:18px;height:18px;accent-color:var(--ok)}
 .safequiz .qcard{background:var(--panel)}
 .print3d{border:1.5px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--board)}
 .print3d img{border-radius:8px;border:1.5px solid var(--line);width:100%;height:auto;background:#f8f8f8}
+/* Illustrations */
+.ill{display:block;width:100%;height:auto;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ill text{fill:var(--ink);stroke:none;font-family:var(--body)}
+.ill .t-hot{fill:var(--bad)}.ill .t-mut{fill:var(--muted)}.ill .t-on{fill:#fff}
+.ill .f-hot,.ill .f-hotfill{fill:var(--bad)}.ill .f-tin{fill:var(--tin)}.ill .f-comp{fill:var(--compb)}.ill .f-water{fill:var(--water);stroke:none}.ill .f-ink{fill:var(--ink)}.ill .f-mut{fill:var(--muted)}
+.ill .f-acc{fill:var(--accent);stroke:none}.ill .f-board{fill:var(--board)}.ill .f-warn{fill:var(--current)}.ill .f-sponge{fill:#E8C547}.ill .f-dark{fill:var(--darkc)}.ill .f-led{fill:var(--led)}.ill .f-ledw{fill:#FFF6D6}
+.ill .f-resbody{fill:#D9C49A}.ill .f-glass{fill:var(--glass)}.ill .f-copper{fill:var(--copper)}.ill .f-cell{fill:var(--cell)}.ill .f-bulb{fill:#FFE9A0}.ill .f-yellow{fill:#E8B923}
+.ill .s-hot{stroke:var(--bad)}.ill .s-tin{stroke:var(--tin)}.ill .s-comp{stroke:var(--compb)}.ill .s-acc{stroke:var(--accent)}.ill .s-mut{stroke:var(--muted)}.ill .s-copper{stroke:var(--copper)}.ill .s-wred{stroke:var(--wred)}.ill .s-wblack{stroke:var(--wblack)}.ill .s-wire{stroke:var(--wire)}.ill .s-ok{stroke:var(--ok)}.ill .s-board{stroke:var(--board)}
+.ill.ico{width:52px;flex:none}
+.safegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.srule{display:flex;gap:10px;align-items:center;background:var(--panel);border-radius:10px;padding:8px 10px;font-size:.9rem;line-height:1.35}
+.safety .burn{display:flex;gap:10px;align-items:center}
+.qhead{display:flex;gap:10px;align-items:center}.qhead .ill.ico{width:44px}
+.illfig{margin:0;display:flex;flex-direction:column;gap:6px;background:var(--board);border:1.5px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto}
+.illfig .ill.wide{min-width:420px}
+.illfig figcaption,.illcard figcaption{font-size:.82rem;color:var(--muted)}
+.illgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.illcard{margin:0;background:var(--board);border:1.5px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:4px}
+.phase h4{margin:6px 0 0;font-family:var(--display);font-size:.95rem}
 @media (prefers-reduced-motion: reduce){#board .flow.on,#board .slot.live .sym .waves,#board .slot.live .sym .glow.blink{animation:none}.bar i{transition:none}}
 </style>
 </head>
@@ -345,27 +367,30 @@ td.chk input{width:18px;height:18px;accent-color:var(--ok)}
       <p>Lis d'abord les consignes de sécurité, engage-toi à les respecter, puis réponds au petit QCM. Les étapes de soudure s'affichent ensuite.</p></div></div>
     <div class="safety">
       <h3>Consignes de sécurité</h3>
-      <ul id="safetyList"></ul>
-      <p class="burn">En cas de brûlure : passe tout de suite la zone sous l'eau froide pendant 10 minutes et préviens le professeur.</p>
+      <div class="safegrid" id="safetyList"></div>
+      <p class="burn" id="burnP">En cas de brûlure : passe tout de suite la zone sous l'eau froide pendant 10 minutes et préviens le professeur.</p>
       <label class="ack" for="ackBox"><input type="checkbox" id="ackBox"> J'ai lu les consignes de sécurité et je m'engage à les respecter.</label>
       <div id="safeQuiz" class="safequiz" hidden>
         <div class="quizhead"><h3>Petit QCM de sécurité</h3><span class="score" id="safeScore"></span></div>
-        <p class="tip">Réponds correctement aux 5 questions pour afficher les étapes de fabrication.</p>
+        <p class="tip">Réponds correctement aux 5 questions pour afficher les étapes de fabrication. Le QCM est à refaire à chaque séance de fabrication, avec des questions tirées au sort.</p>
         <div class="qlist" id="safeList"></div>
         <div id="safeEnd" class="msg ok" hidden>Bravo, tu connais les règles de sécurité. Les étapes de fabrication sont affichées ci-dessous.</div>
       </div>
     </div>
     <div class="fabgrid" id="fabBody" hidden>
       <div class="col">
-        <div class="phase"><h3><span class="n">A</span>Préparer</h3><ol class="list" id="prep"></ol></div>
+        <div class="phase"><h3><span class="n">A</span>Préparer</h3><ol class="list" id="prep"></ol><figure class="illfig" id="prepIll"></figure><div id="compIll"></div></div>
         <div class="phase">
           <h3><span class="n">B</span>Les soudures de ton circuit</h3>
           <p class="tip" id="jointsIntro"></p>
+          <figure class="illfig" id="wiringIll"></figure>
           <div class="joints" id="joints"></div>
         </div>
         <div class="phase">
           <h3><span class="n">C</span>Réussir chaque soudure</h3>
+          <figure class="illfig" id="stationIll"></figure>
           <ol class="list" id="howto"></ol>
+          <div id="stepsIll" style="display:flex;flex-direction:column;gap:8px"></div>
           <div class="hots" id="hotTips"></div>
         </div>
         <div class="phase"><h3><span class="n">D</span>Tester et dépanner</h3><ol class="list" id="testSteps"></ol></div>
@@ -695,13 +720,150 @@ const SAFETY=[
   'À la fin, éteins et débranche le fer, puis laisse-le refroidir sur son support.'
 ];
 const SAFEQ=[
-  {q:'Où poses-tu le fer à souder quand tu ne t’en sers pas ?',a:'Toujours sur son support',d:['Sur la table, à côté de moi','Sur le boîtier de piles'],e:'Posé sur la table, le fer peut brûler la table, un câble ou la main de quelqu’un.'},
-  {q:'Par où tiens-tu le fer à souder ?',a:'Uniquement par le manche',d:['Par la panne, c’est plus précis','Par le câble, pour le déplacer'],e:'La panne dépasse 300 °C : seule la poignée ne chauffe pas.'},
-  {q:'Quand mets-tu les piles dans le boîtier ?',a:'Seulement au test final, après le contrôle du professeur',d:['Avant de souder, pour tester au fur et à mesure','Pendant la soudure du dernier fil'],e:'Souder avec les piles branchées peut provoquer un court-circuit et faire chauffer les piles.'},
-  {q:'Tu viens de faire une soudure. Peux-tu la toucher pour vérifier ?',a:'Non, j’attends qu’elle refroidisse',d:['Oui, l’étain refroidit tout de suite','Oui, si je souffle dessus avant'],e:'L’étain fond vers 220 °C : juste après la soudure, il brûle encore.'},
-  {q:'Tu te brûles le doigt. Que fais-tu ?',a:'Je le passe sous l’eau froide 10 minutes et je préviens le professeur',d:['Je continue, ce n’est pas grave','Je mets du beurre dessus'],e:'L’eau froide limite la brûlure. Le professeur doit toujours être prévenu.'}
+  {ico:'stand',q:'Où poses-tu le fer à souder quand tu ne t’en sers pas ?',a:'Toujours sur son support',d:['Sur la table, à côté de moi','Sur le boîtier de piles'],e:'Posé sur la table, le fer peut brûler la table, un câble ou la main de quelqu’un.'},
+  {ico:'hot',q:'Par où tiens-tu le fer à souder ?',a:'Uniquement par le manche',d:['Par la panne, c’est plus précis','Par le câble, pour le déplacer'],e:'La panne dépasse 300 °C : seule la poignée ne chauffe pas.'},
+  {ico:'battery',q:'Quand mets-tu les piles dans le boîtier ?',a:'Seulement au test final, après le contrôle du professeur',d:['Avant de souder, pour tester au fur et à mesure','Pendant la soudure du dernier fil'],e:'Souder avec les piles branchées peut provoquer un court-circuit et faire chauffer les piles.'},
+  {ico:'hot',q:'Tu viens de faire une soudure. Peux-tu la toucher pour vérifier ?',a:'Non, j’attends qu’elle refroidisse',d:['Oui, l’étain refroidit tout de suite','Oui, si je souffle dessus avant'],e:'L’étain fond vers 220 °C : juste après la soudure, il brûle encore.'},
+  {ico:'burn',q:'Tu te brûles le doigt. Que fais-tu ?',a:'Je le passe sous l’eau froide 10 minutes et je préviens le professeur',d:['Je continue, ce n’est pas grave','Je mets du beurre dessus'],e:'L’eau froide limite la brûlure. Le professeur doit toujours être prévenu.'},
+  {ico:'hair',q:'Avant de souder, que fais-tu de tes cheveux longs et de ton écharpe ?',a:'J’attache mes cheveux et j’enlève mon écharpe',d:['Rien, ce n’est pas dangereux','Je les rentre dans mon col'],e:'Des cheveux ou une écharpe peuvent toucher la panne brûlante ou accrocher le câble.'},
+  {ico:'smoke',q:'La fumée de soudure monte vers ton visage. Que fais-tu ?',a:'J’éloigne ma tête et j’aère la salle',d:['Je souffle dessus','Je me penche pour mieux voir'],e:'La fumée vient du produit contenu dans l’étain : elle irrite le nez et la gorge.'},
+  {ico:'unplug',q:'Tu as fini de souder. Que fais-tu du fer ?',a:'Je l’éteins, je le débranche et je le laisse refroidir sur son support',d:['Je le range tout de suite dans le tiroir','Je le laisse allumé pour le groupe suivant'],e:'Un fer reste brûlant plusieurs minutes après avoir été éteint.'},
+  {ico:'cable',q:'Où passe le câble du fer à souder ?',a:'Loin du passage, pour que personne ne l’accroche',d:['Au bord de la table, devant moi','Par terre, entre les chaises'],e:'Si quelqu’un accroche le câble, le fer brûlant peut tomber.'}
 ];
 const TOOLS=['Fer à souder avec support et éponge','Étain sans plomb, Ø 0,8 mm','Troisième main (support avec pinces)','Pince à dénuder','Pince coupante','Pince plate','Décapeur thermique ou briquet (manipulé par le professeur) pour la gaine'];
+
+/* ================= Illustrations (SVG dessinés) ================= */
+const SV=(w,h,inner,label,cls)=>`<svg class="ill ${cls||''}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">${inner}</svg>`;
+const T=(x,y,s,txt,o)=>`<text x="${x}" y="${y}" font-size="${s}"${o?' '+o:''}>${txt}</text>`;
+const IC={
+  hot:`<path d="M5 38 L20 32 L20 42 Z" class="f-hot"/><rect x="20" y="32" width="14" height="10" rx="2" class="f-tin"/><rect x="34" y="30" width="25" height="14" rx="7" class="f-comp"/><path d="M8 28c3-4-3-6 0-10M14 28c3-4-3-6 0-10" class="s-hot"/>${T(4,58,9,'300 °C','class="t-hot"')}`,
+  stand:`<ellipse cx="32" cy="55" rx="24" ry="5" class="f-comp"/><path d="M12 55h40"/><ellipse cx="22" cy="46" rx="6" ry="3" transform="rotate(-50 22 46)"/><ellipse cx="28" cy="38" rx="6" ry="3" transform="rotate(-50 28 38)"/><ellipse cx="34" cy="30" rx="6" ry="3" transform="rotate(-50 34 30)"/><path d="M14 56 L40 22" class="s-tin" stroke-width="3"/><path d="M40 22 L54 6" stroke-width="7" class="s-comp"/><path d="M12 58 L16 52" class="s-hot" stroke-width="3"/>`,
+  hair:`<circle cx="28" cy="24" r="12" class="f-comp"/><path d="M38 17c9 2 11 12 5 23"/><path d="M40 22l6-2" class="s-acc" stroke-width="4"/><path d="M10 60c2-13 34-13 36 0"/><path d="M14 52l-6 8M42 52l6 8" class="s-acc"/>`,
+  smoke:`<circle cx="48" cy="20" r="9" class="f-comp"/><path d="M38 58c0-11 20-11 20 0"/><path d="M36 20h-8M30 16l-3 4 3 4" class="s-acc"/><circle cx="12" cy="54" r="3" class="f-tin"/><path d="M12 48c-5-4 5-8 0-12s5-8 0-12s5-6 0-10" class="s-mut"/>`,
+  battery:`<rect x="12" y="22" width="34" height="20" rx="3" class="f-comp"/><rect x="46" y="28" width="5" height="8" rx="1"/><path d="M18 32h6M21 29v6"/><path d="M8 12 L56 52M56 12 L8 52" class="s-hot" stroke-width="4"/>`,
+  cable:`<path d="M4 30h56M10 30v28M54 30v28"/><rect x="16" y="22" width="20" height="6" rx="3" class="f-comp"/><path d="M36 25c12 0 16 2 18 6s2 12 0 22" class="s-acc" stroke-width="2.5"/><path d="M26 44l-6 10h12z" class="f-warn"/>${T(24.6,52.5,6,'!','font-weight="700"')}`,
+  wash:`<path d="M18 58V30c0-3 5-3 5 0v-8c0-3 5-3 5 0v-4c0-3 5-3 5 0v4c0-3 5-3 5 0v18l4-6c2-3 6-1 5 2l-7 14c-2 4-5 6-10 6z" class="f-comp"/><path d="M48 8c-3 5-5 7-5 10a5 5 0 0 0 10 0c0-3-2-5-5-10z" class="f-water"/><path d="M12 14c-2 3-3 4-3 6a3 3 0 0 0 6 0c0-2-1-3-3-6z" class="f-water"/>`,
+  unplug:`<rect x="38" y="20" width="18" height="26" rx="4" class="f-comp"/><circle cx="44" cy="33" r="2" class="f-ink"/><circle cx="50" cy="33" r="2" class="f-ink"/><rect x="10" y="26" width="14" height="14" rx="3" class="f-comp"/><path d="M24 30h6M24 36h6M4 33h6"/><path d="M30 14l-6-4M30 52l-6 4" class="s-acc"/>`,
+  burn:`<path d="M10 14h26v8H22v6h-6v-6h-6z" class="f-tin"/><path d="M19 32c-3 5-5 7-5 10a5 5 0 0 0 10 0c0-3-2-5-5-10z" class="f-water"/><path d="M19 50c-2 3-3 4-3 6a3 3 0 0 0 6 0c0-2-1-3-3-6z" class="f-water"/>${T(34,44,10,'10 min','font-weight="700"')}`
+};
+const icon=(k,l)=>SV(64,64,IC[k],l,'ico');
+const SAFETY_I=[['hot','Fer à souder : la panne est brûlante'],['stand','Fer reposé sur son support'],['hair','Cheveux attachés, manches relevées'],['smoke','Tête éloignée de la fumée'],['battery','Pas de piles pendant la soudure'],['cable','Câble du fer loin du passage'],['wash','Se laver les mains'],['unplug','Éteindre et débrancher']];
+
+/* Poste de soudure légendé */
+function stationSVG(){
+  const L=(x1,y1,x2,y2,t,ax)=>`<path d="M${x1} ${y1}L${x2} ${y2}" class="s-mut" stroke-width="1.2"/><circle cx="${x1}" cy="${y1}" r="2.2" class="f-mut"/>${T(x2+(ax==='end'?-4:4),y2+4,12,t,ax==='end'?'text-anchor="end"':'')}`;
+  let s=`<rect x="20" y="168" width="240" height="32" rx="6" class="f-comp"/><rect x="34" y="160" width="74" height="16" rx="4" class="f-sponge"/>`;
+  for(let i=0;i<5;i++){const x=150+i*15,y=160-i*15;s+=`<ellipse cx="${x}" cy="${y}" rx="14" ry="6" transform="rotate(-45 ${x} ${y})"/>`;}
+  s+=`<path d="M168 178 L130 188" stroke-width="3"/><path d="M142 172 L212 102" class="s-tin" stroke-width="7"/><path d="M212 102 L262 52" class="s-comp" stroke-width="18"/><path d="M262 52 L290 30" class="s-mut" stroke-width="3"/><path d="M142 172 L128 186" class="s-hot" stroke-width="6"/>`;
+  s+=`<circle cx="360" cy="160" r="30" class="f-tin"/><circle cx="360" cy="160" r="9" class="f-comp"/><path d="M388 148c20-6 30-20 36-40" class="s-tin" stroke-width="3"/>`;
+  s+=`<rect x="450" y="186" width="90" height="14" rx="4" class="f-comp"/><path d="M495 186V120l-25-25M495 120l30-20"/><path d="M462 88l10 12M468 84l8 14" class="s-hot"/><path d="M522 96l12 8M526 92l12 8" class="s-hot"/><circle cx="495" cy="80" r="18" class="f-water" fill-opacity=".35"/>`;
+  s+=L(130,186,70,222,'panne : plus de 300 °C')+L(248,66,300,40,'manche : on le tient ici')+L(185,128,140,96,'support en spirale','end')+L(70,160,30,132,'éponge humide')+L(360,130,330,100,'fil d’étain','end')+L(510,150,500,226,'troisième main','end');
+  return SV(560,236,s,'Poste de soudure : fer, panne, manche, support, éponge, fil d’étain et troisième main','wide');
+}
+/* Les 4 gestes de la soudure */
+function stepsSVG(){
+  const lug=ox=>`<rect x="${ox+30}" y="72" width="46" height="14" rx="3" class="f-tin"/><circle cx="${ox+66}" cy="79" r="3.5" class="f-board"/><path d="M${ox+62} 79 L${ox+110} 79" class="s-copper" stroke-width="3"/><path d="M${ox+96} 79 L${ox+146} 79" class="s-wred" stroke-width="7"/>`;
+  const iron=(ox,dx)=>`<path d="M${ox+4-dx} ${22-dx} L${ox+56-dx} ${70-dx}" class="s-tin" stroke-width="6"/><path d="M${ox+56-dx} ${70-dx} L${ox+62-dx} ${76-dx}" class="s-hot" stroke-width="5"/>`;
+  const tin=(ox,dx)=>`<path d="M${ox+134+dx} ${22-dx} L${ox+74+dx} ${74-dx}" class="s-tin" stroke-width="3"/>`;
+  const cap=(ox,n,t)=>`<circle cx="${ox+14}" cy="112" r="9" class="f-acc"/>${T(ox+14,116,11,n,'text-anchor="middle" class="t-on"')}${T(ox+28,116,11.5,t)}`;
+  let s='';
+  s+=lug(0)+iron(0,0)+cap(0,'1','Chauffer 2 s')+T(90,40,11,'patte + borne','class="t-mut"');
+  s+=lug(160)+iron(160,0)+tin(160,0)+cap(160,'2','Apporter l’étain');
+  s+=lug(320)+iron(320,16)+tin(320,16)+`<path d="M382 76c0-10 12-10 12 0z" class="f-tin"/><path d="M340 44l-8-8M442 44l8-8" class="s-acc" stroke-width="2"/>`+cap(320,'3','Étain, puis fer');
+  s+=lug(480)+`<path d="M530 79c4-18 18-18 22 0z" class="f-tin"/><path d="M536 70c2-4 5-6 8-6" stroke="#fff" stroke-width="1.5"/>`+cap(480,'4','Refroidir 3 s');
+  return SV(640,126,s,'Les 4 gestes de la soudure : chauffer, apporter l’étain, retirer l’étain puis le fer, laisser refroidir','wide');
+}
+function goodBadSVG(){
+  const base=ox=>`<rect x="${ox+20}" y="60" width="60" height="12" rx="3" class="f-tin"/><path d="M${ox+50} 66 L${ox+140} 66" class="s-copper" stroke-width="3"/>`;
+  let s=base(0)+`<path d="M34 60c6-26 26-26 32 0z" class="f-tin"/><path d="M42 50c3-6 7-8 11-8" stroke="#fff" stroke-width="1.8"/><path d="M60 94l6 6 12-14" class="s-ok" stroke-width="3.5"/>${T(4,122,11.5,'Bonne : brillante, en cône')}`;
+  s+=base(190)+`<circle cx="240" cy="44" r="16" class="f-tin"/><path d="M232 90l16 16M248 90l-16 16" class="s-hot" stroke-width="3.5"/>${T(194,122,11.5,'Ratée : en boule')}`;
+  s+=base(380)+`<path d="M396 60c2-8 6-18 12-14s4-10 10-6 8 12 10 20z" class="f-mut"/><circle cx="408" cy="54" r="1.5" class="f-ink"/><circle cx="418" cy="50" r="1.5" class="f-ink"/><circle cx="414" cy="57" r="1.5" class="f-ink"/><path d="M422 90l16 16M438 90l-16 16" class="s-hot" stroke-width="3.5"/>${T(384,122,11.5,'Ratée : terne, granuleuse')}`;
+  return SV(580,130,s,'Bonne soudure brillante en cône, soudures ratées en boule ou ternes','wide');
+}
+/* Préparer les fils et la gaine */
+function prepSVG(){
+  let s=`<path d="M20 40 L130 40" class="s-wred" stroke-width="10"/><path d="M130 40 L168 40" class="s-copper" stroke-width="4"/><path d="M130 22v10M168 22v10M130 26h38" class="s-mut" stroke-width="1.2"/>${T(135,18,11,'5 mm')}${T(20,76,11.5,'1. Dénuder 5 mm')}`;
+  s+=`<path d="M210 40 L300 40" class="s-wred" stroke-width="10"/><path d="M300 40c6-6 10 6 16 0s10 6 16 0" class="s-copper" stroke-width="3"/><path d="M300 42c6 6 10-6 16 0s10-6 16 0" class="s-copper" stroke-width="3"/>${T(210,76,11.5,'2. Torsader les brins')}`;
+  s+=`<path d="M380 40 L520 40" class="s-wred" stroke-width="6"/><rect x="392" y="33" width="34" height="14" rx="3" class="f-acc" fill-opacity=".55"/><path d="M500 40 L560 40" class="s-copper" stroke-width="3"/><circle cx="520" cy="40" r="6" class="f-tin"/><path d="M430 40h40M462 34l8 6-8 6" class="s-acc"/>${T(380,76,11.5,'3. Gaine enfilée avant, glissée après')}`;
+  return SV(600,86,s,'Dénuder 5 mm, torsader les brins, enfiler la gaine avant de souder','wide');
+}
+/* Repérer les composants délicats */
+const CID={
+  del:c=>SV(200,120,`<path d="M72 60v-26a18 18 0 0 1 36 0v26z" class="${c==='delb'?'f-ledw':'f-led'}"/><path d="M66 60h48" stroke-width="3"/><path d="M104 38v22" stroke-width="2"/><path d="M80 60v50M100 60v34"/>${T(20,112,12,'+ longue')}${T(106,98,12,'− courte')}${T(114,44,11,'méplat = −','class="t-mut"')}`,'DEL : patte longue = plus, patte courte et méplat = moins'),
+  buzzer:()=>SV(200,120,`<circle cx="100" cy="46" r="30" class="f-dark"/><circle cx="100" cy="46" r="5" class="f-board"/>${T(84,30,12,'+','class="t-on" font-weight="700"')}<path d="M86 74c-4 16-20 20-40 22" class="s-wred" stroke-width="4"/><path d="M114 74c4 16 20 20 40 22" class="s-wblack" stroke-width="4"/>${T(10,114,12,'fil rouge = +')}${T(118,114,12,'fil noir = −')}`,'Buzzer : fil rouge vers le plus des piles'),
+  res:c=>{const b=c==='res100'?['#7B4A1E','#111','#7B4A1E']:['#7B4A1E','#111','#111'];return SV(200,120,`<path d="M10 50H56M144 50H190" class="s-tin" stroke-width="3"/><rect x="56" y="36" width="88" height="28" rx="12" class="f-resbody"/>${b.map((col,i)=>`<rect x="${70+i*14}" y="36" width="7" height="28" fill="${col}"/>`).join('')}<rect x="122" y="36" width="7" height="28" fill="#C9A227"/>${T(14,96,12,c==='res100'?'marron-noir-marron = 100 Ω':'marron-noir-noir = 10 Ω')}${T(14,112,11,'la bande dorée se lit en dernier','class="t-mut"')}`,'Résistance et son code couleur');},
+  ils:()=>SV(200,120,`<path d="M10 50H52M148 50H190" class="s-tin" stroke-width="3"/><rect x="52" y="36" width="96" height="28" rx="14" class="f-glass"/><path d="M52 50H104M96 46H148" class="s-tin" stroke-width="2.5"/><path d="M40 70v10M52 70v10M40 76h12" class="s-hot" stroke-width="1.5"/>${T(14,100,12,'plier à 3 mm du verre minimum','class="t-hot"')}`,'ILS : ampoule en verre fragile'),
+  pot:()=>SV(200,120,`<circle cx="100" cy="44" r="28" class="f-comp"/><rect x="92" y="4" width="16" height="30" rx="3" class="f-tin"/><path d="M78 72v34M100 72v34M122 72v34" stroke-width="3"/><path d="M78 72v34M100 72v34" class="s-acc" stroke-width="3"/>${T(60,118,11,'extrémité')}${T(96,118,11,'milieu','text-anchor="middle"')}${T(126,118,11,'libre','class="t-mut"')}`,'Potentiomètre : souder la patte du milieu et une extrémité'),
+  micro:()=>SV(200,120,`<rect x="50" y="30" width="100" height="44" rx="4" class="f-dark"/><path d="M60 30 L140 14" stroke-width="3"/><circle cx="143" cy="13" r="5" class="f-tin"/><path d="M64 74v26M100 74v26M136 74v26" stroke-width="3"/><path d="M64 74v26M136 74v26" class="s-acc" stroke-width="3"/>${T(64,114,12,'COM','text-anchor="middle"')}${T(100,114,12,'NO','text-anchor="middle" class="t-mut"')}${T(136,114,12,'NC','text-anchor="middle"')}`,'Micro-rupteur : souder COM et NC'),
+  inv:()=>SV(200,120,`<rect x="60" y="18" width="80" height="40" rx="6" class="f-dark"/><path d="M76 38l20-12h28" class="s-board" stroke-width="5"/><path d="M76 58v40M100 58v40M124 58v40" stroke-width="3"/><path d="M100 58v40" class="s-wred" stroke-width="3"/>${T(100,114,11,'milieu = + des piles','text-anchor="middle"')}`,'Inverseur : la borne du milieu reçoit le plus'),
+  moteur:()=>SV(200,120,`<rect x="50" y="26" width="84" height="54" rx="14" class="f-tin"/><path d="M134 53h40" stroke-width="3"/><rect x="40" y="36" width="10" height="10" class="f-copper"/><rect x="40" y="60" width="10" height="10" class="f-copper"/>${T(14,108,12,'languettes : souder vite,','class="t-hot"')}${T(14,120,12,'le plastique fond')}`,'Moteur : languettes à souder rapidement')
+};
+function compCards(pl){
+  const out=[],seen=new Set(),add=(k,html,cap)=>{if(seen.has(k))return;seen.add(k);out.push(`<figure class="illcard">${html}<figcaption>${cap}</figcaption></figure>`);};
+  pl.forEach(c=>{if(!c)return;
+    if(c.startsWith('del'))add(c,CID.del(c),C[c].name+' : patte longue (+) côté piles');
+    if(c==='buzzer')add(c,CID.buzzer(),'Buzzer : il a un sens');
+    if(c.startsWith('res'))add(c,CID.res(c),'Résistance de '+C[c].spec);
+    if(c==='ils')add(c,CID.ils(),'ILS : verre fragile');
+    if(c==='pot')add(c,CID.pot(),'Potentiomètre : 2 pattes sur 3');
+    if(c==='micro')add(c,CID.micro(),'Micro-rupteur : COM et NC');
+    if(c==='inv')add(c,CID.inv(),'Inverseur 3 positions');
+    if(c==='moteur'||c==='motored')add('m',CID.moteur(),C[c].name);});
+  return out.join('');
+}
+/* Plan de câblage illustré */
+function compPic(c){
+  const lead=`<path d="M-36 0H-20M20 0H36" class="s-tin" stroke-width="3"/>`;
+  switch(c){
+    case 'inter':return lead+`<rect x="-20" y="-14" width="40" height="28" rx="4" class="f-dark"/><path d="M-12 4 L12 -6" class="s-board" stroke-width="6"/>`;
+    case 'bp':return lead+`<rect x="-20" y="-10" width="40" height="20" rx="4" class="f-dark"/><circle cx="0" cy="-12" r="9" class="f-hotfill"/>`;
+    case 'micro':return lead+`<rect x="-20" y="-12" width="40" height="24" rx="3" class="f-dark"/><path d="M-14 -12 L16 -22" stroke-width="2.5"/><circle cx="18" cy="-23" r="3.5" class="f-tin"/>`+T(-36,22,9,'COM')+T(20,22,9,'NC');
+    case 'contact':return `<path d="M-36 0c6-12 12 12 18 0s10-10 14 0" class="s-copper" stroke-width="3"/><circle cx="12" cy="0" r="8" class="s-copper" stroke-width="3"/><path d="M20 0H36" class="s-copper" stroke-width="3"/>`;
+    case 'ils':return lead.replace(/20/g,'22')+`<rect x="-22" y="-9" width="44" height="18" rx="9" class="f-glass"/><path d="M-22 0H4M-4 -3H22" class="s-tin" stroke-width="2"/>`;
+    case 'pot':return lead+`<circle cx="0" cy="0" r="16" class="f-comp"/><rect x="-4" y="-30" width="8" height="16" class="f-tin"/>`;
+    case 'res100':case 'res10':{const b=c==='res100'?['#7B4A1E','#111','#7B4A1E']:['#7B4A1E','#111','#111'];return lead+`<rect x="-20" y="-8" width="40" height="16" rx="7" class="f-resbody"/>`+b.map((col,i)=>`<rect x="${-13+i*7}" y="-8" width="4" height="16" fill="${col}"/>`).join('')+`<rect x="10" y="-8" width="4" height="16" fill="#C9A227"/>`;}
+    case 'delr':case 'delb':case 'delc':return `<path d="M-36 0H-8V-6M36 0H8V-12" class="s-tin" stroke-width="2.5"/><path d="M-12 -6v-14a12 12 0 0 1 24 0v14z" class="${c==='delb'?'f-ledw':'f-led'}"/><path d="M-15 -6h30" stroke-width="2.5"/>`+T(-34,-6,10,'+','font-weight="700"');
+    case 'lampe':return lead+`<rect x="-12" y="0" width="24" height="12" class="f-tin"/><circle cx="0" cy="-10" r="13" class="f-bulb"/>`;
+    case 'moteur':return lead+`<rect x="-20" y="-14" width="40" height="28" rx="8" class="f-tin"/><path d="M20 0h0"/>`;
+    case 'motored':return lead+`<rect x="-20" y="-14" width="22" height="28" rx="5" class="f-tin"/><rect x="2" y="-16" width="18" height="32" rx="3" class="f-yellow"/>`;
+    case 'bobine':{let s=`<path d="M-36 0H-18M18 0H36" class="s-copper" stroke-width="2.5"/><rect x="-24" y="-4" width="52" height="8" rx="2" class="f-tin"/>`;for(let i=0;i<7;i++)s+=`<ellipse cx="${-16+i*5}" cy="0" rx="3" ry="9" class="s-copper" stroke-width="2"/>`;return s;}
+    case 'buzzer':return `<path d="M-36 0H-10" class="s-wred" stroke-width="3.5"/><path d="M10 0H36" class="s-wblack" stroke-width="3.5"/><circle cx="0" cy="-4" r="15" class="f-dark"/><circle cx="0" cy="-4" r="3" class="f-board"/>`;
+    case 'inv':return `<rect x="-18" y="-22" width="36" height="44" rx="5" class="f-dark"/><path d="M-10 6l10-14h10" class="s-board" stroke-width="4"/>`;
+  }
+  return lead+`<rect x="-20" y="-12" width="40" height="24" rx="4" class="f-comp"/>`;
+}
+function holderPic(n){ // boîtier de piles vertical, borne + en haut
+  let s=`<rect x="-30" y="-70" width="60" height="140" rx="7" class="f-dark"/>`;
+  const cells=n===1?[[0,-50,100]]:[[-13,-50,100],[13,-50,100]];
+  cells.forEach(([x,y,h])=>{s+=`<rect x="${x-10}" y="${y}" width="20" height="${h}" rx="4" class="f-cell"/><rect x="${x-4}" y="${y-5}" width="8" height="5" class="f-tin"/>`;});
+  return s+T(-26,-54,13,'+','class="t-on" font-weight="700"')+T(16,64,13,'−','class="t-on" font-weight="700"');
+}
+function wiringSVG(o,seq){
+  const W=660,Hh=280,yTop=62,yBot=250,hx=60,hy=150,dot=(x,y,n)=>`<circle cx="${x}" cy="${y}" r="10" class="f-acc"/>${T(x,y+4,11,n,'text-anchor="middle" class="t-on" font-weight="700"')}`;
+  let s=`<g transform="translate(${hx},${hy})">${holderPic(seq[0]==='pile1'?1:2)}</g>`+T(hx+44,hy,11,seq[0]==='pile1'?'boîtier 1 pile':'boîtier 2 piles',`text-anchor="middle" transform="rotate(-90 ${hx+44} ${hy})"`);
+  const others=seq.slice(1),n=others.length,x0=180,x1=W-60,xs=others.map((_,i)=>n===1?(x0+x1)/2:x0+i*(x1-x0)/(n-1));
+  // fil rouge + vers le premier composant
+  s+=`<path d="M${hx-12} ${hy-70}V${yTop}H${xs[0]-36}" class="s-wred" stroke-width="4"/>`;
+  const dots=[[xs[0]-36,yTop]];
+  for(let i=0;i<n-1;i++){const a=xs[i]+36,b=xs[i+1]-36;
+    if(isDirect(others[i],others[i+1])){s+=`<path d="M${a} ${yTop}H${b}" class="s-tin" stroke-width="3"/>`;dots.push([(a+b)/2,yTop]);}
+    else{s+=`<path d="M${a} ${yTop}H${b}" class="s-wire" stroke-width="4"/>`;dots.push([b,yTop]);}}
+  const xl=xs[n-1]+36;s+=`<path d="M${xl} ${yTop}H${xl+14}V${yBot}H${hx+12}V${hy+70}" class="s-wblack" stroke-width="4"/>`;dots.push([xl,yTop]);
+  others.forEach((c,i)=>{s+=`<g transform="translate(${xs[i]},${yTop})">${compPic(c)}</g>`+T(xs[i],yTop+46,11,C[c].name,'text-anchor="middle"');});
+  dots.forEach(([x,y],i)=>s+=dot(x,y-24,String(i+1))+`<path d="M${x} ${y-14}V${y-3}" class="s-acc" stroke-width="1.5"/>`);
+  s+=T(hx+120,yBot-8,11,'fil noir (−)','class="t-mut"')+T(hx+2,yTop-8,11,'fil rouge (+)','class="t-mut"');
+  return SV(W,Hh,s,'Plan de câblage illustré avec les soudures numérotées','wide');
+}
+function wiringBicolore(){
+  const hx=60,hy=150,ix=200,yA=70,yB=226,dot=(x,y,n)=>`<circle cx="${x}" cy="${y}" r="10" class="f-acc"/>${T(x,y+4,11,n,'text-anchor="middle" class="t-on" font-weight="700"')}`;
+  let s=`<g transform="translate(${hx},${hy})">${holderPic(2)}</g>`;
+  s+=`<path d="M${hx-12} ${hy-70}V30H${ix-40}V${hy}H${ix-18}" class="s-wred" stroke-width="4"/><g transform="translate(${ix},${hy})">${compPic('inv')}</g>`;
+  s+=`<path d="M${ix} ${hy-22}V${yA}H320" class="s-wire" stroke-width="4"/><path d="M${ix} ${hy+22}V${yB}H320" class="s-wire" stroke-width="4"/>`;
+  [[yA,'res100','delr'],[yB,'res10','delb']].forEach(([y,r,d])=>{s+=`<g transform="translate(356,${y})">${compPic(r)}</g><path d="M392 ${y}H444" class="s-tin" stroke-width="3"/><g transform="translate(480,${y})">${compPic(d)}</g>`+T(356,y+30,10.5,C[r].spec,'text-anchor="middle"')+T(480,y+34,10.5,C[d].name,'text-anchor="middle"');});
+  s+=`<path d="M516 ${yA}H560V${yB}M516 ${yB}H560V270H${hx+12}V${hy+70}" class="s-wblack" stroke-width="4"/>`;
+  [[ix-20,hy],[ix+10,yA+14],[418,yA],[ix+10,yB-14],[418,yB],[560,(yA+yB)/2]].forEach(([x,y],i)=>s+=dot(x,y-18,String(i+1)));
+  return SV(620,282,s,'Plan de câblage de la frontale 2 couleurs','wide');
+}
 
 /* ================= Symboles ================= */
 const ln=(x1,y1,x2,y2,c)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"${c?` class="${c}"`:''}/>`;
@@ -751,7 +913,7 @@ function sym(id,st){st=st||{};
 const KEY='atelier-construction-v4';
 let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
 const nSlots=o=>o.custom?6:o.need.length;
-const state={safeOk:!!saved.safeOk,safeQ:null,step:1,ack:!!saved.ack,recv:{},obj:'torche',placed:{},sel:null,result:null,success:false,sw:false,push:false,lid:false,key:false,pot:30,inv:'off',fb:[],
+const state={safeOk:false,safeQ:null,step:1,ack:false,recv:{},obj:'torche',placed:{},sel:null,result:null,success:false,sw:false,push:false,lid:false,key:false,pot:30,inv:'off',fb:[],
   done:new Set(saved.done||[]),quizDone:new Set(saved.quizDone||[]),expert:!!saved.expert,group:saved.group||'',quiz:{}};
 OBJ.forEach(o=>{const s=(saved.placed||{})[o.id];state.placed[o.id]=Array.isArray(s)&&s.length===nSlots(o)?s.map(x=>C[x]?x:null):new Array(nSlots(o)).fill(null);});
 if(!saved.placed)state.placed.torche[0]='pile2';
@@ -887,7 +1049,8 @@ const term=(o,c,k)=>((o.term&&o.term[c])||TERM[c])[k];
 function renderFab(){
   const o=cur();
   $('fabTitle').textContent='Fabrique : '+o.name.toLowerCase();
-  $('safetyList').innerHTML=SAFETY.map(t=>`<li>${t}</li>`).join('');
+  $('safetyList').innerHTML=SAFETY.map((t,i)=>`<div class="srule">${icon(SAFETY_I[i][0],SAFETY_I[i][1])}<p>${t}</p></div>`).join('');
+  $('burnP').innerHTML=icon('burn','Brûlure : eau froide 10 minutes')+'<span>En cas de brûlure : passe tout de suite la zone sous l’eau froide pendant 10 minutes et préviens le professeur.</span>';
   $('ackBox').checked=state.ack;renderSafeQuiz();$('fabBody').hidden=!(state.ack&&state.safeOk);
   if(!state.success)return;
   let J,w;
@@ -907,8 +1070,13 @@ function renderFab(){
     'Pose tes composants sur la table dans l’ordre du schéma, pour ne pas te tromper de branchement.'];
   if(o.print3d)prep.splice(1,0,'Récupère auprès du professeur les pièces imprimées en 3D du boîtier (voir l’encadré « Boîtier imprimé en 3D »).');
   $('prep').innerHTML=prep.map(t=>`<li>${t}</li>`).join('');
+  $('prepIll').innerHTML=prepSVG()+'<figcaption>Préparer les fils avant de souder</figcaption>';
+  const cc=compCards(state.placed[o.id]);$('compIll').innerHTML=cc?'<h4>Repère bien ces composants</h4><div class="illgrid">'+cc+'</div>':'';
+  $('wiringIll').innerHTML=(o.custom?wiringBicolore():wiringSVG(o,loopOrder()))+'<figcaption>Plan de câblage : chaque numéro correspond à une soudure de la liste ci-dessous.</figcaption>';
   $('joints').innerHTML=J.map((j,i)=>`<div class="joint"><b class="k">Soudure ${i+1}</b><div>${j.t.replace(/ à le /g,' au ')}${j.w?'<small>Soudure fil contre fil : enfile la gaine avant de souder.</small>':''}</div></div>`).join('');
   $('howto').innerHTML=HOWTO.map(t=>`<li>${t}</li>`).join('');
+  $('stationIll').innerHTML=stationSVG()+'<figcaption>Le poste de soudure</figcaption>';
+  $('stepsIll').innerHTML='<figure class="illfig">'+stepsSVG()+'<figcaption>Les 4 gestes de chaque soudure</figcaption></figure><figure class="illfig">'+goodBadSVG()+'<figcaption>Contrôle ta soudure</figcaption></figure>';
   $('hotTips').innerHTML=(o.hot||[]).map(t=>`<p class="hot">${t}</p>`).join('');
   const pl=state.placed[o.id],tr=['Si rien ne se passe, retire les piles avant de chercher la panne.','Vérifie chaque soudure : tire doucement sur les fils, aucun ne doit bouger.'];
   if(pl.some(c=>c&&c.startsWith('del')))tr.push('Vérifie le sens de chaque DEL : la patte longue doit être du côté du + des piles.');
@@ -990,7 +1158,7 @@ function renderStepper(){
     return `<button class="stepbtn ${cls}" data-go="${n}" ${unlocked(n)?'':'disabled'} aria-current="${n===state.step?'step':'false'}"><span class="num">${stepDone(n)&&n!==state.step?'✓':n}</span><span class="lab"><small>${s}</small><span class="long">${l}</span><span class="short">${sh}</span></span></button>`;}).join('');
   for(let n=1;n<=5;n++)$('step'+n).hidden=n!==state.step;
 }
-function goStep(n){if(!unlocked(n))return;state.step=n;if(n!==2)sound(false);render();try{$('stepper').scrollIntoView({block:'start'});}catch(e){}}
+function goStep(n){if(!unlocked(n))return;if(n===5&&state.step!==5)resetSafety();state.step=n;if(n!==2)sound(false);render();try{$('stepper').scrollIntoView({block:'start'});}catch(e){}}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(!b||b.disabled)return;goStep(+b.dataset.go);});
 function renderControls(){
   const o=cur(),ctr=[];
@@ -1035,15 +1203,16 @@ $('copyBtn').addEventListener('click',()=>{
   try{navigator.clipboard.writeText(t).then(()=>{$('copied').textContent='Demande copiée. Colle-la dans un message au professeur.';$('copied').hidden=false;ta.hidden=true;},fallback);}catch(e){fallback();}
 });
 $('ackBox').addEventListener('change',e=>{state.ack=e.target.checked;persist();renderFab();});
-function getSafeQ(){if(!state.safeQ){const rnd=seeded('securite');
-  state.safeQ={qs:SAFEQ.map(x=>({q:x.q,a:x.a,e:x.e,opts:shuffle([x.a,...x.d],rnd)})),ans:SAFEQ.map(()=>({ok:state.safeOk,wrong:[]}))};}
+function resetSafety(){state.ack=false;state.safeOk=false;state.safeQ=null;}
+function getSafeQ(){if(!state.safeQ){const rnd=Math.random,pick=shuffle(SAFEQ,rnd).slice(0,5);
+  state.safeQ={qs:pick.map(x=>({ico:x.ico,q:x.q,a:x.a,e:x.e,opts:shuffle([x.a,...x.d],rnd)})),ans:pick.map(()=>({ok:false,wrong:[]}))};}
   return state.safeQ;}
 function renderSafeQuiz(){
   const box=$('safeQuiz');box.hidden=!state.ack;if(!state.ack)return;
   const Q=getSafeQ(),solved=Q.ans.filter(a=>a.ok).length;
   $('safeScore').textContent=`${solved} / ${Q.qs.length}`;
   $('safeList').innerHTML=Q.qs.map((q,i)=>{const a=Q.ans[i];
-    return `<div class="qcard ${a.ok?'solved':''}"><span class="qn">Question ${i+1}</span><p class="qq">${q.q}</p>
+    return `<div class="qcard ${a.ok?'solved':''}"><span class="qn">Question ${i+1}</span><div class="qhead">${icon(q.ico,'')}<p class="qq">${q.q}</p></div>
       ${q.opts.map((t,j)=>{const cls=a.ok&&t===q.a?'right':a.wrong.includes(t)?'wrong':'';const dis=a.ok||a.wrong.includes(t);
         return `<button class="opt ${cls}" data-q="${i}" data-o="${j}" ${dis?'disabled':''}>${t}</button>`;}).join('')}
       ${a.ok?`<p class="qexp">${q.e}</p>`:a.wrong.length?'<p class="qexp bad">Ce n’est pas ça. Relis les consignes de sécurité et essaie une autre réponse.</p>':''}</div>`;}).join('');
@@ -1068,7 +1237,7 @@ function place(id,idx){
   pl[idx]=id;reset();delete state.quiz[o.id];persist();
   const next=pl.indexOf(null);state.sel=next>=0?next:null;render();
 }
-$('objects').addEventListener('click',e=>{const b=e.target.closest('.obj');if(!b)return;reset();state.obj=b.dataset.id;sound(false);restore();
+$('objects').addEventListener('click',e=>{const b=e.target.closest('.obj');if(!b)return;reset();resetSafety();state.obj=b.dataset.id;sound(false);restore();
   const pl=state.placed[state.obj];const n=pl.indexOf(null);state.sel=state.success?null:(n>=0?n:null);state.step=2;render();try{$('stepper').scrollIntoView({block:'start'});}catch(err){}});
 $('parts').addEventListener('click',e=>{const b=e.target.closest('.part');if(b)place(b.dataset.id);});
 $('parts').addEventListener('dragstart',e=>{const b=e.target.closest('.part');if(b){e.dataTransfer.setData('text/plain',b.dataset.id);e.dataTransfer.effectAllowed='copy';}});

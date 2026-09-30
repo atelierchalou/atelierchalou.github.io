@@ -319,6 +319,13 @@
     .board-actions{flex-direction:row;flex-wrap:wrap;}
     .board-actions .btn{flex:1;min-width:140px;justify-content:center;}
   }
+  .backup-pair{display:flex;gap:8px;}
+  .backup-pair .btn{flex:1;flex-direction:column;justify-content:center;align-items:center;gap:3px;padding:9px 6px;font-size:.82rem;text-align:center;}
+  .backup-pair .btn .ico{font-size:1.15rem;line-height:1;}
+  @media (max-width:760px){
+    .backup-pair{flex-basis:100%;}
+    .backup-pair .btn{flex-direction:row;gap:7px;min-width:0;}
+  }
   #btnHomework{position:relative;}
   #btnHomework .dot{
     display:inline-block;width:8px;height:8px;border-radius:50%;
@@ -607,7 +614,7 @@
     border:1px solid var(--line-paper);border-radius:10px;padding:8px 10px;
   }
   .class-row input{
-    flex:1;border:none;background:transparent;font-family:inherit;
+    flex:1;min-width:0;border:none;background:transparent;font-family:inherit;
     font-size:.95rem;font-weight:600;color:var(--ink);outline:none;
   }
   .row-btn{
@@ -620,14 +627,10 @@
   .row-btn.danger.confirming{background:#a33a49;color:#fff;border-color:#a33a49;}
   .add-class{display:flex;gap:8px;}
   .add-class input{
-    flex:1;border:1px solid var(--line-paper);border-radius:10px;padding:10px 12px;
+    flex:1;min-width:0;border:1px solid var(--line-paper);border-radius:10px;padding:10px 12px;
     font-family:inherit;font-size:.92rem;background:#fff;color:var(--ink);
   }
   .modal-close-row{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
-  .storage-note{
-    margin-top:18px;padding-top:16px;border-top:1px solid var(--line-paper);
-    font-size:.82rem;color:var(--ink-dim);line-height:1.5;
-  }
   .link-media-field{margin:18px 0 12px;}
   #linkMediaUrl{
     width:100%;border:1px solid var(--line-paper);border-radius:10px;padding:10px 12px;
@@ -651,14 +654,21 @@
   .img-lightbox.open{display:flex;}
   .img-lightbox img{max-width:92vw;max-height:92vh;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
   .backup-section{
-    margin-top:18px;padding-top:16px;border-top:1px solid var(--line-paper);
-    display:flex;flex-direction:column;gap:16px;
+    margin-top:16px;padding-top:14px;border-top:1px solid var(--line-paper);
+    display:flex;flex-direction:column;gap:10px;
   }
-  .backup-block{display:flex;flex-direction:column;gap:8px;}
-  .backup-label{font-size:.82rem;font-weight:600;color:var(--ink-dim);}
-  .backup-actions{display:flex;gap:8px;flex-wrap:wrap;}
-  .backup-actions .btn{flex:1;min-width:150px;font-size:.85rem;padding:9px 10px;}
-  .backup-hint{font-size:.78rem;color:var(--ink-dim);line-height:1.4;}
+  .backup-hint{font-size:.8rem;color:var(--ink-dim);line-height:1.4;}
+  .backup-hint:empty{display:none;}
+  .settings-row{display:flex;align-items:center;gap:8px;}
+  .settings-row .backup-hint{flex:1;min-width:0;}
+  .settings-row input{
+    flex:1;min-width:0;border:1px solid var(--line-paper);border-radius:10px;padding:9px 12px;
+    font-family:inherit;font-size:.9rem;background:#fff;color:var(--ink);
+  }
+  #settingsModal .btn{justify-content:center;}
+  .modal .btn:not(.btn-accent){color:var(--ink);border-color:var(--line-paper);background:rgba(36,31,24,.05);}
+  .modal .btn:not(.btn-accent):hover{background:rgba(36,31,24,.1);border-color:var(--ink-dim);}
+  .btn-small{padding:8px 14px;font-size:.85rem;flex-shrink:0;}
 
   /* ---------- Rich-text formatting toolbar ---------- */
   .text-toolbar{
@@ -839,6 +849,10 @@
 
     <aside class="board-actions">
       <button class="btn btn-accent" id="btnSave">✓ Enregistrer</button>
+      <div class="backup-pair">
+        <button class="btn" id="btnFolderSave" type="button" title="Sauvegarder toutes tes classes dans ton dossier de sauvegarde"><span class="ico">💾</span>Sauvegarder</button>
+        <button class="btn" id="btnFolderLoad" type="button" title="Récupérer une sauvegarde (par ex. sur un autre ordinateur)"><span class="ico">📂</span>Ouvrir</button>
+      </div>
       <button class="btn" id="btnHistory">📜 Cours précédent</button>
       <button class="btn" id="btnHomework">📚 Devoirs à faire<span class="dot" id="homeworkDot" hidden></span></button>
       <button class="btn" id="btnNewLesson">↻ Nouveau cours</button>
@@ -967,51 +981,26 @@
     <input type="text" id="newClassInput" placeholder="Nom de la classe (ex. 4e B)">
     <button class="btn btn-accent" id="addClassBtn">Ajouter</button>
   </div>
-  <div class="storage-note">
-    Tout est enregistré directement dans ce navigateur, sur cet ordinateur — rien n'est envoyé ailleurs. Si tu vides les données de navigation ou changes d'ordinateur, l'historique ne sera pas disponible là-bas.
-  </div>
-
   <div class="backup-section">
-    <span class="sub">Sauvegarde &amp; changement d'appareil</span>
-
-    <div class="backup-block">
-      <label class="backup-label">Dossier de sauvegarde (un dossier sur cet appareil, par exemple celui synchronisé par ton nuage édu ou Google Drive)</label>
-      <div class="backup-actions">
-        <button class="btn btn-accent" id="btnChooseFolder" type="button">📁 Choisir un dossier</button>
-      </div>
-      <div class="backup-hint" id="folderStatus">Aucun dossier choisi.</div>
-    </div>
-
-    <div class="backup-block">
-      <div class="backup-actions">
-        <button class="btn" id="btnFolderSave" type="button">💾 Sauvegarder dans le dossier</button>
-        <button class="btn" id="btnFolderLoad" type="button">⬇️ Importer depuis le dossier</button>
-        <button class="btn" id="btnExportFile" type="button">⬇️ Exporter un fichier</button>
-        <button class="btn" id="btnImportFile" type="button">⬆️ Importer un fichier</button>
-      </div>
-      <div class="backup-hint">Les deux premiers boutons utilisent le dossier choisi ci-dessus. Les deux derniers ("méthode universelle", marche aussi avec Google Drive) téléchargent/lisent un fichier de sauvegarde à la main — pratique si le choix de dossier ne fonctionne pas sur ton navigateur.</div>
-      <input type="file" id="importFileInput" accept="application/json" hidden>
+    <span class="sub">Dossier de sauvegarde</span>
+    <div class="settings-row">
+      <span class="backup-hint" id="folderStatus">Aucun dossier choisi.</span>
+      <button class="btn btn-small" id="btnChooseFolder" type="button">Changer</button>
     </div>
   </div>
 
   <div class="backup-section">
-    <span class="sub">Diffusion en direct — connexion directe (sans nuage)</span>
-    <div class="backup-block">
-      <div class="backup-actions">
-        <button class="btn btn-accent" id="btnRtcBroadcast" type="button">📡 Diffuser depuis cet appareil</button>
-      </div>
-      <div class="backup-hint" id="rtcBroadcastStatus">Diffusion inactive.</div>
+    <span class="sub">Diffusion en direct</span>
+    <button class="btn btn-accent" id="btnRtcBroadcast" type="button">📡 Diffuser cet écran</button>
+    <div class="backup-hint" id="rtcBroadcastStatus"></div>
+    <div class="settings-row">
+      <input type="text" id="rtcCodeInput" placeholder="Code reçu (ex. ardoiseprof-a1b2c3)" autocomplete="off">
+      <button class="btn btn-small" id="btnRtcFollow" type="button">👀 Suivre</button>
     </div>
-    <div class="backup-block">
-      <label class="backup-label" for="rtcCodeInput">Code de session (donné par l'appareil qui diffuse)</label>
-      <input type="text" id="rtcCodeInput" placeholder="ex. ardoiseprof-a1b2c3" autocomplete="off">
-      <div class="backup-actions">
-        <button class="btn" id="btnRtcFollow" type="button">👀 Suivre en direct ici</button>
-      </div>
-      <div class="backup-hint" id="rtcFollowStatus">Suivi inactif.</div>
-    </div>
-    <div class="backup-hint">Connexion directe entre les deux appareils (pas de compte ni de nuage nécessaire). Sur le téléphone, clique "Diffuser" puis note le code affiché ; sur le PC, colle ce code et clique "Suivre en direct". Internet est nécessaire sur les deux appareils au moment de la connexion.</div>
+    <div class="backup-hint" id="rtcFollowStatus"></div>
   </div>
+
+  <input type="file" id="importFileInput" accept="application/json" hidden>
 
   <div class="modal-close-row">
     <button class="btn" id="settingsClose">Fermer</button>
@@ -1277,8 +1266,6 @@
     btnFolderSave: document.getElementById('btnFolderSave'),
     btnFolderLoad: document.getElementById('btnFolderLoad'),
     folderStatus: document.getElementById('folderStatus'),
-    btnExportFile: document.getElementById('btnExportFile'),
-    btnImportFile: document.getElementById('btnImportFile'),
     importFileInput: document.getElementById('importFileInput'),
     btnRtcBroadcast: document.getElementById('btnRtcBroadcast'),
     rtcBroadcastStatus: document.getElementById('rtcBroadcastStatus'),
@@ -3337,19 +3324,19 @@
   function updateFolderStatus(handle){
     if (!els.folderStatus) return;
     if (!folderApiSupported){
-      els.folderStatus.textContent = "Non supporté par ce navigateur — utilise l'export/import fichier ci-dessous.";
+      els.folderStatus.textContent = "Sur cet appareil, « Sauvegarder » télécharge un fichier et « Ouvrir » te laisse le choisir.";
       return;
     }
-    els.folderStatus.textContent = handle ? ('Dossier choisi : « ' + handle.name + ' »') : 'Aucun dossier choisi.';
+    els.folderStatus.textContent = handle ? ('📁 ' + handle.name) : 'Aucun — il sera demandé à la première sauvegarde.';
   }
 
   function loadStoredFolderHandle(){
     if (!folderApiSupported){
-      els.btnChooseFolder.disabled = true;
-      els.btnFolderSave.disabled = true;
-      els.btnFolderLoad.disabled = true;
+      els.btnChooseFolder.hidden = true;
+      updateFolderStatus(null);
       return;
     }
+    updateFolderStatus(null);
     if (!storageOk) return;
     idbGet('meta', 'folderHandle').then(function(rec){
       if (rec && rec.value){
@@ -3367,33 +3354,41 @@
     });
   }
 
+  // Ouvre le sélecteur de dossier ; renvoie le dossier choisi (ou null si annulé).
   function chooseFolder(){
-    if (!folderApiSupported){
-      showToast("Ton navigateur ne permet pas de choisir un dossier — utilise l'export/import fichier.");
-      return;
-    }
-    window.showDirectoryPicker({mode:'readwrite'}).then(function(handle){
+    if (!folderApiSupported) return Promise.resolve(null);
+    return window.showDirectoryPicker({mode:'readwrite'}).then(function(handle){
       folderHandle = handle;
       updateFolderStatus(handle);
-      showToast('✓ Dossier choisi : ' + handle.name);
       if (storageOk) idbPut('meta', {key:'folderHandle', value:handle});
+      return handle;
     }).catch(function(e){
       if (e && e.name !== 'AbortError') showToast('Impossible de choisir le dossier.');
+      return null;
     });
   }
 
+  function withFolder(){
+    if (folderHandle) return Promise.resolve(folderHandle);
+    showToast('Choisis le dossier où ranger tes sauvegardes.');
+    return chooseFolder();
+  }
+
   function folderSave(){
-    if (!folderHandle){ showToast("Choisis d'abord un dossier."); return; }
-    ensurePermission(folderHandle, 'readwrite').then(function(ok){
-      if (!ok){ showToast('Permission refusée pour ce dossier.'); return; }
-      return collectExportData().then(function(data){
-        return folderHandle.getFileHandle(BACKUP_FILENAME, {create:true}).then(function(fileHandle){
-          return fileHandle.createWritable().then(function(writable){
-            return writable.write(JSON.stringify(data)).then(function(){ return writable.close(); });
+    if (!folderApiSupported){ exportToFile(); return; }
+    withFolder().then(function(handle){
+      if (!handle) return;
+      return ensurePermission(handle, 'readwrite').then(function(ok){
+        if (!ok){ showToast('Permission refusée pour ce dossier.'); return; }
+        return collectExportData().then(function(data){
+          return handle.getFileHandle(BACKUP_FILENAME, {create:true}).then(function(fileHandle){
+            return fileHandle.createWritable().then(function(writable){
+              return writable.write(JSON.stringify(data)).then(function(){ return writable.close(); });
+            });
           });
+        }).then(function(){
+          showToast('✓ Sauvegardé dans « ' + handle.name + ' ».');
         });
-      }).then(function(){
-        showToast('✓ Sauvegardé dans le dossier.');
       });
     }).catch(function(){
       showToast('Échec de la sauvegarde dans le dossier.');
@@ -3401,21 +3396,25 @@
   }
 
   function folderLoad(){
-    if (!folderHandle){ showToast("Choisis d'abord un dossier."); return; }
-    ensurePermission(folderHandle, 'read').then(function(ok){
-      if (!ok){ showToast('Permission refusée pour ce dossier.'); return; }
-      return folderHandle.getFileHandle(BACKUP_FILENAME).then(function(fileHandle){
-        return fileHandle.getFile();
-      }).then(function(file){
-        return file.text();
-      }).then(function(text){
-        return applyImportData(JSON.parse(text));
-      }).then(function(){
-        showToast('✓ Données importées. Rechargement…');
-        setTimeout(function(){ location.reload(); }, 900);
+    if (!folderApiSupported){ els.importFileInput.click(); return; }
+    withFolder().then(function(handle){
+      if (!handle) return;
+      if (!confirm('Ouvrir la sauvegarde va remplacer les données actuelles de cet appareil. Continuer ?')) return;
+      return ensurePermission(handle, 'read').then(function(ok){
+        if (!ok){ showToast('Permission refusée pour ce dossier.'); return; }
+        return handle.getFileHandle(BACKUP_FILENAME).then(function(fileHandle){
+          return fileHandle.getFile();
+        }).then(function(file){
+          return file.text();
+        }).then(function(text){
+          return applyImportData(JSON.parse(text));
+        }).then(function(){
+          showToast('✓ Sauvegarde ouverte. Rechargement…');
+          setTimeout(function(){ location.reload(); }, 900);
+        });
       });
     }).catch(function(){
-      showToast('Aucune sauvegarde trouvée dans ce dossier, ou lecture impossible.');
+      showToast('Aucune sauvegarde trouvée dans ce dossier.');
     });
   }
 
@@ -3507,8 +3506,8 @@
     rtcDestroyPeer();
     if (rtc.mode === 'broadcast'){ rtc.mode = null; }
     clearTimeout(rtc.pushDebounce);
-    els.btnRtcBroadcast.textContent = '📡 Diffuser depuis cet appareil';
-    if (!keepStatusMessage) els.rtcBroadcastStatus.textContent = 'Diffusion inactive.';
+    els.btnRtcBroadcast.textContent = '📡 Diffuser cet écran';
+    if (!keepStatusMessage) els.rtcBroadcastStatus.textContent = '';
     rtcReleaseWakeLock();
   }
 
@@ -3522,8 +3521,8 @@
       renderMediaStrip();
       hideHomeworkBanner();
     }
-    els.btnRtcFollow.textContent = '👀 Suivre en direct ici';
-    if (!keepStatusMessage) els.rtcFollowStatus.textContent = 'Suivi inactif.';
+    els.btnRtcFollow.textContent = '👀 Suivre';
+    if (!keepStatusMessage) els.rtcFollowStatus.textContent = '';
     rtcReleaseWakeLock();
   }
 
@@ -3685,7 +3684,7 @@
     conn.on('open', function(){
       clearTimeout(rtc.reconnectTimer);
       els.rtcFollowStatus.textContent = '✓ Connecté — suivi en direct.';
-      els.btnRtcFollow.textContent = '⏹ Arrêter le suivi';
+      els.btnRtcFollow.textContent = '⏹ Arrêter';
       els.boardText.contentEditable = 'false';
     });
     conn.on('data', function(data){
@@ -3863,17 +3862,15 @@
     if (turnTaker.active) stopTurnRotation(); else startTurnRotation();
   });
 
-  els.btnChooseFolder.addEventListener('click', chooseFolder);
-  els.btnFolderSave.addEventListener('click', folderSave);
-  els.btnFolderLoad.addEventListener('click', function(){
-    if (confirm('Importer va remplacer toutes les données actuelles de cet appareil par celles du dossier. Continuer ?')) folderLoad();
+  els.btnChooseFolder.addEventListener('click', function(){
+    chooseFolder().then(function(h){ if (h) showToast('✓ Dossier : ' + h.name); });
   });
-  els.btnExportFile.addEventListener('click', exportToFile);
-  els.btnImportFile.addEventListener('click', function(){ els.importFileInput.click(); });
+  els.btnFolderSave.addEventListener('click', folderSave);
+  els.btnFolderLoad.addEventListener('click', folderLoad);
   els.importFileInput.addEventListener('change', function(){
     var file = els.importFileInput.files && els.importFileInput.files[0];
     if (!file) return;
-    if (confirm('Importer va remplacer toutes les données actuelles de cet appareil par celles du fichier. Continuer ?')){
+    if (confirm('Ouvrir la sauvegarde va remplacer les données actuelles de cet appareil. Continuer ?')){
       importFromFile(file);
     }
     els.importFileInput.value = '';
