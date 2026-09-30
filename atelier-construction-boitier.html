@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modeleur de boîtiers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout : même identité que l'Atelier. Écran 1 = choix de l'objet ; écran 2 = vue 3D / plan de découpe à gauche, réglages à droite. */
+:root{
+  --paper:#EEF2EC; --board:#FBFCF8; --panel:#FFFFFF; --ink:#16242A; --muted:#566870; --line:#D2DBD3;
+  --accent:#16775A; --accent-soft:#DCEFE6; --current:#E4A800; --warn-soft:#FFF4D1;
+  --ok:#1D8A4B; --bad:#C3322A; --bad-soft:#FBE4E1; --ok-soft:#E0F2E6;
+  --body3d:#2F7D62; --lid3d:#4FA383; --wood:#C9A36B; --wood2:#DDBB86; --metal:#C9D2CE; --mark:#E0342B;
+  --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0D1512; --board:#121D19; --panel:#16231E; --ink:#E3ECE6; --muted:#94A69D; --line:#2A3A33;
+  --accent:#42C08F; --accent-soft:#1B3A2E; --current:#FFD13B; --warn-soft:#3A3217;
+  --ok:#52C47D; --bad:#FF6F63; --bad-soft:#3A1E1C; --ok-soft:#173826; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0D1512; --board:#121D19; --panel:#16231E; --ink:#E3ECE6; --muted:#94A69D; --line:#2A3A33;
+  --accent:#42C08F; --accent-soft:#1B3A2E; --current:#FFD13B; --warn-soft:#3A3217;
+  --ok:#52C47D; --bad:#FF6F63; --bad-soft:#3A1E1C; --ok-soft:#173826; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:1260px;margin:0 auto;padding-inline:20px;padding-block:24px 48px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;line-height:1.05}
+h2{font-size:1.4rem;font-weight:800}
+h3{font-size:1.02rem;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.tip{font-size:.86rem;color:var(--muted)}
+header .intro{display:flex;flex-direction:column;gap:6px;max-width:70ch}
+header .intro p{color:var(--muted)}
+
+/* Choix de l'objet */
+.levels{display:flex;flex-direction:column;gap:12px}
+.lvlrow{display:grid;grid-template-columns:7.5rem minmax(0,1fr);gap:10px;align-items:start}
+.lvlname{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:10px}
+.lvlname b{display:block;color:var(--ink);font-family:var(--display);font-size:.95rem;letter-spacing:0;text-transform:none}
+.objects{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+@media (max-width:640px){.lvlrow{grid-template-columns:minmax(0,1fr)}.lvlname{padding-top:0}.objects{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.obj{all:unset;box-sizing:border-box;cursor:pointer;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.obj:hover{border-color:var(--accent)}
+.obj:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.obj .top{display:flex;align-items:center;gap:9px}
+.obj svg{flex:none;width:30px;height:30px;color:var(--ink)}
+.obj b{font-size:.9rem;line-height:1.2}
+.obj small{font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.badge{font-family:var(--mono);font-size:.64rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:var(--accent-soft);color:var(--accent);align-self:flex-start}
+.badge.laser{background:var(--warn-soft);color:var(--ink)}
+
+/* Éditeur */
+.topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.objname{display:flex;align-items:center;gap:10px;margin-right:auto}
+.objname svg{width:40px;height:40px;color:var(--accent);flex:none}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;font-weight:700;font-size:.92rem;padding:9px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--board);color:var(--ink);text-align:center}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.btn.small{padding:5px 10px;font-size:.8rem}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:11px;overflow:hidden;background:var(--panel)}
+.seg button{all:unset;cursor:pointer;padding:9px 14px;font-weight:700;font-size:.9rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--panel)}
+.seg button:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.reco{border-radius:10px;padding:10px 12px;font-size:.9rem;border-left:4px solid var(--accent);background:var(--panel)}
+.reco.other{border-color:var(--current);background:var(--warn-soft)}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:920px){.grid{grid-template-columns:minmax(0,1fr)}}
+.viewcol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.viewcard{background:var(--board);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.viewbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;border-bottom:1.5px solid var(--line);background:var(--panel)}
+.tabs{display:inline-flex;gap:4px;margin-right:auto}
+.tabs button{all:unset;cursor:pointer;padding:6px 11px;border-radius:8px;font-size:.85rem;font-weight:700;color:var(--muted)}
+.tabs button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.tabs button:focus-visible{outline:3px solid var(--accent)}
+.tg{display:flex;align-items:center;gap:6px;font-size:.84rem;cursor:pointer;user-select:none}
+.tg input{width:16px;height:16px;accent-color:var(--accent)}
+.view3d{position:relative;touch-action:none}
+.view3d canvas{display:block;width:100%;height:auto;cursor:grab}
+.view3d canvas:active{cursor:grabbing}
+.hint{position:absolute;left:10px;bottom:8px;font-size:.74rem;color:var(--muted);pointer-events:none}
+.nogl{padding:40px 20px;text-align:center;color:var(--muted)}
+.viewplan{padding:12px;overflow-x:auto}
+.viewplan svg{display:block;max-width:100%;height:auto;background:var(--panel);border-radius:8px}
+.legend{display:flex;gap:14px;font-size:.8rem;color:var(--muted);padding:0 12px 10px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.stat{background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:8px 11px}
+.stat span{display:block;font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.stat b{font-variant-numeric:tabular-nums;font-size:1rem}
+.warns{display:flex;flex-direction:column;gap:6px}
+.w{border-radius:9px;padding:8px 11px;font-size:.88rem;border-left:4px solid var(--bad);background:var(--bad-soft)}
+.w.info{border-color:var(--current);background:var(--warn-soft)}
+.w.ok{border-color:var(--ok);background:var(--ok-soft)}
+
+.side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.sec{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:0}
+.sec>summary{cursor:pointer;list-style:none;padding:11px 14px;font-family:var(--display);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.sec>summary::-webkit-details-marker{display:none}
+.sec>summary::after{content:"+";font-family:var(--mono);color:var(--muted)}
+.sec[open]>summary::after{content:"−"}
+.sec>summary:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;border-radius:12px}
+.secbody{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.field{display:grid;grid-template-columns:minmax(0,1fr) 5.2rem;gap:4px 10px;align-items:center;font-size:.86rem}
+.field label{font-weight:700}
+.field input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+input[type=number],select{font:inherit;font-size:.86rem;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--board);color:var(--ink);width:100%;min-width:0}
+input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.hole{border:1.5px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--board)}
+.hole.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.hole.bad{border-color:var(--bad);background:var(--bad-soft)}
+.holehead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.holehead b{font-size:.9rem}
+.x{all:unset;cursor:pointer;font-size:1.2rem;line-height:1;padding:2px 8px;border-radius:6px;color:var(--muted)}
+.x:hover,.x:focus-visible{background:var(--bad-soft);color:var(--bad)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:8px;align-items:end}
+.row label{display:flex;flex-direction:column;gap:3px;font-size:.76rem;font-weight:700;color:var(--muted)}
+.facehint{font-size:.74rem;color:var(--muted)}
+.addrow{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:6px}
+@media (max-width:480px){.addrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.addrow .btn{grid-column:1/-1}}
+.exp{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.exp .actions{display:flex;flex-wrap:wrap;gap:8px}
+#dlStatus{font-size:.85rem;color:var(--ok);font-weight:700}
+footer{font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header><div class="intro">
+    <span class="eyebrow">Atelier construction électronique · outil du professeur et des élèves</span>
+    <h1>Modeleur de boîtiers</h1>
+    <p>Choisis l'objet à habiller. Le boîtier arrive déjà dimensionné pour ses composants : règle ses cotes et ses ouvertures, puis récupère les fichiers pour l'imprimante 3D ou la découpeuse laser.</p>
+  </div></header>
+
+  <section id="pick">
+    <div class="levels" id="objects"></div>
+  </section>
+
+  <section id="editor" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="topbar">
+      <button class="btn" id="back">← Changer d'objet</button>
+      <div class="objname"><svg id="objIcon" viewBox="0 0 48 48" aria-hidden="true"></svg><div><span class="eyebrow" id="objEyebrow">Boîtier pour</span><h2 id="objName"></h2></div></div>
+      <div class="seg" id="modeSeg" role="group" aria-label="Mode de fabrication">
+        <button data-mode="3d" aria-pressed="true">Impression 3D</button><button data-mode="laser" aria-pressed="false">Découpe laser</button>
+      </div>
+    </div>
+    <p class="reco" id="reco"></p>
+    <div class="grid">
+      <div class="viewcol">
+        <div class="viewcard">
+          <div class="viewbar">
+            <div class="tabs"><button data-view="3d" aria-pressed="true">Vue 3D</button><button data-view="plan" aria-pressed="false" id="planTab">Plan de découpe</button></div>
+            <label class="tg"><input type="checkbox" id="explode"> Vue éclatée</label>
+            <label class="tg"><input type="checkbox" id="lidShow" checked> <span id="lidLbl">Couvercle</span></label>
+            <button class="btn small" id="resetView">Recentrer</button>
+          </div>
+          <div class="view3d" id="view3d"><canvas id="cv" aria-label="Vue 3D du boîtier"></canvas><p class="hint">Glisse pour tourner · molette ou pincement pour zoomer</p></div>
+          <div id="viewPlan" hidden><div class="viewplan" id="planBox"></div><div class="legend"><span><i style="background:#ff0000"></i>découpe</span><span><i style="background:#0000ff"></i>gravure (noms des pièces)</span></div></div>
+        </div>
+        <div class="stats" id="stats"></div>
+        <div class="warns" id="warns" aria-live="polite"></div>
+      </div>
+
+      <aside class="side">
+        <details class="sec" id="smSec" open hidden><summary>Banc de stop motion</summary><div class="secbody">
+          <p class="tip">La tablette est posée à plat, écran vers le haut, au-dessus du décor. Son objectif arrière vise le centre de la feuille à travers le trou du plateau.</p>
+          <div class="field"><label for="sm_paper">Format du décor</label><select id="sm_paper"><option value="A5">A5</option><option value="A4">A4</option><option value="A3">A3</option><option value="perso">Autre</option></select></div>
+          <div class="field" id="sm_pwF"><label for="sm_pw">Largeur du décor (mm)</label><input type="number" id="sm_pw" min="80" max="600" step="1"></div>
+          <div class="field" id="sm_pdF"><label for="sm_pd">Profondeur du décor (mm)</label><input type="number" id="sm_pd" min="60" max="450" step="1"></div>
+          <h3 style="margin-top:6px">Tablette ou téléphone</h3>
+          <div class="field"><label for="sm_dev">Appareil</label><select id="sm_dev"><option value="t10">Tablette 10″</option><option value="t8">Tablette 8″</option><option value="phone">Smartphone</option><option value="perso">Autre</option></select></div>
+          <div class="field"><label for="sm_tw">Largeur, à l’horizontale (mm)</label><input type="number" id="sm_tw" min="60" max="400" step="0.5"></div>
+          <div class="field"><label for="sm_td">Hauteur, à l’horizontale (mm)</label><input type="number" id="sm_td" min="40" max="300" step="0.5"></div>
+          <p class="tip">Mesure l’appareil à la règle : les tailles proposées sont approximatives. Tiens-le à l’horizontale, <b>dos vers toi</b>, et mesure la position du centre de l’objectif :</p>
+          <div id="camDiag"></div>
+          <div class="field"><label for="sm_ca">Objectif : depuis le bord gauche (mm)</label><input type="number" id="sm_ca" min="3" max="400" step="0.5"></div>
+          <div class="field"><label for="sm_cb">Objectif : depuis le bord haut (mm)</label><input type="number" id="sm_cb" min="3" max="300" step="0.5"></div>
+          <div class="field"><label for="sm_winShape">Trou pour l’objectif</label><select id="sm_winShape"><option value="rond">Rond</option><option value="carre">Carré</option></select></div>
+          <div class="field"><label for="sm_win">Taille du trou (mm)</label><input type="number" id="sm_win" min="10" max="80" step="1"></div>
+          <h3 style="margin-top:6px">Hauteur et cadrage</h3>
+          <div class="field"><label for="sm_hc">Objectif au-dessus du décor (mm)</label><input type="number" id="sm_hc" min="100" max="700" step="1"></div>
+          <div class="field"><label for="sm_fov">Angle de vue de l’appareil (°)</label><input type="number" id="sm_fov" min="40" max="100" step="1"></div>
+          <button class="btn small" id="sm_adv" style="justify-self:start">Utiliser la hauteur conseillée</button>
+          <p class="tip">Environ 65° pour l’objectif principal de la plupart des tablettes et téléphones. Si l’image coupe le décor ou le montre trop petit, ajuste l’angle puis la hauteur.</p>
+          <div class="field"><label for="sm_cable">Encoche pour le câble</label><select id="sm_cable"><option value="droite">À droite</option><option value="gauche">À gauche</option><option value="aucune">Aucune</option></select></div>
+          <label class="tg"><input type="checkbox" id="sm_stops"> Butées d’angle pour caler la feuille</label>
+        </div></details>
+
+        <details class="sec" id="chessSec" open hidden><summary>Jeu d’échecs</summary><div class="secbody">
+          <p class="tip">Plateau gravé posé sur un coffret ; le tiroir glisse dessous pour ranger les 32 pièces. Chaque pièce = un socle avec une fente rectangulaire + un corps plat qui s’y emboîte.</p>
+          <div class="field"><label for="ch_c">Taille des cases (mm)</label><input type="number" id="ch_c" min="18" max="60" step="1"></div>
+          <div class="field"><label for="ch_b">Bordure du plateau (mm)</label><input type="number" id="ch_b" min="5" max="40" step="1"></div>
+          <div class="field"><label for="ch_Hw">Hauteur du coffret (mm)</label><input type="number" id="ch_Hw" min="25" max="90" step="1"></div>
+          <div class="field"><label for="ch_jt">Jeu du tiroir (mm)</label><input type="number" id="ch_jt" min="0.1" max="2" step="0.1"></div>
+          <label class="tg"><input type="checkbox" id="ch_marks"> Graver les repères a à h et 1 à 8</label>
+          <h3 style="margin-top:6px">Pièces</h3>
+          <div class="field"><label for="ch_K">Hauteur du roi (mm)</label><input type="number" id="ch_K" min="30" max="120" step="1"></div>
+          <div class="field"><label for="ch_soc">Forme du socle</label><select id="ch_soc"><option value="rond">Rond</option><option value="carre">Carré</option></select></div>
+          <div class="field"><label for="ch_D">Taille du socle (mm)</label><input type="number" id="ch_D" min="12" max="60" step="1"></div>
+          <div class="field" id="ch_layersF"><label for="ch_layers">Couches du socle (laser)</label><select id="ch_layers"><option value="1">1 couche</option><option value="2">2 couches</option><option value="3">3 couches</option></select></div>
+          <p class="tip" id="ch_layersTip">1 couche : fente traversante. 2 ou 3 couches collées : la couche du dessous reste pleine et la languette s’enfonce plus.</p>
+          <div class="field" id="ch_tb3F"><label for="ch_tb3">Épaisseur des corps (mm)</label><input type="number" id="ch_tb3" min="2" max="8" step="0.2"></div>
+          <div class="field" id="ch_hs3F"><label for="ch_hs3">Hauteur des socles (mm)</label><input type="number" id="ch_hs3" min="4" max="20" step="0.5"></div>
+          <div class="field"><label for="ch_jp">Jeu d’emboîtement (mm)</label><input type="number" id="ch_jp" min="0" max="0.6" step="0.05"></div>
+          <p class="tip">Le plateau et le coffret se font toujours à la découpe laser (trop grands pour la plupart des imprimantes). Le bouton en haut choisit la technique pour les pièces.</p>
+        </div></details>
+
+        <details class="sec" id="dimSec" open><summary>Dimensions intérieures</summary><div class="secbody">
+          <p class="tip" id="contents"></p>
+          <div class="field"><label for="Li">Longueur (mm)</label><input type="number" id="Li" min="20" max="300" step="1"><input type="range" id="Li_r" min="20" max="300" step="1" aria-label="Longueur"></div>
+          <div class="field"><label for="Wi">Largeur (mm)</label><input type="number" id="Wi" min="15" max="250" step="1"><input type="range" id="Wi_r" min="15" max="250" step="1" aria-label="Largeur"></div>
+          <div class="field"><label for="Hi">Hauteur (mm)</label><input type="number" id="Hi" min="10" max="150" step="1"><input type="range" id="Hi_r" min="10" max="150" step="1" aria-label="Hauteur"></div>
+        </div></details>
+
+        <details class="sec" id="matSec" open><summary>Matériau</summary><div class="secbody">
+          <div id="mat3d" style="display:flex;flex-direction:column;gap:10px">
+            <div class="field"><label for="t3">Épaisseur des parois (mm)</label><input type="number" id="t3" min="1.2" max="4" step="0.2"></div>
+            <div class="field"><label for="jeu">Jeu du couvercle (mm)</label><input type="number" id="jeu" min="0" max="0.8" step="0.05"></div>
+            <p class="tip">Le jeu laisse un peu de place pour emboîter le couvercle. 0,25 mm convient à la plupart des imprimantes.</p>
+          </div>
+          <div id="matLaser" style="display:flex;flex-direction:column;gap:10px">
+            <div class="field"><label for="tl">Épaisseur de la plaque (mm)</label><input type="number" id="tl" min="1" max="10" step="0.1" list="tlList"><input type="range" id="tl_r" min="1" max="10" step="0.5" aria-label="Épaisseur de la plaque"></div>
+            <datalist id="tlList"><option value="1"></option><option value="1.5"></option><option value="2"></option><option value="3"></option><option value="4"></option><option value="5"></option><option value="6"></option></datalist>
+            <p class="tip">Mesure ta plaque au pied à coulisse : une plaque vendue « 3 mm » fait souvent 2,8 à 3,2 mm.</p>
+            <div class="field"><label for="fw">Largeur des créneaux (mm)</label><input type="number" id="fw" min="5" max="30" step="1"></div>
+            <div class="field"><label for="kerf">Largeur du trait laser (mm)</label><input type="number" id="kerf" min="0" max="0.4" step="0.05"></div>
+            <label class="tg"><input type="checkbox" id="engrave"> Graver le nom de chaque pièce</label>
+            <p class="tip">Le trait laser brûle un peu de matière : la largeur indiquée est ajoutée aux créneaux pour qu'ils s'emboîtent serré. Fais un essai sur une chute.</p>
+          </div>
+        </div></details>
+
+        <details class="sec" id="holeSec" open><summary>Ouvertures <span class="tip" id="holeCount"></span></summary><div class="secbody">
+          <p class="tip">Les positions se mesurent depuis le coin en bas à gauche de la face, vue de l'extérieur.</p>
+          <div id="holes" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div class="addrow">
+            <select id="addType" aria-label="Type d'ouverture"></select>
+            <select id="addFace" aria-label="Face"></select>
+            <button class="btn small" id="addHole">Ajouter</button>
+          </div>
+        </div></details>
+
+        <details class="sec" id="accSec"><summary>Accessoires</summary><div class="secbody">
+          <label class="tg"><input type="checkbox" id="refl"> Réflecteur conique sur la face avant</label>
+          <div class="field"><label for="reflH">Hauteur du réflecteur (mm)</label><input type="number" id="reflH" min="8" max="40" step="1"></div>
+          <p class="tip" id="accNote">Le réflecteur se centre sur l'ouverture « Ampoule E10 » de la face avant. Tapisse-le de papier aluminium.</p>
+        </div></details>
+
+        <div class="exp">
+          <h3>Récupérer les fichiers</h3>
+          <p class="tip" id="expInfo"></p>
+          <div class="actions" id="expBtns"></div>
+          <p id="dlStatus" aria-live="polite"></p>
+        </div>
+      </aside>
+    </div>
+  </section>
+  <footer>Cotes en millimètres. Mesure toujours tes composants avant de lancer une série : les dimensions varient selon les fournisseurs.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const ICONS={
+  torche:'<path d="M6 20h20v8H6z"/><path d="M26 18l8-5v22l-8-5"/><path d="M38 16l6-3M39 24h7M38 32l6 3"/><path d="M12 20v8"/>',
+  sonnette:'<rect x="10" y="6" width="28" height="36" rx="5"/><circle cx="24" cy="24" r="8"/><circle cx="24" cy="24" r="3"/>',
+  adresse:'<path d="M3 34c6-14 10 6 16-8s10 4 16-6 9 4 10 2"/><circle cx="24" cy="20" r="5"/><path d="M24 25v17"/>',
+  manege:'<path d="M6 16L24 6l18 10z"/><path d="M10 16v20M24 16v20M38 16v20"/><path d="M6 40h36"/><circle cx="10" cy="28" r="2.5"/><circle cx="38" cy="30" r="2.5"/>',
+  dessin:'<path d="M14 8h20l-3 24H17z"/><path d="M18 32l-4 12M24 32v12M30 32l4 12"/><rect x="19" y="3" width="10" height="5" rx="1"/>',
+  ventilo:'<circle cx="24" cy="18" r="13"/><circle cx="24" cy="18" r="2.5"/><path d="M24 15.5c-2-5 0-9 3-9M26.5 19c5 1 7 5 5 8M21.5 19.5c-3 4-7 4-9 1"/><path d="M24 31v12M18 43h12"/>',
+  brosse:'<rect x="6" y="30" width="36" height="7" rx="3"/><path d="M10 37v6M16 37v6M22 37v6M28 37v6M34 37v6M40 37v4"/><rect x="14" y="16" width="16" height="14" rx="3"/><path d="M30 23h6"/><circle cx="38" cy="21" r="3"/>',
+  grue:'<path d="M8 44V8h28M8 14l8-6M36 8v14"/><rect x="30" y="22" width="12" height="7" rx="2"/><path d="M33 34v3M39 34v4"/>',
+  coffre:'<rect x="6" y="18" width="36" height="24" rx="3"/><path d="M6 26h36"/><circle cx="24" cy="32" r="3"/><path d="M24 35v4"/><path d="M14 3v7a5 5 0 0 0 10 0V3"/>',
+  secrets:'<rect x="8" y="24" width="32" height="18" rx="2"/><path d="M8 24L16 8h26l-2 16"/><path d="M24 20v-5M19 21l-2-3M29 21l2-3"/>',
+  clignotant:'<rect x="16" y="8" width="16" height="30" rx="6"/><circle cx="24" cy="18" r="4"/><path d="M24 38v6M8 16l-4-2M8 24H3M40 16l4-2M40 24h5"/>',
+  questions:'<rect x="6" y="6" width="36" height="36" rx="3"/><circle cx="14" cy="16" r="2"/><circle cx="14" cy="28" r="2"/><circle cx="34" cy="16" r="2"/><circle cx="34" cy="28" r="2"/><path d="M16 17l16 10" stroke-dasharray="3 3"/>',
+  frontale:'<ellipse cx="24" cy="26" rx="18" ry="11"/><rect x="17" y="10" width="14" height="10" rx="3"/><path d="M20 6l-2-3M24 5V1M28 6l2-3"/>',
+  lecture:'<path d="M8 44h22"/><path d="M19 44V28l11-13"/><path d="M25 11l14-5 3 15z"/><path d="M36 25l2 7M42 23l5 5"/>',
+  variateur:'<circle cx="24" cy="24" r="11"/><path d="M24 24l5-7"/><path d="M9 38A20 20 0 1 1 39 38"/>',
+  bicolore:'<ellipse cx="24" cy="28" rx="18" ry="11"/><rect x="13" y="10" width="22" height="11" rx="3"/><circle cx="19" cy="15.5" r="2.2"/><circle cx="29" cy="15.5" r="2.2"/>'
+};
+ICONS.echecs='<path d="M14 42h20M17 42l2-9h10l2 9M19 33l-1-15h12l-1 15M17 18v-7h4v3h2.5v-3h3v3H29v-3h4v7z"/>';
+ICONS.stopmotion='<rect x="12" y="6" width="24" height="6" rx="1.5"/><path d="M8 12v28M40 12v28M4 40h40"/><path d="M24 12l-9 26M24 12l9 26" stroke-dasharray="2 3"/><circle cx="24" cy="12" r="1.6"/>';
+ICONS.libre='<rect x="7" y="16" width="34" height="24" rx="2"/><path d="M7 22h34"/><path d="M20 10h8"/>';
+
+/* ================= Objets et préréglages ================= */
+const OBJS=[['torche','Lampe torche',1],['sonnette','Sonnette',1],['adresse','Jeu d’adresse',1],['manege','Manège miniature',1],['dessin','Robot dessinateur',1],
+ ['ventilo','Ventilateur de poche',2],['brosse','Robot brosse',2],['grue','Grue à électroaimant',2],['coffre','Coffre à clé magnétique',2],['secrets','Boîte à secrets lumineuse',2],['clignotant','Feu de vélo clignotant',2],['questions','Jeu de questions',2],
+ ['frontale','Lampe frontale',3],['lecture','Lampe de lecture',3],['variateur','Lampe à variateur',3],['bicolore','Frontale 2 couleurs',3],['echecs','Jeu d’échecs à tiroir',9],['stopmotion','Banc de stop motion',9],['libre','Boîtier libre',0]];
+const LEVELS=[[1,'Découverte'],[2,'Intermédiaire'],[3,'Expert'],[9,'Sans électronique'],[0,'Autre']];
+const HT={
+  inter_rect:{label:'Interrupteur à bascule (KCD1)',shape:'rect',w:19,h:13},
+  inter_rond:{label:'Interrupteur rond à écrou',shape:'rond',d:12},
+  bp:{label:'Bouton poussoir',shape:'rond',d:12},
+  del:{label:'DEL 5 mm',shape:'rond',d:5.2},
+  bulb:{label:'Ampoule E10',shape:'rond',d:14},
+  pot:{label:'Potentiomètre',shape:'rond',d:7.5},
+  axe:{label:'Axe de moteur',shape:'rond',d:8},
+  fil:{label:'Passage de fils',shape:'rond',d:5},
+  parcours:{label:'Extrémité du parcours',shape:'rond',d:3},
+  attache:{label:'Attache parisienne',shape:'rond',d:3.5},
+  son:{label:'Trou pour le son',shape:'rond',d:4},
+  fente:{label:'Fente pour élastique',shape:'rect',w:3,h:18},
+  libre:{label:'Ouverture libre',shape:'carre',w:10}
+};
+const FACES=[['avant','Face avant'],['arriere','Face arrière'],['gauche','Côté gauche'],['droite','Côté droit'],['dessus','Couvercle'],['dessous','Fond']];
+const FL=Object.fromEntries(FACES);
+const P2=[60,32,16],P1=[60,18,16];
+const Q=[];[.2,.35,.5,.65,.8].forEach(v=>{Q.push(['attache','dessus',.15,v]);Q.push(['attache','dessus',.85,v]);});
+const PRESETS={
+  torche:{inner:[100,36,30],reco:'3d',contents:'boîtier 2 piles AA, douille E10 et interrupteur',need:P2,holes:[['bulb','avant',.5,.5],['inter_rect','gauche',.72,.5]],reflector:true},
+  sonnette:{inner:[64,40,30],reco:'3d',contents:'boîtier 2 piles AA et buzzer ; le bouton poussoir se fixe sur le couvercle',need:P2,holes:[['bp','dessus',.5,.5],['son','avant',.35,.5],['son','avant',.5,.5],['son','avant',.65,.5]]},
+  adresse:{inner:[200,50,25],reco:'laser',contents:'socle du jeu : boîtier 2 piles AA et buzzer ; le parcours se plante dans le couvercle',need:P2,holes:[['parcours','dessus',.06,.5],['parcours','dessus',.94,.5],['fil','avant',.5,.5]]},
+  manege:{inner:[90,90,45],reco:'laser',contents:'boîtier 2 piles AA et motoréducteur ; l’axe sort par le couvercle',need:[72,40,30],holes:[['axe','dessus',.5,.5],['inter_rond','avant',.5,.5]]},
+  dessin:{inner:[62,20,20],reco:'3d',contents:'boîtier 1 pile AA et interrupteur, à coller sur le gobelet',need:P1,holes:[['inter_rect','dessus',.5,.5],['fil','avant',.5,.5]]},
+  ventilo:{inner:[66,36,30],reco:'3d',contents:'boîtier 2 piles AA et moteur ; l’axe sort par le couvercle',need:P2,holes:[['inter_rect','gauche',.4,.5],['axe','dessus',.85,.5]]},
+  brosse:{inner:[62,20,18],reco:'3d',contents:'boîtier 1 pile AA et interrupteur, à coller sur la brosse',need:P1,holes:[['inter_rect','dessus',.5,.5],['fil','avant',.5,.5]]},
+  grue:{inner:[64,40,25],reco:'3d',contents:'boîtier 1 pile AA et bouton poussoir ; le fil de l’électroaimant sort à l’arrière',need:P1,holes:[['bp','dessus',.5,.5],['fil','arriere',.5,.5]]},
+  coffre:{inner:[120,80,60],reco:'laser',contents:'le coffre lui-même ; le circuit se colle sous le couvercle',need:P2,holes:[['del','avant',.5,.7]]},
+  secrets:{inner:[120,80,50],reco:'laser',contents:'la boîte elle-même ; le circuit se colle dans un coin',need:P2,holes:[]},
+  clignotant:{inner:[64,36,24],reco:'3d',contents:'boîtier 2 piles AA ; la DEL sort à l’arrière',need:P2,holes:[['del','arriere',.5,.5],['inter_rect','dessus',.5,.5],['fente','gauche',.5,.5],['fente','droite',.5,.5]]},
+  questions:{inner:[200,140,20],reco:'laser',contents:'plateau du jeu : boîtier 2 piles AA à l’intérieur, attaches parisiennes sur le dessus',need:P2,holes:Q.concat([['del','dessus',.5,.9],['fil','avant',.4,.5],['fil','avant',.6,.5]])},
+  frontale:{inner:[64,36,24],reco:'3d',contents:'boîtier 2 piles AA, interrupteur et DEL',need:P2,holes:[['del','avant',.5,.5],['inter_rect','dessus',.5,.5],['fente','gauche',.5,.5],['fente','droite',.5,.5]]},
+  lecture:{inner:[64,36,24],reco:'3d',contents:'boîtier 2 piles AA, interrupteur et DEL',need:P2,holes:[['del','avant',.5,.5],['inter_rect','dessus',.5,.5]]},
+  variateur:{inner:[70,40,32],reco:'3d',contents:'boîtier 2 piles AA, potentiomètre, interrupteur et DEL',need:P2,holes:[['pot','dessus',.3,.5],['inter_rect','dessus',.72,.5],['del','avant',.5,.6]]},
+  bicolore:{inner:[64,36,24],reco:'3d',contents:'boîtier 2 piles AA, inverseur et 2 DEL',need:P2,holes:[['del','avant',.35,.5],['del','avant',.65,.5],['inter_rect','dessus',.5,.5],['fente','gauche',.5,.5],['fente','droite',.5,.5]]},
+  echecs:{inner:[0,0,0],reco:'laser',contents:'',need:null,holes:[],chess:true},
+  stopmotion:{inner:[0,0,0],reco:'laser',contents:'',need:null,holes:[],sm:true},
+  libre:{inner:[80,50,30],reco:'3d',contents:'ce que tu veux y ranger',need:null,holes:[]}
+};
+const RECO={
+  '3d':'Conseillé : impression 3D. Petit boîtier : les parois fines (2 mm) conviennent aux interrupteurs à clipser, et le corps sort d’une seule pièce.',
+  'laser':'Conseillé : découpe laser. Grand boîtier : en plaque de bois, de carton ou d’acrylique (épaisseur réglable de 1 à 10 mm), il est découpé en quelques minutes et les créneaux s’assemblent à la colle.'
+};
+
+/* ================= État ================= */
+const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp:0.1},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1};
+function loadPreset(id){
+  const p=PRESETS[id];state.obj=id;state.mode=p.reco;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.sel=-1;
+  state.holes=p.holes.map(([type,face,fu,fv])=>{const t=HT[type];return {type,label:t.label,face,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu,fv};});
+}
+const T=()=>state.mode==='3d'?state.t3:state.tl;
+function dims(){const t=T();return {t,L:state.Li+2*t,W:state.Wi+2*t,H:state.Hi+t};}
+function faceSize(f,d){return f==='avant'||f==='arriere'?[d.W,d.H]:f==='gauche'||f==='droite'?[d.L,d.H]:[d.L,d.W];}
+function ext(h){return h.shape==='rond'?[h.d/2,h.d/2]:h.shape==='carre'?[h.w/2,h.w/2]:[h.w/2,h.h/2];}
+function absHole(h,d){const [fw,fh]=faceSize(h.face,d);return {...h,u:h.fu*fw,v:h.fv*fh};}
+const r1=x=>Math.round(x*10)/10;
+const fmt=x=>String(r1(x)).replace('.',',');
+
+/* ================= Zones autorisées ================= */
+function allowed(face,d){
+  const t=d.t,m=1,[fw,fh]=faceSize(face,d);
+  if(face==='dessus'){const band=state.mode==='3d'?t+state.jeu+1.2:t+state.jeu+6;return [band+m,fw-band-m,band+m,fh-band-m];}
+  if(face==='dessous')return [t+m,fw-t-m,t+m,fh-t-m];
+  const top=state.mode==='3d'?4:t+1;
+  return [t+m,fw-t-m,t+m,fh-top];
+}
+function checkHoles(d){
+  const res=state.holes.map(()=>({ok:true,msg:''}));
+  const abs=state.holes.map(h=>absHole(h,d));
+  abs.forEach((h,i)=>{const [a,b,c,e]=allowed(h.face,d),[ru,rv]=ext(h);
+    if(h.u-ru<a||h.u+ru>b||h.v-rv<c||h.v+rv>e){res[i]={ok:false,msg:`trop près du bord de la face (${FL[h.face].toLowerCase()}) ou plus grande que la zone libre`};}});
+  for(let i=0;i<abs.length;i++)for(let j=i+1;j<abs.length;j++){const A=abs[i],B=abs[j];if(A.face!==B.face||!res[i].ok||!res[j].ok)continue;
+    const [ai,aj]=ext(A),[bi,bj]=ext(B);
+    if(Math.abs(A.u-B.u)<ai+bi+1&&Math.abs(A.v-B.v)<aj+bj+1){res[j]={ok:false,msg:`chevauche « ${A.label} »`};}}
+  return {res,abs};
+}
+
+/* ================= Créneaux (découpe laser) ================= */
+function segs(E,pat,d){
+  if(!pat)return [{b:E,dep:0}];
+  const t=d.t,k=state.kerf;let n=Math.max(3,Math.round(E/state.fw));if(n%2===0)n+=1;while(n>3&&E/n<1.5*t)n-=2;
+  const s=E/n,out=[];
+  for(let i=0;i<n;i++){const full=pat==='A'?i%2===0:i%2===1;const b=i===n-1?E:(i+1)*s+(full?k/2:-k/2);out.push({b,dep:full?0:t});}
+  return out;
+}
+function outline(w,h,edges,d){ // edges: [bas, droite, haut, gauche] -> 'A' | 'B' | null
+  const E=[segs(w,edges[0],d),segs(h,edges[1],d),segs(w,edges[2],d),segs(h,edges[3],d)];
+  const pt=[(s,dp)=>[s,dp],(s,dp)=>[w-dp,s],(s,dp)=>[w-s,h-dp],(s,dp)=>[dp,h-s]];
+  const corner=(k,dE,dF)=>k===0?[dE,dF]:k===1?[w-dF,dE]:k===2?[w-dE,h-dF]:[dF,h-dE];
+  const P=[];
+  for(let k=0;k<4;k++){const prev=E[(k+3)%4],cur=E[k];P.push(corner(k,prev[prev.length-1].dep,cur[0].dep));
+    for(let i=0;i<cur.length-1;i++){P.push(pt[k](cur[i].b,cur[i].dep));P.push(pt[k](cur[i].b,cur[i+1].dep));}}
+  return P.filter((p,i)=>{const q=P[(i+P.length-1)%P.length];return Math.abs(p[0]-q[0])>1e-6||Math.abs(p[1]-q[1])>1e-6;});
+}
+const rect=(x0,y0,x1,y1)=>[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+
+/* ================= Modèle ================= */
+function frames(d){
+  const {L,W,H,t}=d;
+  return {avant:{U:[0,1,0],V:[0,0,1],N:[-1,0,0],O:[L,0,0]},arriere:{U:[0,-1,0],V:[0,0,1],N:[1,0,0],O:[0,W,0]},
+    gauche:{U:[1,0,0],V:[0,0,1],N:[0,1,0],O:[0,0,0]},droite:{U:[-1,0,0],V:[0,0,1],N:[0,-1,0],O:[L,W,0]},
+    dessous:{U:[1,0,0],V:[0,1,0],N:[0,0,1],O:[0,0,0]},dessus:{U:[1,0,0],V:[0,1,0],N:[0,0,-1],O:[0,0,H+t]},
+    rebord:{U:[1,0,0],V:[0,1,0],N:[0,0,-1],O:[0,0,H]},rebord3d:{U:[1,0,0],V:[0,1,0],N:[0,0,-1],O:[0,0,H+0.05]}};
+}
+function buildModel(){
+  if(state.obj==='stopmotion')return buildSM();
+  if(state.obj==='echecs')return buildChess();
+  const d=dims(),{L,W,H,t}=d,F=frames(d),{res,abs}=checkHoles(d);
+  const by={};FACES.forEach(([f])=>by[f]=[]);abs.forEach((h,i)=>{if(res[i].ok)by[h.face].push(h);});
+  const panels=[]; // {part, name, face, frame, w, h, outline, holes, cuts, depth, explode}
+  const j=state.jeu;
+  if(state.mode==='3d'){
+    const e=0.05; // léger recouvrement entre pièces : le logiciel d'impression les fusionne
+    panels.push({part:'corps',name:'Fond',frame:F.dessous,outline:rect(0,0,L,W),holes:by.dessous,depth:t});
+    panels.push({part:'corps',name:'Côté gauche',frame:F.gauche,outline:rect(0,t-e,L,H),holes:by.gauche,depth:t});
+    panels.push({part:'corps',name:'Côté droit',frame:F.droite,outline:rect(0,t-e,L,H),holes:by.droite,depth:t});
+    panels.push({part:'corps',name:'Face avant',frame:F.avant,outline:rect(t-e,t-e,W-t+e,H),holes:by.avant,depth:t});
+    panels.push({part:'corps',name:'Face arrière',frame:F.arriere,outline:rect(t-e,t-e,W-t+e,H),holes:by.arriere,depth:t});
+    panels.push({part:'couvercle',name:'Couvercle',frame:F.dessus,outline:rect(0,0,L,W),holes:by.dessus,depth:t});
+    const a=t+j;panels.push({part:'couvercle',name:'Rebord',frame:F.rebord3d,outline:rect(a,a,L-a,W-a),holes:[{shape:'poly',pts:rect(a+1.2,a+1.2,L-a-1.2,W-a-1.2)}],depth:3+e,lift:e});
+  }else{
+    panels.push({part:'corps',name:'Fond',face:'dessous',frame:F.dessous,w:L,h:W,outline:outline(L,W,['B','B','B','B'],d),holes:by.dessous,depth:t,ex:[0,0,-18]});
+    panels.push({part:'corps',name:'Côté gauche',face:'gauche',frame:F.gauche,w:L,h:H,outline:outline(L,H,['A','A',null,'A'],d),holes:by.gauche,depth:t,ex:[0,-18,0]});
+    panels.push({part:'corps',name:'Côté droit',face:'droite',frame:F.droite,w:L,h:H,outline:outline(L,H,['A','A',null,'A'],d),holes:by.droite,depth:t,ex:[0,18,0]});
+    panels.push({part:'corps',name:'Face avant',face:'avant',frame:F.avant,w:W,h:H,outline:outline(W,H,['A','B',null,'B'],d),holes:by.avant,depth:t,ex:[18,0,0]});
+    panels.push({part:'corps',name:'Face arrière',face:'arriere',frame:F.arriere,w:W,h:H,outline:outline(W,H,['A','B',null,'B'],d),holes:by.arriere,depth:t,ex:[-18,0,0]});
+    panels.push({part:'couvercle',name:'Couvercle',face:'dessus',frame:F.dessus,w:L,h:W,outline:rect(0,0,L,W),holes:by.dessus,depth:t});
+    const a=t+j;panels.push({part:'couvercle',name:'Cadre sous le couvercle',frame:F.rebord,w:L,h:W,outline:rect(a,a,L-a,W-a),holes:[{shape:'poly',pts:rect(a+6,a+6,L-a-6,W-a-6)}],depth:t,planOffset:[a,a]});
+  }
+  return {d,panels,res,abs};
+}
+
+/* ================= Géométrie Three.js ================= */
+function holePath(h){
+  const p=new THREE.Path();
+  if(h.shape==='rond'){const n=Math.max(24,Math.min(96,Math.round(h.d*4)));for(let i=0;i<n;i++){const a=i/n*2*Math.PI,x=h.u+h.d/2*Math.cos(a),y=h.v+h.d/2*Math.sin(a);i?p.lineTo(x,y):p.moveTo(x,y);}return p;}
+  const pts=h.shape==='poly'?h.pts:(()=>{const [a,b]=ext(h);return rect(h.u-a,h.v-b,h.u+a,h.v+b);})();
+  p.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)p.lineTo(pts[i][0],pts[i][1]);p.lineTo(pts[0][0],pts[0][1]);return p;
+}
+function frameMatrix(F){return new THREE.Matrix4().set(F.U[0],F.V[0],F.N[0],F.O[0],F.U[1],F.V[1],F.N[1],F.O[1],F.U[2],F.V[2],F.N[2],F.O[2],0,0,0,1);}
+function flip(g){
+  if(g.index){const a=g.index.array;for(let i=0;i<a.length;i+=3){const x=a[i+1];a[i+1]=a[i+2];a[i+2]=x;}g.index.needsUpdate=true;return;}
+  Object.values(g.attributes).forEach(at=>{const s=at.itemSize,a=at.array;for(let i=0;i<at.count;i+=3){for(let c=0;c<s;c++){const x=a[(i+1)*s+c];a[(i+1)*s+c]=a[(i+2)*s+c];a[(i+2)*s+c]=x;}}at.needsUpdate=true;});
+}
+function place(g,m){g.applyMatrix4(m);if(m.determinant()<0)flip(g);g.computeVertexNormals();return g;}
+function panelGeo(p){
+  const s=new THREE.Shape();p.outline.forEach((q,i)=>i?s.lineTo(q[0],q[1]):s.moveTo(q[0],q[1]));
+  p.holes.forEach(h=>s.holes.push(holePath(h)));
+  return place(new THREE.ExtrudeGeometry(s,{depth:p.depth,bevelEnabled:false,curveSegments:40}),frameMatrix(p.frame));
+}
+function reflectorLocal(d){
+  const D=Math.min(d.W,d.H+d.t)-0.4,Ro=D/2,bulb=state.holes.map(h=>absHole(h,d)).find(h=>h.face==='avant'&&h.shape==='rond'),rh=bulb?bulb.d/2:7,bt=2,H=state.reflH;
+  const prof=[[rh,0],[Ro,0],[Ro,H],[Ro-1.5,H],[rh,bt],[rh,0]].map(([x,y])=>new THREE.Vector2(x,y));
+  const g=new THREE.LatheGeometry(prof,72);
+  return {g,center:bulb?[bulb.u,bulb.v]:[d.W/2,d.H/2],D};
+}
+function signedVolume(geos){let v=0;geos.forEach(g=>{const p=g.attributes.position.array,idx=g.index?g.index.array:null,n=idx?idx.length:p.length/3;
+  for(let i=0;i<n;i+=3){const a=(idx?idx[i]:i)*3,b=(idx?idx[i+1]:i+1)*3,c=(idx?idx[i+2]:i+2)*3;
+    v+=(p[a]*(p[b+1]*p[c+2]-p[b+2]*p[c+1])-p[a+1]*(p[b]*p[c+2]-p[b+2]*p[c])+p[a+2]*(p[b]*p[c+1]-p[b+1]*p[c]))/6;}});return v;}
+
+/* ================= Vue 3D ================= */
+let renderer=null,scene,camera,group,marker=null,orbit={th:-0.9,ph:0.55,dist:250,target:new THREE.Vector3()},needs=true,lastModel=null;
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()||'#888';}
+function initGL(){
+  try{renderer=new THREE.WebGLRenderer({canvas:$('cv'),antialias:true,preserveDrawingBuffer:true});}catch(e){renderer=null;}
+  if(!renderer){$('view3d').innerHTML='<p class="nogl">La vue 3D n’est pas disponible sur cet appareil. Les réglages et les fichiers fonctionnent quand même.</p>';return;}
+  renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(35,1.6,1,5000);camera.up.set(0,0,1);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x667766,0.75));const dl=new THREE.DirectionalLight(0xffffff,0.7);dl.position.set(1,-2,3);scene.add(dl);const d2=new THREE.DirectionalLight(0xffffff,0.25);d2.position.set(-2,1,1);scene.add(d2);
+  group=new THREE.Group();scene.add(group);
+  const cv=$('cv'),pts=new Map();let pinch=0;
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);});
+  cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const [x,y]=pts.get(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);
+    if(pts.size===1){orbit.th-=(e.clientX-x)*0.01;orbit.ph=Math.max(-1.45,Math.min(1.45,orbit.ph+(e.clientY-y)*0.01));needs=true;}
+    else if(pts.size===2){const [a,b]=[...pts.values()],dd=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch)orbit.dist*=pinch/dd;pinch=dd;needs=true;}});
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=0;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{e.preventDefault();orbit.dist*=e.deltaY>0?1.1:1/1.1;needs=true;},{passive:false});
+  new ResizeObserver(()=>{sizeGL();}).observe($('view3d'));sizeGL();
+  (function loop(){if(needs&&renderer){needs=false;draw();}requestAnimationFrame(loop);})();
+}
+function sizeGL(){if(!renderer)return;const w=$('view3d').clientWidth||600,h=Math.round(Math.min(Math.max(w*0.62,260),560));renderer.setSize(w,h,false);$('cv').style.height=h+'px';camera.aspect=w/h;camera.updateProjectionMatrix();needs=true;}
+function draw(){
+  const o=orbit;orbit.dist=Math.max(20,Math.min(3000,orbit.dist));
+  camera.position.set(o.target.x+o.dist*Math.cos(o.ph)*Math.cos(o.th),o.target.y+o.dist*Math.cos(o.ph)*Math.sin(o.th),o.target.z+o.dist*Math.sin(o.ph));
+  camera.lookAt(o.target);renderer.setClearColor(new THREE.Color(css('--board')));renderer.render(scene,camera);
+}
+function resetView(){if(state.obj==='stopmotion'){const sd=smDims();orbit.target.set(sd.Bw/2,sd.Bd/2,sd.hc*0.45);orbit.dist=Math.max(sd.Bw,sd.hc)*2.6;orbit.th=-1.25;orbit.ph=0.4;needs=true;return;}if(state.obj==='echecs'){const cd=chessDims();orbit.target.set(cd.S/2,cd.S/2,cd.Hw/2);orbit.dist=cd.S*2.6;orbit.th=-1.2;orbit.ph=0.62;needs=true;return;}const d=dims();orbit.target.set(d.L/2,d.W/2,d.H/2);orbit.dist=Math.max(d.L,d.W,d.H)*2.9+40;orbit.th=-0.9;orbit.ph=0.55;needs=true;}
+function rebuild3D(m){
+  if(!renderer)return;
+  group.children.slice().forEach(c=>{group.remove(c);c.geometry&&c.geometry.dispose();});
+  if(m.chess){rebuildChess3D(m);return;}
+  if(m.sm){rebuildSM3D(m);return;}
+  const laser=state.mode==='laser';
+  const cBody=new THREE.Color(css(laser?'--wood':'--body3d')),cLid=new THREE.Color(css(laser?'--wood2':'--lid3d')),edge=new THREE.Color(0x1a2a24);
+  const add=(g,col,off)=>{const me=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:col,roughness:.75,metalness:0,side:THREE.DoubleSide}));
+    const ln=new THREE.LineSegments(new THREE.EdgesGeometry(g,25),new THREE.LineBasicMaterial({color:edge,transparent:true,opacity:.35}));
+    if(off){me.position.set(...off);ln.position.set(...off);}group.add(me,ln);};
+  m.panels.forEach(p=>{if(p.part==='couvercle'&&!state.lidShow)return;
+    let off=null;if(state.explode){off=p.part==='couvercle'?[0,0,Math.max(25,m.d.H*0.6)]:(p.ex||null);}
+    add(panelGeo(p),p.part==='couvercle'?cLid:cBody,off);});
+  if(!laser&&state.reflector){const r=reflectorLocal(m.d),M=new THREE.Matrix4().set(0,1,0,m.d.L, 1,0,0,r.center[0], 0,0,1,r.center[1], 0,0,0,1);
+    add(place(r.g,M),new THREE.Color(css('--metal')),state.explode?[25,0,0]:null);}
+  if(state.sel>=0&&state.holes[state.sel]){const h=absHole(state.holes[state.sel],m.d),F=frames(m.d)[h.face],[a,b]=ext(h),R=Math.max(a,b)+2.5;
+    const tor=new THREE.Mesh(new THREE.TorusGeometry(R,0.8,8,48),new THREE.MeshBasicMaterial({color:new THREE.Color(css('--mark'))}));
+    const pos=new THREE.Vector3(...F.O).addScaledVector(new THREE.Vector3(...F.U),h.u).addScaledVector(new THREE.Vector3(...F.V),h.v).addScaledVector(new THREE.Vector3(...F.N),-1);
+    if(h.face==='dessus'&&state.explode)pos.z+=Math.max(25,m.d.H*0.6);
+    tor.position.copy(pos);tor.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(...F.N));group.add(tor);}
+  needs=true;
+}
+
+/* ================= Plan de découpe (SVG / DXF) ================= */
+function laserSheet(m){
+  const gap=6,maxRow=Math.max(420,m.d.L+2*gap);let x=gap,y=gap,rowH=0,W=0;const items=[];
+  const order=['Fond','Couvercle','Cadre sous le couvercle','Côté gauche','Côté droit','Face avant','Face arrière'];
+  order.map(n=>m.panels.find(p=>p.name===n)).filter(Boolean).forEach(p=>{
+    const xs=p.outline.map(q=>q[0]),ys=p.outline.map(q=>q[1]),minx=Math.min(...xs),miny=Math.min(...ys),w=Math.max(...xs)-minx,h=Math.max(...ys)-miny;
+    if(x+w+gap>maxRow&&x>gap){x=gap;y+=rowH+gap;rowH=0;}
+    items.push({p,ox:x-minx,oy:y,miny,h,w});x+=w+gap;rowH=Math.max(rowH,h);W=Math.max(W,x);});
+  const H=y+rowH+gap;
+  items.forEach(it=>{it.tr=(u,v)=>[it.ox+u,it.oy+(it.h+it.miny)-v];});
+  return {items,W,H};
+}
+function svgOf(m,forExport){
+  const sh=laserSheet(m),n=v=>(Math.round(v*100)/100);let body='';let cut=0;
+  sh.items.forEach(it=>{const p=it.p,tr=it.tr;
+    const poly=pts=>{const q=pts.map(([u,v])=>tr(u,v));for(let i=0;i<q.length;i++){const a=q[i],b=q[(i+1)%q.length];cut+=Math.hypot(a[0]-b[0],a[1]-b[1]);}
+      return `<path d="M${q.map(([a,b])=>n(a)+' '+n(b)).join(' L')} Z"/>`;};
+    body+=poly(p.outline);
+    p.holes.forEach(h=>{if(h.shape==='rond'){const [cx,cy]=tr(h.u,h.v);cut+=Math.PI*h.d;body+=`<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(h.d/2)}"/>`;}
+      else{const pts=h.shape==='poly'?h.pts:(()=>{const [a,b]=ext(h);return rect(h.u-a,h.v-b,h.u+a,h.v+b);})();body+=poly(pts);}});
+  });
+  let labels='';
+  if(state.engrave||!forExport)sh.items.forEach(it=>{const xs=it.p.outline.map(q=>q[0]),ys=it.p.outline.map(q=>q[1]);
+    const [cx,cy]=it.tr((Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2);
+    const small=it.p.name==='Cadre sous le couvercle';const [lx,ly]=small?it.tr((Math.min(...xs)+Math.max(...xs))/2,Math.min(...ys)+3):[cx,cy];
+    labels+=`<text x="${n(lx)}" y="${n(ly)}" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="${small?3:4}" fill="#0000ff">${it.p.name}</text>`;});
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${n(sh.W)}mm" height="${n(sh.H)}mm" viewBox="0 0 ${n(sh.W)} ${n(sh.H)}">`+
+    `<g fill="none" stroke="#ff0000" stroke-width="${forExport?0.1:0.4}">${body}</g>${labels?`<g>${labels}</g>`:''}</svg>`;
+  return {svg,W:sh.W,H:sh.H,cut,items:sh.items};
+}
+function dxfOf(m){
+  const sh=laserSheet(m),L=[];const ln=(a,b)=>L.push('0','LINE','8','DECOUPE','10',a[0].toFixed(3),'20',(sh.H-a[1]).toFixed(3),'11',b[0].toFixed(3),'21',(sh.H-b[1]).toFixed(3));
+  sh.items.forEach(it=>{const p=it.p,tr=it.tr;const poly=pts=>{const q=pts.map(([u,v])=>tr(u,v));q.forEach((a,i)=>ln(a,q[(i+1)%q.length]));};
+    poly(p.outline);p.holes.forEach(h=>{if(h.shape==='rond'){const [cx,cy]=tr(h.u,h.v);L.push('0','CIRCLE','8','DECOUPE','10',cx.toFixed(3),'20',(sh.H-cy).toFixed(3),'40',(h.d/2).toFixed(3));}
+      else poly(h.shape==='poly'?h.pts:(()=>{const [a,b]=ext(h);return rect(h.u-a,h.v-b,h.u+a,h.v+b);})());});});
+  return ['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES',...L,'0','ENDSEC','0','EOF'].join('\n');
+}
+
+/* ================= STL ================= */
+function stlOf(geos,name){
+  let n=0;const tris=[];geos.forEach(g=>{const p=g.attributes.position.array,idx=g.index?g.index.array:null,c=idx?idx.length:p.length/3;for(let i=0;i<c;i+=3){tris.push([p,idx?idx[i]:i,idx?idx[i+1]:i+1,idx?idx[i+2]:i+2]);}});
+  const vol=signedVolume(geos),inv=vol<0;n=tris.length;
+  const buf=new ArrayBuffer(84+n*50),dv=new DataView(buf);const head=('Atelier construction electronique - '+name).slice(0,79);for(let i=0;i<head.length;i++)dv.setUint8(i,head.charCodeAt(i)&127);
+  dv.setUint32(80,n,true);let o=84;
+  tris.forEach(([p,a,b,c])=>{if(inv){const x=b;b=c;c=x;}const A=[p[a*3],p[a*3+1],p[a*3+2]],Bv=[p[b*3],p[b*3+1],p[b*3+2]],Cv=[p[c*3],p[c*3+1],p[c*3+2]];
+    const u=[Bv[0]-A[0],Bv[1]-A[1],Bv[2]-A[2]],v=[Cv[0]-A[0],Cv[1]-A[1],Cv[2]-A[2]];let nx=u[1]*v[2]-u[2]*v[1],ny=u[2]*v[0]-u[0]*v[2],nz=u[0]*v[1]-u[1]*v[0];const l=Math.hypot(nx,ny,nz)||1;
+    [nx/l,ny/l,nz/l,...A,...Bv,...Cv].forEach(f=>{dv.setFloat32(o,f,true);o+=4;});dv.setUint16(o,0,true);o+=2;});
+  return {buf,vol:Math.abs(vol),tris:n};
+}
+function printParts(m){
+  const d=m.d,parts=[];
+  const body=m.panels.filter(p=>p.part==='corps').map(panelGeo);parts.push({file:'corps.stl',label:'Corps',geos:body});
+  const lidM=new THREE.Matrix4().set(1,0,0,0, 0,-1,0,d.W, 0,0,-1,d.H+d.t, 0,0,0,1);
+  const lid=m.panels.filter(p=>p.part==='couvercle').map(p=>place(panelGeo(p),lidM));parts.push({file:'couvercle.stl',label:'Couvercle',geos:lid});
+  if(state.reflector){const r=reflectorLocal(d);parts.push({file:'reflecteur.stl',label:'Réflecteur',geos:[place(r.g,new THREE.Matrix4().makeRotationX(Math.PI/2))]});}
+  return parts;
+}
+
+/* ================= Téléchargements ================= */
+let dlNs;async function downloadsNs(){if(dlNs!==undefined)return dlNs;try{dlNs=(window.claude&&typeof window.claude.use==='function')?await window.claude.use('downloads'):null;}catch(e){dlNs=null;}return dlNs;}
+async function saveFile(filename,data,mime){
+  const st=$('dlStatus');st.textContent='Préparation du fichier…';
+  const dl=await downloadsNs();
+  if(dl){try{await dl.save({filename,data});st.textContent='Fichier proposé : '+filename;}catch(e){st.textContent=e&&e.code==='declined'?'Téléchargement annulé.':'Téléchargement impossible ici ('+((e&&e.code)||'erreur')+').';}return;}
+  const blob=data instanceof Blob?data:new Blob([data],{type:mime||'application/octet-stream'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+  st.textContent='Fichier téléchargé : '+filename;
+}
+const slug=()=>(OBJS.find(o=>o[0]===state.obj)||['','boitier'])[1].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+function holesText(m){return state.holes.map((h,i)=>{const a=absHole(h,m.d),sz=h.shape==='rond'?`Ø ${fmt(h.d)}`:h.shape==='carre'?`${fmt(h.w)} × ${fmt(h.w)}`:`${fmt(h.w)} × ${fmt(h.h)}`;
+  return `- ${h.label} : ${FL[h.face].toLowerCase()}, ${sz} mm, centre à ${fmt(a.u)} mm du bord gauche et ${fmt(a.v)} mm du bas${m.res[i].ok?'':' (NON DÉCOUPÉE : mal placée)'}`;}).join('\n')||'- aucune';}
+function notice(m,kind){
+  const d=m.d,name=(OBJS.find(o=>o[0]===state.obj)||['','Boîtier'])[1];
+  const head=`BOÎTIER – ${name.toUpperCase()}\nAtelier construction électronique – Modeleur de boîtiers\n\nDimensions intérieures : ${fmt(state.Li)} × ${fmt(state.Wi)} × ${fmt(state.Hi)} mm\nDimensions extérieures : ${fmt(d.L)} × ${fmt(d.W)} × ${fmt(d.H+d.t)} mm (couvercle compris)\n\nOuvertures :\n${holesText(m)}\n\n`;
+  if(kind==='3d')return head+`IMPRESSION 3D\n- Parois : ${fmt(d.t)} mm ; jeu du couvercle : ${fmt(state.jeu)} mm\n- PLA, couche 0,2 mm, remplissage 20 %, sans support\n- corps.stl : ouverture vers le haut ; couvercle.stl : déjà posé à plat, rebord vers le haut${state.reflector?' ; reflecteur.stl : fond percé sur le plateau':''}\n- Un trou dans une paroi verticale fait un « pont » en haut : au-delà de 15 mm, il peut légèrement s’affaisser, c’est normal.\n\nMesure tes composants avant de lancer une série.\n`;
+  return head+`DÉCOUPE LASER\n- Plaque de ${fmt(d.t)} mm (contreplaqué, MDF, carton gris rigide ou acrylique)\n- Trait rouge = découpe ; texte bleu = gravure (facultatif)\n- Créneaux d’environ ${fmt(state.fw)} mm ; largeur du trait laser compensée : ${fmt(state.kerf)} mm\n- Assemblage : fond + 4 côtés collés à la colle à bois (vinylique). Le couvercle ne se colle pas :\n  colle seulement le « cadre sous le couvercle » dessous, bien centré, pour qu’il reste en place.\n- Fais d’abord un essai d’emboîtement sur une chute et ajuste la largeur du trait si c’est trop lâche ou trop serré.\n`;
+}
+async function export3D(){const m=buildModel(),parts=printParts(m),z=new JSZip();parts.forEach(p=>z.file(p.file,stlOf(p.geos,p.label).buf));z.file('LISEZ-MOI.txt',notice(m,'3d'));
+  await saveFile(`boitier-${slug()}-impression-3d.zip`,await z.generateAsync({type:'blob'}),'application/zip');}
+async function exportSVG(){const m=buildModel();await saveFile(`boitier-${slug()}-decoupe-laser.svg`,svgOf(m,true).svg,'image/svg+xml');}
+async function exportLaserZip(){const m=buildModel(),z=new JSZip();z.file(`boitier-${slug()}.svg`,svgOf(m,true).svg);z.file(`boitier-${slug()}.dxf`,dxfOf(m));z.file('LISEZ-MOI.txt',notice(m,'laser'));
+  await saveFile(`boitier-${slug()}-decoupe-laser.zip`,await z.generateAsync({type:'blob'}),'application/zip');}
+
+/* ================= Jeu d'échecs (sans électronique) ================= */
+const arcP=(cx,cy,rx,ry,a0,a1,n)=>{const o=[];for(let i=0;i<=n;i++){const a=(a0+(a1-a0)*i/n)*Math.PI/180;o.push([cx+rx*Math.cos(a),cy+ry*Math.sin(a)]);}return o;};
+const PIECES={
+  roi:{nom:'Roi',n:1,half:[[23,0],[23,5],[18,9],[13,12],[9,60],[15,63],[15,66],[10,68],[14,82],[3,84],[3,88],[8,88],[8,93],[3,93],[3,100],[0,100]]},
+  dame:{nom:'Dame',n:1,half:[[22,0],[22,5],[17,9],[12,12],[8,55],[14,58],[14,61],[9,63],[15,80],[10,75],[6,82],[2.4,77],[2.4,84.9]].concat(arcP(0,87,3.2,3.2,-41,90,10))},
+  fou:{nom:'Fou',n:2,half:[[21,0],[21,5],[16,9],[11,12],[7,40],[12,43],[12,46],[7,48]].concat(arcP(0,61,10,13,-67,82,16),arcP(0,77,3,3,-60,90,8))},
+  cavalier:{nom:'Cavalier',n:2,full:[[21,0],[21,5],[16,9],[12,12],[12,20],[10,30],[4,38],[6,43],[14,41],[19,44],[18,50],[8,66],[1,70],[-2,76],[-6,70],[-12,60],[-15,45],[-13,30],[-12,12],[-16,9],[-21,5],[-21,0]]},
+  tour:{nom:'Tour',n:2,half:[[21,0],[21,5],[16,9],[12,12],[11,44],[15,47],[16,60],[11,60],[11,54],[5,54],[5,60],[0,60]]},
+  pion:{nom:'Pion',n:8,half:[[20,0],[20,5],[15,9],[9,12],[7,27],[12,29],[12,32],[6,34]].concat(arcP(0,42,8,8,-51,90,14))}
+};
+const BACK=['tour','cavalier','fou','dame','roi','fou','cavalier','tour'];
+function pieceOutline(k,cd){
+  const P=PIECES[k],s=cd.s;let body;
+  if(P.full)body=P.full.map(([x,y])=>[x*s,y*s]);
+  else{const h=P.half.map(([x,y])=>[x*s,y*s]);body=h.concat(h.slice(0,-1).reverse().map(([x,y])=>[-x,y]));}
+  return [[-cd.tw/2,-cd.tabD],[cd.tw/2,-cd.tabD],[cd.tw/2,0]].concat(body,[[-cd.tw/2,0]]);
+}
+const circlePts=(r,n=72)=>Array.from({length:n},(_,i)=>[r*Math.cos(i/n*2*Math.PI),r*Math.sin(i/n*2*Math.PI)]);
+function chessDims(){
+  const C=state.chess,t=state.tl,S=8*C.c+2*C.b,j=C.jt,laserP=state.mode==='laser';
+  const s=C.K/100,tw=24*s,tb=laserP?t:C.tb3,socH=laserP?C.layers*t:C.hs3;
+  const slotDepth=laserP?(C.layers>=2?(C.layers-1)*t:t):Math.min(C.hs3-1.5,5);
+  const tabD=laserP?slotDepth:slotDepth-0.2,k=laserP?state.kerf:0;
+  return {t,S,j,Hw:C.Hw,c:C.c,b:C.b,Wd:S-2*t-2*j,Dd:S-t-j,Hd:C.Hw-t-j,s,tw,tb,socH,slotDepth,tabD,D:C.D,
+    slotW:tw+C.jp-k,slotH:tb+C.jp-k,laserP,finger:Math.min(22,C.Hw-12)};
+}
+const fr=(U,V,N,O)=>({U,V,N,O});
+function chessBoardPanels(cd){
+  const {t,S,Hw,c,b,j,Wd,Dd,Hd}=cd,d={t},P=[];
+  P.push({part:'coffret',name:'Coffret – fond',frame:fr([1,0,0],[0,1,0],[0,0,1],[0,0,0]),outline:outline(S,S,[null,'B','B','B'],d),holes:[],depth:t});
+  P.push({part:'coffret',name:'Coffret – arrière',frame:fr([-1,0,0],[0,0,1],[0,-1,0],[S,S,0]),outline:outline(S,Hw,['A','B',null,'B'],d),holes:[],depth:t});
+  P.push({part:'coffret',name:'Coffret – côté gauche',frame:fr([0,-1,0],[0,0,1],[1,0,0],[0,S,0]),outline:outline(S,Hw,['A',null,null,'A'],d),holes:[],depth:t});
+  P.push({part:'coffret',name:'Coffret – côté droit',frame:fr([0,1,0],[0,0,1],[-1,0,0],[S,0,0]),outline:outline(S,Hw,['A','A',null,null],d),holes:[],depth:t});
+  const engr=[];for(let i=0;i<8;i++)for(let k=0;k<8;k++)if((i+k)%2===0)engr.push({r:[b+i*c,b+k*c,b+(i+1)*c,b+(k+1)*c]});
+  engr.push({l:[b,b,b+8*c,b+8*c]});
+  if(state.chess.marks){const fs=Math.min(b*0.55,c*0.35);for(let i=0;i<8;i++){engr.push({tx:'abcdefgh'[i],u:b+(i+.5)*c,v:b/2,size:fs});engr.push({tx:String(i+1),u:b/2,v:b+(i+.5)*c,size:fs});}}
+  P.push({part:'plateau',name:'Plateau',frame:fr([1,0,0],[0,1,0],[0,0,-1],[0,0,Hw+t]),outline:rect(0,0,S,S),holes:[],depth:t,engr});
+  // tiroir : boîte à créneaux (même principe que les boîtiers) + façade collée devant
+  const O=[t+j,0,t],off=F=>({U:F.U,V:F.V,N:F.N,O:[F.O[0]+O[0],F.O[1]+O[1],F.O[2]+O[2]]}),Fd=frames({L:Wd,W:Dd,H:Hd,t});
+  const fh=Math.min(cd.finger,Hd-2*t-4);
+  P.push({part:'tiroir',name:'Tiroir – fond',frame:off(Fd.dessous),outline:outline(Wd,Dd,['B','B','B','B'],d),holes:[],depth:t});
+  P.push({part:'tiroir',name:'Tiroir – avant',frame:off(Fd.gauche),outline:outline(Wd,Hd,['A','A',null,'A'],d),holes:fh>8?[{shape:'rond',u:S/2-(t+j),v:Hw/2-t,d:fh}]:[],depth:t});
+  P.push({part:'tiroir',name:'Tiroir – arrière',frame:off(Fd.droite),outline:outline(Wd,Hd,['A','A',null,'A'],d),holes:[],depth:t});
+  P.push({part:'tiroir',name:'Tiroir – côté gauche',frame:off(Fd.arriere),outline:outline(Dd,Hd,['A','B',null,'B'],d),holes:[],depth:t});
+  P.push({part:'tiroir',name:'Tiroir – côté droit',frame:off(Fd.avant),outline:outline(Dd,Hd,['A','B',null,'B'],d),holes:[],depth:t});
+  P.push({part:'tiroir',name:'Tiroir – façade',frame:fr([1,0,0],[0,0,1],[0,1,0],[0,-t,0]),outline:rect(0,0,S,Hw),holes:fh>8?[{shape:'rond',u:S/2,v:Hw/2,d:fh}]:[],depth:t});
+  return P;
+}
+function socleShape(cd,withSlot){
+  const s=new THREE.Shape();
+  if(state.chess.soc==='rond')circlePts(cd.D/2,96).forEach((q,i)=>i?s.lineTo(q[0],q[1]):s.moveTo(q[0],q[1]));else{const a=cd.D/2;s.moveTo(-a,-a);s.lineTo(a,-a);s.lineTo(a,a);s.lineTo(-a,a);s.lineTo(-a,-a);}
+  if(withSlot)s.holes.push(holePath({shape:'rect',u:0,v:0,w:cd.slotW,h:cd.slotH}));
+  return s;
+}
+function socleGeos(cd){ // géométrie locale d'un socle, base à z = 0
+  const out=[],ext=(sh,h,z)=>{const g=new THREE.ExtrudeGeometry(sh,{depth:h,bevelEnabled:false,curveSegments:40});g.translate(0,0,z);return g;};
+  if(cd.laserP){const L=state.chess.layers;for(let k=0;k<L;k++)out.push(ext(socleShape(cd,!(L>=2&&k===0)),cd.t,k*cd.t));}
+  else{const base=cd.socH-cd.slotDepth;out.push(ext(socleShape(cd,false),base+0.05,0));out.push(ext(socleShape(cd,true),cd.slotDepth,base));}
+  return out;
+}
+function bodyGeo(k,cd){const s=new THREE.Shape(),p=pieceOutline(k,cd);p.forEach((q,i)=>i?s.lineTo(q[0],q[1]):s.moveTo(q[0],q[1]));return new THREE.ExtrudeGeometry(s,{depth:cd.tb,bevelEnabled:false});}
+function buildChess(){
+  const cd=chessDims(),panels=chessBoardPanels(cd);
+  const res=[],W=[];
+  if(cd.D>cd.c-1)W.push(['bad',`Les socles (${fmt(cd.D)} mm) sont plus larges que les cases (${fmt(cd.c)} mm) : réduis le diamètre du socle ou agrandis les cases.`]);
+  if(cd.slotW>cd.D*(state.chess.soc==='rond'?0.86:0.95)-3)W.push(['bad',`La fente (${fmt(cd.slotW)} mm) est trop longue pour le socle de ${fmt(cd.D)} mm : réduis la hauteur du roi ou agrandis le socle.`]);
+  const nx=Math.floor((cd.Wd-2*cd.t)/(cd.D+1)),ny=Math.floor((cd.Dd-2*cd.t)/(cd.D+1)),cap=Math.max(0,nx*ny);
+  if(cap<32)W.push(['info',`Le tiroir contient ${cap} socles posés à plat sur 32 : empile-les ou agrandis les cases.`]);
+  const kingL=100*cd.s+cd.tabD;if(kingL>cd.Dd-2*cd.t-2)W.push(['info',`Le roi (${fmt(kingL)} mm avec sa languette) ne tient pas couché dans le tiroir : réduis sa hauteur.`]);
+  if(cd.Hd-cd.t<cd.socH+cd.tb+1)W.push(['bad',`Le tiroir est trop bas pour ranger les pièces : augmente la hauteur du coffret.`]);
+  if(!cd.laserP&&cd.slotDepth<2)W.push(['bad','Socle trop bas pour une fente solide : augmente sa hauteur (au moins 5 mm).']);
+  if(cd.laserP&&cd.t<2)W.push(['info',`Plaque de ${fmt(cd.t)} mm : les pièces seront fines et fragiles. 3 mm est un bon compromis.`]);
+  if(cd.S>400)W.push(['info',`Le plateau fait ${Math.ceil(cd.S)} mm de côté : vérifie la taille du plateau de ta découpeuse laser.`]);
+  if(state.chess.jt<0.3)W.push(['info','Jeu du tiroir très faible : il risque de coincer. 0,5 mm est conseillé.']);
+  return {chess:true,cd,panels,W,cap,d:{t:cd.t,L:cd.S,W:cd.S,H:cd.Hw}};
+}
+function rebuildChess3D(m){
+  const cd=m.cd,col=v=>new THREE.Color(css(v)),edge=new THREE.Color(0x1a2a24);
+  const add=(g,c,off)=>{const me=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:c,roughness:.75,metalness:0,side:THREE.DoubleSide}));
+    const ln=new THREE.LineSegments(new THREE.EdgesGeometry(g,25),new THREE.LineBasicMaterial({color:edge,transparent:true,opacity:.3}));
+    if(off){me.position.set(...off);ln.position.set(...off);}group.add(me,ln);};
+  const pull=state.explode?[0,-cd.Dd*0.6,0]:null;
+  m.panels.forEach(p=>add(panelGeo(p),col(p.part==='plateau'?'--wood2':'--wood'),p.part==='tiroir'?pull:null));
+  // cases foncées gravées
+  const top=cd.Hw+cd.t,dark=col('--wood').multiplyScalar(0.6);
+  for(let i=0;i<8;i++)for(let k=0;k<8;k++)if((i+k)%2===0){const g=new THREE.BoxGeometry(cd.c,cd.c,0.3);g.translate(cd.b+(i+.5)*cd.c,cd.b+(k+.5)*cd.c,top+0.15);group.add(new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:dark,roughness:.9})));}
+  if(!state.lidShow)return;
+  const light=new THREE.Color('#EFDDB6'),darkP=new THREE.Color('#5B3A24'),soc=socleGeos(cd),bodies={};Object.keys(PIECES).forEach(k=>bodies[k]=bodyGeo(k,cd));
+  const put=(k,i,row,black)=>{const cx=cd.b+(i+.5)*cd.c,cy=cd.b+(row+.5)*cd.c,z0=top+0.3,c=black?darkP:light;
+    soc.forEach(g=>{const h=g.clone();h.translate(cx,cy,z0);add(h,c);});
+    const M=black?new THREE.Matrix4().set(-1,0,0,cx, 0,0,-1,cy+cd.tb/2, 0,1,0,z0+cd.socH-cd.tabD, 0,0,0,1):new THREE.Matrix4().set(1,0,0,cx, 0,0,1,cy-cd.tb/2, 0,1,0,z0+cd.socH-cd.tabD, 0,0,0,1);
+    add(place(bodies[k].clone(),M),c);};
+  BACK.forEach((k,i)=>{put(k,i,0,false);put('pion',i,1,false);put('pion',i,6,true);put(k,i,7,true);});
+  needs=true;
+}
+/* Feuilles de découpe génériques (plateau + pièces) */
+function packSheet(list,maxRow){
+  const gap=4;let x=gap,y=gap,rowH=0,W=0;const items=[];
+  list.forEach(p=>{const xs=p.outline.map(q=>q[0]),ys=p.outline.map(q=>q[1]),minx=Math.min(...xs),miny=Math.min(...ys),w=Math.max(...xs)-minx,h=Math.max(...ys)-miny;
+    if(x+w+gap>maxRow&&x>gap){x=gap;y+=rowH+gap;rowH=0;}
+    const ox=x-minx,oy=y+h+miny;items.push({p,tr:(u,v)=>[ox+u,oy-v],cx:x+w/2,cy:y+h/2,w,h});x+=w+gap;rowH=Math.max(rowH,h);W=Math.max(W,x);});
+  return {items,W,H:y+rowH+gap};
+}
+function sheetSVG(sh,forExport,labels){
+  const n=v=>Math.round(v*100)/100;let cut='',eng='',len=0;
+  const poly=(pts,tr)=>{const q=pts.map(([u,v])=>tr(u,v));q.forEach((a,i)=>{const b=q[(i+1)%q.length];len+=Math.hypot(a[0]-b[0],a[1]-b[1]);});return `<path d="M${q.map(([a,b])=>n(a)+' '+n(b)).join(' L')} Z"/>`;};
+  sh.items.forEach(({p,tr,cx,cy})=>{
+    if(p.circ){const [x,y]=tr(0,0);cut+=`<circle cx="${n(x)}" cy="${n(y)}" r="${n(p.circ)}"/>`;len+=2*Math.PI*p.circ;}else cut+=poly(p.outline,tr);
+    p.holes.forEach(h=>{if(h.shape==='rond'){const [x,y]=tr(h.u,h.v);len+=Math.PI*h.d;cut+=`<circle cx="${n(x)}" cy="${n(y)}" r="${n(h.d/2)}"/>`;}else if(h.shape==='poly')cut+=poly(h.pts,tr);else{const [a,b]=ext(h);cut+=poly(rect(h.u-a,h.v-b,h.u+a,h.v+b),tr);}});
+    (p.engr||[]).forEach(e=>{if(e.r){const [x0,y0]=tr(e.r[0],e.r[3]);eng+=`<rect x="${n(x0)}" y="${n(y0)}" width="${n(e.r[2]-e.r[0])}" height="${n(e.r[3]-e.r[1])}" fill="#0000ff"/>`;}
+      if(e.l){const [x0,y0]=tr(e.l[0],e.l[3]);eng+=`<rect x="${n(x0)}" y="${n(y0)}" width="${n(e.l[2]-e.l[0])}" height="${n(e.l[3]-e.l[1])}" fill="none" stroke="#0000ff" stroke-width="0.3"/>`;}
+      if(e.tx){const [x,y]=tr(e.u,e.v);eng+=`<text x="${n(x)}" y="${n(y)}" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="${n(e.size)}" fill="#0000ff">${e.tx}</text>`;}});
+    if(labels&&p.name&&!p.noLabel)eng+=`<text x="${n(cx)}" y="${n(cy)}" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="3.5" fill="#0000ff">${p.name}</text>`;
+  });
+  return {svg:`<svg xmlns="http://www.w3.org/2000/svg" width="${n(sh.W)}mm" height="${n(sh.H)}mm" viewBox="0 0 ${n(sh.W)} ${n(sh.H)}"><g fill="none" stroke="#ff0000" stroke-width="${forExport?0.1:0.4}">${cut}</g><g>${eng}</g></svg>`,len};
+}
+function sheetDXF(sh){
+  const L=[],H=sh.H,ln=(a,b,lay)=>L.push('0','LINE','8',lay,'10',a[0].toFixed(3),'20',(H-a[1]).toFixed(3),'11',b[0].toFixed(3),'21',(H-b[1]).toFixed(3));
+  const poly=(pts,tr,lay)=>{const q=pts.map(([u,v])=>tr(u,v));q.forEach((a,i)=>ln(a,q[(i+1)%q.length],lay));};
+  sh.items.forEach(({p,tr})=>{
+    if(p.circ){const [x,y]=tr(0,0);L.push('0','CIRCLE','8','DECOUPE','10',x.toFixed(3),'20',(H-y).toFixed(3),'40',p.circ.toFixed(3));}else poly(p.outline,tr,'DECOUPE');
+    p.holes.forEach(h=>{if(h.shape==='rond'){const [x,y]=tr(h.u,h.v);L.push('0','CIRCLE','8','DECOUPE','10',x.toFixed(3),'20',(H-y).toFixed(3),'40',(h.d/2).toFixed(3));}else if(h.shape==='poly')poly(h.pts,tr,'DECOUPE');else{const [a,b]=ext(h);poly(rect(h.u-a,h.v-b,h.u+a,h.v+b),tr,'DECOUPE');}});
+    (p.engr||[]).forEach(e=>{if(e.r)poly(rect(...e.r),tr,'GRAVURE');if(e.l)poly(rect(...e.l),tr,'GRAVURE');});});
+  return ['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES',...L,'0','ENDSEC','0','EOF'].join('\n');
+}
+function chessSheets(m){
+  const cd=m.cd;
+  const get=n=>m.panels.find(p=>p.name===n),mr=Math.max(300,cd.S+8);
+  const groups=[['plateau','Plateau',['Plateau']],['coffret','Coffret',['Coffret – fond','Coffret – arrière','Coffret – côté gauche','Coffret – côté droit']],['tiroir','Tiroir',['Tiroir – fond','Tiroir – façade','Tiroir – avant','Tiroir – arrière','Tiroir – côté gauche','Tiroir – côté droit']]];
+  const board=groups.map(([key,label,names])=>({key,label,sheet:packSheet(names.map(get),mr)}));
+  let pieces=null;
+  if(cd.laserP){const list=[];Object.entries(PIECES).forEach(([k,P])=>{for(let i=0;i<P.n;i++)list.push({name:P.nom,outline:pieceOutline(k,cd),holes:[],noLabel:true});});
+    const L=state.chess.layers;for(let i=0;i<16;i++)for(let k=0;k<L;k++){const slot=!(L>=2&&k===0);const r=cd.D/2;
+      list.push({name:'socle',noLabel:true,outline:state.chess.soc==='rond'?circlePts(r):rect(-r,-r,r,r),circ:state.chess.soc==='rond'?r:0,holes:slot?[{shape:'rect',u:0,v:0,w:cd.slotW,h:cd.slotH}]:[]});}
+    pieces=packSheet(list,300);}
+  return {board,pieces};
+}
+function chessNotice(m){
+  const cd=m.cd,C=state.chess;
+  let s=`JEU D'ÉCHECS À TIROIR\nAtelier construction électronique – Modeleur de boîtiers (projet sans électronique)\n\nPlateau : ${fmt(cd.S)} × ${fmt(cd.S)} mm, cases de ${fmt(cd.c)} mm, bordure de ${fmt(cd.b)} mm\nCoffret : hauteur ${fmt(cd.Hw+cd.t)} mm avec le plateau ; tiroir de ${fmt(cd.Wd)} × ${fmt(cd.Dd)} × ${fmt(cd.Hd)} mm (jeu ${fmt(C.jt)} mm)\nPlaque : ${fmt(cd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n\nPLATEAU, COFFRET ET TIROIR (découpe laser : 1-plateau, 2-coffret, 3-tiroir, en .svg et .dxf)\n- Rouge = découpe ; bleu = gravure (cases foncées${C.marks?', lettres a à h et chiffres 1 à 8':''}). Grave avant de découper.\n- Coffret : colle le fond, l'arrière et les deux côtés (créneaux). L'avant reste ouvert pour le tiroir.\n- Colle le plateau sur le coffret, cases gravées vers le haut, la case a1 (foncée) en bas à gauche, côté tiroir.\n- Tiroir : colle le fond et les 4 côtés, puis la façade devant, centrée et à fleur du bas. Le trou sert de poignée.\n- Laisse sécher avant d'essayer le tiroir. S'il frotte, ponce légèrement ses côtés.\n\nPIÈCES (32 = 16 claires + 16 foncées)\nPar couleur : 1 roi, 1 dame, 2 tours, 2 fous, 2 cavaliers, 8 pions, et 16 socles.\nChaque pièce = un socle avec une fente rectangulaire (${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm) + un corps plat dont la languette s'enfonce de ${fmt(cd.tabD)} mm.\n`;
+  if(cd.laserP)s+=`- pieces-a-decouper-2-fois.svg : une couleur. Découpe la planche une fois dans un bois clair et une fois dans un bois foncé (ou peins la deuxième série).\n- Socles : ${C.layers} couche${C.layers>1?'s':''} de ${fmt(cd.t)} mm à coller ensemble${C.layers>=2?' (la couche sans fente en dessous)':''}.\n- L'emboîtement doit être serré : fais un essai et ajuste le jeu d'emboîtement (${fmt(C.jp)} mm) si besoin.\n`;
+  else s+=`- Impression 3D : socle.stl (à imprimer 32 fois) et un fichier par corps (corps-roi.stl, etc.), à imprimer en 2 couleurs.\n- Corps de ${fmt(cd.tb)} mm d'épaisseur, posés à plat ; socles de ${fmt(cd.socH)} mm, fente de ${fmt(cd.slotDepth)} mm de profondeur. PLA, couche 0,2 mm, sans support.\n- Quantités par couleur : roi 1, dame 1, tour 2, fou 2, cavalier 2, pion 8.\n`;
+  return s;
+}
+function renderChessWarns(m){const W=m.W.length?m.W:[['ok','Tout est en ordre : les pièces tiennent sur les cases et rentrent dans le tiroir.']];$('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');}
+function renderChessStats(m){
+  const cd=m.cd,sh=chessSheets(m);let s=[['Plateau',`${fmt(cd.S)} × ${fmt(cd.S)} mm`],['Hauteur totale',`${fmt(cd.Hw+cd.t)} mm`]];
+  sh.board.forEach(g=>s.push(['Plaque '+g.label.toLowerCase(),`${Math.ceil(g.sheet.W)} × ${Math.ceil(g.sheet.H)} mm`]));s.push(['Tiroir',`${m.cap} socles à plat`]);
+  if(sh.pieces)s.push(['Plaque pièces (× 2)',`${Math.ceil(sh.pieces.W)} × ${Math.ceil(sh.pieces.H)} mm`]);
+  else{const v=Math.abs(signedVolume(socleGeos(cd)))*32+Object.entries(PIECES).reduce((acc,[k,P])=>acc+Math.abs(signedVolume([bodyGeo(k,cd)]))*P.n*2,0);s.push(['Plastique pièces',`≈ ${Math.round(v/1000*1.24)} g de PLA au maximum`]);}
+  $('stats').innerHTML=s.map(([x,y])=>`<div class="stat"><span>${x}</span><b>${y}</b></div>`).join('');
+  $('expInfo').textContent=cd.laserP?'Un .zip avec 3 plans (plateau, coffret, tiroir), la planche de pièces à découper deux fois, en SVG et DXF, et la notice de montage.':'Un .zip avec les 3 plans laser (plateau, coffret, tiroir), les STL du socle et des 6 corps de pièces, et la notice.';
+}
+async function exportChess(){
+  const m=buildModel(),sh=chessSheets(m),z=new JSZip();
+  sh.board.forEach((g,i)=>{z.file(`${i+1}-${g.key}.svg`,sheetSVG(g.sheet,true,state.engrave).svg);z.file(`${i+1}-${g.key}.dxf`,sheetDXF(g.sheet));});
+  if(sh.pieces){z.file('pieces-a-decouper-2-fois.svg',sheetSVG(sh.pieces,true,false).svg);z.file('pieces-a-decouper-2-fois.dxf',sheetDXF(sh.pieces));}
+  else{z.file('socle.stl',stlOf(socleGeos(m.cd),'Socle').buf);Object.keys(PIECES).forEach(k=>z.file(`corps-${k}.stl`,stlOf([bodyGeo(k,m.cd)],PIECES[k].nom).buf));}
+  z.file('LISEZ-MOI.txt',chessNotice(m));
+  await saveFile('jeu-d-echecs-a-tiroir.zip',await z.generateAsync({type:'blob'}),'application/zip');
+}
+async function exportChessBoardSVG(){const m=buildModel();await saveFile('jeu-d-echecs-plateau-grave.svg',sheetSVG(chessSheets(m).board[0].sheet,true,false).svg,'image/svg+xml');}
+
+/* ================= Banc de stop motion (sans électronique) ================= */
+const PAPER={A5:[210,148],A4:[297,210],A3:[420,297]};
+const DEVICES={t10:['Tablette 10 pouces',250,174],t8:['Tablette 8 pouces',210,125],phone:['Smartphone',160,75]};
+function smDims(){
+  const S=state.sm,t=state.tl,k=state.kerf,e=10,ms=15,[sw,sd]=S.paper==='perso'?[S.pw,S.pd]:PAPER[S.paper];
+  const Bw=sw+2*(ms+t+e),mf=25,Bd=mf+sd+12+t+22,yb=Bd-22-t,cx=Bw/2,cy=mf+sd/2,H=S.hc-t;
+  const tx0=cx-S.tw+S.ca,ty0=cy-S.td+S.cb;
+  // le plateau entoure la tablette ; il peut déborder des montants (porte-à-faux)
+  const px0=Math.min(e-12,tx0-15),px1=Math.max(Bw-e+12,tx0+S.tw+15),py0=Math.min(ty0,cy-S.win/2)-15,py1=Math.max(ty0+S.td,cy+S.win/2)+15;
+  const hb=Math.min(80,Math.max(30,H*0.35));
+  const half=Math.tan(S.fov*Math.PI/360),Wc=2*S.hc*half,Hc=Wc*3/4;
+  return {t,k,e,ms,sw,sd,Bw,Bd,mf,yb,cx,cy,hc:S.hc,H,TW:S.tw,TD:S.td,tx0,ty0,px0,px1,py0,py1,hb,Wb:Bw-2*e-2*t,Wc,Hc,half,tabW:20};
+}
+const smAdvised=()=>{const S=state.sm,[sw,sd]=S.paper==='perso'?[S.pw,S.pd]:PAPER[S.paper],half=Math.tan(S.fov*Math.PI/360);return Math.round(Math.max(sw/2,sd*2/3)/half*1.08);};
+function tabbed(U0,U1,H,bottom,top,t,w){ // rectangle [U0,U1]×[0,H] avec languettes en bas (vers -t) et en haut (vers H+t)
+  const P=[[U0,0]];bottom.slice().sort((a,b)=>a-b).forEach(c=>P.push([c-w/2,0],[c-w/2,-t],[c+w/2,-t],[c+w/2,0]));
+  P.push([U1,0],[U1,H]);top.slice().sort((a,b)=>b-a).forEach(c=>P.push([c+w/2,H],[c+w/2,H+t],[c-w/2,H+t],[c-w/2,H]));P.push([U0,H]);return P;
+}
+function buildSM(){
+  const sd=smDims(),{t,k,e,Bw,Bd,yb,H,hb,Wb,px0,px1,py0,py1,cx,cy,tx0,ty0,TW,TD,mf}=sd,S=state.sm,W=[],P=[];
+  const tw=sd.tabW+k,sl=(u,v,w,h)=>({shape:'rect',u,v,w:w-k,h:h-k});
+  const U0=e,U1=Bd-e,bot=[U0+(U1-U0)*0.2,U0+(U1-U0)*0.62],q0=Math.max(py0,U0),q1=Math.min(py1,U1),span=q1-q0,top=span>70?[q0+span*0.25,q0+span*0.75]:[q0+span/2];
+  if(span<30)W.push(['bad','Le plateau porte-tablette est presque en dehors des montants : il ne peut pas être fixé. Vérifie la position de l’objectif.']);
+  // socle
+  const baseH=[];[e+t/2,Bw-e-t/2].forEach(x=>bot.forEach(y=>baseH.push(sl(x,y,t,sd.tabW))));
+  [e+t+Wb*0.25,e+t+Wb*0.75].forEach(x=>baseH.push(sl(x,yb+t/2,sd.tabW,t)));
+  const x0=(Bw-sd.sw)/2,engr=[{l:[x0,mf,x0+sd.sw,mf+sd.sd]},{tx:(S.paper==='perso'?'Décor':'Décor '+S.paper),u:Bw/2,v:mf/2,size:5}];
+  P.push({part:'socle',name:'Socle',frame:fr([1,0,0],[0,1,0],[0,0,1],[0,0,0]),outline:rect(0,0,Bw,Bd),holes:baseH,depth:t,engr});
+  // montants
+  const upH=[sl(yb+t/2,hb*0.5,t,hb*0.4)];
+  const wu0=U0+25,wu1=Math.min(U1-25,yb-15),wv0=25,wv1=H-25;if(wu1-wu0>40&&wv1-wv0>40)upH.push({shape:'poly',pts:rect(wu0,wv0,wu1,wv1)});
+  const upO=tabbed(U0,U1,H,bot,top,t,tw);
+  P.push({part:'structure',name:'Montant gauche',frame:fr([0,1,0],[0,0,1],[1,0,0],[e,0,t]),outline:upO,holes:upH,depth:t});
+  P.push({part:'structure',name:'Montant droit',frame:fr([0,1,0],[0,0,1],[-1,0,0],[Bw-e,0,t]),outline:upO,holes:upH,depth:t});
+  // traverse arrière
+  const v0=hb*0.3-k/2,v1=hb*0.7+k/2,bw=[Wb*0.25,Wb*0.75],br=[[0,0]];
+  bw.forEach(c=>br.push([c-tw/2,0],[c-tw/2,-t],[c+tw/2,-t],[c+tw/2,0]));
+  br.push([Wb,0],[Wb,v0],[Wb+t,v0],[Wb+t,v1],[Wb,v1],[Wb,hb],[0,hb],[0,v1],[-t,v1],[-t,v0],[0,v0]);
+  P.push({part:'structure',name:'Traverse arrière',frame:fr([1,0,0],[0,0,1],[0,1,0],[e+t,yb,t]),outline:br,holes:[],depth:t});
+  // plateau porte-tablette
+  const topH=[];[e+t/2,Bw-e-t/2].forEach(x=>top.forEach(y=>topH.push(sl(x,y,t,sd.tabW))));
+  topH.push(S.winShape==='rond'?{shape:'rond',u:cx,v:cy,d:S.win}:{shape:'carre',u:cx,v:cy,w:S.win});
+  P.push({part:'plateau',name:'Plateau porte-tablette',frame:fr([1,0,0],[0,1,0],[0,0,1],[0,0,t+H]),outline:rect(px0,py0,px1,py1),holes:topH,depth:t});
+  // cadre qui retient la tablette
+  const j=1,a=tx0-j,b=ty0-j,c2=tx0+TW+j,d2=ty0+TD+j,border=Math.min(a-px0,px1-c2,b-py0,py1-d2);
+  if(border>=6){let cut=rect(a,b,c2,d2);const my=ty0+TD/2,nw=Math.min(12,(TD+2)/2-2);
+    if(S.cable==='droite'){const x2=Math.min(c2+25,px1-6);if(x2>c2+3)cut=[[a,b],[c2,b],[c2,my-nw],[x2,my-nw],[x2,my+nw],[c2,my+nw],[c2,d2],[a,d2]];}
+    if(S.cable==='gauche'){const x2=Math.max(a-25,px0+6);if(x2<a-3)cut=[[a,b],[c2,b],[c2,d2],[a,d2],[a,my+nw],[x2,my+nw],[x2,my-nw],[a,my-nw]];}
+    P.push({part:'cadre',name:'Cadre de la tablette',frame:fr([1,0,0],[0,1,0],[0,0,1],[0,0,t+H+t]),outline:rect(px0,py0,px1,py1),holes:[{shape:'poly',pts:cut}],depth:t});}
+  else W.push(['bad',`La tablette (${fmt(TW)} × ${fmt(TD)} mm) dépasse du plateau : le cadre qui la retient ne peut pas être découpé. Choisis un décor plus grand ou vérifie la position de l’objectif.`]);
+  // butées d'angle
+  if(S.stops){const L=[[0,0],[22,0],[22,6],[6,6],[6,22],[0,22]],x1=x0+sd.sw,y0=mf,y1=mf+sd.sd;
+    [[x0,y0,1,1],[x1,y0,-1,1],[x0,y1,1,-1],[x1,y1,-1,-1]].forEach(([X,Y,sx,sy],i)=>P.push({part:'butee',name:'Butée d’angle',frame:fr([sx,0,0],[0,sy,0],[0,0,1],[X-sx*6,Y-sy*6,t]),outline:L,holes:[],depth:t,noLabel:true}));}
+  // vérifications
+  const need=Math.max(sd.sw,sd.sd*4/3);
+  if(sd.Wc<need)W.push(['bad',`À ${fmt(sd.hc)} mm de haut, l’objectif ne voit qu’environ ${Math.round(sd.Wc)} × ${Math.round(sd.Hc)} mm : une partie du décor sera coupée. Hauteur conseillée : ${smAdvised()} mm.`]);
+  else if(sd.Wc>need*1.45)W.push(['info',`À ${fmt(sd.hc)} mm de haut, le décor n’occupera qu’une partie de l’image (champ d’environ ${Math.round(sd.Wc)} × ${Math.round(sd.Hc)} mm). Hauteur conseillée : ${smAdvised()} mm.`]);
+  const over=Math.max(0,-px0,px1-Bw,-py0,py1-Bd);if(over>60)W.push(['info',`Le plateau dépasse du socle de ${Math.round(over)} mm pour que l’objectif soit au-dessus du centre du décor : fixe le socle à la table avec un serre-joint pour que le banc ne bascule pas.`]);
+  if(H<150)W.push(['info','Moins de 15 cm sous le plateau : il reste peu de place pour les mains qui déplacent les personnages.']);
+  if(H>420)W.push(['info','Banc très haut : fixe le socle à la table avec un serre-joint pour qu’il ne bascule pas.']);
+  if(t<3&&Bw>300)W.push(['info',`Plaque de ${fmt(t)} mm sur ${Math.round(Bw)} mm de large : le plateau risque de fléchir sous la tablette. 4 ou 5 mm est plus sûr.`]);
+  if(S.ca<S.win/2||S.ca>TW-S.win/2||S.cb<S.win/2||S.cb>TD-S.win/2)W.push(['info','L’ouverture pour l’objectif déborde du bord de la tablette : vérifie la position de l’objectif mesurée au dos.']);
+  return {sm:true,sd,panels:P,W,d:{t,L:Bw,W:Bd,H:sd.hc}};
+}
+function rebuildSM3D(m){
+  const sd=m.sd,col=v=>new THREE.Color(css(v)),edge=new THREE.Color(0x1a2a24);
+  const add=(g,c,off,op)=>{const me=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:c,roughness:.75,metalness:0,side:THREE.DoubleSide,transparent:!!op,opacity:op||1}));
+    const ln=new THREE.LineSegments(new THREE.EdgesGeometry(g,25),new THREE.LineBasicMaterial({color:edge,transparent:true,opacity:.3}));
+    if(off){me.position.set(...off);ln.position.set(...off);}group.add(me,ln);};
+  const lift={plateau:40,cadre:75};
+  m.panels.forEach(p=>add(panelGeo(p),col(p.part==='plateau'||p.part==='cadre'?'--wood2':'--wood'),state.explode&&lift[p.part]?[0,0,lift[p.part]]:null));
+  if(!state.lidShow){needs=true;return;}
+  const x0=(sd.Bw-sd.sw)/2,paper=new THREE.BoxGeometry(sd.sw,sd.sd,0.4);paper.translate(x0+sd.sw/2,sd.mf+sd.sd/2,sd.t+0.2);add(paper,new THREE.Color('#F7F5EE'));
+  const zt=sd.t+sd.H+sd.t,tab=new THREE.BoxGeometry(sd.TW,sd.TD,7);tab.translate(sd.tx0+sd.TW/2,sd.ty0+sd.TD/2,zt+3.5);add(tab,new THREE.Color('#2B3238'),state.explode?[0,0,110]:null);
+  const cam=new THREE.Vector3(sd.cx,sd.cy,zt),hw=sd.Wc/2,hh=sd.Hc/2,z=sd.t+0.5,c=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([a,b])=>new THREE.Vector3(sd.cx+a,sd.cy+b,z));
+  const pts=[];c.forEach((q,i)=>{pts.push(cam,q,q,c[(i+1)%4]);});
+  group.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:new THREE.Color(css('--mark'))})));
+  needs=true;
+}
+function smSheets(m){
+  const get=names=>m.panels.filter(p=>names.includes(p.part)),mr=Math.max(300,m.sd.Bw+8,m.sd.px1-m.sd.px0+8);
+  return [['socle','Socle et butées',get(['socle','butee'])],['structure','Montants et traverse',get(['structure'])],['plateau','Plateau et cadre',get(['plateau','cadre'])]].filter(g=>g[2].length).map(([key,label,list])=>({key,label,sheet:packSheet(list,mr)}));
+}
+function renderSMStats(m){
+  const sd=m.sd,sh=smSheets(m);let s=[['Socle',`${fmt(sd.Bw)} × ${fmt(sd.Bd)} mm`],['Objectif au-dessus du décor',`${fmt(sd.hc)} mm`],['Champ de la caméra',`≈ ${Math.round(sd.Wc)} × ${Math.round(sd.Hc)} mm`],['Place pour les mains',`${fmt(sd.H)} mm`]];
+  sh.forEach(g=>s.push(['Plaque '+g.label.toLowerCase(),`${Math.ceil(g.sheet.W)} × ${Math.ceil(g.sheet.H)} mm`]));
+  $('stats').innerHTML=s.map(([x,y])=>`<div class="stat"><span>${x}</span><b>${y}</b></div>`).join('');
+  $('expInfo').textContent='Un .zip avec 3 plans (socle, montants et traverse, plateau et cadre) en SVG et DXF, et la notice de montage et d’utilisation.';
+}
+function renderSMWarns(m){const W=m.W.length?m.W:[['ok','Tout est en ordre : le décor entier est dans le champ de la caméra et la tablette tient dans son cadre.']];$('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');}
+function renderCamDiagram(){
+  const S=state.sm,w=160,h=Math.max(40,Math.min(130,w*S.td/S.tw)),sx=w/S.tw,sy=h/S.td,cx=S.ca*sx,cy=S.cb*sy,r=Math.max(3,S.win/2*sx);
+  $('camDiag').innerHTML=`<svg viewBox="-24 -16 ${w+48} ${h+34}" width="100%" style="max-width:260px" role="img" aria-label="Dos de la tablette avec la position de l’objectif">
+    <rect x="0" y="0" width="${w}" height="${h}" rx="8" fill="var(--board)" stroke="var(--ink)" stroke-width="1.5"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--mark)" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="2" fill="var(--mark)"/>
+    <line x1="0" y1="${cy}" x2="${cx-r}" y2="${cy}" stroke="var(--muted)" stroke-dasharray="3 2"/><line x1="${cx}" y1="0" x2="${cx}" y2="${cy-r}" stroke="var(--muted)" stroke-dasharray="3 2"/>
+    <text x="${cx/2}" y="${cy-4}" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="monospace">${fmt(S.ca)}</text>
+    <text x="${cx+4}" y="${Math.max(9,cy/2)}" font-size="9" fill="var(--muted)" font-family="monospace">${fmt(S.cb)}</text>
+    <text x="${w/2}" y="${h+14}" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="sans-serif">dos de la tablette, à l’horizontale</text></svg>`;
+}
+function smNotice(m){
+  const sd=m.sd,S=state.sm;
+  return `BANC DE STOP MOTION\nAtelier construction électronique – Modeleur de boîtiers (projet sans électronique)\n\nDécor : ${S.paper==='perso'?fmt(sd.sw)+' × '+fmt(sd.sd)+' mm':S.paper+' à l’horizontale ('+sd.sw+' × '+sd.sd+' mm)'}\nTablette : ${fmt(sd.TW)} × ${fmt(sd.TD)} mm ; objectif mesuré au dos à ${fmt(S.ca)} mm du bord gauche et ${fmt(S.cb)} mm du bord haut\nObjectif à ${fmt(sd.hc)} mm au-dessus du décor ; champ estimé ≈ ${Math.round(sd.Wc)} × ${Math.round(sd.Hc)} mm (angle de vue ${S.fov}°)\nPlaque : ${fmt(sd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n\nFICHIERS (rouge = découpe, bleu = gravure)\n- 1-socle : le socle (le contour du décor est gravé)${S.stops?' et 4 butées d’angle':''}\n- 2-structure : les 2 montants et la traverse arrière\n- 3-plateau : le plateau percé pour l’objectif et le cadre qui retient la tablette\n\nMONTAGE\n1. Enfonce les languettes du bas des deux montants dans les fentes du socle.\n2. Glisse la traverse arrière : ses languettes latérales entrent dans les fentes des montants, celles du bas dans le socle.\n3. Pose le plateau sur les languettes du haut des montants.\n4. Si tout s’emboîte bien, démonte, mets une goutte de colle à bois dans chaque fente et remonte.\n5. Colle le cadre sur le plateau : son ouverture doit entourer l’emplacement de la tablette${S.cable!=='aucune'?' (l’encoche laisse passer le câble de charge)':''}.\n${S.stops?'6. Colle les 4 butées d’angle sur le socle, aux coins du rectangle gravé.\n':''}\nUTILISATION\n- Pose la feuille de décor dans le rectangle gravé, puis les personnages en papier.\n- Pose la tablette écran vers le haut dans le cadre : l’objectif arrière se place au-dessus du trou.\n- Ouvre une application d’animation image par image. Déplace un peu les personnages entre deux photos.\n- Pour éviter les images floues ou décalées : ne touche pas la tablette pendant la photo (retardateur ou déclencheur Bluetooth), garde la même lumière pendant toute la prise de vue, fixe le socle à la table.\n- Si la traverse arrière apparaît sur le bord de l’image, recadre dans l’application ou réduis la hauteur.\n\nL’angle de vue varie selon les appareils : vérifie le cadrage avec la vraie tablette avant de coller.\n`;
+}
+async function exportSM(){const m=buildModel(),z=new JSZip();smSheets(m).forEach((g,i)=>{z.file(`${i+1}-${g.key}.svg`,sheetSVG(g.sheet,true,state.engrave).svg);z.file(`${i+1}-${g.key}.dxf`,sheetDXF(g.sheet));});z.file('LISEZ-MOI.txt',smNotice(m));
+  await saveFile('banc-de-stop-motion.zip',await z.generateAsync({type:'blob'}),'application/zip');}
+
+/* ================= Interface ================= */
+function renderPick(){
+  $('objects').innerHTML=LEVELS.map(([l,name])=>`<div class="lvlrow"><div class="lvlname">${l?'Niveau '+l:''}<b>${name}</b></div><div class="objects">`+
+    OBJS.filter(o=>o[2]===l).map(([id,nm])=>{const p=PRESETS[id];return `<button class="obj" data-id="${id}"><span class="top"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[id]}</svg><b>${nm}</b></span>
+      <small>${p.sm?'support de tablette au-dessus du décor':p.chess?'plateau à tiroir + 32 pièces':p.inner.join(' × ')+' mm intérieur'}</small><span class="badge ${p.reco}">${p.reco==='3d'?'Impression 3D':'Découpe laser'}</span></button>`;}).join('')+'</div></div>').join('');
+}
+function sync(id,v){$(id).value=v;if($(id+'_r'))$(id+'_r').value=v;}
+function renderControls(){
+  const p=PRESETS[state.obj];
+  $('objIcon').innerHTML=`<g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ICONS[state.obj]}</g>`;
+  $('objName').textContent=OBJS.find(o=>o[0]===state.obj)[1];
+  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===state.mode)));
+  const isS=!!p.sm,isC=!!p.chess;$('objEyebrow').textContent=isC||isS?'Projet sans électronique':'Boîtier pour';
+  $('smSec').hidden=!isS;$('modeSeg').hidden=isS;if(isS)state.mode='laser';$('chessSec').hidden=!isC;$('dimSec').hidden=isC||isS;$('holeSec').hidden=isC||isS;$('lidLbl').textContent=isS?'Tablette et décor':isC?'Pièces':'Couvercle';
+  if(isS){const S=state.sm;['pw','pd','tw','td','ca','cb','win','hc','fov'].forEach(k=>$('sm_'+k).value=S[k]);$('sm_paper').value=S.paper;$('sm_dev').value=S.dev;$('sm_winShape').value=S.winShape;$('sm_cable').value=S.cable;$('sm_stops').checked=S.stops;
+    $('sm_pwF').hidden=S.paper!=='perso';$('sm_pdF').hidden=S.paper!=='perso';}
+  if(isC){const C=state.chess;['c','b','Hw','jt','K','D','tb3','hs3','jp'].forEach(k=>$('ch_'+k).value=C[k]);$('ch_marks').checked=C.marks;$('ch_soc').value=C.soc;$('ch_layers').value=String(C.layers);
+    $('ch_layersF').hidden=state.mode!=='laser';$('ch_layersTip').hidden=state.mode!=='laser';$('ch_tb3F').hidden=state.mode!=='3d';$('ch_hs3F').hidden=state.mode!=='3d';}
+  const r=$('reco');if(isS){r.textContent='Découpe laser : grand cadre plat en contreplaqué de 4 ou 5 mm, assemblé par tenons et mortaises. Les fentes sont compensées pour que les languettes tiennent serrées.';r.classList.remove('other');}
+  else if(isC){r.textContent=state.mode==='laser'?'Plateau, coffret et tiroir en découpe laser (gravure des cases). Pièces aussi en découpe laser : corps et socles dans la même plaque, rapide et sans plastique.':'Plateau, coffret et tiroir en découpe laser. Pièces en impression 3D : socles plus lourds et plus stables, fente borgne qui cache la languette.';r.classList.remove('other');}
+  else r.textContent=state.mode===p.reco?RECO[p.reco]:RECO[p.reco]+' Tu as choisi l’autre technique : c’est possible, vérifie les avertissements.';r.classList.toggle('other',state.mode!==p.reco);
+  $('contents').textContent='À loger dedans : '+p.contents+'.';
+  sync('Li',state.Li);sync('Wi',state.Wi);sync('Hi',state.Hi);
+  $('t3').value=state.t3;$('jeu').value=state.jeu;$('tl').value=state.tl;$('tl_r').value=state.tl;$('fw').value=state.fw;$('kerf').value=state.kerf;$('engrave').checked=state.engrave;
+  $('mat3d').hidden=state.mode!=='3d'||isC||isS;$('matLaser').hidden=state.mode!=='laser'&&!isC&&!isS;
+  $('refl').checked=state.reflector;$('reflH').value=state.reflH;$('accSec').hidden=state.mode!=='3d'||isC||isS;
+  $('planTab').hidden=state.mode!=='laser'&&!isC&&!isS;if(state.mode!=='laser'&&!isC&&!isS&&state.view==='plan')state.view='3d';
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===state.view)));
+  $('view3d').hidden=state.view!=='3d';$('viewPlan').hidden=state.view!=='plan';
+  $('explode').checked=state.explode;$('lidShow').checked=state.lidShow;
+  $('addType').innerHTML=Object.entries(HT).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+  $('addFace').innerHTML=FACES.map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  $('expBtns').innerHTML=isS?'<button class="btn primary" id="exSM">Télécharger le banc de stop motion (.zip)</button>':isC?'<button class="btn primary" id="exCh">Télécharger tout le projet (.zip)</button><button class="btn" id="exChSvg">Plateau gravé seul (SVG)</button>':state.mode==='3d'?'<button class="btn primary" id="ex3d">Télécharger les fichiers STL (.zip)</button>':
+    '<button class="btn primary" id="exSvg">Télécharger le plan SVG</button><button class="btn" id="exZip">SVG + DXF + notice (.zip)</button>';
+  if(!isC&&!isS)renderHoles();
+}
+function renderHoles(){
+  const d=dims(),{res}=checkHoles(d);
+  $('holeCount').textContent=state.holes.length?`(${state.holes.length})`:'';
+  $('holes').innerHTML=state.holes.length?state.holes.map((h,i)=>{const [fw,fh]=faceSize(h.face,d),a=absHole(h,d);
+    const size=h.shape==='rond'?`<label>Diamètre (mm)<input type="number" data-h="${i}" data-k="d" min="1" max="120" step="0.1" value="${r1(h.d)}"></label>`:
+      h.shape==='carre'?`<label>Côté (mm)<input type="number" data-h="${i}" data-k="w" min="1" max="200" step="0.1" value="${r1(h.w)}"></label>`:
+      `<label>Largeur (mm)<input type="number" data-h="${i}" data-k="w" min="1" max="200" step="0.1" value="${r1(h.w)}"></label><label>Hauteur (mm)<input type="number" data-h="${i}" data-k="h" min="1" max="200" step="0.1" value="${r1(h.h)}"></label>`;
+    return `<div class="hole ${res[i].ok?'':'bad'} ${state.sel===i?'sel':''}" data-card="${i}">
+      <div class="holehead"><b>${h.label}</b><button class="x" data-del="${i}" aria-label="Supprimer ${h.label}">×</button></div>
+      <div class="row"><label>Face<select data-h="${i}" data-k="face">${FACES.map(([k,v])=>`<option value="${k}" ${k===h.face?'selected':''}>${v}</option>`).join('')}</select></label>
+        <label>Forme<select data-h="${i}" data-k="shape"><option value="rond" ${h.shape==='rond'?'selected':''}>Ronde</option><option value="carre" ${h.shape==='carre'?'selected':''}>Carrée</option><option value="rect" ${h.shape==='rect'?'selected':''}>Rectangulaire</option></select></label></div>
+      <div class="row">${size}</div>
+      <div class="row"><label>Depuis la gauche (mm)<input type="number" data-h="${i}" data-k="u" step="0.5" value="${r1(a.u)}"></label><label>Depuis le bas (mm)<input type="number" data-h="${i}" data-k="v" step="0.5" value="${r1(a.v)}"></label><button class="btn small" data-center="${i}">Centrer</button></div>
+      <p class="facehint">${FL[h.face]} : ${fmt(fw)} × ${fmt(fh)} mm${res[i].ok?'':' · <b style="color:var(--bad)">Mal placée : elle ne sera pas découpée.</b>'}</p>
+    </div>`;}).join(''):'<p class="tip">Aucune ouverture. Ajoute-en une ci-dessous.</p>';
+}
+function renderWarns(m){
+  const W=[],p=PRESETS[state.obj],d=m.d;
+  m.res.forEach((r,i)=>{if(!r.ok)W.push(['bad',`« ${state.holes[i].label} » est ${r.msg} : elle ne sera pas découpée. Déplace-la, réduis-la ou agrandis le boîtier.`]);});
+  if(p.need){const [a,b,c]=p.need;const lack=[];if(state.Li<a)lack.push(`longueur ≥ ${a} mm`);if(state.Wi<b)lack.push(`largeur ≥ ${b} mm`);if(state.Hi<c)lack.push(`hauteur ≥ ${c} mm`);
+    if(lack.length)W.push(['bad',`Le contenu (${p.contents.split(' ;')[0]}) risque de ne pas rentrer : il faut ${lack.join(', ')}.`]);}
+  if(state.mode==='3d'&&state.t3<1.6)W.push(['info','Parois de moins de 1,6 mm : le boîtier sera fragile.']);
+  if(state.mode==='laser'&&state.tl<2)W.push(['info',`Plaque fine (${fmt(state.tl)} mm) : utilise du contreplaqué de modélisme, du carton gris rigide ou de l’acrylique. Les créneaux sont petits : colle-les à la colle cyanoacrylate ou vinylique, et manipule le boîtier avec soin.`]);
+  if(state.mode==='laser'&&state.tl>2&&state.holes.some(h=>h.type==='inter_rect'&&h.shape!=='rond'))W.push(['info',`Les interrupteurs à clipser sont prévus pour des parois fines. Avec ${fmt(state.tl)} mm de bois, vérifie la fiche de ton interrupteur ou choisis « Interrupteur rond à écrou ».`]);
+  if(state.mode==='laser'&&Math.max(d.L,d.W)<50)W.push(['info','Petit boîtier en découpe laser : les créneaux seront très petits. L’impression 3D sera plus simple.']);
+  if(state.mode==='3d'&&Math.max(d.L,d.W)>200)W.push(['info','Grand boîtier : l’impression sera longue et il faut un plateau d’au moins '+Math.ceil(Math.max(d.L,d.W))+' mm. La découpe laser sera plus rapide.']);
+  if(state.mode==='3d'&&state.reflector&&!state.holes.some(h=>h.face==='avant'&&h.shape==='rond'))W.push(['info','Le réflecteur est centré sur la face avant, mais aucune ouverture ronde n’y est prévue pour l’ampoule.']);
+  if(!W.length)W.push(['ok','Tout est en ordre : les ouvertures sont bien placées et le contenu prévu rentre.']);
+  $('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');
+}
+function renderStats(m){
+  const d=m.d;let s=[['Extérieur',`${fmt(d.L)} × ${fmt(d.W)} × ${fmt(d.H+d.t)} mm`]];
+  if(state.mode==='3d'){const parts=printParts(m);let v=0;parts.forEach(p=>v+=Math.abs(signedVolume(p.geos)));
+    s.push(['Plastique',`${fmt(v/1000)} cm³ ≈ ${Math.round(v/1000*1.24)} g de PLA`],['Pièces',parts.map(p=>p.label.toLowerCase()).join(', ')]);}
+  else{const sv=svgOf(m,true);s.push(['Plaque nécessaire',`${Math.ceil(sv.W)} × ${Math.ceil(sv.H)} mm`],['Longueur de découpe',`${fmt(sv.cut/1000)} m`],['Pièces',`${sv.items.length} pièces`]);}
+  $('stats').innerHTML=s.map(([a,b])=>`<div class="stat"><span>${a}</span><b>${b}</b></div>`).join('');
+  $('expInfo').textContent=state.mode==='3d'?'Un fichier .zip avec un fichier STL par pièce, déjà posées à plat pour l’impression, et une notice.':'Le plan SVG s’ouvre dans le logiciel de la découpeuse (LightBurn, Inkscape…). Le .zip ajoute un DXF et une notice d’assemblage.';
+}
+let raf=0;function update(full){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{
+  const m=buildModel();lastModel=m;rebuild3D(m);
+  if(m.sm){renderSMWarns(m);renderSMStats(m);renderCamDiagram();if(state.view==='plan')$('planBox').innerHTML=smSheets(m).map(g=>'<p class="tip" style="margin:8px 0 4px">'+g.label+'</p>'+sheetSVG(g.sheet,false,true).svg).join('');return;}
+  if(m.chess){renderChessWarns(m);renderChessStats(m);if(state.view==='plan'){const sh=chessSheets(m);$('planBox').innerHTML=sh.board.map(g=>'<p class="tip" style="margin:8px 0 4px">'+g.label+'</p>'+sheetSVG(g.sheet,false,true).svg).join('')+(sh.pieces?'<p class="tip" style="margin-top:10px">Pièces : une couleur, à découper deux fois</p>'+sheetSVG(sh.pieces,false,false).svg:'');}return;}
+  renderWarns(m);renderStats(m);
+  if(state.mode==='laser')$('planBox').innerHTML=svgOf(m,false).svg;
+  if(full)renderHoles();else{document.querySelectorAll('[data-card]').forEach(c=>{const i=+c.dataset.card;c.classList.toggle('bad',!m.res[i].ok);});}
+});}
+function open(id){loadPreset(id);if(id==='stopmotion'){state.sm.hc=smAdvised();if(state.tl<4)state.tl=4;}$('pick').hidden=true;$('editor').hidden=false;renderControls();resetView();update(true);window.scrollTo(0,0);if(renderer)sizeGL();}
+
+/* ================= Évènements ================= */
+$('objects').addEventListener('click',e=>{const b=e.target.closest('.obj');if(b)open(b.dataset.id);});
+$('back').addEventListener('click',()=>{$('editor').hidden=true;$('pick').hidden=false;window.scrollTo(0,0);});
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;renderControls();resetView();update(true);}));
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;renderControls();update(false);if(renderer)sizeGL();}));
+['Li','Wi','Hi'].forEach(k=>{const f=v=>{const x=Math.max(+$(k).min,Math.min(+$(k).max,+v||0));state[k]=x;return x;};
+  $(k).addEventListener('input',e=>{if(e.target.value==='')return;f(e.target.value);$(k+'_r').value=state[k];update(true);});
+  $(k+'_r').addEventListener('input',e=>{f(e.target.value);$(k).value=state[k];update(true);});});
+$('t3').addEventListener('input',e=>{const v=+e.target.value;if(v>=1&&v<=5){state.t3=v;update(true);}});
+$('jeu').addEventListener('input',e=>{const v=+e.target.value;if(v>=0&&v<=1){state.jeu=v;update(true);}});
+const setTl=v=>{v=+v;if(!(v>=1&&v<=10))return;state.tl=Math.round(v*10)/10;$('tl').value=state.tl;$('tl_r').value=state.tl;state.fw=Math.max(state.fw,state.tl*2);$('fw').value=state.fw;update(true);};
+$('tl').addEventListener('input',e=>{if(e.target.value!=='')setTl(e.target.value);});$('tl_r').addEventListener('input',e=>setTl(e.target.value));
+$('fw').addEventListener('input',e=>{const v=+e.target.value;if(v>=4&&v<=40){state.fw=v;update(false);}});
+$('kerf').addEventListener('input',e=>{const v=+e.target.value;if(v>=0&&v<=0.5){state.kerf=v;update(false);}});
+$('engrave').addEventListener('change',e=>{state.engrave=e.target.checked;});
+$('refl').addEventListener('change',e=>{state.reflector=e.target.checked;update(false);});
+$('reflH').addEventListener('input',e=>{const v=+e.target.value;if(v>=6&&v<=50){state.reflH=v;update(false);}});
+$('explode').addEventListener('change',e=>{state.explode=e.target.checked;update(false);});
+$('lidShow').addEventListener('change',e=>{state.lidShow=e.target.checked;update(false);});
+$('resetView').addEventListener('click',resetView);
+['c','b','Hw','jt','K','D','tb3','hs3','jp'].forEach(k=>$('ch_'+k).addEventListener('input',e=>{const el=e.target,v=+el.value;if(el.value===''||!(v>=+el.min&&v<=+el.max))return;
+  if(k==='c'){const old=state.chess.c;state.chess.D=Math.max(12,Math.round(state.chess.D+(v-old)));$('ch_D').value=state.chess.D;}state.chess[k]=v;update(false);if(k==='c'||k==='Hw')resetView();}));
+['pw','pd','tw','td','ca','cb','win','hc','fov'].forEach(k=>$('sm_'+k).addEventListener('input',e=>{const el=e.target,v=+el.value;if(el.value===''||!(v>=+el.min&&v<=+el.max))return;state.sm[k]=v;
+  if(k==='tw'||k==='td'){state.sm.dev='perso';$('sm_dev').value='perso';}update(false);if(k==='hc')resetView();}));
+$('sm_paper').addEventListener('change',e=>{const S=state.sm;S.paper=e.target.value;if(S.paper!=='perso'){[S.pw,S.pd]=PAPER[S.paper];}S.hc=smAdvised();renderControls();resetView();update(false);});
+$('sm_dev').addEventListener('change',e=>{const S=state.sm;S.dev=e.target.value;if(DEVICES[S.dev]){S.tw=DEVICES[S.dev][1];S.td=DEVICES[S.dev][2];}renderControls();update(false);});
+$('sm_winShape').addEventListener('change',e=>{state.sm.winShape=e.target.value;update(false);});
+$('sm_cable').addEventListener('change',e=>{state.sm.cable=e.target.value;update(false);});
+$('sm_stops').addEventListener('change',e=>{state.sm.stops=e.target.checked;update(false);});
+$('sm_adv').addEventListener('click',()=>{state.sm.hc=smAdvised();$('sm_hc').value=state.sm.hc;resetView();update(false);});
+$('ch_marks').addEventListener('change',e=>{state.chess.marks=e.target.checked;update(false);});
+$('ch_soc').addEventListener('change',e=>{state.chess.soc=e.target.value;update(false);});
+$('ch_layers').addEventListener('change',e=>{state.chess.layers=+e.target.value;update(false);});
+$('addHole').addEventListener('click',()=>{const k=$('addType').value,t=HT[k];state.holes.push({type:k,label:t.label,face:$('addFace').value,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu:.5,fv:.5});state.sel=state.holes.length-1;update(true);});
+const hl=$('holes');
+hl.addEventListener('input',e=>{const el=e.target.closest('[data-h]');if(!el||el.tagName==='SELECT'||el.value==='')return;const i=+el.dataset.h,k=el.dataset.k,h=state.holes[i],v=+el.value,d=dims(),[fw,fh]=faceSize(h.face,d);
+  if(!(v>0)&&k!=='u'&&k!=='v')return;if(k==='u')h.fu=v/fw;else if(k==='v')h.fv=v/fh;else h[k]=v;state.sel=i;update(false);});
+hl.addEventListener('change',e=>{const el=e.target.closest('select[data-h]');if(!el)return;const i=+el.dataset.h,k=el.dataset.k,h=state.holes[i];
+  if(k==='face'){h.face=el.value;h.fu=.5;h.fv=.5;}
+  if(k==='shape'){const s=el.value;if(s==='rond')h.d=h.shape==='rect'?Math.min(h.w,h.h):h.w;else if(h.shape==='rond'){h.w=h.d;h.h=h.d;}h.shape=s;}
+  state.sel=i;update(true);});
+hl.addEventListener('click',e=>{const del=e.target.closest('[data-del]');if(del){state.holes.splice(+del.dataset.del,1);state.sel=-1;update(true);return;}
+  const c=e.target.closest('[data-center]');if(c){const h=state.holes[+c.dataset.center];h.fu=.5;h.fv=.5;state.sel=+c.dataset.center;update(true);}});
+hl.addEventListener('focusin',e=>{const c=e.target.closest('[data-card]');if(c&&state.sel!==+c.dataset.card){state.sel=+c.dataset.card;document.querySelectorAll('[data-card]').forEach(x=>x.classList.toggle('sel',+x.dataset.card===state.sel));update(false);}});
+$('expBtns').addEventListener('click',e=>{const id=e.target.id;
+  const run=f=>f().catch(err=>{$('dlStatus').textContent='Erreur pendant la création du fichier : '+(err&&err.message||err);});
+  if(id==='exSM')run(exportSM);if(id==='exCh')run(exportChess);if(id==='exChSvg')run(exportChessBoardSVG);if(id==='ex3d')run(export3D);if(id==='exSvg')run(exportSVG);if(id==='exZip')run(exportLaserZip);});
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(lastModel)rebuild3D(lastModel);});
+
+renderPick();initGL();
+})();
+</script>
+
+</body>
+</html>
