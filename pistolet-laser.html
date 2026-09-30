@@ -1441,6 +1441,22 @@ function buildComponents(){
   g.add(cyl(C.rech/2, -W2, -W2 + 11, 1, [62,0,90], grey)); g.add(cyl(C.rech*.37, -W2 - 4, -W2, 1, [62,0,90], blue));
   g.add(cyl(C.laser/2, 144, 163, 0, [0,0,90], brass));
   const board = new THREE.Mesh(new THREE.BoxGeometry(18, 1.6, 15), pcb); board.position.set(135, 0, 90); g.add(board);
+
+  /* Carte Arduino Nano (18 × 43 mm) debout dans la crosse, prise USB vers le bas */
+  const nano = new THREE.Group();
+  const bx = (sx, sy, sz, x, y, z, mat) => { const mm = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); mm.position.set(x, y, z); nano.add(mm); return mm; };
+  const nanoBlue = m(0x1d5fa8), black = m(0x151a1f), metal = m(0xb8c0c6), gold = m(0xd4a93a), white = m(0xf2f2f2);
+  bx(18, 1.6, 43.2, 30, .8, 27.6, nanoBlue);                               // circuit imprimé
+  for (const x of [21.4, 38.6]) {                                           // 2 rangées de 15 broches
+    bx(2.5, 2.5, 38.1, x, -1.25, 29.5, black);
+    for (let i = 0; i < 15; i++) bx(.64, 6, .64, x, -3.2, 10.4 + i*2.54, gold);
+  }
+  const chip = bx(7, 1.2, 7, 30, 2.2, 31, black); chip.rotation.y = Math.PI/4; // microcontrôleur ATmega328P
+  bx(3.4, 1.2, 5.5, 30, 2.2, 20, black);                                    // puce USB
+  bx(8, 4, 9, 30, 2.4, 6.5, metal);                                         // prise mini-USB
+  bx(3, 1.4, 3, 30, 2.3, 42, white);                                        // bouton reset
+  for (const [x, c] of [[25, 0x33ff66], [27, 0xff3048], [33, 0xffb020]]) bx(1, .6, 1.6, x, 1.9, 46, m(c)); // LED de la carte
+  g.add(nano);
   g.visible = $('optComp').checked;
 }
 
