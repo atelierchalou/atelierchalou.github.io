@@ -341,6 +341,12 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
 
 #c-cab,#u-cab{min-width:780px}
 
+.nbsel{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;margin:0 0 14px}
+.nbsel>b{font-family:var(--f-display);font-size:15px;color:var(--ink)}
+.nbsel .seg2 button{cursor:pointer}
+.nbsel .seg2 button[aria-pressed="true"]{background:var(--teal);color:var(--teal-ink)}
+.nbsel small{font-size:13px;color:var(--muted)}
+
 </style>
 
 <div class="wrap">
@@ -353,17 +359,18 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
     <div class="projects" role="group" aria-label="Choisir le projet">
       <button type="button" data-proj="p" aria-pressed="true">
         <svg viewBox="0 0 40 28" aria-hidden="true"><path d="M3 6h30v8H14l-2 11H5l2-11H3z" fill="currentColor"/><path d="M33 10h6" stroke="var(--laser)" stroke-width="2.5"/></svg>
-        <span><b>Pistolet</b><small>gâchette, 3 LED, laser</small></span></button>
+        <span><b>Pistolet</b><small>gâchette, <x-n data-g="p" data-v5="5">3</x-n> LED, laser</small></span></button>
       <button type="button" data-proj="c" aria-pressed="false">
         <svg viewBox="0 0 40 28" aria-hidden="true"><circle cx="8" cy="14" r="6.5" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="20" cy="14" r="6.5" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="32" cy="14" r="6.5" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="20" cy="14" r="2" fill="var(--laser)"/></svg>
-        <span><b>Cibles</b><small>3 capteurs, 3 servos</small></span></button>
+        <span><b>Cibles</b><small><x-n data-g="c" data-v5="5 capteurs, 5 servos">3 capteurs, 3 servos</x-n></small></span></button>
       <button type="button" data-proj="u" aria-pressed="false">
         <svg viewBox="0 0 40 28" aria-hidden="true"><circle cx="13" cy="14" r="10" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="13" cy="14" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="31" cy="6" r="2.6" fill="var(--laser)"/><circle cx="31" cy="14" r="2.6" fill="var(--laser)"/><circle cx="31" cy="22" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-        <span><b>Cible 3 LED</b><small>1 capteur, 3 LED de vie</small></span></button>
+        <span><b>Cible <x-n data-g="u" data-v5="5">3</x-n> LED</b><small>1 capteur, <x-n data-g="u" data-v5="5">3</x-n> LED de vie</small></span></button>
     </div>
   </header>
 
   <div class="project" id="projP">
+  <div class="nbsel"><b>Version</b><div class="seg2" role="group" aria-label="Nombre de tirs"><button type="button" data-nbset="p" data-n="3" aria-pressed="false">3 tirs</button><button type="button" data-nbset="p" data-n="5" aria-pressed="false">5 tirs</button></div><small>Le programme, le câblage et la coque suivent ce choix.</small></div>
   <nav class="tabs" role="tablist" aria-label="Étapes : pistolet">
     <button type="button" role="tab" id="tabProg" aria-selected="true" aria-controls="modProg"><span>1</span>Programmer</button>
     <button type="button" role="tab" id="tabCab" aria-selected="false" aria-controls="modCab"><span>2</span>Câbler</button>
@@ -385,7 +392,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
       <div class="legend-sim">
         <span style="--c:#d4213a">gâchette</span>
         <span style="--c:#2f8fd0">bouton recharger</span>
-        <span style="--c:#3cff8f">3 LED = tirs restants</span>
+        <span style="--c:#3cff8f"><x-n data-g="p" data-v5="5">3</x-n> LED = tirs restants</span>
       </div>
     </div>
     <canvas id="sim" tabindex="0" aria-label="Stand de tir : pistolet à gauche, trois cibles à droite. Clique sur une cible pour viser."></canvas>
@@ -394,12 +401,14 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
         <button type="button" id="aim0" aria-pressed="true">Cible 1</button>
         <button type="button" id="aim1" aria-pressed="false">Cible 2</button>
         <button type="button" id="aim2" aria-pressed="false">Cible 3</button>
+        <button type="button" id="aim3" aria-pressed="false" hidden>Cible 4</button>
+        <button type="button" id="aim4" aria-pressed="false" hidden>Cible 5</button>
       </div>
       <button type="button" class="btn btn-fire" id="fireBtn">Tirer<span class="kbd">Espace</span></button>
       <button type="button" class="btn btn-reload" id="reloadBtn">Recharger<span class="kbd">R</span></button>
       <button type="button" class="btn btn-plain" id="resetTargets">Relever les cibles</button>
       <button type="button" class="btn btn-plain" id="soundBtn" aria-pressed="true">Son : oui</button>
-      <div class="readout"><span>munitions = <b id="ammoVal">3</b></span><span>cibles : <b id="hitVal">0</b>/3</span></div>
+      <div class="readout"><span>munitions = <b id="ammoVal">3</b></span><span>cibles : <b id="hitVal">0</b>/<x-n data-g="p" data-v5="5">3</x-n></span></div>
     </div>
     <p class="simmsg" id="simMsg">Vise une cible, puis tire. Le bloc exécuté s'allume en rouge dans l'organigramme et dans le code.</p>
   </section>
@@ -433,8 +442,8 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
       <table class="pins">
         <tr><td>D2</td><td>Bouton gâchette, autre patte au GND</td></tr>
         <tr><td>D3</td><td>Bouton recharger, autre patte au GND</td></tr>
-        <tr><td>D4 D5 D6</td><td>LED 1, 2, 3, chacune avec une résistance de 220 Ω vers le GND</td></tr>
-        <tr><td>D8</td><td>Signal du module laser (KY-008), + au 5 V, − au GND</td></tr>
+        <tr><td><x-n data-g="p" data-v5="D4 à D8">D4 D5 D6</x-n></td><td>LED <x-n data-g="p" data-v5="1 à 5">1, 2, 3</x-n>, chacune avec une résistance de 220 Ω vers le GND</td></tr>
+        <tr><td><x-n data-g="p" data-v5="D9">D8</x-n></td><td>Signal du module laser (KY-008), + au 5 V, − au GND</td></tr>
       </table>
       <p class="safety">Même un petit laser de classe 2 est dangereux pour les yeux : ne jamais viser une personne.</p>
     </div>
@@ -491,10 +500,15 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
           <h3>Ce que le programme attend</h3>
           <pre class="cab-code"><span class="k">const int</span> GACHETTE = <span class="n">2</span>;
 <span class="k">const int</span> RECHARGE = <span class="n">3</span>;
-<span class="k">const int</span> LED1 = <span class="n">4</span>;
+<x-n data-g="p" data-v5="&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED1 = &lt;span class=&quot;n&quot;&gt;4&lt;/span&gt;;
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED2 = &lt;span class=&quot;n&quot;&gt;5&lt;/span&gt;;
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED3 = &lt;span class=&quot;n&quot;&gt;6&lt;/span&gt;;
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED4 = &lt;span class=&quot;n&quot;&gt;7&lt;/span&gt;;
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED5 = &lt;span class=&quot;n&quot;&gt;8&lt;/span&gt;;
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LASER = &lt;span class=&quot;n&quot;&gt;9&lt;/span&gt;;"><span class="k">const int</span> LED1 = <span class="n">4</span>;
 <span class="k">const int</span> LED2 = <span class="n">5</span>;
 <span class="k">const int</span> LED3 = <span class="n">6</span>;
-<span class="k">const int</span> LASER = <span class="n">8</span>;</pre>
+<span class="k">const int</span> LASER = <span class="n">8</span>;</x-n></pre>
           <ul class="cab-tips">
             <li>Les boutons sont en <b>INPUT_PULLUP</b> : une patte sur la broche, l'autre sur GND.</li>
             <li>Une LED se branche toujours avec une <b>résistance</b> en série. Sa patte longue (+) va du côté de la broche.</li>
@@ -503,7 +517,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
         </section>
 
         <section class="panel side-block">
-          <div class="cab-check-head"><h3>Vérification</h3><span class="pill wait" id="cabScore">0 / 6</span></div>
+          <div class="cab-check-head"><h3>Vérification</h3><span class="pill wait" id="cabScore">0 / <x-n data-g="p" data-v5="8">6</x-n></span></div>
           <button class="btn-flash" id="cabCheck" type="button">Vérifier mon câblage</button>
           <div id="cabAlerts" class="cab-alerts" aria-live="polite"></div>
           <ul class="cab-list" id="cabList"></ul>
@@ -512,13 +526,13 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
         <section class="panel side-block" id="cabTest" hidden>
           <h3>Tester le montage</h3>
           <p class="small-note">Ton câblage est correct. Clique sur le bouton rouge (gâchette) ou bleu (recharger) du schéma : les LED et le laser réagissent comme avec le vrai programme.</p>
-          <p class="cab-ammo">munitions = <b id="cabAmmo">3</b></p>
+          <p class="cab-ammo">munitions = <b id="cabAmmo"><x-n data-g="p" data-v5="5">3</x-n></b></p>
         </section>
       </aside>
     </div>
   </div>
   <div id="modCad" class="module" role="tabpanel" aria-labelledby="tabCad" hidden>
-    <p class="mod-intro">Modélise la coque du pistolet. Les trous doivent laisser passer les 3 LED, les 2 boutons et le module laser. À la fin, télécharge le fichier pour la machine.</p>
+    <p class="mod-intro">Modélise la coque du pistolet. Les trous doivent laisser passer les <x-n data-g="p" data-v5="5">3</x-n> LED, les 2 boutons et le module laser. À la fin, télécharge le fichier pour la machine.</p>
 
     <section class="panel cad-setup" id="cadSetup">
       <fieldset class="bigchoice">
@@ -596,6 +610,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
   </div>
 
   <div class="project" id="projC" hidden>
+  <div class="nbsel"><b>Version</b><div class="seg2" role="group" aria-label="Nombre de cibles"><button type="button" data-nbset="c" data-n="3" aria-pressed="false">3 cibles</button><button type="button" data-nbset="c" data-n="5" aria-pressed="false">5 cibles</button></div><small>Le programme, le câblage et le boîtier suivent ce choix.</small></div>
   <nav class="tabs" role="tablist" aria-label="Étapes : cibles">
     <button type="button" role="tab" id="c-tabProg" aria-selected="true" aria-controls="c-modProg"><span>1</span>Programmer</button>
     <button type="button" role="tab" id="c-tabCab" aria-selected="false" aria-controls="c-modCab"><span>2</span>Câbler</button>
@@ -613,7 +628,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
 
   <section class="range" aria-label="Simulation des cibles">
     <div class="range-head">
-      <h2>Les 3 cibles</h2>
+      <h2>Les <x-n data-g="c" data-v5="5">3</x-n> cibles</h2>
       <div class="legend-sim">
         <span style="--c:#e07b2e">capteur de lumière</span>
         <span style="--c:#c45a2a">volet du servomoteur</span>
@@ -627,10 +642,12 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
         <button type="button" id="c-shoot0">Tir cible 0</button>
         <button type="button" id="c-shoot1">Tir cible 1</button>
         <button type="button" id="c-shoot2">Tir cible 2</button>
+        <button type="button" id="c-shoot3" hidden>Tir cible 3</button>
+        <button type="button" id="c-shoot4" hidden>Tir cible 4</button>
       </div>
       <button type="button" class="btn btn-reload" id="c-raz">Bouton RAZ<span class="kbd">R</span></button>
       <button type="button" class="btn btn-plain" id="c-soundBtn">Son : oui</button>
-      <div class="readout"><span>touchées : <b id="c-hitVal">0</b>/3</span><span class="amp">servos ≈ <b id="c-ampVal">0</b> mA <i class="ampbar"><i id="c-ampBar"></i></i></span></div>
+      <div class="readout"><span>touchées : <b id="c-hitVal">0</b>/<x-n data-g="c" data-v5="5">3</x-n></span><span class="amp">servos ≈ <b id="c-ampVal">0</b> mA <i class="ampbar"><i id="c-ampBar"></i></i></span></div>
     </div>
     <p class="simmsg" id="c-simMsg">Mets l'interrupteur sur marche, puis clique sur une cible pour tirer. Le bloc exécuté s'allume en rouge dans l'organigramme et dans le code.</p>
   </section>
@@ -664,9 +681,9 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
       <table class="pins">
         <tr><td>VIN</td><td>9 V après l'interrupteur marche/arrêt</td></tr>
         <tr><td>D2</td><td>Bouton RAZ, autre patte au GND</td></tr>
-        <tr><td>D4 D5 D6</td><td>LED des cibles 0, 1, 2, avec une résistance de 220 Ω</td></tr>
-        <tr><td>D9 D10 D11</td><td>Fil orange (signal) des servos 0, 1, 2</td></tr>
-        <tr><td>A0 A1 A2</td><td>Sortie S des capteurs KY-018 0, 1, 2</td></tr>
+        <tr><td><x-n data-g="c" data-v5="D4 à D8">D4 D5 D6</x-n></td><td>LED des cibles <x-n data-g="c" data-v5="0 à 4">0, 1, 2</x-n>, avec une résistance de 220 Ω</td></tr>
+        <tr><td><x-n data-g="c" data-v5="D9 à D13">D9 D10 D11</x-n></td><td>Fil orange (signal) des servos <x-n data-g="c" data-v5="0 à 4">0, 1, 2</x-n></td></tr>
+        <tr><td><x-n data-g="c" data-v5="A0 à A4">A0 A1 A2</x-n></td><td>Sortie S des capteurs KY-018 <x-n data-g="c" data-v5="0 à 4">0, 1, 2</x-n></td></tr>
       </table>
       <p>Les servos sont alimentés par le régulateur 5 V, les capteurs par le régulateur 3,3 V. Toutes les masses (GND) sont reliées entre elles.</p>
       <p class="safety">La bibliothèque Servo est fournie avec l'IDE Arduino : rien à installer.</p>
@@ -698,7 +715,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
   </div>
 
   <div id="c-modCab" class="module" role="tabpanel" aria-labelledby="c-tabCab" hidden>
-    <p class="mod-intro">Relie la carte Nano, l'alimentation et les composants des 3 cibles. Clique sur une broche, puis sur une autre pour tirer un fil : il contourne tout seul les composants. Glisse un composant pour le déplacer. Quand tu penses avoir fini, clique sur « Vérifier mon câblage ».</p>
+    <p class="mod-intro">Relie la carte Nano, l'alimentation et les composants des <x-n data-g="c" data-v5="5">3</x-n> cibles. Clique sur une broche, puis sur une autre pour tirer un fil : il contourne tout seul les composants. Glisse un composant pour le déplacer. Quand tu penses avoir fini, clique sur « Vérifier mon câblage ».</p>
     <div class="cab-work">
       <section class="panel cab-board" aria-label="Plan de câblage des cibles">
         <div class="cab-tools">
@@ -724,19 +741,21 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
         <section class="panel side-block">
           <h3>Ce que le programme attend</h3>
           <pre class="cab-code"><span class="k">const int</span> BOUTON_RAZ = <span class="n">2</span>;
-<span class="k">const int</span> LED[<span class="n">3</span>] = {<span class="n">4</span>, <span class="n">5</span>, <span class="n">6</span>};
+<x-n data-g="c" data-v5="&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED[&lt;span class=&quot;n&quot;&gt;5&lt;/span&gt;] = {&lt;span class=&quot;n&quot;&gt;4&lt;/span&gt;, &lt;span class=&quot;n&quot;&gt;5&lt;/span&gt;, &lt;span class=&quot;n&quot;&gt;6&lt;/span&gt;, &lt;span class=&quot;n&quot;&gt;7&lt;/span&gt;, &lt;span class=&quot;n&quot;&gt;8&lt;/span&gt;};
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; CAPTEUR[&lt;span class=&quot;n&quot;&gt;5&lt;/span&gt;] = {A0, A1, A2, A3, A4};
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; BROCHE_SERVO[&lt;span class=&quot;n&quot;&gt;5&lt;/span&gt;] = {&lt;span class=&quot;n&quot;&gt;9&lt;/span&gt;, &lt;span class=&quot;n&quot;&gt;10&lt;/span&gt;, &lt;span class=&quot;n&quot;&gt;11&lt;/span&gt;, &lt;span class=&quot;n&quot;&gt;12&lt;/span&gt;, &lt;span class=&quot;n&quot;&gt;13&lt;/span&gt;};"><span class="k">const int</span> LED[<span class="n">3</span>] = {<span class="n">4</span>, <span class="n">5</span>, <span class="n">6</span>};
 <span class="k">const int</span> CAPTEUR[<span class="n">3</span>] = {A0, A1, A2};
-<span class="k">const int</span> BROCHE_SERVO[<span class="n">3</span>] = {<span class="n">9</span>, <span class="n">10</span>, <span class="n">11</span>};</pre>
+<span class="k">const int</span> BROCHE_SERVO[<span class="n">3</span>] = {<span class="n">9</span>, <span class="n">10</span>, <span class="n">11</span>};</x-n></pre>
           <ul class="cab-tips">
             <li><b>Alimentation</b> : bloc secteur 9 V → interrupteur → VIN de la Nano et entrée IN des régulateurs.</li>
-            <li>Le <b>régulateur 5 V</b> alimente les 3 servos, le <b>régulateur 3,3 V</b> les 3 capteurs.</li>
+            <li>Le <b>régulateur 5 V</b> alimente les <x-n data-g="c" data-v5="5">3</x-n> servos, le <b>régulateur 3,3 V</b> les <x-n data-g="c" data-v5="5">3</x-n> capteurs.</li>
             <li>Toutes les <b>masses</b> (GND) doivent être reliées entre elles. Les barres t'aident à les rassembler.</li>
             <li>Servo SG90 : marron = GND, rouge = +, orange = signal.</li>
           </ul>
         </section>
 
         <section class="panel side-block">
-          <div class="cab-check-head"><h3>Vérification</h3><span class="pill wait" id="c-cabScore">0 / 13</span></div>
+          <div class="cab-check-head"><h3>Vérification</h3><span class="pill wait" id="c-cabScore">0 / <x-n data-g="c" data-v5="19">13</x-n></span></div>
           <button class="btn-flash" id="c-cabCheck" type="button">Vérifier mon câblage</button>
           <div id="c-cabAlerts" class="cab-alerts" aria-live="polite"></div>
           <ul class="cab-list" id="c-cabList"></ul>
@@ -752,7 +771,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
   </div>
 
   <div id="c-modCad" class="module" role="tabpanel" aria-labelledby="c-tabCad" hidden>
-    <p class="mod-intro">Modélise le boîtier des cibles. Sa façade porte les 3 capteurs, les 3 LED, et le bouton RAZ ; les 3 servos se vissent sur la casquette et rabattent un volet devant chaque tube ; l'interrupteur et la prise d'alimentation sont sur le côté droit. Chaque capteur est au fond d'un tube : on tire dans le tube, et le tube comme la casquette empêchent la lumière du soleil de gêner la mesure. À la fin, télécharge le fichier pour la machine.</p>
+    <p class="mod-intro">Modélise le boîtier des cibles. Sa façade porte les <x-n data-g="c" data-v5="5">3</x-n> capteurs, les <x-n data-g="c" data-v5="5">3</x-n> LED, et le bouton RAZ ; les <x-n data-g="c" data-v5="5">3</x-n> servos se vissent sur la casquette et rabattent un volet devant chaque tube ; l'interrupteur et la prise d'alimentation sont sur le côté droit. Chaque capteur est au fond d'un tube : on tire dans le tube, et le tube comme la casquette empêchent la lumière du soleil de gêner la mesure. À la fin, télécharge le fichier pour la machine.</p>
 
     <section class="panel cad-setup" id="c-cadSetup">
       <fieldset class="bigchoice">
@@ -811,7 +830,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
 
           <section class="panel side-block">
             <h3>Fixations prévues</h3>
-            <p class="small-note"><b>Servos</b> : sous la casquette, 3 découpes 12,8 × 23,2 mm (le corps du servo passe dessus), 2 trous Ø 2,2 mm par servo pour les vis M2 des oreilles et un trou Ø 8 mm pour les fils (aussi percé dans la paroi du dessus).</p>
+            <p class="small-note"><b>Servos</b> : sous la casquette, <x-n data-g="c" data-v5="5">3</x-n> découpes 12,8 × 23,2 mm (le corps du servo passe dessus), 2 trous Ø 2,2 mm par servo pour les vis M2 des oreilles et un trou Ø 8 mm pour les fils (aussi percé dans la paroi du dessus).</p>
             <p class="small-note"><b>Volets</b> : un volet en T par servo (plaque + tablette), fixé sur le palonnier, qui se rabat devant la bouche du tube. Coche « Volets fermés » pour voir les deux positions.</p>
             <p class="small-note"><b>Tubes</b> : 4 trous Ø 2,2 mm autour de chaque capteur dans la façade, pour les vis M2 de la collerette du tube.</p>
             <p class="small-note"><b>Casquette</b> : 4 vis M3 qui descendent dans la paroi du dessus (avant-trous Ø 2,5 mm dans le boîtier imprimé).</p>
@@ -838,14 +857,15 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
   </div>
 
   <div class="project" id="projU" hidden>
-  <nav class="tabs" role="tablist" aria-label="Étapes : cible 3 LED">
+  <div class="nbsel"><b>Version</b><div class="seg2" role="group" aria-label="Nombre de vies"><button type="button" data-nbset="u" data-n="3" aria-pressed="false">3 vies</button><button type="button" data-nbset="u" data-n="5" aria-pressed="false">5 vies</button></div><small>Le programme, le câblage et le boîtier suivent ce choix.</small></div>
+  <nav class="tabs" role="tablist" aria-label="Étapes : cible LED">
     <button type="button" role="tab" id="u-tabProg" aria-selected="true" aria-controls="u-modProg"><span>1</span>Programmer</button>
     <button type="button" role="tab" id="u-tabCab" aria-selected="false" aria-controls="u-modCab"><span>2</span>Câbler</button>
     <button type="button" role="tab" id="u-tabCad" aria-selected="false" aria-controls="u-modCad"><span>3</span>Modéliser le boîtier</button>
   </nav>
   <div id="u-modProg" class="module" role="tabpanel" aria-labelledby="u-tabProg">
   <div class="mod-top">
-    <p class="mod-intro">Une seule cible et 3 LED de vie. Chaque tir reçu éteint une LED, le bouton RAZ les rallume toutes. Clique sur chaque bloc de l'organigramme et choisis la bonne instruction : chaque bonne réponse ajoute ses lignes au programme Arduino. Quand les 10 blocs sont trouvés, copie le code ou envoie-le directement dans la carte.</p>
+    <p class="mod-intro">Une seule cible et <x-n data-g="u" data-v5="5">3</x-n> LED de vie. Chaque tir reçu éteint une LED, le bouton RAZ les rallume toutes. Clique sur chaque bloc de l'organigramme et choisis la bonne instruction : chaque bonne réponse ajoute ses lignes au programme Arduino. Quand les 10 blocs sont trouvés, copie le code ou envoie-le directement dans la carte.</p>
     <div class="progress" aria-live="polite">
       <div class="row"><span><b id="u-progN">0</b> / 10 blocs trouvés</span><span id="u-errTxt">0 erreur</span></div>
       <div class="bar"><i id="u-progBar"></i></div>
@@ -853,12 +873,12 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
     </div>
   </div>
 
-  <section class="range" aria-label="Simulation de la cible 3 LED">
+  <section class="range" aria-label="Simulation de la cible LED">
     <div class="range-head">
-      <h2>La cible à 3 vies</h2>
+      <h2>La cible à <x-n data-g="u" data-v5="5">3</x-n> vies</h2>
       <div class="legend-sim">
         <span style="--c:#e07b2e">capteur de lumière</span>
-        <span style="--c:#3cff8f">3 LED = vies restantes</span>
+        <span style="--c:#3cff8f"><x-n data-g="u" data-v5="5">3</x-n> LED = vies restantes</span>
         <span style="--c:#f2c94c">bouton RAZ</span>
       </div>
     </div>
@@ -868,13 +888,13 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
       <button type="button" class="btn btn-fire" id="u-shoot">Tirer sur la cible<span class="kbd">Espace</span></button>
       <button type="button" class="btn btn-reload" id="u-raz">Bouton RAZ<span class="kbd">R</span></button>
       <button type="button" class="btn btn-plain" id="u-soundBtn">Son : oui</button>
-      <div class="readout"><span>vies = <b id="u-livesVal">0</b>/3</span><span>tirs reçus : <b id="u-hitVal">0</b></span></div>
+      <div class="readout"><span>vies = <b id="u-livesVal">0</b>/<x-n data-g="u" data-v5="5">3</x-n></span><span>tirs reçus : <b id="u-hitVal">0</b></span></div>
     </div>
     <p class="simmsg" id="u-simMsg">Mets l'interrupteur sur marche, puis clique sur la cible pour tirer. Le bloc exécuté s'allume en rouge dans l'organigramme et dans le code.</p>
   </section>
 
   <main class="work">
-    <section class="panel" aria-label="Organigramme de la cible 3 LED">
+    <section class="panel" aria-label="Organigramme de la cible LED">
       <div class="panel-head">
         <h2>Organigramme</h2>
         <div class="shapes">
@@ -882,13 +902,13 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
           <span><svg width="26" height="16" aria-hidden="true"><polygon points="13,1 25,8 13,15 1,8" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Test (oui / non)</span>
         </div>
       </div>
-      <div class="flow-scroll"><svg id="u-flow" viewBox="0 0 560 1030" role="img" aria-label="Organigramme de la cible 3 LED"></svg></div>
+      <div class="flow-scroll"><svg id="u-flow" viewBox="0 0 560 1030" role="img" aria-label="Organigramme de la cible LED"></svg></div>
       <p class="tip">La variable <strong>vies</strong> compte les LED encore allumées. Le bouton RAZ est en <em>INPUT_PULLUP</em> : appuyé, il se lit <strong>LOW</strong>. L'interrupteur, lui, coupe simplement l'alimentation : le programme n'a pas besoin de le lire.</p>
     </section>
 
-    <section class="panel code-panel" aria-label="Programme Arduino de la cible 3 LED">
+    <section class="panel code-panel" aria-label="Programme Arduino de la cible LED">
       <div class="panel-head">
-        <div><h2>Programme Arduino</h2><p class="code-sub">cible_3_led.ino · <span class="pill wait" id="u-codeState">incomplet</span></p></div>
+        <div><h2>Programme Arduino</h2><p class="code-sub"><x-n data-g="u" data-v5="cible_5_led.ino">cible_3_led.ino</x-n> · <span class="pill wait" id="u-codeState">incomplet</span></p></div>
         <button class="btn-copy" id="u-copyBtn" type="button" disabled>Copier le code</button>
       </div>
       <div class="code-body" id="u-code"></div>
@@ -903,7 +923,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
         <tr><td>VIN</td><td>+ de la pile 9 V, après l'interrupteur marche/arrêt</td></tr>
         <tr><td>GND</td><td>− de la pile 9 V et toutes les masses</td></tr>
         <tr><td>D2</td><td>Bouton RAZ, autre patte au GND</td></tr>
-        <tr><td>D4 D5 D6</td><td>LED 1, 2, 3, chacune avec une résistance de 220 Ω vers le GND</td></tr>
+        <tr><td><x-n data-g="u" data-v5="D4 à D8">D4 D5 D6</x-n></td><td>LED <x-n data-g="u" data-v5="1 à 5">1, 2, 3</x-n>, chacune avec une résistance de 220 Ω vers le GND</td></tr>
         <tr><td>A0</td><td>Sortie S du capteur KY-018 · + au 5V de la Nano · − au GND</td></tr>
       </table>
       <p>Pas de servomoteur ici : la Nano alimente seule le capteur et les LED. Une pile 9 V suffit.</p>
@@ -937,7 +957,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
   <div id="u-modCab" class="module" role="tabpanel" aria-labelledby="u-tabCab" hidden>
     <p class="mod-intro">Relie la carte Nano, la pile, l'interrupteur et les composants de la cible. Clique sur une broche, puis sur une autre pour tirer un fil : il contourne tout seul les composants. Glisse un composant pour le déplacer. Quand tu penses avoir fini, clique sur « Vérifier mon câblage ».</p>
     <div class="cab-work">
-      <section class="panel cab-board" aria-label="Plan de câblage de la cible 3 LED">
+      <section class="panel cab-board" aria-label="Plan de câblage de la cible LED">
         <div class="cab-tools">
           <div class="swatches" role="group" aria-label="Couleur du fil">
             <span class="sw-lbl">Fil</span>
@@ -961,9 +981,13 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
         <section class="panel side-block">
           <h3>Ce que le programme attend</h3>
           <pre class="cab-code"><span class="k">const int</span> BOUTON_RAZ = <span class="n">2</span>;
-<span class="k">const int</span> LED1 = <span class="n">4</span>;
+<x-n data-g="u" data-v5="&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED1 = &lt;span class=&quot;n&quot;&gt;4&lt;/span&gt;;
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED2 = &lt;span class=&quot;n&quot;&gt;5&lt;/span&gt;;
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED3 = &lt;span class=&quot;n&quot;&gt;6&lt;/span&gt;;
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED4 = &lt;span class=&quot;n&quot;&gt;7&lt;/span&gt;;
+&lt;span class=&quot;k&quot;&gt;const int&lt;/span&gt; LED5 = &lt;span class=&quot;n&quot;&gt;8&lt;/span&gt;;"><span class="k">const int</span> LED1 = <span class="n">4</span>;
 <span class="k">const int</span> LED2 = <span class="n">5</span>;
-<span class="k">const int</span> LED3 = <span class="n">6</span>;
+<span class="k">const int</span> LED3 = <span class="n">6</span>;</x-n>
 <span class="k">const int</span> CAPTEUR = <span class="c">A0</span>;</pre>
           <ul class="cab-tips">
             <li><b>Alimentation</b> : + de la pile 9 V → interrupteur → VIN de la Nano. Le − de la pile va au GND.</li>
@@ -974,7 +998,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
         </section>
 
         <section class="panel side-block">
-          <div class="cab-check-head"><h3>Vérification</h3><span class="pill wait" id="u-cabScore">0 / 6</span></div>
+          <div class="cab-check-head"><h3>Vérification</h3><span class="pill wait" id="u-cabScore">0 / <x-n data-g="u" data-v5="8">6</x-n></span></div>
           <button class="btn-flash" id="u-cabCheck" type="button">Vérifier mon câblage</button>
           <div id="u-cabAlerts" class="cab-alerts" aria-live="polite"></div>
           <ul class="cab-list" id="u-cabList"></ul>
@@ -990,7 +1014,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
   </div>
 
   <div id="u-modCad" class="module" role="tabpanel" aria-labelledby="u-tabCad" hidden>
-    <p class="mod-intro">Modélise le boîtier de la cible. Sa façade porte le capteur au centre de la cible gravée, les 3 LED au-dessus et le bouton RAZ en bas ; l'interrupteur est sur le côté droit. La pile 9 V et la Nano tiennent à l'intérieur. Le capteur est au fond d'un tube : on tire dans le tube, et le tube comme la casquette empêchent la lumière du soleil de gêner la mesure. À la fin, télécharge le fichier pour la machine.</p>
+    <p class="mod-intro">Modélise le boîtier de la cible. Sa façade porte le capteur au centre de la cible gravée, les <x-n data-g="u" data-v5="5">3</x-n> LED au-dessus et le bouton RAZ en bas ; l'interrupteur est sur le côté droit. La pile 9 V et la Nano tiennent à l'intérieur. Le capteur est au fond d'un tube : on tire dans le tube, et le tube comme la casquette empêchent la lumière du soleil de gêner la mesure. À la fin, télécharge le fichier pour la machine.</p>
 
     <section class="panel cad-setup" id="u-cadSetup">
       <fieldset class="bigchoice">
@@ -1083,6 +1107,34 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
   </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<script>
+/* ================= Version : 3 ou 5 (tirs du pistolet, cibles, vies) =================
+   Le choix est mémorisé, puis la page se recharge : programme, câblage et modèle 3D suivent. */
+window.NB = (() => {
+  const d = {p:3, c:3, u:3};
+  let got = false;
+  try { const s = JSON.parse(localStorage.getItem('versions') || 'null'); if (s) { Object.assign(d, s); got = true; } } catch(e) {}
+  if (!got) try { const m = /nbv=(\{[^}]*\})/.exec(window.name || ''); if (m) Object.assign(d, JSON.parse(m[1])); } catch(e) {}
+  for (const k in d) d[k] = +d[k] === 5 ? 5 : 3;
+  return d;
+})();
+(() => {
+  const NB = window.NB;
+  document.querySelectorAll('[data-v5]').forEach(el => { if (NB[el.dataset.g] === 5) el.innerHTML = el.dataset.v5; });
+  document.querySelectorAll('[data-nbset]').forEach(b => {
+    const k = b.dataset.nbset, n = +b.dataset.n;
+    b.setAttribute('aria-pressed', String(NB[k] === n));
+    b.addEventListener('click', () => {
+      if (NB[k] === n) return;
+      const v = Object.assign({}, NB, {[k]: n});
+      try { localStorage.setItem('versions', JSON.stringify(v)); } catch(e) {}
+      try { window.name = 'nbv=' + JSON.stringify(v); } catch(e) {}
+      try { localStorage.setItem('projet', k); } catch(e) {}
+      location.reload();
+    });
+  });
+})();
+</script>
 <script>
 /* ================= Moteur « Programmer » : organigramme, code, envoi dans la Nano =================
    P : préfixe des identifiants HTML du projet ('' pour le pistolet, 'c-' pour les cibles). */
@@ -1425,27 +1477,28 @@ buildFlow(); renderCode(); updateProgress();
 return {trace, toast, $, complete: () => solved.size === TOTAL};
 }
 const PISTOL_CFG = (() => {
+const N = NB.p, LP = N === 5 ? 9 : 8;    // 5 tirs : LED sur D4 à D8, laser sur D9
 /* ---------- Données de l'organigramme ---------- */
 const NODES = [
-  {id:1,type:'rect',cx:280,cy:110,label:['munitions = 3'],
+  {id:1,type:'rect',cx:280,cy:110,label:[`munitions = ${N}`],
    q:"Au démarrage de la carte, combien de tirs le pistolet peut-il faire ?",
    wrong:['munitions = 0','Allumer le laser','Attendre 1 s'],
-   hint:"Au démarrage, le chargeur est plein : 3 tirs au maximum."},
-  {id:2,type:'rect',cx:280,cy:190,label:['Afficher munitions','sur les 3 LED'],
+   hint:`Au démarrage, le chargeur est plein : ${N} tirs au maximum.`},
+  {id:2,type:'rect',cx:280,cy:190,label:['Afficher munitions',`sur les ${N} LED`],
    q:"Au début de chaque tour de boucle, que doivent montrer les LED ?",
-   wrong:['Éteindre les 3 LED','Allumer le laser','munitions = munitions − 1'],
+   wrong:[`Éteindre les ${N} LED`,'Allumer le laser','munitions = munitions − 1'],
    hint:"Les LED servent de jauge : elles doivent suivre la variable munitions."},
   {id:3,type:'diamond',cx:280,cy:290,label:['Gâchette','appuyée ?'],
    q:"Quel test déclenche un tir ?",
-   wrong:['Bouton recharger appuyé ?','Laser allumé ?','munitions = 3 ?'],
+   wrong:['Bouton recharger appuyé ?','Laser allumé ?',`munitions = ${N} ?`],
    hint:"Le tir part quand on presse la gâchette."},
   {id:4,type:'diamond',cx:280,cy:410,label:['munitions > 0 ?'],
    q:"La gâchette est appuyée. Que faut-il vérifier avant de tirer ?",
-   wrong:['munitions = 3 ?','munitions < 0 ?','LED 1 allumée ?'],
+   wrong:[`munitions = ${N} ?`,'munitions < 0 ?','LED 1 allumée ?'],
    hint:"S'il ne reste aucune munition, le laser ne doit pas s'allumer."},
   {id:5,type:'rect',cx:280,cy:510,label:['Allumer le laser'],
    q:"Il reste au moins une munition. Quelle est la première action du tir ?",
-   wrong:['Éteindre le laser','Allumer les 3 LED','munitions = 3'],
+   wrong:['Éteindre le laser',`Allumer les ${N} LED`,`munitions = ${N}`],
    hint:"Pour tirer, le laser doit d'abord émettre."},
   {id:6,type:'rect',cx:280,cy:575,label:['Attendre 0,2 s'],
    q:"Le laser est allumé. Combien de temps le laisser allumé ?",
@@ -1453,28 +1506,28 @@ const NODES = [
    hint:"Un tir laser est un flash bref : quelques dixièmes de seconde."},
   {id:7,type:'rect',cx:280,cy:640,label:['Éteindre le laser'],
    q:"Le flash est terminé. Que fait-on ensuite ?",
-   wrong:['Allumer le laser','Attendre 2 s','munitions = 3'],
+   wrong:['Allumer le laser','Attendre 2 s',`munitions = ${N}`],
    hint:"Sinon le laser resterait allumé en permanence."},
   {id:8,type:'rect',cx:280,cy:705,label:['munitions =','munitions − 1'],
    q:"Un tir vient d'être fait. Que devient la variable munitions ?",
-   wrong:['munitions = munitions + 1','munitions = 0','munitions = 3'],
+   wrong:['munitions = munitions + 1','munitions = 0',`munitions = ${N}`],
    hint:"Chaque tir consomme une munition."},
   {id:9,type:'rect',cx:280,cy:800,label:['Attendre le relâchement','de la gâchette'],
    q:"Si on garde le doigt sur la gâchette, un seul tir doit partir. Que faut-il ajouter ?",
-   wrong:['Attendre 5 s','Allumer le laser','munitions = 3'],
+   wrong:['Attendre 5 s','Allumer le laser',`munitions = ${N}`],
    hint:"Sans cette attente, un appui long viderait le chargeur en une fraction de seconde."},
   {id:10,type:'diamond',cx:280,cy:920,label:['munitions = 0 ?'],
-   q:"On ne doit pouvoir recharger qu'une fois les 3 tirs faits. Quel test faut-il faire d'abord ?",
-   wrong:['munitions > 0 ?','munitions = 3 ?','Gâchette appuyée ?'],
+   q:`On ne doit pouvoir recharger qu'une fois les ${N} tirs faits. Quel test faut-il faire d'abord ?`,
+   wrong:['munitions > 0 ?',`munitions = ${N} ?`,'Gâchette appuyée ?'],
    hint:"Le rechargement n'est autorisé que si le chargeur est complètement vide."},
   {id:11,type:'diamond',cx:280,cy:1040,label:['Bouton recharger','appuyé ?'],
    q:"Le chargeur est vide. Quel test permet de le remplir à nouveau ?",
    wrong:['Gâchette appuyée ?','munitions > 0 ?','Laser éteint ?'],
    hint:"C'est le deuxième bouton du pistolet qui sert à recharger."},
-  {id:12,type:'rect',cx:280,cy:1145,label:['munitions = 3'],
+  {id:12,type:'rect',cx:280,cy:1145,label:[`munitions = ${N}`],
    q:"Le bouton recharger est appuyé. Que devient la variable munitions ?",
    wrong:['munitions = 0','munitions = munitions − 1','Allumer le laser'],
-   hint:"Recharger remet le chargeur à son maximum : 3."}
+   hint:`Recharger remet le chargeur à son maximum : ${N}.`}
 ];
 
 const EDGES = [
@@ -1499,34 +1552,29 @@ const EDGES = [
 const DOTS = [[280,760],[280,860],[280,1200],[460,1200],[280,150]];
 
 /* ---------- Programme Arduino (numéro de bloc, texte) ---------- */
+const LEDS = Array.from({length:N}, (_, i) => i + 1);
 const CODE = [
- [0,'// Pistolet laser : 3 tirs, 3 LED, gâchette et rechargement'],
+ [0,`// Pistolet laser : ${N} tirs, ${N} LED, gâchette et rechargement`],
  [0,'// Carte : Arduino Nano'],
  [0,''],
  [0,'const int GACHETTE = 2;   // bouton gâchette'],
  [0,'const int RECHARGE = 3;   // bouton recharger'],
- [0,'const int LED1 = 4;'],
- [0,'const int LED2 = 5;'],
- [0,'const int LED3 = 6;'],
- [0,'const int LASER = 8;      // module laser'],
+ ...LEDS.map(i => [0, `const int LED${i} = ${3 + i};`]),
+ [0,`const int LASER = ${LP};      // module laser`],
  [0,''],
  [0,'int munitions;            // nombre de tirs restants'],
  [0,''],
  [0,'void setup() {'],
  [0,'  pinMode(GACHETTE, INPUT_PULLUP);'],
  [0,'  pinMode(RECHARGE, INPUT_PULLUP);'],
- [0,'  pinMode(LED1, OUTPUT);'],
- [0,'  pinMode(LED2, OUTPUT);'],
- [0,'  pinMode(LED3, OUTPUT);'],
+ ...LEDS.map(i => [0, `  pinMode(LED${i}, OUTPUT);`]),
  [0,'  pinMode(LASER, OUTPUT);'],
- [1,'  munitions = 3;                        // chargeur plein'],
+ [1,`  munitions = ${N};                        // chargeur plein`],
  [0,'}'],
  [0,''],
  [0,'void loop() {'],
  [2,'  // Afficher les munitions sur les LED'],
- [2,'  digitalWrite(LED1, munitions >= 1);'],
- [2,'  digitalWrite(LED2, munitions >= 2);'],
- [2,'  digitalWrite(LED3, munitions >= 3);'],
+ ...LEDS.map(i => [2, `  digitalWrite(LED${i}, munitions >= ${i});`]),
  [0,''],
  [3,'  if (digitalRead(GACHETTE) == LOW) {    // gâchette appuyée'],
  [4,'    if (munitions > 0) {'],
@@ -1541,7 +1589,7 @@ const CODE = [
  [0,''],
  [10,'  if (munitions == 0) {                   // chargeur vide ?'],
  [11,'    if (digitalRead(RECHARGE) == LOW) {  // recharger appuyé'],
- [12,'      munitions = 3;'],
+ [12,`      munitions = ${N};`],
  [11,'    }'],
  [10,'  }'],
  [0,'}']
@@ -1634,12 +1682,100 @@ const HEX = `:100000000C9461000C9473000C9473000C947300B6
 :10054000CF91089580E090E0FACF0895F894FFCF1E
 :00000001FF`;
 
-return {NODES, EDGES, DOTS, CODE, HEX, key:'pistolet-laser-v2', doneMsg:'Appuie sur la gâchette !', annos:[
+const HEX5 = `:100000000C9461000C9473000C9473000C947300B6
+:100010000C9473000C9473000C9473000C94730094
+:100020000C9473000C9473000C9473000C94730084
+:100030000C9473000C9473000C9473000C94730074
+:100040000C949A010C9473000C9473000C9473003C
+:100050000C9473000C9473000C9473000C94730054
+:100060000C9473000C947300000000002300260021
+:10007000290000000008000201000003040700003E
+:1000800000000000000000000000250028002B00F8
+:1000900000000000240027002A00040404040404D3
+:1000A0000404020202020202030303030303010227
+:1000B00004081020408001020408102001020408F6
+:1000C000102011241FBECFEFD8E0DEBFCDBF21E04E
+:1000D000A0E0B1E001C01D92AB30B207E1F70E9491
+:1000E000E2010C94B4020C9400003FB7F8948091A4
+:1000F000020190910301A0910401B091050126B580
+:10010000A89B05C02F3F19F00196A11DB11D3FBF4F
+:10011000BA2FA92F982F8827BC01CD01620F711D1E
+:10012000811D911D42E0660F771F881F991F4A9518
+:10013000D1F708954F925F926F927F928F929F9224
+:10014000AF92BF92CF92DF92EF92FF920F931F93E5
+:10015000CF93DF938B01D82FC92F0E947500262FD4
+:10016000822E972E5C016801ED2EFC2E05C0C11475
+:10017000D104E104F10409F10E9475002B013C0156
+:10018000481859086A087B088601DE2DCF2D31E01A
+:10019000C31AD108E108F108282D792DC50138EEE0
+:1001A000830E33E0931EA11CB11C38EE431633E0DE
+:1001B000530661047104D8F6D3CFDF91CF911F911C
+:1001C0000F91FF90EF90DF90CF90BF90AF909F90F6
+:1001D0008F907F906F905F904F900895CF93DF93B3
+:1001E00090E0FC01E255FF4F249186569F4FFC01A1
+:1001F00084918115D1F090E0880F991FFC01E057A0
+:10020000FF4FA591B591FC01EA57FF4FC591D591DC
+:100210009FB7623069F4F8943C91822F80958323D4
+:100220008C938881822B88839FBFDF91CF91089523
+:10023000F8948C91822B8C93F7CF843081F050F41A
+:100240008230A9F0833079F4809180008F77809399
+:1002500080000895873071F0883091F00895809182
+:1002600080008F7DF4CF84B58F7784BD089584B5E9
+:100270008F7DFBCF8091B0008F778093B000089581
+:100280008091B0008F7DF9CF1F93CF93DF93162F0E
+:10029000282F30E0F901EE58FF4F8491F901E25523
+:1002A000FF4FD491F901E656FF4FC491C115A1F05B
+:1002B00081110E941D01EC2FF0E0EE0FFF1FEA57A5
+:1002C000FF4FA591B5919FB7F8948C91111108C07B
+:1002D000D095D823DC939FBFDF91CF911F910895D4
+:1002E0008D2B8C93F8CFCF93DF93282F30E0F9013B
+:1002F000EE58FF4F8491F901E255FF4FD491F90177
+:10030000E656FF4FC491C11581F081110E941D0175
+:10031000EC2FF0E0EE0FFF1FE859FF4FA591B591CC
+:10032000EC91ED2381E0E11101C080E090E0DF91EC
+:10033000CF9108951F921FB61F9211242F933F93C0
+:100340008F939F93AF93BF93809107019091080182
+:10035000A0910901B0910A013091060123E0230F19
+:100360002D3750F50196A11DB11D209306018093F4
+:10037000070190930801A0930901B0930A018091AD
+:10038000020190910301A0910401B0910501019631
+:10039000A11DB11D8093020190930301A09304015C
+:1003A000B0930501BF91AF919F918F913F912F9194
+:1003B0001F901FBE1F90189526E8230F0296A11DBF
+:1003C000B11DD3CF789484B5826084BD84B581603B
+:1003D00084BD85B5826085BD85B5816085BD809110
+:1003E0006E00816080936E00109281008091810088
+:1003F0008260809381008091810081608093810080
+:10040000809180008160809380008091B100846041
+:100410008093B1008091B00081608093B0008091A2
+:100420007A00846080937A0080917A008260809361
+:100430007A0080917A00816080937A0080917A00BE
+:10044000806880937A001092C10062E082E00E948E
+:10045000EE0062E083E00E94EE0061E084E00E9432
+:10046000EE0061E085E00E94EE0061E086E00E941F
+:10047000EE0061E087E00E94EE0061E088E00E940B
+:10048000EE0061E089E00E94EE0085E090E090934C
+:1004900001018093000100E010E085E0E82EF12CDE
+:1004A000C0910001D091010161E01C161D060CF005
+:1004B00060E084E00E94440161E0C230D1050CF4A8
+:1004C00060E085E00E94440161E0C330D1050CF496
+:1004D00060E086E00E94440161E0C430D1050CF484
+:1004E00060E087E00E94440161E0C530D1050CF472
+:1004F00060E088E00E94440182E00E947301892B41
+:1005000009F51C161D069CF461E089E00E94440177
+:1005100068EC70E080E090E00E949A0060E089E082
+:100520000E9444012197D0930101C093000182E011
+:100530000E947301892BD9F362E370E080E090E0C0
+:100540000E949A00CD2B49F483E00E947301892B0D
+:1005500021F4F0920101E09200010115110509F466
+:0C0560009FCF0E9400009CCFF894FFCFBA
+:00000001FF`;
+return {NODES, EDGES, DOTS, CODE, HEX: N === 5 ? HEX5 : HEX, key:'pistolet-laser-v2', doneMsg:'Appuie sur la gâchette !', annos:[
   {x:410, y:114, t:'setup() · 1 seule fois'}, {x:410, y:194, t:'loop() · répété sans fin'},
   {x:22, y:680, t:'retour au début de loop()', rot:true}]};
 })();
 function PistolSim(prog){
-const trace = prog.trace, $ = id => document.getElementById(id);
+const trace = prog.trace, $ = id => document.getElementById(id), N = NB.p, IDX = [...Array(N).keys()];
 /* ---------- Simulation ---------- */
 const cv = $('sim'), ctx = cv.getContext('2d');
 let W = 0, H = 0;
@@ -1651,7 +1787,7 @@ function resize(){
 }
 new ResizeObserver(resize).observe(cv); resize();
 
-const sim = { ammo:3, aim:0, ang:null, targets:[0,1,2].map(()=>({hit:false, t:0})), beamUntil:0, trigAt:-1e9, reloadAt:-1e9, busy:false, sound:true };
+const sim = { ammo:N, aim:0, ang:null, targets:IDX.map(()=>({hit:false, t:0})), beamUntil:0, trigAt:-1e9, reloadAt:-1e9, busy:false, sound:true };
 let actx = null;
 function beep(kind){
   if (!sim.sound) return;
@@ -1669,8 +1805,8 @@ function geo(){
   const s = Math.max(.55, Math.min(1.1, W/760));
   const floorY = H*.8;
   const bx0 = W*.52, bx1 = W*.96, by = H*.36, bh = Math.max(58, 76*s);
-  const r = Math.min(bh*.3, (bx1-bx0)/3*.3);
-  const discs = [0,1,2].map(i => ({x: bx0 + (bx1-bx0)*(i+.5)/3, y: by}));
+  const r = Math.min(bh*.3, (bx1-bx0)/N*.3);
+  const discs = IDX.map(i => ({x: bx0 + (bx1-bx0)*(i+.5)/N, y: by}));
   return { s, floorY, bx0, bx1, by, bh, r, discs, gx: W*.12, gy: H*.62 };
 }
 function rr(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x,y,w,h,r) : ctx.rect(x,y,w,h); }
@@ -1751,13 +1887,13 @@ function draw(now){
   rr(20-5*tp,-4,7,17,3); ctx.fillStyle = '#e0304a'; ctx.fill();
   const rp = Math.max(0, 1-(now-sim.reloadAt)/300);
   ctx.beginPath(); ctx.arc(72,-19,6.5-1.5*rp,0,Math.PI*2); ctx.fillStyle = rp>0 ? '#8fd8ff' : '#2f8fd0'; ctx.fill();
-  for (let i=0;i<3;i++){
-    const on = i < sim.ammo;
+  for (let i=0;i<N;i++){
+    const on = i < sim.ammo, lx = N === 5 ? -27+i*13 : -22+i*17;
     ctx.save();
     if (on) { ctx.shadowColor = '#3cff8f'; ctx.shadowBlur = 10; }
-    ctx.beginPath(); ctx.arc(-22+i*17,-19,5,0,Math.PI*2); ctx.fillStyle = on ? '#3cff8f' : '#1c2a24'; ctx.fill();
+    ctx.beginPath(); ctx.arc(lx,-19,5,0,Math.PI*2); ctx.fillStyle = on ? '#3cff8f' : '#1c2a24'; ctx.fill();
     ctx.restore();
-    ctx.beginPath(); ctx.arc(-22+i*17,-19,5,0,Math.PI*2); ctx.strokeStyle = '#11191e'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(lx,-19,5,0,Math.PI*2); ctx.strokeStyle = '#11191e'; ctx.lineWidth = 1; ctx.stroke();
   }
   ctx.restore();
 
@@ -1772,7 +1908,7 @@ function updateReadout(){
 }
 function setAim(i){
   sim.aim = i;
-  [0,1,2].forEach(k => $('aim'+k).setAttribute('aria-pressed', k===i ? 'true' : 'false'));
+  IDX.forEach(k => $('aim'+k).setAttribute('aria-pressed', k===i ? 'true' : 'false'));
 }
 function fire(){
   if (sim.busy) return;
@@ -1786,7 +1922,7 @@ function fire(){
     sim.ammo--;
     updateReadout();
     const hits = sim.targets.filter(t=>t.hit).length;
-    if (hits === 3 && !already) setMsg('Les 3 cibles sont touchées ! Relève-les pour recommencer.');
+    if (hits === N && !already) setMsg(`Les ${N} cibles sont touchées ! Relève-les pour recommencer.`);
     else if (already) setMsg(`Cible ${sim.aim+1} déjà touchée : tir perdu. Il reste ${sim.ammo} tir${sim.ammo>1?'s':''}.`);
     else setMsg(`Cible ${sim.aim+1} touchée. Il reste ${sim.ammo} tir${sim.ammo>1?'s':''}.`);
   } else {
@@ -1803,14 +1939,14 @@ function reload(){
     return;
   }
   trace([3,10,11,12,2]); beep('reload');
-  sim.ammo = 3; updateReadout();
-  setMsg('Rechargé : munitions = 3, les 3 LED sont allumées.');
+  sim.ammo = N; updateReadout();
+  setMsg(`Rechargé : munitions = ${N}, les ${N} LED sont allumées.`);
 }
 $('fireBtn').addEventListener('click', fire);
 $('reloadBtn').addEventListener('click', reload);
 $('resetTargets').addEventListener('click', () => { sim.targets.forEach(t => t.hit = false); updateReadout(); setMsg('Cibles relevées.'); });
 $('soundBtn').addEventListener('click', e => { sim.sound = !sim.sound; e.currentTarget.textContent = 'Son : ' + (sim.sound ? 'oui' : 'non'); e.currentTarget.setAttribute('aria-pressed', sim.sound); });
-[0,1,2].forEach(i => $('aim'+i).addEventListener('click', () => setAim(i)));
+IDX.forEach(i => { $('aim'+i).hidden = false; }); IDX.forEach(i => $('aim'+i).addEventListener('click', () => setAim(i)));
 cv.addEventListener('click', e => {
   const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, G = geo();
   let best = -1, bd = 1e9;
@@ -1825,63 +1961,65 @@ document.addEventListener('keydown', e => {
   if (e.target.classList && e.target.classList.contains('node')) return;
   if (e.code === 'Space' && tag !== 'button') { e.preventDefault(); fire(); }
   else if (e.key === 'r' || e.key === 'R') reload();
-  else if (e.key === '1' || e.key === '2' || e.key === '3') setAim(+e.key - 1);
+  else if (/^[1-9]$/.test(e.key) && +e.key <= N) setAim(+e.key - 1);
   else if (e.target === cv && e.key === 'ArrowLeft') setAim(Math.max(0, sim.aim-1));
-  else if (e.target === cv && e.key === 'ArrowRight') setAim(Math.min(2, sim.aim+1));
+  else if (e.target === cv && e.key === 'ArrowRight') setAim(Math.min(N-1, sim.aim+1));
 });
 
+if (N === 5) cv.setAttribute('aria-label', 'Stand de tir : pistolet à gauche, cinq cibles à droite. Clique sur une cible pour viser.');
 updateReadout();
 }
 const CIBLES_CFG = (() => {
+const N = NB.c;
 /* ---------- Organigramme des cibles ---------- */
 const NODES = [
-  {id:1,type:'rect',cx:280,cy:110,label:['Ouvrir les 3 cibles'],
+  {id:1,type:'rect',cx:280,cy:110,label:[`Ouvrir les ${N} cibles`],
    q:"Au démarrage, dans quelle position faut-il mettre les cibles ?",
-   wrong:['Fermer les 3 cibles','Allumer les 3 LED','Attendre un tir'],
-   hint:"Au début de la partie, les 3 cibles doivent être visibles pour qu'on puisse tirer dessus."},
-  {id:2,type:'rect',cx:280,cy:175,label:['Éteindre les 3 LED'],
+   wrong:[`Fermer les ${N} cibles`,`Allumer les ${N} LED`,'Attendre un tir'],
+   hint:`Au début de la partie, les ${N} cibles doivent être visibles pour qu'on puisse tirer dessus.`},
+  {id:2,type:'rect',cx:280,cy:175,label:[`Éteindre les ${N} LED`],
    q:"Aucune cible n'est encore touchée. Que doivent faire les LED ?",
-   wrong:['Allumer les 3 LED','Faire clignoter les LED','Fermer les 3 cibles'],
+   wrong:[`Allumer les ${N} LED`,'Faire clignoter les LED',`Fermer les ${N} cibles`],
    hint:"Une LED allumée signale une cible touchée."},
   {id:3,type:'rect',cx:280,cy:240,label:['Mesurer la lumière','ambiante des capteurs'],
    q:"Pour reconnaître un tir, le programme doit connaître la lumière normale de la salle. Que fait-il ?",
-   wrong:['Allumer le laser','Mesurer la température','Fermer les 3 cibles'],
+   wrong:['Allumer le laser','Mesurer la température',`Fermer les ${N} cibles`],
    hint:"Chaque mesure sera ensuite comparée à cette lumière de repos : un tir laser la fait varier fortement."},
   {id:4,type:'diamond',cx:280,cy:335,label:['Bouton RAZ','appuyé ?'],
    q:"Quel test permet de relancer une partie ?",
-   wrong:['Lumière détectée ?','Cible fermée ?','i < 3 ?'],
+   wrong:['Lumière détectée ?','Cible fermée ?',`i < ${N} ?`],
    hint:"Le bouton de remise à zéro (RAZ) remet les cibles en jeu."},
   {id:5,type:'rect',cx:280,cy:435,label:['Ouvrir les cibles','une par une'],
    q:"Le bouton RAZ est appuyé. Comment rouvrir les cibles sans faire chuter la tension d'alimentation ?",
-   wrong:['Ouvrir les 3 cibles en même temps','Fermer les 3 cibles','Couper l’alimentation'],
-   hint:"Trois servomoteurs qui démarrent ensemble demandent beaucoup de courant : on les fait bouger l'un après l'autre."},
-  {id:6,type:'rect',cx:280,cy:500,label:['Éteindre les 3 LED'],
+   wrong:[`Ouvrir les ${N} cibles en même temps`,`Fermer les ${N} cibles`,'Couper l’alimentation'],
+   hint:`${N === 5 ? 'Cinq' : 'Trois'} servomoteurs qui démarrent ensemble demandent beaucoup de courant : on les fait bouger l'un après l'autre.`},
+  {id:6,type:'rect',cx:280,cy:500,label:[`Éteindre les ${N} LED`],
    q:"Les cibles sont rouvertes. Que deviennent les LED ?",
-   wrong:['Allumer les 3 LED','Allumer la LED de la cible 0','Ne rien changer'],
+   wrong:[`Allumer les ${N} LED`,'Allumer la LED de la cible 0','Ne rien changer'],
    hint:"La partie recommence : aucune cible n'est touchée."},
   {id:7,type:'rect',cx:280,cy:585,label:['i = 0'],
    q:"On va examiner les cibles une par une. Avec quel numéro commence-t-on ?",
-   wrong:['i = 3','i = i + 1','i = 1 + 1'],
-   hint:"En programmation, on numérote souvent à partir de 0 : les cibles sont 0, 1 et 2."},
-  {id:8,type:'diamond',cx:280,cy:680,label:['i < 3 ?'],
+   wrong:[`i = ${N}`,'i = i + 1','i = 1 + 1'],
+   hint:`En programmation, on numérote souvent à partir de 0 : les cibles ${N === 5 ? 'vont de 0 à 4' : 'sont 0, 1 et 2'}.`},
+  {id:8,type:'diamond',cx:280,cy:680,label:[`i < ${N} ?`],
    q:"Quel test vérifie qu'il reste encore une cible à examiner ?",
-   wrong:['i = 3 ?','i > 3 ?','Bouton RAZ appuyé ?'],
-   hint:"Les cibles portent les numéros 0, 1 et 2 : on continue tant que i est plus petit que 3."},
+   wrong:[`i = ${N} ?`,`i > ${N} ?`,'Bouton RAZ appuyé ?'],
+   hint:`Les cibles portent les numéros ${N === 5 ? '0 à 4' : '0, 1 et 2'} : on continue tant que i est plus petit que ${N}.`},
   {id:9,type:'diamond',cx:280,cy:800,label:['Lumière détectée','sur le capteur i ?'],
    q:"Comment savoir si la cible i vient d'être touchée ?",
    wrong:['Cible i fermée ?','LED i allumée ?','Bouton RAZ appuyé ?'],
    hint:"Le faisceau laser fait varier fortement la lumière mesurée par le capteur de la cible."},
   {id:10,type:'rect',cx:280,cy:905,label:['Fermer la cible i','(servo à 90°)'],
    q:"La cible i est touchée. Que fait son servomoteur ?",
-   wrong:['Ouvrir la cible i (servo à 0°)','Fermer les 3 cibles','Attendre 5 s'],
+   wrong:['Ouvrir la cible i (servo à 0°)',`Fermer les ${N} cibles`,'Attendre 5 s'],
    hint:"La cible touchée se rabat : son servomoteur tourne à 90°."},
   {id:11,type:'rect',cx:280,cy:970,label:['Allumer la LED i'],
    q:"Comment montrer que la cible i est touchée ?",
-   wrong:['Éteindre la LED i','Allumer les 3 LED','Mesurer la lumière ambiante'],
+   wrong:['Éteindre la LED i',`Allumer les ${N} LED`,'Mesurer la lumière ambiante'],
    hint:"Chaque cible a sa propre LED : on allume celle de la cible touchée."},
   {id:12,type:'rect',cx:280,cy:1060,label:['i = i + 1'],
    q:"La cible i est traitée. Comment passer à la suivante ?",
-   wrong:['i = 0','i = i − 1','i = 3'],
+   wrong:['i = 0','i = i − 1',`i = ${N}`],
    hint:"On ajoute 1 au numéro de la cible."}
 ];
 const EDGES = [
@@ -1906,48 +2044,48 @@ const DOTS = [[280,285],[280,545],[280,622],[280,1015]];
 
 /* ---------- Programme Arduino (numéro de bloc, texte) ---------- */
 const CODE = [
- [0,'// Cibles laser : 3 cibles, 3 capteurs de lumière, 3 servomoteurs'],
+ [0,`// Cibles laser : ${N} cibles, ${N} capteurs de lumière, ${N} servomoteurs`],
  [0,'// Carte : Arduino Nano'],
  [0,'#include <Servo.h>'],
  [0,''],
  [0,'const int BOUTON_RAZ = 2;                  // bouton de remise à zéro'],
- [0,'const int LED[3] = {4, 5, 6};              // une LED par cible'],
- [0,'const int CAPTEUR[3] = {A0, A1, A2};       // modules KY-018'],
- [0,'const int BROCHE_SERVO[3] = {9, 10, 11};   // servomoteurs SG90'],
+ [0,`const int LED[${N}] = {${N === 5 ? '4, 5, 6, 7, 8' : '4, 5, 6'}};              // une LED par cible`],
+ [0,`const int CAPTEUR[${N}] = {${N === 5 ? 'A0, A1, A2, A3, A4' : 'A0, A1, A2'}};       // modules KY-018`],
+ [0,`const int BROCHE_SERVO[${N}] = {${N === 5 ? '9, 10, 11, 12, 13' : '9, 10, 11'}};   // servomoteurs SG90`],
  [0,'const int OUVERTE = 0;                     // angle : cible ouverte'],
  [0,'const int FERMEE = 90;                     // angle : cible fermée'],
  [0,'const int ECART = 150;                     // variation de lumière d\'un tir'],
  [0,''],
- [0,'Servo servo[3];'],
- [0,'int repos[3];                              // lumière ambiante'],
+ [0,`Servo servo[${N}];`],
+ [0,`int repos[${N}];                              // lumière ambiante`],
  [0,''],
  [0,'void setup() {'],
  [0,'  pinMode(BOUTON_RAZ, INPUT_PULLUP);'],
- [0,'  for (int c = 0; c < 3; c++) {'],
+ [0,`  for (int c = 0; c < ${N}; c++) {`],
  [0,'    pinMode(LED[c], OUTPUT);'],
  [0,'    servo[c].attach(BROCHE_SERVO[c]);'],
  [1,'    servo[c].write(OUVERTE);'],
  [1,'    delay(300);                             // une cible à la fois'],
  [2,'    digitalWrite(LED[c], LOW);'],
  [0,'  }'],
- [3,'  for (int c = 0; c < 3; c++) {'],
+ [3,`  for (int c = 0; c < ${N}; c++) {`],
  [3,'    repos[c] = analogRead(CAPTEUR[c]);'],
  [3,'  }'],
  [0,'}'],
  [0,''],
  [0,'void loop() {'],
  [4,'  if (digitalRead(BOUTON_RAZ) == LOW) {      // RAZ appuyé'],
- [5,'    for (int c = 0; c < 3; c++) {'],
+ [5,`    for (int c = 0; c < ${N}; c++) {`],
  [5,'      servo[c].write(OUVERTE);'],
  [5,'      delay(300);                           // une cible à la fois'],
  [5,'    }'],
- [6,'    for (int c = 0; c < 3; c++) {'],
+ [6,`    for (int c = 0; c < ${N}; c++) {`],
  [6,'      digitalWrite(LED[c], LOW);'],
  [6,'    }'],
  [4,'  }'],
  [0,''],
  [7,'  int i = 0;'],
- [8,'  while (i < 3) {'],
+ [8,`  while (i < ${N}) {`],
  [9,'    int lumiere = analogRead(CAPTEUR[i]);'],
  [9,'    if (abs(lumiere - repos[i]) > ECART) {  // tir détecté'],
  [10,'      servo[i].write(FERMEE);'],
@@ -2148,13 +2286,174 @@ const HEX = `:100000000C9462000C948A000C948A000C948A0070
 :100BBC000109000A000B000E000F001000040005D4
 :040BCC00000600001F
 :00000001FF`;
-return {NODES, EDGES, DOTS, CODE, HEX, key:'cibles-laser-v1', doneMsg:'Mets l\u2019interrupteur sur marche et tire sur une cible !', annos:[
+{ const re = /^(const int (?:LED|CAPTEUR|BROCHE_SERVO)\[.*?;)\s+(\/\/.*)$/, ms = CODE.map(c => c[1].match(re)), col = Math.max(43, ...ms.filter(Boolean).map(m => m[1].length + 3));
+  ms.forEach((m, i) => { if (m) CODE[i][1] = m[1].padEnd(col) + m[2]; }); }
+const HEX5 = `:100000000C9462000C948A000C948A000C948A0070
+:100010000C948A000C948A000C948A000C948A0038
+:100020000C948A000C948A000C948A000C9445026B
+:100030000C948A000C948A000C948A000C948A0018
+:100040000C94FD010C948A000C948A000C948A0094
+:100050000C948A000C948A000C948A000C948A00F8
+:100060000C948A000C948A000000000023002600F3
+:10007000290000000008000201000003040700003E
+:1000800000000000000000000000250028002B00F8
+:1000900000000000240027002A00040404040404D3
+:1000A0000404020202020202030303030303010227
+:1000B00004081020408001020408102001020408F6
+:1000C0001020FC0211241FBECFEFD8E0DEBFCDBF51
+:1000D00021E0AEE1B1E001C01D92A636B207E1F722
+:1000E00011E0A0E0B1E0E0ECF9E002C005900D9273
+:1000F000AE31B107D9F710E0C2E6D0E004C02197D5
+:10010000FE010E948804C136D107C9F70E941E0370
+:100110000C94DE040C9400003FB7F8948091290100
+:1001200090912A01A0912B01B0912C0126B5A89B9A
+:1001300005C02F3F19F00196A11DB11D3FBFBA2F79
+:10014000A92F982F8827BC01CD01620F711D811D39
+:10015000911D42E0660F771F881F991F4A95D1F7BE
+:1001600008958E3008F08E508770806480937C00F4
+:1001700080917A00806480937A0080917A0086FD75
+:10018000FCCF80917800909179000895CF93DF9310
+:1001900090E0FC01E255FF4F249186569F4FFC01F1
+:1001A00084918115D1F090E0880F991FFC01E057F0
+:1001B000FF4FA591B591FC01EA57FF4FC591D5912D
+:1001C0009FB7623069F4F8943C91822F8095832325
+:1001D0008C938881822B88839FBFDF91CF91089574
+:1001E000F8948C91822B8C93F7CF843081F050F46B
+:1001F0008230A9F0833079F4809180008F778093EA
+:1002000080000895873071F0883091F008958091D2
+:1002100080008F7DF4CF84B58F7784BD089584B539
+:100220008F7DFBCF8091B0008F778093B0000895D1
+:100230008091B0008F7DF9CF1F93CF93DF93162F5E
+:10024000282F30E0F901EE58FF4F8491F901E25573
+:10025000FF4FD491F901E656FF4FC491C115A1F0AB
+:1002600081110E94F500EC2FF0E0EE0FFF1FEA571E
+:10027000FF4FA591B5919FB7F8948C91111108C0CB
+:10028000D095D823DC939FBFDF91CF911F91089524
+:100290008D2B8C93F8CF8F929F92AF92BF92FF924B
+:1002A0000F931F93CF93DF93FC01DB01F0808CE071
+:1002B000F81608F049C0828108E512E0081B110910
+:1002C00087FD1395000F111F000F111F8181C8E8D2
+:1002D000D0E0C81BD10987FDD395CC0FDD1FCC0F13
+:1002E000DD1F4E010D2E000CAA08BB089801012E3F
+:1002F000000C440B550B281939094A095B090E9467
+:10030000790424EB30E040E050E00E948E04820E3D
+:10031000931EA41EB51E8C169D062CF0E8018016B7
+:1003200091060CF4E4012297CC0FDD1F2FB7F8944F
+:100330008F2D90E0FC01EE0FFF1FE80FF91FEE5C20
+:10034000FE4FD283C1832FBFDF91CF911F910F91B9
+:10035000FF90BF90AF909F908F9008954F925F92C3
+:100360006F927F928F929F92AF92BF92CF92DF92C5
+:10037000EF92FF920E948C00262F6CE251E040E049
+:1003800030E0822E972E5C01C62ED52EE42EF32E61
+:1003900005C0C114D104E104F10411F10E948C00E4
+:1003A0002B013C01481859086A087B086C2D5D2D0B
+:1003B0004E2D3F2D81E0C81AD108E108F108282D03
+:1003C000792DC501E8EE8E0EE3E09E1EA11CB11C46
+:1003D000E8EE4E16E3E05E0661047104D0F6D1CF7C
+:1003E000FF90EF90DF90CF90BF90AF909F908F9055
+:1003F0007F906F905F904F9008951F921FB61F924D
+:1004000011242F933F938F939F93AF93BF9380912A
+:100410002E0190912F01A0913001B09131013091C6
+:100420002D0123E0230F2D3750F50196A11DB11D9D
+:1004300020932D0180932E0190932F01A0933001E2
+:10044000B09331018091290190912A01A0912B0153
+:10045000B0912C010196A11DB11D809329019093AB
+:100460002A01A0932B01B0932C01BF91AF919F91D2
+:100470008F913F912F911F901FBE1F90189526E8D6
+:10048000230F0296A11DB11DD3CF1F920F920FB65D
+:100490000F9211242F933F934F935F936F937F930A
+:1004A0008F939F93AF93BF93CF93DF93EF93FF937C
+:1004B00080911E01C0915601D0E087FF24C01092A8
+:1004C00085001092840080911E018F5F80931E0131
+:1004D00080911E01082E001C00088C170D0624F4C4
+:1004E00080911E018C30B4F1809184009091850040
+:1004F000049680349C4908F475C0809184009091E2
+:100500008500049671C080911E01082E001C000811
+:100510008C170D06C4F680911E01E82FEE0FFF0B1D
+:10052000E80FF11D87FDFA95EE5CFE4F808186FF96
+:10053000CACF80911E01E82FEE0FFF0BE80FF11DCF
+:1005400087FDFA95EE5CFE4F808160E08F730E941C
+:100550001C01B9CF809184009091850020911E01EB
+:10056000E22FEE0FFF0BE20FF11D27FDFA95EE5C77
+:10057000FE4F21813281820F931F909389008093D7
+:10058000880080911E01E82FEE0FFF0BE80FF11D90
+:1005900087FDFA95EE5CFE4F808186FF10C080914A
+:1005A0001E01E82FEE0FFF0BE80FF11D87FDFA95F6
+:1005B000EE5CFE4F808161E08F730E941C01FF9111
+:1005C000EF91DF91CF91BF91AF919F918F917F91EB
+:1005D0006F915F914F913F912F910F900FBE0F90B0
+:1005E0001F90189580E49CE990938900809388007F
+:1005F0008FEF80931E01E3CF80915601E7E5F1E094
+:100600009FEF48EB5BE08C30B8F48083282F30E01C
+:10061000D901AA0FBB1FA20FB31FAE5CBE4F12962B
+:100620005C934E9311978F5F339621E0E636F20785
+:1006300051F78093560108959083F6CF789484B54E
+:10064000826084BD84B5816084BD85B5826085BDCE
+:1006500085B5816085BD80916E00816080936E005C
+:10066000109281008091810082608093810080914E
+:1006700081008160809381008091800081608093FF
+:1006800080008091B10084608093B1008091B000BF
+:1006900081608093B00080917A00846080937A00BA
+:1006A00080917A00826080937A0080917A008160E4
+:1006B00080937A0080917A00806880937A0010920B
+:1006C000C10062E082E00E94C60000E0C02E01E0AE
+:1006D000D02EC7E5D1E084E1E82E81E0F82E9CE041
+:1006E000A92EF701B080F2E0EF0EF11C61E08B2D36
+:1006F0000E94C60088818C3008F04BC0F6019080C3
+:1007000061E0892D0E94C6002881822F90E0FC01C3
+:10071000EE0FFF1FE80FF91FEE5CFE4F992D9F7340
+:100720008081807C892B808319821A82822F6A2D96
+:100730000E946D04A89EC00111243CE0FC01EE0F54
+:10074000FF1FE80FF91FEE5CFE4F408146FD15C00C
+:10075000315001963111F2CF2C3078F41092800094
+:1007600082E0809381001092850010928400B19AFB
+:1007700080916F00826080936F00888190E0FC011F
+:10078000EE0FFF1FE80FF91FEE5CFE4F80818064C3
+:10079000808360E070E0CE010E944B010E94AE01B8
+:1007A00060E08B2D0E941C012396F2E0CF0ED11C3D
+:1007B0008EE1E81681E0F80609F093CFEFE1EE2E26
+:1007C000E1E0FE2ECAE0D1E0888122960E94B100CD
+:1007D000F701819391937F01F1E0C431DF07A1F725
+:1007E00044E7242E40E0342E50EB452E50E0552EA9
+:1007F0006CE9662E60E0762E70E0872E70E0972E12
+:10080000F1018491F201C491F301D491D1111AC084
+:10081000C7E5D1E060E070E0CE010E944B010E948C
+:10082000AE012396F1E0C636DF07A1F7C4E1D1E0BF
+:100830008881229660E00E941C0181E0CE31D807B9
+:10084000B9F70FC081110E94F500ED2FF0E0EE0F17
+:10085000FF1FE859FF4FA591B5918C91C823C11591
+:10086000B9F284E1E82E81E0F82E97E5C92E91E0F7
+:10087000D92E2FE1A22E21E0B22ECAE0D1E088814C
+:1008800022960E94B1008C01F501219131915F0106
+:10089000821B930B97FF03C0C901801B910B873903
+:1008A000910554F06AE570E0C6010E944B0161E0D9
+:1008B000F70180810E941C01F3E0CF0ED11C82E081
+:1008C000E80EF11CE1E0C431DE07C9F681149104A1
+:1008D00009F496CF0E94000093CF992778E0880F03
+:1008E000991F961708F0961B881F7A95C9F780956F
+:1008F00008950E94CF04332312F48A1B9B0B0C949F
+:1009000083040E94CF04B7FF0895821B930B0895C0
+:10091000EE0FFF1F0590F491E02D0994052E97FB33
+:100920001EF400940E94A50457FD07D00E94AD0458
+:1009300007FC03D04EF40C94A504509540953095D7
+:1009400021953F4F4F4F5F4F08959095809570953B
+:1009500061957F4F8F4F9F4F0895A1E21A2EAA1BDA
+:10096000BB1BFD010DC0AA1FBB1FEE1FFF1FA2175F
+:10097000B307E407F50720F0A21BB30BE40BF50B5C
+:10098000661F771F881F991F1A9469F760957095E5
+:10099000809590959B01AC01BD01CF010895A29F68
+:1009A000B001B39FC001A39F700D811D1124911D43
+:1009B000B29F700D811D1124911D0895F894FFCFF1
+:1009C00009000A000B000C000D000E000F001000C3
+:0E09D0001100120004000500060007000800D8
+:00000001FF`;
+return {NODES, EDGES, DOTS, CODE, HEX: N === 5 ? HEX5 : HEX, key:'cibles-laser-v1', doneMsg:'Mets l\u2019interrupteur sur marche et tire sur une cible !', annos:[
   {x:410, y:179, t:'setup() · 1 seule fois'}, {x:104, y:279, t:'loop() · répété sans fin'},
   {x:540, y:480, t:'retour au début de loop()', rot:true}, {x:48, y:866, t:'cible suivante', rot:true}]};
 })();
 /* ================= Simulation des 3 cibles ================= */
 function CiblesSim(prog){
-const $ = id => document.getElementById('c-' + id), trace = prog.trace;
+const $ = id => document.getElementById('c-' + id), trace = prog.trace, N = NB.c, IDX = [...Array(N).keys()], RD = N*300 + 50;
 const cv = $('sim'), ctx = cv.getContext('2d');
 let W = 0, H = 0;
 function resize(){
@@ -2163,7 +2462,7 @@ function resize(){
 }
 new ResizeObserver(resize).observe(cv); resize();
 
-const T = [0,1,2].map(() => ({angle:0, target:0, led:false, hitAt:-1e9}));
+const T = IDX.map(() => ({angle:0, target:0, led:false, hitAt:-1e9}));
 const S = {power:false, sound:true, beam:null, queue:[], busy:false};
 const SERVO_SPEED = 90 / 280;                        // degrés par ms (≈ 0,28 s pour 90°)
 let actx = null;
@@ -2173,8 +2472,8 @@ function beep(f, d, type = 'square', v = .05){
     o.type = type; o.frequency.setValueAtTime(f, t); o.connect(g); g.connect(actx.destination); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.start(t); o.stop(t + d + .02); } catch(e) {}
 }
 const geo = () => {
-  const r = Math.min(W*.085, H*.17), cy = H*.47;
-  return {r, cy, cx:[.25,.5,.75].map(f => W*f), bx0:W*.1, bx1:W*.9, by0:cy - r - 52, by1:cy + r + 46};
+  const r = Math.min(W*(N === 5 ? .058 : .085), H*.17), cy = H*.47;
+  return {r, cy, cx:(N === 5 ? [.14,.32,.5,.68,.86] : [.25,.5,.75]).map(f => W*f), bx0:W*(N === 5 ? .04 : .1), bx1:W*(N === 5 ? .96 : .9), by0:cy - r - 52, by1:cy + r + 46};
 };
 const moving = () => T.filter(t => Math.abs(t.angle - t.target) > .5).length;
 
@@ -2184,9 +2483,9 @@ function clearQueue(){ S.queue.forEach(clearTimeout); S.queue = []; }
 function powerOn(){
   S.power = true; clearQueue();
   setMsg('Mise sous tension : setup() ouvre les cibles une par une, éteint les LED puis mesure la lumière ambiante.');
-  trace([1,2,1,2,1,2,3]);
+  trace([...IDX.flatMap(() => [1,2]), 3]);
   T.forEach((t, i) => later(i*300, () => { t.target = 0; t.led = false; beep(180, .12, 'sawtooth', .02); }));
-  later(950, () => setMsg('Prêt : clique sur une cible pour tirer.'));
+  later(RD, () => setMsg('Prêt : clique sur une cible pour tirer.'));
 }
 function powerOff(){
   S.power = false; clearQueue(); T.forEach(t => { t.led = false; t.target = t.angle; });
@@ -2207,10 +2506,10 @@ function shoot(i){
 }
 function raz(){
   if (!S.power) { setMsg('Les cibles sont éteintes : mets l’interrupteur sur marche.'); return; }
-  clearQueue(); trace([4,5,5,5,6]);
+  clearQueue(); trace([4, ...IDX.map(() => 5), 6]);
   setMsg('Bouton RAZ : les cibles se rouvrent une par une (300 ms d’écart) pour ne pas demander trop de courant d’un coup.');
   T.forEach((t, i) => later(i*300, () => { t.target = 0; beep(180, .12, 'sawtooth', .02); }));
-  later(950, () => { T.forEach(t => t.led = false); updateReadout(); });
+  later(RD, () => { T.forEach(t => t.led = false); updateReadout(); });
 }
 function setMsg(m){ $('simMsg').textContent = m; }
 function updateReadout(){
@@ -2284,57 +2583,59 @@ $('power').addEventListener('click', e => {
   e.currentTarget.setAttribute('aria-pressed', String(S.power));
 });
 $('raz').addEventListener('click', raz);
-[0,1,2].forEach(i => $('shoot' + i).addEventListener('click', () => shoot(i)));
+IDX.forEach(i => { $('shoot' + i).hidden = false; }); IDX.forEach(i => $('shoot' + i).addEventListener('click', () => shoot(i)));
 $('soundBtn').addEventListener('click', e => { S.sound = !S.sound; e.currentTarget.textContent = 'Son : ' + (S.sound ? 'oui' : 'non'); });
 document.addEventListener('keydown', e => {
   if (cv.offsetParent === null || !document.getElementById('sheet').hidden || /input|textarea/i.test(e.target.tagName)) return;
-  if (['1','2','3'].includes(e.key)) shoot(+e.key - 1);
+  if (/^[1-9]$/.test(e.key) && +e.key <= N) shoot(+e.key - 1);
   else if (e.key === 'r' || e.key === 'R') raz();
 });
+if (N === 5) cv.setAttribute('aria-label', 'Boîtier des cinq cibles. Clique sur une cible pour tirer dessus.');
 updateReadout();
 }
 const CIBLE3_CFG = (() => {
+const N = NB.u;
 /* ---------- Organigramme de la cible 3 LED ---------- */
 const NODES = [
-  {id:1,type:'rect',cx:280,cy:110,label:['vies = 3'],
+  {id:1,type:'rect',cx:280,cy:110,label:[`vies = ${N}`],
    q:"Au démarrage de la carte, combien de vies la cible doit-elle avoir ?",
-   wrong:['vies = 0','vies = vies − 1','Éteindre les 3 LED'],
-   hint:"Au début de la partie, la cible a ses 3 vies : ses 3 LED seront allumées."},
+   wrong:['vies = 0','vies = vies − 1',`Éteindre les ${N} LED`],
+   hint:`Au début de la partie, la cible a ses ${N} vies : ses ${N} LED seront allumées.`},
   {id:2,type:'rect',cx:280,cy:175,label:['Mesurer la lumière','ambiante'],
    q:"Pour reconnaître un tir, le programme doit connaître la lumière normale de la salle. Que fait-il ?",
-   wrong:['Allumer le laser','Attendre un tir','vies = 3'],
+   wrong:['Allumer le laser','Attendre un tir',`vies = ${N}`],
    hint:"Chaque mesure sera comparée à cette lumière de repos : un tir laser la fait varier fortement."},
-  {id:3,type:'rect',cx:280,cy:250,label:['Afficher vies','sur les 3 LED'],
-   q:"Au début de chaque tour de boucle, que doivent montrer les 3 LED ?",
-   wrong:['Allumer les 3 LED','Éteindre les 3 LED','Faire clignoter les LED'],
-   hint:"Les LED servent de jauge de vie : elles suivent la variable vies (3 vies = 3 LED allumées)."},
+  {id:3,type:'rect',cx:280,cy:250,label:['Afficher vies',`sur les ${N} LED`],
+   q:`Au début de chaque tour de boucle, que doivent montrer les ${N} LED ?`,
+   wrong:[`Allumer les ${N} LED`,`Éteindre les ${N} LED`,'Faire clignoter les LED'],
+   hint:`Les LED servent de jauge de vie : elles suivent la variable vies (${N} vies = ${N} LED allumées).`},
   {id:4,type:'diamond',cx:280,cy:350,label:['Bouton RAZ','appuyé ?'],
    q:"Quel test permet de relancer une partie ?",
    wrong:['Lumière détectée ?','vies > 0 ?','Interrupteur sur marche ?'],
-   hint:"Le bouton de remise à zéro (RAZ) redonne ses 3 vies à la cible. L'interrupteur, lui, coupe juste l'alimentation."},
-  {id:5,type:'rect',cx:280,cy:440,label:['vies = 3'],
+   hint:`Le bouton de remise à zéro (RAZ) redonne ses ${N} vies à la cible. L'interrupteur, lui, coupe juste l'alimentation.`},
+  {id:5,type:'rect',cx:280,cy:440,label:[`vies = ${N}`],
    q:"Le bouton RAZ est appuyé. Que devient la variable vies ?",
    wrong:['vies = 0','vies = vies − 1','vies = vies + 1'],
-   hint:"Une nouvelle partie commence : la cible retrouve ses 3 vies."},
+   hint:`Une nouvelle partie commence : la cible retrouve ses ${N} vies.`},
   {id:6,type:'rect',cx:280,cy:505,label:['Attendre 0,3 s'],
    q:"Après la remise à zéro, que faut-il ajouter pour éviter de relancer la partie plusieurs fois d'un seul appui ?",
-   wrong:['Attendre 10 s','Éteindre les 3 LED','Mesurer la lumière ambiante'],
+   wrong:['Attendre 10 s',`Éteindre les ${N} LED`,'Mesurer la lumière ambiante'],
    hint:"Une petite pause laisse le temps de relâcher le bouton."},
   {id:7,type:'diamond',cx:280,cy:640,label:['Lumière détectée','sur le capteur ?'],
    q:"Comment savoir si la cible vient d'être touchée ?",
-   wrong:['Bouton RAZ appuyé ?','vies = 3 ?','LED 1 allumée ?'],
+   wrong:['Bouton RAZ appuyé ?',`vies = ${N} ?`,'LED 1 allumée ?'],
    hint:"Le faisceau laser fait varier fortement la lumière mesurée par le capteur."},
   {id:8,type:'diamond',cx:280,cy:760,label:['vies > 0 ?'],
    q:"La cible est touchée. Que faut-il vérifier avant de lui enlever une vie ?",
-   wrong:['vies = 3 ?','vies < 0 ?','Bouton RAZ appuyé ?'],
+   wrong:[`vies = ${N} ?`,'vies < 0 ?','Bouton RAZ appuyé ?'],
    hint:"Si la cible n'a plus de vie, on ne descend pas en dessous de 0."},
   {id:9,type:'rect',cx:280,cy:850,label:['vies = vies − 1'],
    q:"La cible a encore au moins une vie. Que devient la variable vies ?",
-   wrong:['vies = vies + 1','vies = 0','vies = 3'],
+   wrong:['vies = vies + 1','vies = 0',`vies = ${N}`],
    hint:"Chaque tir reçu coûte une vie : une LED va s'éteindre."},
   {id:10,type:'rect',cx:280,cy:950,label:['Attendre la fin','du tir'],
    q:"Un tir laser dure environ 0,2 s. Que faut-il faire pour qu'il n'enlève qu'une seule vie ?",
-   wrong:['Attendre 5 s','vies = 3','Éteindre les 3 LED'],
+   wrong:['Attendre 5 s',`vies = ${N}`,`Éteindre les ${N} LED`],
    hint:"Sans cette attente, la boucle verrait le même tir plusieurs fois et enlèverait toutes les vies d'un coup."}
 ];
 const EDGES = [
@@ -2356,14 +2657,13 @@ const EDGES = [
 const DOTS = [[280,222],[280,560],[280,900]];
 
 /* ---------- Programme Arduino (numéro de bloc, texte) ---------- */
+const LEDS = Array.from({length:N}, (_, i) => i + 1);
 const CODE = [
- [0,'// Cible laser 3 LED : 1 cible, 3 vies, bouton RAZ'],
+ [0,`// Cible laser ${N} LED : 1 cible, ${N} vies, bouton RAZ`],
  [0,'// Carte : Arduino Nano'],
  [0,''],
  [0,'const int BOUTON_RAZ = 2;   // bouton de remise à zéro'],
- [0,'const int LED1 = 4;'],
- [0,'const int LED2 = 5;'],
- [0,'const int LED3 = 6;'],
+ ...LEDS.map(i => [0, `const int LED${i} = ${3 + i};`]),
  [0,'const int CAPTEUR = A0;     // module KY-018'],
  [0,'const int ECART = 150;      // variation de lumière d\'un tir'],
  [0,''],
@@ -2372,21 +2672,17 @@ const CODE = [
  [0,''],
  [0,'void setup() {'],
  [0,'  pinMode(BOUTON_RAZ, INPUT_PULLUP);'],
- [0,'  pinMode(LED1, OUTPUT);'],
- [0,'  pinMode(LED2, OUTPUT);'],
- [0,'  pinMode(LED3, OUTPUT);'],
- [1,'  vies = 3;                           // 3 vies au départ'],
+ ...LEDS.map(i => [0, `  pinMode(LED${i}, OUTPUT);`]),
+ [1,`  vies = ${N};                           // ${N} vies au départ`],
  [2,'  repos = analogRead(CAPTEUR);        // lumière de la salle'],
  [0,'}'],
  [0,''],
  [0,'void loop() {'],
  [3,'  // Afficher les vies sur les LED'],
- [3,'  digitalWrite(LED1, vies >= 1);'],
- [3,'  digitalWrite(LED2, vies >= 2);'],
- [3,'  digitalWrite(LED3, vies >= 3);'],
+ ...LEDS.map(i => [3, `  digitalWrite(LED${i}, vies >= ${i});`]),
  [0,''],
  [4,'  if (digitalRead(BOUTON_RAZ) == LOW) {    // RAZ appuyé'],
- [5,'    vies = 3;                              // nouvelle partie'],
+ [5,`    vies = ${N};                              // nouvelle partie`],
  [6,'    delay(300);'],
  [4,'  }'],
  [0,''],
@@ -2494,13 +2790,97 @@ const HEX = `:100000000C9461000C947E000C947E000C947E0095
 :0805C0000C94E202F894FFCF55
 :0205C800010030
 :00000001FF`;
-return {NODES, EDGES, DOTS, CODE, HEX, key:'cible3-led-v1', doneMsg:'Mets l’interrupteur sur marche et tire sur la cible !', annos:[
+const HEX5 = `:100000000C9461000C9473000C9473000C947300B6
+:100010000C9473000C9473000C9473000C94730094
+:100020000C9473000C9473000C9473000C94730084
+:100030000C9473000C9473000C9473000C94730074
+:100040000C9430010C9473000C9473000C947300A6
+:100050000C9473000C9473000C9473000C94730054
+:100060000C9473000C947300000000002300260021
+:10007000290000000008000201000003040700003E
+:1000800000000000000000000000250028002B00F8
+:1000900000000000240027002A00040404040404D3
+:1000A0000404020202020202030303030303010227
+:1000B00004081020408001020408102001020408F6
+:1000C000102011241FBECFEFD8E0DEBFCDBF21E04E
+:1000D000A0E0B1E001C01D92AD30B207E1F70E948F
+:1000E00078010C9490020C9400003FB7F894809132
+:1000F000040190910501A0910601B091070126B578
+:10010000A89B05C02F3F19F00196A11DB11D3FBF4F
+:10011000BA2FA92F982F8827BC01CD01620F711D1E
+:10012000811D911D42E0660F771F881F991F4A9518
+:10013000D1F70895CF93DF9390E0FC01E255FF4F94
+:10014000249186569F4FFC0184918115D1F090E057
+:10015000880F991FFC01E057FF4FA591B591FC0155
+:10016000EA57FF4FC591D5919FB7623069F4F89473
+:100170003C91822F809583238C938881822B888366
+:100180009FBFDF91CF910895F8948C91822B8C932F
+:10019000F7CF843081F050F48230A9F0833079F4C5
+:1001A000809180008F77809380000895873071F070
+:1001B000883091F00895809180008F7DF4CF84B5D0
+:1001C0008F7784BD089584B58F7DFBCF8091B0007B
+:1001D0008F778093B00008958091B0008F7DF9CF24
+:1001E0001F93CF93DF93162F282F30E0F901EE589D
+:1001F000FF4F8491F901E255FF4FD491F901E65682
+:10020000FF4FC491C115A1F081110E94C900EC2FCC
+:10021000F0E0EE0FFF1FEA57FF4FA591B5919FB792
+:10022000F8948C91111108C0D095D823DC939FBF0E
+:10023000DF91CF911F9108958D2B8C93F8CF80E49F
+:1002400080937C0080917A00806480937A00809112
+:100250007A0086FDFCCF8091780090917900089516
+:100260001F921FB61F9211242F933F938F939F933A
+:10027000AF93BF938091090190910A01A0910B0166
+:10028000B0910C013091080123E0230F2D3750F578
+:100290000196A11DB11D209308018093090190933F
+:1002A0000A01A0930B01B0930C018091040190917D
+:1002B0000501A0910601B09107010196A11DB11D94
+:1002C0008093040190930501A0930601B093070168
+:1002D000BF91AF919F918F913F912F911F901FBE22
+:1002E0001F90189526E8230F0296A11DB11DD3CFAC
+:1002F000789484B5826084BD84B5816084BD85B501
+:10030000826085BD85B5816085BD80916E0081600C
+:1003100080936E00109281008091810082608093B2
+:1003200081008091810081608093810080918000B4
+:100330008160809380008091B10084608093B100DF
+:100340008091B00081608093B00080917A008460D9
+:1003500080937A0080917A00826080937A00809105
+:100360007A00816080937A0080917A00806880931F
+:100370007A001092C10062E082E00E949A0061E07F
+:1003800084E00E949A0061E085E00E949A0061E0AA
+:1003900086E00E949A0061E087E00E949A0061E096
+:1003A00088E00E949A0085E090E09093030180939A
+:1003B00002010E941F01909301018093000120EB34
+:1003C000622E20E0722E3CE9832E30E0932E40E036
+:1003D000A42E40E0B42EC0910201D091030161E04F
+:1003E0001C161D060CF060E084E00E94F00061E045
+:1003F000C230D1050CF460E085E00E94F00061E0BD
+:10040000C330D1050CF460E086E00E94F00061E0AA
+:10041000C430D1050CF460E087E00E94F00061E098
+:1004200025970CF460E088E00E94F000E4E7F0E03B
+:100430008491F301C491F401D491D1112BC0F5E062
+:10044000F0930201109203010E9475006B017C0180
+:100450009CE2292E33243394412C512C0E947500A8
+:100460006C197D098E099F09683E734081059105CD
+:10047000A8F321E0221A31084108510838EEC30ED2
+:1004800033E0D31EE11CF11C21143104410451045A
+:1004900029F70FC081110E94C900ED2FF0E0EE0F87
+:1004A000FF1FE859FF4FA591B5918C91C823C11545
+:1004B00031F20E941F018C01C0910001D091010115
+:1004C0008C1B9D0B97FF03C0CE01801B910B8739BE
+:1004D0009105C4F08091020190910301181619064C
+:1004E0002CF4019790930301809302010E941F0155
+:1004F000C817D90774F40E941F018C1B9D0B873904
+:100500009105A4F7A114B10409F465CF0E9400007D
+:1005100062CF0E941F019E01281B390BC901EFCF3A
+:04052000F894FFCF7D
+:00000001FF`;
+return {NODES, EDGES, DOTS, CODE, HEX: N === 5 ? HEX5 : HEX, key:'cible3-led-v1', doneMsg:'Mets l’interrupteur sur marche et tire sur la cible !', annos:[
   {x:410, y:146, t:'setup() · 1 seule fois'}, {x:52, y:296, t:'loop() · répété sans fin'},
   {x:540, y:430, t:'pas de tir : on recommence', rot:true}, {x:28, y:610, t:'retour au début de loop()', rot:true}]};
 })();
 /* ================= Simulation de la cible 3 LED ================= */
 function Cible3Sim(prog){
-const $ = id => document.getElementById('u-' + id), trace = prog.trace;
+const $ = id => document.getElementById('u-' + id), trace = prog.trace, N = NB.u;
 const cv = $('sim'), ctx = cv.getContext('2d');
 let W = 0, H = 0;
 function resize(){
@@ -2526,15 +2906,15 @@ function setMsg(m){ $('simMsg').textContent = m; }
 function updateReadout(){ $('livesVal').textContent = S.power ? S.vies : 0; $('hitVal').textContent = S.hits; }
 
 function powerOn(){
-  S.power = true; S.vies = 3; S.hits = 0; clearTimers();
+  S.power = true; S.vies = N; S.hits = 0; clearTimers();
   trace([1,2,3,4,7]);
   beep(660, .08, 'square', .03); later(110, () => beep(880, .1, 'square', .03));
-  setMsg('Mise sous tension : setup() donne 3 vies à la cible et mesure la lumière de la salle. Les 3 LED s’allument.');
+  setMsg(`Mise sous tension : setup() donne ${N} vies à la cible et mesure la lumière de la salle. Les ${N} LED s’allument.`);
   updateReadout();
 }
 function powerOff(){
   S.power = false; clearTimers();
-  setMsg('Interrupteur sur arrêt : plus de courant, les LED s’éteignent. Au prochain allumage, la partie recommence à 3 vies.');
+  setMsg(`Interrupteur sur arrêt : plus de courant, les LED s’éteignent. Au prochain allumage, la partie recommence à ${N} vies.`);
   updateReadout();
 }
 function shoot(){
@@ -2548,7 +2928,7 @@ function shoot(){
     setMsg(`Tir détecté : vies = ${S.vies} − 1. La LED s’éteint dès que le tir est fini (bloc 10), quand la boucle réaffiche les vies.`);
     later(230, () => {
       S.vies--; beep(S.vies ? 320 : 160, S.vies ? .14 : .45, 'sawtooth', .03); updateReadout();
-      setMsg(S.vies ? `Touché ! Il reste ${S.vies} vie${S.vies > 1 ? 's' : ''} : ${S.vies} LED allumée${S.vies > 1 ? 's' : ''}.` : 'Touché ! Plus aucune vie : les 3 LED sont éteintes. Appuie sur RAZ pour une nouvelle partie.');
+      setMsg(S.vies ? `Touché ! Il reste ${S.vies} vie${S.vies > 1 ? 's' : ''} : ${S.vies} LED allumée${S.vies > 1 ? 's' : ''}.` : `Touché ! Plus aucune vie : les ${N} LED sont éteintes. Appuie sur RAZ pour une nouvelle partie.`);
     });
   } else {
     trace([3,4,7,8,10,10,3]);
@@ -2560,8 +2940,8 @@ function raz(){
   if (!S.power) { setMsg('La cible est éteinte : mets l’interrupteur sur marche.'); return; }
   S.razAt = performance.now();
   trace([3,4,5,6,6,7,3]);
-  S.vies = 3; S.hits = 0; beep(520, .08, 'square', .03); later(90, () => beep(780, .12, 'square', .03));
-  setMsg('Bouton RAZ : vies = 3, puis pause de 0,3 s. Au tour de boucle suivant, les 3 LED se rallument.');
+  S.vies = N; S.hits = 0; beep(520, .08, 'square', .03); later(90, () => beep(780, .12, 'square', .03));
+  setMsg(`Bouton RAZ : vies = ${N}, puis pause de 0,3 s. Au tour de boucle suivant, les ${N} LED se rallument.`);
   updateReadout();
 }
 
@@ -2574,12 +2954,12 @@ function draw(now){
     ctx.fillStyle = '#26363f'; ctx.strokeStyle = '#3d515c'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.roundRect ? ctx.roundRect(g.bx0, g.by0, g.bx1-g.bx0, g.by1-g.by0, 12) : ctx.rect(g.bx0, g.by0, g.bx1-g.bx0, g.by1-g.by0); ctx.fill(); ctx.stroke();
     ctx.font = `600 11px "Chakra Petch", sans-serif`; ctx.textAlign = 'center';
-    // 3 LED de vie
-    for (let k = 0; k < 3; k++) {
-      const x = g.cx + (k-1)*34, y = g.by0 + 30, lit = S.power && S.vies >= k + 1;
+    // LED de vie
+    for (let k = 0; k < N; k++) {
+      const x = g.cx + (k-(N-1)/2)*34, y = g.by0 + 30, lit = S.power && S.vies >= k + 1;
       ctx.save(); if (lit) { ctx.shadowColor = '#3cff8f'; ctx.shadowBlur = 18; }
       ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI*2); ctx.fillStyle = lit ? '#3cff8f' : '#1f3a2b'; ctx.fill(); ctx.restore();
-      ctx.fillStyle = '#8ea3ab'; ctx.fillText(`LED ${k+1}`, x, y + 24);
+      ctx.fillStyle = '#8ea3ab'; ctx.fillText(N === 5 ? `${k+1}` : `LED ${k+1}`, x, y + 24);
     }
     // cible
     const r = g.r, cx = g.cx, cy = g.cy;
@@ -2627,6 +3007,7 @@ document.addEventListener('keydown', e => {
   if (e.key === ' ') { e.preventDefault(); shoot(); }
   else if (e.key === 'r' || e.key === 'R') raz();
 });
+if (N === 5) cv.setAttribute('aria-label', 'Boîtier de la cible avec ses 5 LED. Clique sur la cible pour tirer dessus.');
 updateReadout();
 }
 
@@ -2663,8 +3044,8 @@ setupTabs(''); setupTabs('c-'); setupTabs('u-');
 
 const PROJ = {
   p: {el:'projP', title:'Pistolet laser', lede:'Programme le pistolet à partir de son organigramme, câble sa carte Nano, puis modélise sa coque pour la fabriquer à la découpe laser ou à l’imprimante 3D.'},
-  c: {el:'projC', title:'Cibles laser', lede:'Programme les 3 cibles, câble leur carte Nano avec l’alimentation et les régulateurs, puis modélise leur boîtier.'},
-  u: {el:'projU', title:'Cible 3 LED', lede:'Programme une cible à 3 vies : chaque tir reçu éteint une LED, le bouton RAZ relance la partie. Câble sa carte Nano avec sa pile 9 V et son interrupteur, puis modélise son boîtier.'}
+  c: {el:'projC', title:'Cibles laser', lede:`Programme les ${NB.c} cibles, câble leur carte Nano avec l’alimentation et les régulateurs, puis modélise leur boîtier.`},
+  u: {el:'projU', title:`Cible ${NB.u} LED`, lede:`Programme une cible à ${NB.u} vies : chaque tir reçu éteint une LED, le bouton RAZ relance la partie. Câble sa carte Nano avec sa pile 9 V et son interrupteur, puis modélise son boîtier.`}
 };
 function showProject(k){
   Object.entries(PROJ).forEach(([key, v]) => { $(v.el).hidden = key !== k; });
@@ -2684,7 +3065,7 @@ showProject(PROJ[pj] ? pj : 'p');
 /* ================= Module câblage ================= */
 (() => {
 const NS = 'http://www.w3.org/2000/svg', $ = id => document.getElementById(id);
-const svg = $('cab');
+const svg = $('cab'), N = NB.p, LP = N === 5 ? 'D9' : 'D8';   // 5 tirs : LED sur D4 à D8, laser sur D9
 const VW = 1000, VH = 660;
 const mk = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
 const txt = (x, y, s, cls, parent, anchor = 'middle') => { const t = mk('text', {x, y, class:cls, 'text-anchor':anchor}, parent); t.textContent = s; return t; };
@@ -2696,8 +3077,8 @@ const BOT = ['D13','3V3','REF','A0','A1','A2','A3','A4','A5','A6','A7','5V','RST
 const addPin = (id, x, y, dx, dy, label, comp) => { PINS[id] = {id, x, y, dx, dy, label, comp}; };
 TOP.forEach((n, i) => addPin('N:' + n, 304 + i*28, 266, 0, -1, `Nano : broche ${n}`, 'N'));
 BOT.forEach((n, i) => addPin('N:' + n, 304 + i*28, 384, 0, 1, `Nano : broche ${n.replace(/2$/, '')}`, 'N'));
-const LEDX = k => 430 + (k-1)*120, RESY = k => 70 + (k-1)*58;
-for (let k = 1; k <= 3; k++) {
+const LEDX = k => N === 5 ? 400 + (k-1)*80 : 430 + (k-1)*120, RESY = k => N === 5 ? 40 + (k-1)*44 : 70 + (k-1)*58;
+for (let k = 1; k <= N; k++) {
   addPin(`L${k}:A`, LEDX(k)-8, 142, 0, 1, `LED ${k} : patte longue (+, anode)`, 'L'+k);
   addPin(`L${k}:K`, LEDX(k)+8, 128, 0, 1, `LED ${k} : patte courte (−, cathode)`, 'L'+k);
   addPin(`R${k}:1`, 80, RESY(k), -1, 0, `Résistance R${k} (220 Ω)`, 'R'+k);
@@ -2716,15 +3097,15 @@ for (let i = 0; i < 10; i++) {
 }
 /* Encombrement de chaque composant : les fils le contournent */
 const BOX = {N:[244,246,744,404], BG:[72,256,164,334], BR:[72,406,164,484], LS:[838,244,982,344], RP:[296,562,576,614], RN:[606,562,886,614]};
-for (let k = 1; k <= 3; k++) { BOX['L'+k] = [LEDX(k)-28, 12, LEDX(k)+28, 146]; BOX['R'+k] = [76, RESY(k)-28, 204, RESY(k)+12]; }
+for (let k = 1; k <= N; k++) { BOX['L'+k] = [LEDX(k)-28, 12, LEDX(k)+28, 146]; BOX['R'+k] = [76, RESY(k)-28, 204, RESY(k)+12]; }
 
 /* ---------- État ---------- */
-const KEY = 'pistolet-cablage-v2';
+const KEY = 'pistolet-cablage-v2' + (N === 5 ? '-5' : '');
 let S = {wires:[], color:'#d4213a', checked:false, pos:{}};
 try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) S = Object.assign(S, s); } catch(e) {}
 S.wires = (S.wires || []).filter(w => PINS[w.a] && PINS[w.b]); S.pos = S.pos || {};
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
-let pending = null, selected = -1, testMode = false, ammo = 3, laserUntil = 0, lastDragEnd = 0;
+let pending = null, selected = -1, testMode = false, ammo = N, laserUntil = 0, lastDragEnd = 0;
 const off = c => S.pos[c] || {x:0, y:0};
 const P = id => { const p = PINS[id], o = off(p.comp); return {x:p.x + o.x, y:p.y + o.y, dx:p.dx, dy:p.dy}; };
 const boxOf = c => { const b = BOX[c], o = off(c); return [b[0]+o.x, b[1]+o.y, b[2]+o.x, b[3]+o.y]; };
@@ -2753,7 +3134,7 @@ function drawComponents(){
   TOP.forEach((p, i) => txt(304 + i*28, 290, p, 'nlbl', n));
   BOT.forEach((p, i) => txt(304 + i*28, 366, p.replace(/2$/, ''), 'nlbl', n));
   // LED et résistances
-  for (let k = 1; k <= 3; k++) {
+  for (let k = 1; k <= N; k++) {
     const x = LEDX(k), g = newComp('L'+k);
     mk('rect', {x:x-28, y:12, width:56, height:134, fill:'transparent'}, g);
     txt(x, 26, `LED ${k}`, 'lbl-s', g);
@@ -3029,7 +3410,7 @@ function analyze(){
     const nm = names(r), sg = sigs(nm);
     const pw = ['5V','3V3','VIN'].filter(p => nm.has(p));
     if (nm.has('GND') && pw.length) alerts.push(`<b>Court-circuit :</b> ${pw.join(', ')} est relié directement à GND. Retire ce fil tout de suite, il peut abîmer la carte ou le port USB.`);
-    const outs = sg.filter(s => ['D4','D5','D6','D8'].includes(s));
+    const outs = sg.filter(s => [...Array(N).keys()].map(k => 'D' + (4 + k)).concat(LP).includes(s));
     if (outs.length && nm.has('GND')) alerts.push(`<b>Court-circuit :</b> ${outs.join(', ')} est reliée directement à GND. Quand le programme mettra cette sortie à HIGH, trop de courant passera.`);
     if (outs.length && nm.has('5V')) alerts.push(`<b>Court-circuit :</b> ${outs.join(', ')} est reliée directement au 5V. Quand le programme mettra cette sortie à LOW, trop de courant passera.`);
     if (sg.length > 1) alerts.push(`<b>Attention :</b> les broches ${sg.join(' et ')} sont reliées entre elles. Chaque broche doit avoir son propre circuit.`);
@@ -3087,24 +3468,22 @@ function analyze(){
     const rs = find('LS:S'), rv = find('LS:V'), rg = find('LS:G');
     if (rs === rg) return BAD('Les broches S et − du laser sont reliées ensemble.');
     const nS = names(rs), nV = names(rv), nG = names(rg);
-    if (nS.has('GND') && nG.has('D8')) return BAD('Le laser est branché à l\u2019envers : S (signal) va sur D8, et − va sur GND.');
-    if (!nS.has('D8')) {
+    if (nS.has('GND') && nG.has(LP)) return BAD(`Le laser est branché à l\u2019envers : S (signal) va sur ${LP}, et − va sur GND.`);
+    if (!nS.has(LP)) {
       const s = sigs(nS)[0];
-      if (s) return BAD(`La broche S du laser est reliée à ${s}, mais le programme commande le laser sur D8 (LASER = 8).`);
-      if (nS.has('5V') || railP(rs)) return BAD('S est relié au 5V : le laser resterait toujours allumé. Relie S à D8.');
-      return BAD('La broche S (signal) du laser doit aller sur D8.');
+      if (s) return BAD(`La broche S du laser est reliée à ${s}, mais le programme commande le laser sur ${LP} (LASER = ${LP.slice(1)}).`);
+      if (nS.has('5V') || railP(rs)) return BAD(`S est relié au 5V : le laser resterait toujours allumé. Relie S à ${LP}.`);
+      return BAD(`La broche S (signal) du laser doit aller sur ${LP}.`);
     }
     if (!nG.has('GND')) return BAD(gndHint(rg, 'La broche − du laser doit aller à GND.'));
     if (wired('LS:V') && (nV.has('GND') || sigs(nV).length)) return BAD('La broche du milieu (+) du laser se relie au 5V, ou reste libre.');
     if (railP(rv) && wired('LS:V')) return BAD('La broche + du laser va sur la barre +, mais cette barre n\u2019est reliée à aucun 5V de la Nano.');
-    return OK('D8 → S, − → GND' + (nV.has('5V') ? ', + → 5V' : ''));
+    return OK(`${LP} → S, − → GND` + (nV.has('5V') ? ', + → 5V' : ''));
   };
   const items = [
     ['BG', 'Bouton gâchette', checkBtn('BG:1', 'BG:2', 'D2', 'gâchette', 'GACHETTE')],
     ['BR', 'Bouton recharger', checkBtn('BR:1', 'BR:2', 'D3', 'recharger', 'RECHARGE')],
-    ['L1', 'LED 1', checkLed(1, 'D4')],
-    ['L2', 'LED 2', checkLed(2, 'D5')],
-    ['L3', 'LED 3', checkLed(3, 'D6')],
+    ...[...Array(N).keys()].map(i => ['L' + (i + 1), `LED ${i + 1}`, checkLed(i + 1, 'D' + (4 + i))]),
     ['LS', 'Module laser', checkLaser()]
   ];
   return {alerts:[...new Set(alerts)], items};
@@ -3112,8 +3491,8 @@ function analyze(){
 
 /* ---------- Affichage du diagnostic ---------- */
 function render(){
-  const res = analyze(), n = res.items.filter(i => i[2].state === 'ok').length, allOk = n === 6 && !res.alerts.length;
-  $('cabScore').textContent = `${n} / 6`;
+  const res = analyze(), n = res.items.filter(i => i[2].state === 'ok').length, allOk = n === res.items.length && !res.alerts.length;
+  $('cabScore').textContent = `${n} / ${res.items.length}`;
   $('cabScore').className = 'pill ' + (allOk ? 'done' : res.alerts.length ? 'warn' : 'wait');
   const al = $('cabAlerts'); al.innerHTML = '';
   res.alerts.forEach(a => { const d = document.createElement('div'); d.className = 'alert danger'; d.innerHTML = a; al.appendChild(d); });
@@ -3132,7 +3511,7 @@ function render(){
 function clearMarks(){
   Object.values(compEls).forEach(g => g.classList.remove('ok', 'bad'));
   $('cabAlerts').innerHTML = ''; $('cabList').innerHTML = '';
-  $('cabScore').textContent = '? / 6'; $('cabScore').className = 'pill wait';
+  $('cabScore').textContent = `? / ${N + 3}`; $('cabScore').className = 'pill wait';
   setTest(false);
 }
 function changed(){ if (S.checked) render(); else clearMarks(); }
@@ -3142,7 +3521,7 @@ $('cabCheck').addEventListener('click', () => { S.checked = true; save(); const 
 function setTest(on){
   testMode = on; $('cabTest').hidden = !on;
   [capG, capR].forEach(c => c.classList.toggle('testable', on));
-  if (!on) { ammo = 3; }
+  if (!on) { ammo = N; }
   paintLeds();
 }
 function paintLeds(){
@@ -3166,7 +3545,7 @@ capR.addEventListener('click', e => {
   e.stopPropagation();
   if (performance.now() - lastDragEnd < 300) return;
   if (!testMode) { setStatus('Bouton recharger. Termine et vérifie le câblage pour pouvoir tester.'); return; }
-  if (ammo === 0) { ammo = 3; paintLeds(); setStatus('Rechargé : les 3 LED sont allumées.'); }
+  if (ammo === 0) { ammo = N; paintLeds(); setStatus(`Rechargé : les ${N} LED sont allumées.`); }
   else setStatus(`Recharge refusée : il reste ${ammo} tir${ammo > 1 ? 's' : ''}.`);
 });
 
@@ -3180,22 +3559,24 @@ window.__cab = {S, analyze, PINS, render, routeAll, drawWires, applyPos, compEls
 /* ================= Câblage des cibles ================= */
 (() => {
 const NS = 'http://www.w3.org/2000/svg', $ = id => document.getElementById('c-' + id);
-const svg = $('cab');
+const svg = $('cab'), N = NB.c, IDX = [...Array(N).keys()];
 const VW = 1200, VH = 820;
 const mk = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
 const txt = (x, y, s, cls, parent, anchor = 'middle') => { const t = mk('text', {x, y, class:cls, 'text-anchor':anchor}, parent); t.textContent = s; return t; };
 
 /* ---------- Position de départ de chaque composant ---------- */
 const BASE = {N:{x:110,y:60}, J:{x:30,y:40}, SW:{x:210,y:50}, U5:{x:370,y:30}, U3:{x:520,y:30}, BR:{x:40,y:560}};
-for (let k = 0; k < 3; k++) {
-  BASE['SV'+k] = {x:1010, y:60 + k*110};
-  BASE['K'+k]  = {x:470 + k*130, y:560};
-  BASE['L'+k]  = {x:60 + k*90, y:150};
-  BASE['R'+k]  = {x:40, y:340 + k*60};
+const F5 = N === 5;
+if (F5) BASE.BR = {x:40, y:610};
+for (let k = 0; k < N; k++) {
+  BASE['SV'+k] = {x:1010, y:F5 ? 50 + k*92 : 60 + k*110};
+  BASE['K'+k]  = {x:F5 ? 430 + k*112 : 470 + k*130, y:560};
+  BASE['L'+k]  = {x:F5 ? 50 + k*64 : 60 + k*90, y:150};
+  BASE['R'+k]  = {x:40, y:F5 ? 332 + k*44 : 340 + k*60};
 }
 for (let b = 1; b <= 4; b++) BASE['B'+b] = {x:40 + (b-1)*290, y:740};
 const LBOX = {N:[244,246,744,404], J:[-16,-24,98,52], SW:[-28,-26,84,36], U5:[-36,-24,82,80], U3:[-40,-24,86,80], BR:[-12,-50,84,32]};
-for (let k = 0; k < 3; k++) { LBOX['SV'+k] = [-40,-22,94,44]; LBOX['K'+k] = [-4,-10,52,86]; LBOX['L'+k] = [-28,12,28,146]; LBOX['R'+k] = [-4,-28,124,12]; }
+for (let k = 0; k < N; k++) { LBOX['SV'+k] = [-40,-22,94,44]; LBOX['K'+k] = [-4,-10,52,86]; LBOX['L'+k] = [-28,12,28,146]; LBOX['R'+k] = [-4,-28,124,12]; }
 for (let b = 1; b <= 4; b++) LBOX['B'+b] = [-4,-4,234,48];
 const BOX = {}; for (const c in LBOX) { const b = LBOX[c], o = BASE[c]; BOX[c] = [b[0]+o.x, b[1]+o.y, b[2]+o.x, b[3]+o.y]; }
 
@@ -3217,7 +3598,7 @@ for (const [u, name] of [['U5','Régulateur 5 V'], ['U3','Régulateur 3,3 V']]) 
 }
 addPin('BR:1', 'BR', 80, -12, 1, 0, 'Bouton RAZ : patte 1');
 addPin('BR:2', 'BR', 80, 16, 1, 0, 'Bouton RAZ : patte 2');
-for (let k = 0; k < 3; k++) {
+for (let k = 0; k < N; k++) {
   addPin(`SV${k}:G`, 'SV'+k, -36, 8, -1, 0, `Servo ${k} : fil marron (GND)`);
   addPin(`SV${k}:V`, 'SV'+k, -36, 20, -1, 0, `Servo ${k} : fil rouge (+)`);
   addPin(`SV${k}:S`, 'SV'+k, -36, 32, -1, 0, `Servo ${k} : fil orange (signal)`);
@@ -3232,7 +3613,7 @@ for (let k = 0; k < 3; k++) {
 for (let b = 1; b <= 4; b++) for (let i = 0; i < 8; i++) addPin(`B${b}:${i}`, 'B'+b, 20 + i*27, 16, 0, -1, `Barre ${b} (tous ses trous sont reliés)`);
 
 /* ---------- État ---------- */
-const KEY = 'cibles-cablage-v1';
+const KEY = 'cibles-cablage-v1' + (N === 5 ? '-5' : '');
 let S = {wires:[], color:'#d4213a', checked:false, pos:{}};
 try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) S = Object.assign(S, s); } catch(e) {}
 S.wires = (S.wires || []).filter(w => PINS[w.a] && PINS[w.b]); S.pos = S.pos || {};
@@ -3297,7 +3678,7 @@ function drawComponents(){
   parts.raz = mk('circle', {cx:26, cy:2, r:16, fill:'#f2c94c', stroke:'rgba(0,0,0,.35)', 'stroke-width':2}, br);
   // Servos, capteurs, LED, résistances
   parts.horn = []; parts.ldr = []; parts.led = [];
-  for (let k = 0; k < 3; k++) {
+  for (let k = 0; k < N; k++) {
     const s = inner('SV'+k);
     txt(45, -8, `Servo ${k} (SG90)`, 'lbl-s', s);
     [['#7a4a1c',8],['#d4213a',20],['#ef7d22',32]].forEach(([c, y]) => mk('line', {x1:0, y1:y, x2:-36, y2:y, stroke:c, 'stroke-width':4}, s));
@@ -3581,7 +3962,7 @@ function analyze(){
   for (const id of Object.keys(PINS)) {
     const r = find(id); if (seen.has(r)) continue; seen.add(r);
     const nm = names(r), sg = sigs(nm);
-    const outs = sg.filter(s => ['D4','D5','D6','D9','D10','D11'].includes(s));
+    const outs = sg.filter(s => IDX.flatMap(k => ['D' + (4 + k), 'D' + (9 + k)]).includes(s));
     if (outs.length && r === G0) A('Court-circuit', `${outs.join(', ')} est reliée directement à GND. Quand le programme mettra cette sortie à HIGH, trop de courant passera.`);
     if (outs.length && r !== G0 && (r === V5 || r === V3 || nm.has('5V'))) A('Court-circuit', `${outs.join(', ')} est reliée directement à une alimentation. Quand le programme mettra cette sortie à LOW, trop de courant passera.`);
     if (sg.length > 1) A('Attention', `les broches ${sg.join(' et ')} sont reliées entre elles. Chaque broche doit avoir son propre circuit.`);
@@ -3617,7 +3998,7 @@ function analyze(){
     const g = find(id + ':G'), v = find(id + ':V'), s = find(id + ':S');
     if (g === V5 && v === G0) return BAD(`Les fils marron et rouge du servo ${k} sont inversés : marron = GND, rouge = + 5 V.`);
     if (is9(v)) return BAD(`Le fil rouge du servo ${k} reçoit 9 V : c'est trop pour un SG90 (4,8 à 6 V). Branche-le sur la sortie OUT du régulateur 5 V.`);
-    if (v !== V5 && names(v).has('5V')) return BAD(`Le servo ${k} est alimenté par le 5V de la Nano : trois servos demandent trop de courant. Branche le fil rouge sur la sortie OUT du régulateur 5 V.`);
+    if (v !== V5 && names(v).has('5V')) return BAD(`Le servo ${k} est alimenté par le 5V de la Nano : ${N === 5 ? 'cinq' : 'trois'} servos demandent trop de courant. Branche le fil rouge sur la sortie OUT du régulateur 5 V.`);
     if (wired('U3:O') && v === V3) return BAD(`3,3 V, c'est trop faible pour un servo : branche le fil rouge sur la sortie du régulateur 5 V.`);
     if (v !== V5 || !wired('U5:O')) return BAD(`Le fil rouge (+) du servo ${k} doit aller sur la sortie OUT du régulateur 5 V.`);
     if (g !== G0 && (g === V5 || g === V3 || is9(g) || names(g).has('5V'))) return BAD(`Le fil marron du servo ${k} est relié à une alimentation : le marron est la masse, il va sur GND.`);
@@ -3685,9 +4066,9 @@ function analyze(){
     ['J', 'Bloc secteur 9 V et interrupteur', checkPower()],
     ['U5', 'Régulateur 5 V (servos)', checkReg('U5', 'régulateur 5 V', [V9], 'L\u2019entrée IN du régulateur 5 V doit recevoir le 9 V, après l\u2019interrupteur.')],
     ['U3', 'Régulateur 3,3 V (capteurs)', checkReg('U3', 'régulateur 3,3 V', [V9, wired('U5:O') ? V5 : null], 'L\u2019entrée IN du régulateur 3,3 V doit recevoir le 9 V (après l\u2019interrupteur) ou la sortie du régulateur 5 V.')],
-    ...[0,1,2].map(k => ['SV'+k, `Servo ${k}`, checkServo(k)]),
-    ...[0,1,2].map(k => ['K'+k, `Capteur ${k}`, checkSensor(k)]),
-    ...[0,1,2].map(k => ['L'+k, `LED ${k}`, checkLed(k, 'D' + (4 + k))]),
+    ...IDX.map(k => ['SV'+k, `Servo ${k}`, checkServo(k)]),
+    ...IDX.map(k => ['K'+k, `Capteur ${k}`, checkSensor(k)]),
+    ...IDX.map(k => ['L'+k, `LED ${k}`, checkLed(k, 'D' + (4 + k))]),
     ['BR', 'Bouton RAZ', checkBtn()]
   ];
   return {alerts:[...new Set(alerts)], items};
@@ -3714,17 +4095,17 @@ function render(){
 function clearMarks(){
   Object.values(compEls).forEach(g => g.classList.remove('ok', 'bad'));
   $('cabAlerts').innerHTML = ''; $('cabList').innerHTML = '';
-  $('cabScore').textContent = '? / 13'; $('cabScore').className = 'pill wait';
+  $('cabScore').textContent = `? / ${3*N + 4}`; $('cabScore').className = 'pill wait';
   setTest(false);
 }
 function changed(){ if (S.checked) render(); else clearMarks(); }
 $('cabCheck').addEventListener('click', () => { S.checked = true; save(); const r = render(); setStatus(r.items.every(i => i[2].state === 'ok') && !r.alerts.length ? 'Câblage vérifié : tout est bon.' : 'Câblage vérifié. Lis les conseils à droite, corrige, puis revérifie.'); });
 /* ---------- Test du montage (même logique que le programme) ---------- */
 drawComponents(); drawPins();
-const T = {power:false, closed:[false,false,false], timers:[]};
+const T = {power:false, closed:IDX.map(() => false), timers:[]};
 function setTest(on){
   testMode = on; $('cabTest').hidden = !on;
-  if (!on) { T.power = false; T.closed = [false,false,false]; T.timers.forEach(clearTimeout); T.timers = []; }
+  if (!on) { T.power = false; T.closed = IDX.map(() => false); T.timers.forEach(clearTimeout); T.timers = []; }
   paint();
 }
 function paint(){
@@ -3744,7 +4125,7 @@ parts.lever.parentNode.addEventListener('click', e => {
   if (!testMode) { setStatus('Interrupteur marche/arrêt. Termine et vérifie le câblage pour pouvoir tester.'); return; }
   e.stopPropagation();
   T.power = !T.power;
-  if (T.power) { T.closed = [false,false,false]; setStatus('Sous tension : les servos ouvrent les cibles une par une. Clique sur un capteur pour simuler un tir.'); }
+  if (T.power) { T.closed = IDX.map(() => false); setStatus('Sous tension : les servos ouvrent les cibles une par une. Clique sur un capteur pour simuler un tir.'); }
   else setStatus('Hors tension : plus rien ne fonctionne.');
   paint();
 });
@@ -3754,7 +4135,7 @@ parts.raz.addEventListener('click', e => {
   if (!testMode) { setStatus('Bouton RAZ. Termine et vérifie le câblage pour pouvoir tester.'); return; }
   if (!T.power) { setStatus('Mets d’abord l’interrupteur sur marche.'); return; }
   T.timers.forEach(clearTimeout); T.timers = [];
-  [0,1,2].forEach(k => T.timers.push(setTimeout(() => { T.closed[k] = false; paint(); }, k*300)));
+  IDX.forEach(k => T.timers.push(setTimeout(() => { T.closed[k] = false; paint(); }, k*300)));
   setStatus('RAZ : les cibles se rouvrent une par une.');
 });
 parts.ldr.forEach((c, k) => c.addEventListener('click', e => {
@@ -3776,16 +4157,16 @@ window.__cabC = {S, analyze, PINS, render, routeAll, drawWires, applyPos, compEl
 /* ================= Câblage de la cible 3 LED ================= */
 (() => {
 const NS = 'http://www.w3.org/2000/svg', $ = id => document.getElementById('u-' + id);
-const svg = $('cab');
+const svg = $('cab'), N = NB.u, IDX = [...Array(N).keys()];
 const VW = 1000, VH = 700;
 const mk = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
 const txt = (x, y, s, cls, parent, anchor = 'middle') => { const t = mk('text', {x, y, class:cls, 'text-anchor':anchor}, parent); t.textContent = s; return t; };
 
 /* ---------- Position de départ de chaque composant ---------- */
 const BASE = {N:{x:20,y:150}, J:{x:40,y:60}, SW:{x:230,y:70}, BR:{x:870,y:470}, K:{x:330,y:600}, B1:{x:40,y:620}, B2:{x:560,y:620}};
-for (let k = 0; k < 3; k++) { BASE['L'+k] = {x:430 + k*100, y:150}; BASE['R'+k] = {x:760, y:120 + k*70}; }
+for (let k = 0; k < N; k++) { BASE['L'+k] = N === 5 ? {x:330 + k*90, y:150} : {x:430 + k*100, y:150}; BASE['R'+k] = {x:760, y:N === 5 ? 110 + k*56 : 120 + k*70}; }
 const LBOX = {N:[244,246,744,404], J:[-16,-24,98,52], SW:[-28,-26,84,36], BR:[-12,-50,84,32], K:[-4,-10,52,86], B1:[-4,-4,234,48], B2:[-4,-4,234,48]};
-for (let k = 0; k < 3; k++) { LBOX['L'+k] = [-28,12,28,146]; LBOX['R'+k] = [-4,-28,124,12]; }
+for (let k = 0; k < N; k++) { LBOX['L'+k] = [-28,12,28,146]; LBOX['R'+k] = [-4,-28,124,12]; }
 const BOX = {}; for (const c in LBOX) { const b = LBOX[c], o = BASE[c]; BOX[c] = [b[0]+o.x, b[1]+o.y, b[2]+o.x, b[3]+o.y]; }
 
 /* ---------- Broches ---------- */
@@ -3804,7 +4185,7 @@ addPin('BR:2', 'BR', 80, 16, 1, 0, 'Bouton RAZ : patte 2');
 addPin('K:S', 'K', 10, -6, 0, -1, 'Capteur KY-018 : S (signal)');
 addPin('K:V', 'K', 24, -6, 0, -1, 'Capteur KY-018 : + (milieu)');
 addPin('K:G', 'K', 38, -6, 0, -1, 'Capteur KY-018 : − (masse)');
-for (let k = 0; k < 3; k++) {
+for (let k = 0; k < N; k++) {
   addPin(`L${k}:A`, 'L'+k, -8, 142, 0, 1, `LED ${k+1} : patte longue (+, anode)`);
   addPin(`L${k}:K`, 'L'+k, 8, 128, 0, 1, `LED ${k+1} : patte courte (−, cathode)`);
   addPin(`R${k}:1`, 'R'+k, 0, 0, -1, 0, `Résistance R${k+1} (220 Ω)`);
@@ -3813,7 +4194,7 @@ for (let k = 0; k < 3; k++) {
 for (let b = 1; b <= 2; b++) for (let i = 0; i < 8; i++) addPin(`B${b}:${i}`, 'B'+b, 20 + i*27, 16, 0, -1, `Barre ${b} (tous ses trous sont reliés)`);
 
 /* ---------- État ---------- */
-const KEY = 'cible3-cablage-v1';
+const KEY = 'cible3-cablage-v1' + (N === 5 ? '-5' : '');
 let S = {wires:[], color:'#d4213a', checked:false, pos:{}};
 try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) S = Object.assign(S, s); } catch(e) {}
 S.wires = (S.wires || []).filter(w => PINS[w.a] && PINS[w.b]); S.pos = S.pos || {};
@@ -3875,7 +4256,7 @@ function drawComponents(){
   txt(24, 80, 'Capteur KY-018', 'lbl-s', kk);
   // LED et résistances
   parts.led = [];
-  for (let k = 0; k < 3; k++) {
+  for (let k = 0; k < N; k++) {
     const l = inner('L'+k);
     txt(0, 26, `LED ${k+1}`, 'lbl-s', l);
     mk('line', {x1:-8, y1:90, x2:-8, y2:142, stroke:'#9aa3aa', 'stroke-width':3}, l);
@@ -4140,7 +4521,7 @@ function analyze(){
   for (const id of Object.keys(PINS)) {
     const r = find(id); if (seen.has(r)) continue; seen.add(r);
     const nm = names(r), sg = sigs(nm);
-    const outs = sg.filter(s => ['D4','D5','D6'].includes(s));
+    const outs = sg.filter(s => IDX.map(k => 'D' + (4 + k)).includes(s));
     if (outs.length && r === G0) A('Court-circuit', `${outs.join(', ')} est reliée directement à GND. Quand le programme mettra cette sortie à HIGH, trop de courant passera.`);
     if (outs.length && r !== G0 && (nm.has('5V') || nm.has('3V3'))) A('Court-circuit', `${outs.join(', ')} est reliée directement à une alimentation. Quand le programme mettra cette sortie à LOW, trop de courant passera.`);
     if (sg.length > 1) A('Attention', `les broches ${sg.join(' et ')} sont reliées entre elles. Chaque broche doit avoir son propre circuit.`);
@@ -4214,7 +4595,7 @@ function analyze(){
   const items = [
     ['J', 'Pile 9 V et interrupteur', checkPower()],
     ['K', 'Capteur de lumière', checkSensor()],
-    ...[0,1,2].map(k => ['L'+k, `LED ${k+1}`, checkLed(k, 'D' + (4 + k))]),
+    ...IDX.map(k => ['L'+k, `LED ${k+1}`, checkLed(k, 'D' + (4 + k))]),
     ['BR', 'Bouton RAZ', checkBtn()]
   ];
   return {alerts:[...new Set(alerts)], items};
@@ -4241,7 +4622,7 @@ function render(){
 function clearMarks(){
   Object.values(compEls).forEach(g => g.classList.remove('ok', 'bad'));
   $('cabAlerts').innerHTML = ''; $('cabList').innerHTML = '';
-  $('cabScore').textContent = '? / 6'; $('cabScore').className = 'pill wait';
+  $('cabScore').textContent = `? / ${N + 3}`; $('cabScore').className = 'pill wait';
   setTest(false);
 }
 function changed(){ if (S.checked) render(); else clearMarks(); }
@@ -4271,7 +4652,7 @@ parts.lever.parentNode.addEventListener('click', e => {
   if (!testMode) { setStatus('Interrupteur marche/arrêt. Termine et vérifie le câblage pour pouvoir tester.'); return; }
   e.stopPropagation();
   T.power = !T.power;
-  if (T.power) { T.vies = 3; setStatus('Sous tension : 3 vies, les 3 LED s\u2019allument. Clique sur le capteur pour simuler un tir.'); }
+  if (T.power) { T.vies = N; setStatus(`Sous tension : ${N} vies, les ${N} LED s\u2019allument. Clique sur le capteur pour simuler un tir.`); }
   else setStatus('Hors tension : plus rien ne fonctionne.');
   paint();
 });
@@ -4280,15 +4661,15 @@ parts.raz.addEventListener('click', e => {
   e.stopPropagation();
   if (!testMode) { setStatus('Bouton RAZ. Termine et vérifie le câblage pour pouvoir tester.'); return; }
   if (!T.power) { setStatus('Mets d\u2019abord l\u2019interrupteur sur marche.'); return; }
-  T.vies = 3; paint();
-  setStatus('RAZ : vies = 3, les 3 LED se rallument.');
+  T.vies = N; paint();
+  setStatus(`RAZ : vies = ${N}, les ${N} LED se rallument.`);
 });
 parts.ldr.addEventListener('click', e => {
   if (dragged()) return;
   e.stopPropagation();
   if (!testMode) { setStatus('Capteur de lumière. Termine et vérifie le câblage pour pouvoir tester.'); return; }
   if (!T.power) { setStatus('Mets d\u2019abord l\u2019interrupteur sur marche.'); return; }
-  if (T.vies > 0) { T.vies--; paint(); setStatus(T.vies ? `Tir reçu : une LED s'éteint. Il reste ${T.vies} vie${T.vies > 1 ? 's' : ''}.` : 'Tir reçu : plus aucune vie, les 3 LED sont éteintes. Appuie sur RAZ.'); }
+  if (T.vies > 0) { T.vies--; paint(); setStatus(T.vies ? `Tir reçu : une LED s'éteint. Il reste ${T.vies} vie${T.vies > 1 ? 's' : ''}.` : `Tir reçu : plus aucune vie, les ${N} LED sont éteintes. Appuie sur RAZ.`); }
   else setStatus('Tir reçu, mais il n\u2019y a plus de vie : rien ne change. Appuie sur RAZ.');
 });
 
@@ -4310,6 +4691,8 @@ import ManifoldModule from 'manifold-3d';
 /* ================= Géométrie du pistolet (mm) =================
    Repère : X vers l'avant (canon), Y vers la gauche, Z vers le haut.
    Origine : arrière du pistolet (X = 0), bas de la poignée (Z = 0), milieu de l'épaisseur (Y = 0). */
+const NL = window.NB.p;                                   // 3 ou 5 LED de munitions
+const LEDXS = NL === 5 ? [20, 29, 38, 47, 56] : [24, 36, 48];   // entre les plots de vis (x 13 et 66)
 const PROFILE = [[0,70],[12,70],[4,0],[50,0],[55,32],[55,70],[160,70],[160,106],[156,110],[6,110],[0,104]];
 const CAVITY  = [[8,76],[17,76],[17,-1],[44,-1],[44,76],[146,76],[146,104],[8,104]];
 const INNER   = [[0,70],[12,70],[4,0],[17,0],[17,76],[8,76],[8,104],[146,104],[146,76],[44,76],[44,0],[50,0],[55,32],[55,70],[160,70],[160,106],[156,110],[6,110],[0,104]];
@@ -4325,13 +4708,13 @@ const JOINT = [SPLIT + TNL/2, 73];
 
 /* Composants : tailles proposées (mm) et limites pour « Autre » (pour que le trou tienne dans la coque) */
 const COMPS = {
-  led:   {label:'LED (× 3)',        name:'LED',              sizes:[3,5,8,10],  min:2, max:10, def:5,  ref:d => `LED Ø ${fmt(d)} mm`},
+  led:   {label:`LED (× ${NL})`,        name:'LED',              sizes:NL === 5 ? [3,5,8] : [3,5,8,10],  min:2, max:NL === 5 ? 8 : 10, def:5,  ref:d => `LED Ø ${fmt(d)} mm`},
   gach:  {label:'Bouton gâchette',  name:'bouton gâchette',  sizes:[7,12,16,19], min:4, max:20, def:12, ref:d => `bouton poussoir à visser, corps Ø ${fmt(d)} mm`},
   rech:  {label:'Bouton recharger', name:'bouton recharger', sizes:[6,7,12,16],  min:4, max:18, def:7,  ref:d => `bouton poussoir à visser, corps Ø ${fmt(d)} mm`},
   laser: {label:'Module laser',     name:'module laser',     sizes:[6,9,12],     min:4, max:14, def:6,  ref:d => `tête du laser Ø ${fmt(d)} mm`}
 };
 const GROUPS = [
-  {comp:'led', holes:['led1','led2','led3']}, {comp:'gach', holes:['gach']},
+  {comp:'led', holes:LEDXS.map((x, k) => 'led' + (k + 1))}, {comp:'gach', holes:['gach']},
   {comp:'rech', holes:['rech']}, {comp:'laser', holes:['laser']}
 ];
 const DIRS = {'+X':[0,1],'-X':[0,-1],'+Y':[1,1],'-Y':[1,-1],'+Z':[2,1],'-Z':[2,-1]};
@@ -4346,6 +4729,7 @@ const PROC = {
 const KEY = 'pistolet-cao-v2';
 let S = {proc:null, started:false, ply:3, holes:{led:'',gach:'',rech:'',laser:''}, comp:{led:5,gach:12,rech:7,laser:6}, explode:false};
 try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) { S = Object.assign(S, s); S.comp = Object.assign({led:5,gach:12,rech:7,laser:6}, s.comp); } } catch(e) {}
+if (S.comp.led > COMPS.led.max) S.comp.led = COMPS.led.max;   // 5 LED : Ø 8 mm au plus
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
 const $ = id => document.getElementById(id), ROOT = document.getElementById('modCad');
 const num = v => { if (v === null || v === undefined) return NaN; const s = String(v).trim().replace(',', '.'); return s === '' ? NaN : Number(s); };
@@ -4362,9 +4746,7 @@ function G(){
 function HOLES(){
   const g = G();
   return [
-    {id:'led1', comp:'led',  p:[24,0,110],       dir:'-Z', depth:8},
-    {id:'led2', comp:'led',  p:[36,0,110],       dir:'-Z', depth:8},
-    {id:'led3', comp:'led',  p:[48,0,110],       dir:'-Z', depth:8},
+    ...LEDXS.map((x, k) => ({id:'led' + (k + 1), comp:'led', p:[x,0,110], dir:'-Z', depth:8})),
     {id:'gach', comp:'gach', p:[55,0,52],        dir:'-X', depth:13},
     {id:'rech', comp:'rech', p:[62,-g.W2,90],    dir:'+Y', depth:(g.W2 - g.CY) + 2},
     {id:'laser',comp:'laser',p:[160,0,90],       dir:'-X', depth:16}
@@ -4547,7 +4929,7 @@ function buildComponents(){
   const cyl = (r, x0, x1, axis, at, mat) => { const gg = new THREE.CylinderGeometry(r, r, Math.abs(x1-x0), 32); if (axis===0) gg.rotateZ(-Math.PI/2); else if (axis===2) gg.rotateX(Math.PI/2); const p = at.slice(); p[axis] = (x0+x1)/2; gg.translate(...p); return new THREE.Mesh(gg, mat); };
   const red = m(0xff3048), grey = m(0x3a4148), blue = m(0x2f8fd0), brass = m(0xc9a44c), pcb = m(0x1f6b3a);
   const rl = C.led/2;
-  for (const x of [24,36,48]) {
+  for (const x of LEDXS) {
     g.add(cyl(rl, 103, 110 + rl*.4, 2, [x,0,0], red));
     const dome = new THREE.Mesh(new THREE.SphereGeometry(rl, 24, 12, 0, Math.PI*2, 0, Math.PI/2), red); dome.rotation.x = Math.PI/2; dome.position.set(x,0,110 + rl*.4); g.add(dome);
     g.add(cyl(rl*1.16, 102, 103, 2, [x,0,0], red));
@@ -4779,7 +5161,7 @@ s'enfile dans la rainure de la piece avant (a coller). Une vis de jonction M3 de
 traverse le bas du canon (juste devant la poignee) et serre les 4 pieces ensemble.
 
 Composants prevus :
-  3 LED Ø ${fmt(C.led)} mm (trous Ø ${fmt(num(S.holes.led))} mm)
+  ${NL} LED Ø ${fmt(C.led)} mm (trous Ø ${fmt(num(S.holes.led))} mm)
   bouton gachette Ø ${fmt(C.gach)} mm (trou Ø ${fmt(num(S.holes.gach))} mm)
   bouton recharger Ø ${fmt(C.rech)} mm (trou Ø ${fmt(num(S.holes.rech))} mm)
   module laser Ø ${fmt(C.laser)} mm (trou Ø ${fmt(num(S.holes.laser))} mm)
@@ -4791,7 +5173,7 @@ Impression conseillee :
   - Les pieces sont deja posees sur leur face exterieure : pas de supports.
 
 Montage :
-  1. Place les 3 LED (dessus), le bouton gachette (avant de la poignee),
+  1. Place les ${NL} LED (dessus), le bouton gachette (avant de la poignee),
      le bouton recharger (face droite) et le module laser (avant).
   2. Loge la carte Arduino Nano dans la poignee ; le cable USB sort par le bas.
   3. Pose la pile 9 V couchee dans la partie haute, bornes cote crosse (entre le plot de vis et la butee).
@@ -4800,7 +5182,7 @@ Montage :
   5. Visse la vis de jonction M3 de 30 mm par la droite, dans le bas du canon juste devant
      la poignee : elle traverse les 2 languettes et les 4 pieces, qui sont alors tenues ensemble.
 
-Cablage : D2 gachette, D3 recharger, D4 D5 D6 LED, D8 laser.
+Cablage : D2 gachette, D3 recharger, ${NL === 5 ? 'D4 a D8 LED, D9 laser' : 'D4 D5 D6 LED, D8 laser'}.
 Securite : ne jamais viser les yeux avec le laser.
 `;
 }
@@ -4875,22 +5257,23 @@ import ManifoldModule from 'manifold-3d';
 /* ================= Géométrie du boîtier des cibles (mm) =================
    Repère : X vers la droite, Y vers l'arrière (la façade est en Y = −W2), Z vers le haut.
    Origine : coin bas gauche de la façade (X = 0, Z = 0), milieu de la profondeur (Y = 0). */
-const BW = 210, BH = 120;
+const NC = window.NB.c;                                   // 3 ou 5 cibles
+const BW = NC === 5 ? 240 : 210, BH = 120;
 const PROFILE = [[0,0],[BW,0],[BW,BH],[0,BH]];
 const CAVITY  = [[8,8],[BW-8,8],[BW-8,BH-8],[8,BH-8]];
 const PLIES = [3, 4, 5, 6, 8];
-const TX = k => 40 + k*65;            // centre horizontal de la cible k
+const TX = k => NC === 5 ? 32 + k*44 : 40 + k*65;            // centre horizontal de la cible k
 
 /* Composants : tailles proposées (mm) et limites pour « Autre » */
 const COMPS = {
-  ldr:   {label:'Capteur de lumière (× 3)', sizes:[4,5,6],      min:3, max:8,  def:5,  ref:d => `photorésistance du KY-018, Ø ${fmt(d)} mm`},
-  led:   {label:'LED (× 3)',                 sizes:[3,5,8],      min:2, max:10, def:5,  ref:d => `LED Ø ${fmt(d)} mm`},
+  ldr:   {label:`Capteur de lumière (× ${NC})`, sizes:[4,5,6],      min:3, max:8,  def:5,  ref:d => `photorésistance du KY-018, Ø ${fmt(d)} mm`},
+  led:   {label:`LED (× ${NC})`,                 sizes:[3,5,8],      min:2, max:10, def:5,  ref:d => `LED Ø ${fmt(d)} mm`},
   raz:   {label:'Bouton RAZ',                sizes:[7,12,16],    min:5, max:18, def:7,  ref:d => `bouton poussoir à visser, Ø ${fmt(d)} mm`},
   sw:    {label:'Interrupteur marche/arrêt', sizes:[6,12],       min:5, max:16, def:6,  ref:d => `interrupteur à levier, Ø ${fmt(d)} mm`},
   jack:  {label:'Prise d’alimentation',  sizes:[8,11,12],    min:6, max:14, def:11, ref:d => `prise jack 5,5 × 2,1 à visser, Ø ${fmt(d)} mm`}
 };
 const GROUPS = [
-  {comp:'ldr', holes:['ldr0','ldr1','ldr2']}, {comp:'led', holes:['led0','led1','led2']},
+  {comp:'ldr', holes:[...Array(NC).keys()].map(k => 'ldr' + k)}, {comp:'led', holes:[...Array(NC).keys()].map(k => 'led' + k)},
   {comp:'raz', holes:['raz']}, {comp:'sw', holes:['sw']}, {comp:'jack', holes:['jack']}
 ];
 const DIRS = {'+X':[0,1],'-X':[0,-1],'+Y':[1,1],'-Y':[1,-1],'+Z':[2,1],'-Z':[2,-1]};
@@ -4921,7 +5304,7 @@ function G(){
 }
 /* Casquette et tubes pare-soleil : le capteur est au fond du tube, on tire dans le tube */
 const TZ = 70, TI = 16, TO = 22;          // hauteur des capteurs, Ø intérieur et Ø extérieur des tubes
-const SENS = [0,1,2].map(k => [TX(k), 70]);
+const SENS = [...Array(NC).keys()].map(k => [TX(k), 70]);
 const NT = SENS.length;
 function shade(){
   const g = G(), laser = S.proc === 'laser';
@@ -4940,7 +5323,7 @@ function frontFix(){ return tubeHoles(); }                  // façade : vis du 
 function backFix(){ return CORNERS.map(([x, z]) => circS(x, z, 3.2)); }   // fond : 4 vis M3
 /* Servos SG90 vissés sous la casquette : un volet se rabat devant la bouche de chaque tube */
 const SV_DX = 14, SV_GAP = 5, SV_YOFF = 5.5, SV_HZ = 108, SV_ZBOT = 56;   // décalage du servo, jeu devant le tube, décalage du corps, hauteur du palonnier, bas du volet
-const SVNOTE = ' Servos : 3 SG90 vissés sous la casquette (découpe 12,8 × 23,2 mm, 2 vis M2 et un trou Ø 8 mm pour les fils par servo). Chaque servo rabat un volet de 30 mm devant la bouche de son tube (rotation de 90°) : coche « Volets fermés » pour voir les deux positions.';
+const SVNOTE = ` Servos : ${NC} SG90 vissés sous la casquette (découpe 12,8 × 23,2 mm, 2 vis M2 et un trou Ø 8 mm pour les fils par servo). Chaque servo rabat un volet de 30 mm devant la bouche de son tube (rotation de 90°) : coche « Volets fermés » pour voir les deux positions.`;
 function servoSpots(){
   const g = G(), s = shade();
   return SENS.map(([x]) => { const y = -g.W2 - s.L - SV_GAP; return {x: x + SV_DX, y, ys: y + SV_YOFF}; });
@@ -4948,7 +5331,7 @@ function servoSpots(){
 function shapeSolid(s, y0, y1){ return s.type === 'rect' ? box(s.x0, y0, s.z0, s.x1, y1, s.z1) : cylAxis(s.r, y0, y1, 1, [s.x, 0, s.z]); }
 function HOLES(){
   const g = G(), y = -g.W2, d = g.front + 2, out = [];
-  for (let k = 0; k < 3; k++) {
+  for (let k = 0; k < NC; k++) {
     out.push({id:'ldr'+k, comp:'ldr',   p:[TX(k), y, 70],  dir:'+Y', depth:d});
     out.push({id:'led'+k, comp:'led',   p:[TX(k), y, 103], dir:'+Y', depth:d});
   }
@@ -5143,7 +5526,7 @@ function buildComponents(){
   const cyl = (r, a0, a1, axis, at, mat) => { const gg = new THREE.CylinderGeometry(r, r, Math.abs(a1-a0), 32); if (axis===0) gg.rotateZ(-Math.PI/2); else if (axis===2) gg.rotateX(Math.PI/2); const p = at.slice(); p[axis] = (a0+a1)/2; gg.translate(...p); return new THREE.Mesh(gg, mat); };
   const bx = (sx, sy, sz, x, y, z, mat) => { const mm = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); mm.position.set(x, y, z); g.add(mm); return mm; };
   const green = m(0x3cff8f), grey = m(0x3a4148), blue = m(0x1f6fc4), kyb = m(0x1d2a6b), ldr = m(0xe07b2e), yel = m(0xf2c94c), metal = m(0xb8c0c6), white = m(0xf2f2f2), nano = m(0x1d5fa8);
-  for (let k = 0; k < 3; k++) {
+  for (let k = 0; k < NC; k++) {
     const x = TX(k), rl = C.led/2, rs = C.ldr/2;
     g.add(cyl(rl, yf + 1, -W2 - rl*.4, 1, [x, 0, 103], green));
     const dome = new THREE.Mesh(new THREE.SphereGeometry(rl, 24, 12, 0, Math.PI*2, 0, Math.PI/2), green); dome.rotation.z = Math.PI; dome.position.set(x, -W2 - rl*.4, 103); g.add(dome);
@@ -5295,13 +5678,13 @@ function refresh(){
   btn.disabled = !st.ready;
   btn.textContent = S.proc === 'laser' ? 'Télécharger le plan de découpe (.svg)' : 'Télécharger les pièces à imprimer (.zip)';
   $('exportMsg').textContent = st.ready
-    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches, des anneaux des tubes et de la casquette, avec les trous de fixation.` : 'Tous les trous sont corrects. Le fichier contient le boîtier, son fond, les 3 tubes et la casquette au format STL.')
+    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches, des anneaux des tubes et de la casquette, avec les trous de fixation.` : `Tous les trous sont corrects. Le fichier contient le boîtier, son fond, les ${NC} tubes et la casquette au format STL.`)
     : `Le téléchargement se débloque quand les ${N} diamètres sont corrects (${st.n} / ${N}).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Bleu : gravure (numéros et cercles des cibles). Colle les couches C1 à C${g.n - 1} ; le fond C${g.n} se visse (4 vis M3 dans les coins) pour garder l'accès à l'électronique. Colle les anneaux sur chaque collerette et visse les collerettes sur la façade (4 vis M2) ; visse la casquette sur le dessus (4 vis M3). Volets : colle chaque languette dans la fente de sa tablette, puis fixe le palonnier sur la tablette.`
     : 'Imprime le boîtier façade sur le plateau, sans supports, les tubes debout et la casquette à plat. Couche 0,2 mm, remplissage 20 %. Fond : 4 vis M3 dans les coins ; tube : 4 vis M2 ; casquette : 4 vis M3.';
   const prev = $('exportPreview');
-  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : `<div class="stlinfo">boitier.stl (210 × 120 × 46 mm), fond.stl (210 × 120 × 3 mm), tubes.stl (3 × Ø ${TO} × ${fmt(shade().L)} mm), casquette.stl (${BW} × ${fmt(shade().D)} × 3 mm) et volets.stl (3 volets) · PLA</div>`;
+  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : `<div class="stlinfo">boitier.stl (${BW} × ${BH} × 46 mm), fond.stl (${BW} × ${BH} × 3 mm), tubes.stl (${NC} × Ø ${TO} × ${fmt(shade().L)} mm), casquette.stl (${BW} × ${fmt(shade().D)} × 3 mm) et volets.stl (3 volets) · PLA</div>`;
   else prev.innerHTML = '';
   return st;
 }
@@ -5410,17 +5793,17 @@ function readme(){
 =====================================
 
 Fichiers :
-  boitier.stl : boitier avec sa facade (210 x 120 x 46 mm)
-  fond.stl    : plaque de fond (210 x 120 x 3 mm), a visser (4 vis M3 dans les coins) 
-  tubes.stl   : 3 tubes pare-soleil avec collerette Ø ${FL_D} mm (diametre ext. ${TO} mm, int. ${TI} mm, longueur ${fmt(shade().L)} mm)
-  casquette.stl : visiere (${BW} x ${fmt(shade().D)} x 3 mm), 4 trous Ø 3,4 mm pour les vis M3, 3 decoupes pour les servos et 3 trous pour les fils
-  volets.stl  : 3 volets en T (plaque + tablette), a imprimer tablette sur le plateau
+  boitier.stl : boitier avec sa facade (${BW} x ${BH} x 46 mm)
+  fond.stl    : plaque de fond (${BW} x ${BH} x 3 mm), a visser (4 vis M3 dans les coins) 
+  tubes.stl   : ${NC} tubes pare-soleil avec collerette Ø ${FL_D} mm (diametre ext. ${TO} mm, int. ${TI} mm, longueur ${fmt(shade().L)} mm)
+  casquette.stl : visiere (${BW} x ${fmt(shade().D)} x 3 mm), 4 trous Ø 3,4 mm pour les vis M3, ${NC} decoupes pour les servos et ${NC} trous pour les fils
+  volets.stl  : ${NC} volets en T (plaque + tablette), a imprimer tablette sur le plateau
 Unites : millimetres.
 
 Composants prevus (diametre du composant / du trou) :
-  3 capteurs KY-018 : ${fmt(C.ldr)} / ${h('ldr')} mm
-  3 LED             : ${fmt(C.led)} / ${h('led')} mm
-  3 servos SG90     : visses sous la casquette (decoupe 12,8 x 23,2 mm, 2 vis M2 chacun)
+  ${NC} capteurs KY-018 : ${fmt(C.ldr)} / ${h('ldr')} mm
+  ${NC} LED             : ${fmt(C.led)} / ${h('led')} mm
+  ${NC} servos SG90     : visses sous la casquette (decoupe 12,8 x 23,2 mm, 2 vis M2 chacun)
   bouton RAZ        : ${fmt(C.raz)} / ${h('raz')} mm
   interrupteur      : ${fmt(C.sw)} / ${h('sw')} mm (cote droit)
   prise jack 9 V    : ${fmt(C.jack)} / ${h('jack')} mm (cote droit)
@@ -5431,7 +5814,7 @@ Impression conseillee :
   - Les tubes s'impriment debout, la casquette a plat.
 
 Montage :
-  1. Prepare les 3 volets (volets.stl) : chacun se fixe sur le palonnier d'un servo.
+  1. Prepare les ${NC} volets (volets.stl) : chacun se fixe sur le palonnier d'un servo.
   2. Colle chaque capteur KY-018 derriere son trou, la photoresistance vers l'avant.
   3. Place la Nano et les deux regulateurs au fond du boitier.
   4. Visse chaque servo SG90 sous la casquette : le corps passe dans la decoupe, les oreilles sont plaquees
@@ -5470,7 +5853,7 @@ async function doExport(){
     const back = stlBinary(parts.back, (x,y,z) => [x, BH - z, y - W2]);
     const tubes = stlBinary(parts.tubes, (x,y,z) => [BW - x, BH - z, -(y + W2)]);
     const cap = stlBinary(parts.cap, (x,y,z) => [x, y + W2 + sh.P, z - BH]);    const stlMerge = list => { const bodies = list.map(a => a.subarray(84)), nt = bodies.reduce((n, b) => n + b.length/50, 0), out = new Uint8Array(84 + nt*50); out.set(list[0].subarray(0, 80), 0); new DataView(out.buffer).setUint32(80, nt, true); let o = 84; for (const b of bodies) { out.set(b, o); o += b.length; } return out; };
-    const volets = stlMerge([0, 1, 2].map(i => stlBinary(parts.flap, (x,y,z) => [x + 30 + i*40, 5 - y, 108 - z])));
+    const volets = stlMerge([...Array(NC).keys()].map(i => stlBinary(parts.flap, (x,y,z) => [x + 30 + (i % 3)*40, 5 - y + Math.floor(i / 3)*20, 108 - z])));
     r = await saveFile('cibles_impression_3d.zip', zip([{name:'boitier.stl', data:box}, {name:'fond.stl', data:back}, {name:'tubes.stl', data:tubes}, {name:'casquette.stl', data:cap}, {name:'volets.stl', data:volets}, {name:'LISEZ-MOI.txt', data:readme()}]));
   }
   btn.disabled = false;
@@ -5524,16 +5907,17 @@ const BW = 130, BH = 125;
 const PROFILE = [[0,0],[BW,0],[BW,BH],[0,BH]];
 const CAVITY  = [[8,8],[BW-8,8],[BW-8,BH-8],[8,BH-8]];
 const TCX = 65, TCZ = 55;              // centre de la cible (capteur)
-const LEDX = [45, 65, 85], LEDZ = 105; // les 3 LED de vie
+const NU = window.NB.u;                // 3 ou 5 vies
+const LEDX = NU === 5 ? [35, 50, 65, 80, 95] : [45, 65, 85], LEDZ = 105; // les LED de vie
 
 /* Composants : tailles proposées (mm) et limites pour « Autre » */
 const COMPS = {
   ldr:   {label:'Capteur de lumière',        sizes:[4,5,6],   min:3, max:8,  def:5, ref:d => `photorésistance du KY-018, Ø ${fmt(d)} mm`},
-  led:   {label:'LED de vie (× 3)',          sizes:[3,5,8],   min:2, max:10, def:5, ref:d => `LED Ø ${fmt(d)} mm`},
+  led:   {label:`LED de vie (× ${NU})`,          sizes:[3,5,8],   min:2, max:10, def:5, ref:d => `LED Ø ${fmt(d)} mm`},
   raz:   {label:'Bouton RAZ',                sizes:[7,12,16], min:5, max:18, def:7, ref:d => `bouton poussoir à visser, Ø ${fmt(d)} mm`},
   sw:    {label:'Interrupteur marche/arrêt', sizes:[6,12],    min:5, max:16, def:6, ref:d => `interrupteur à levier, Ø ${fmt(d)} mm`}
 };
-const GROUPS = [{comp:'ldr', holes:['ldr']}, {comp:'led', holes:['led0','led1','led2']}, {comp:'raz', holes:['raz']}, {comp:'sw', holes:['sw']}];
+const GROUPS = [{comp:'ldr', holes:['ldr']}, {comp:'led', holes:LEDX.map((x, k) => 'led' + k)}, {comp:'raz', holes:['raz']}, {comp:'sw', holes:['sw']}];
 const DIRS = {'+X':[0,1],'-X':[0,-1],'+Y':[1,1],'-Y':[1,-1],'+Z':[2,1],'-Z':[2,-1]};
 const PROC = {
   print: {name:'Impression 3D', lo:.1, hi:.5,
@@ -5968,13 +6352,13 @@ function laserSVG(preview){
   body += '</g>';
   const Hd = y2 + s.D + 5;
   const size = preview ? 'width="100%"' : `width="${Wd}mm" height="${Hd.toFixed(3)}mm"`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" ${size} viewBox="0 0 ${Wd} ${Hd.toFixed(3)}"><title>Cible 3 LED : ${g.n} couches de ${fmt(g.t)} mm, anneaux et casquette</title>${body}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" ${size} viewBox="0 0 ${Wd} ${Hd.toFixed(3)}"><title>Cible ${NU} LED : ${g.n} couches de ${fmt(g.t)} mm, anneaux et casquette</title>${body}</svg>`;
 }
 
 function stlBinary(geo, map){
   const pos = geo.attributes.position, n = pos.count/3;
   const buf = new ArrayBuffer(84 + 50*n), dv = new DataView(buf);
-  const head = 'Cible laser 3 LED - boitier imprime 3D (mm)'; for (let i = 0; i < 80; i++) dv.setUint8(i, i < head.length ? head.charCodeAt(i) : 32);
+  const head = `Cible laser ${NU} LED - boitier imprime 3D (mm)`; for (let i = 0; i < 80; i++) dv.setUint8(i, i < head.length ? head.charCodeAt(i) : 32);
   dv.setUint32(80, n, true);
   const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), nn = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
   let o = 84;
@@ -6010,7 +6394,7 @@ function zip(files){
 }
 function readme(){
   const C = S.comp, h = k => fmt(num(S.holes[k]));
-  return `CIBLE LASER 3 LED - BOITIER IMPRIME EN 3D
+  return `CIBLE LASER ${NU} LED - BOITIER IMPRIME EN 3D
 =========================================
 
 Fichiers :
@@ -6022,7 +6406,7 @@ Unites : millimetres.
 
 Composants prevus (diametre du composant / du trou) :
   capteur KY-018    : ${fmt(C.ldr)} / ${h('ldr')} mm (centre de la cible)
-  3 LED de vie      : ${fmt(C.led)} / ${h('led')} mm
+  ${NU} LED de vie      : ${fmt(C.led)} / ${h('led')} mm
   bouton RAZ        : ${fmt(C.raz)} / ${h('raz')} mm
   interrupteur      : ${fmt(C.sw)} / ${h('sw')} mm (cote droit)
 
@@ -6033,7 +6417,7 @@ Impression conseillee :
 
 Montage :
   1. Colle le capteur KY-018 derriere le trou central, la photoresistance vers l'avant.
-  2. Enfonce les 3 LED dans leurs trous et visse le bouton RAZ et l'interrupteur.
+  2. Enfonce les ${NU} LED dans leurs trous et visse le bouton RAZ et l'interrupteur.
   3. Place la Nano et la pile 9 V au fond du boitier.
   4. Visse le tube par sa collerette sur la facade (4 vis M2 de 10 mm + ecrous, ecrous a l'interieur) :
      le capteur KY-018 est au fond du tube, le joueur tire dans le tube.
@@ -6060,14 +6444,14 @@ async function doExport(){
   if (!status().ready) return;
   const btn = $('exportBtn'); btn.disabled = true;
   let r;
-  if (S.proc === 'laser') r = await saveFile(`cible_3_led_decoupe_laser_${String(S.ply).replace('.', ',')}mm.svg`, laserSVG(false));
+  if (S.proc === 'laser') r = await saveFile(`cible_${NU}_led_decoupe_laser_${String(S.ply).replace('.', ',')}mm.svg`, laserSVG(false));
   else {
     const parts = lastParts && lastParts.box && lastParts.tubes ? lastParts : Object.assign(buildPrint(), buildShade()), W2 = G().W2, sh = shade();
     const bx = stlBinary(parts.box, (x,y,z) => [x, BH - z, y + W2]);
     const back = stlBinary(parts.back, (x,y,z) => [x, BH - z, y - W2]);
     const tubes = stlBinary(parts.tubes, (x,y,z) => [BW - x, BH - z, -(y + W2)]);
     const cap = stlBinary(parts.cap, (x,y,z) => [x, y + W2 + sh.P, z - BH]);
-    r = await saveFile('cible_3_led_impression_3d.zip', zip([{name:'boitier.stl', data:bx}, {name:'fond.stl', data:back}, {name:'tubes.stl', data:tubes}, {name:'casquette.stl', data:cap}, {name:'LISEZ-MOI.txt', data:readme()}]));
+    r = await saveFile(`cible_${NU}_led_impression_3d.zip`, zip([{name:'boitier.stl', data:bx}, {name:'fond.stl', data:back}, {name:'tubes.stl', data:tubes}, {name:'casquette.stl', data:cap}, {name:'LISEZ-MOI.txt', data:readme()}]));
   }
   btn.disabled = false;
   $('exportMsg').textContent = r.ok ? 'Fichier prêt. Vérifie ton dossier Téléchargements.' : r.msg;
