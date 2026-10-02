@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TechnoQuest — Jeu de Plateau 5ème</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D1117;--bg2:#161B22;--bg3:#21262D;
+  --green:#00FF9C;--blue:#3B82F6;--purple:#8B5CF6;
+  --orange:#F97316;--red:#EF4444;--text:#E6EDF3;--muted:#8B949E;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,156,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,156,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;min-height:100vh}
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column}
+
+/* ACCUEIL */
+#screen-accueil{align-items:center;justify-content:center;padding:30px 20px;background:radial-gradient(ellipse at 50% 0%,rgba(0,255,156,.08) 0%,transparent 60%)}
+.accueil-wrap{max-width:700px;width:100%;text-align:center}
+.logo-circuit{width:90px;height:90px;border:3px solid var(--green);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:24px;box-shadow:0 0 30px rgba(0,255,156,.3);animation:logopulse 2s ease-in-out infinite}
+@keyframes logopulse{0%,100%{box-shadow:0 0 30px rgba(0,255,156,.3)}50%{box-shadow:0 0 50px rgba(0,255,156,.5)}}
+.game-title{font-family:'Orbitron',monospace;font-size:clamp(32px,6vw,58px);font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.game-subtitle{font-family:'Orbitron',monospace;font-size:clamp(11px,2vw,14px);color:var(--muted);letter-spacing:4px;text-transform:uppercase;margin-bottom:30px}
+.zones-preview{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:30px;text-align:left}
+.zone-card{background:var(--bg2);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;transition:transform .2s}
+.zone-card:hover{transform:translateY(-2px)}
+.zone-icon{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.zone-info .zone-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.zone-info .zone-count{font-size:12px;color:var(--muted)}
+.accueil-stats{display:flex;gap:12px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}
+.stat-pill{background:var(--bg2);border:1px solid rgba(255,255,255,.07);border-radius:30px;padding:8px 18px;font-size:13px;color:var(--muted)}
+.stat-pill span{color:var(--text);font-weight:700}
+.btn-start{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--green),#00CC7A);color:#0D1117;border:none;border-radius:14px;padding:18px 52px;cursor:pointer;box-shadow:0 8px 32px rgba(0,255,156,.35);transition:transform .15s;text-transform:uppercase}
+.btn-start:hover{transform:translateY(-2px)}
+.accueil-note{margin-top:16px;color:var(--muted);font-size:12px}
+
+/* PLATEAU */
+#screen-plateau{padding:16px;align-items:stretch}
+.plateau-inner{max-width:900px;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;background:var(--bg2);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:12px 20px}
+.hud-left,.hud-right{display:flex;flex-direction:column;gap:4px}
+.hud-right{align-items:flex-end}
+.hud-label{font-size:10px;font-family:'Orbitron',monospace;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.hud-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--text)}
+.hud-val.green{color:var(--green)}
+.hud-center{text-align:center}
+#timer-ring{position:relative;width:72px;height:72px;margin:0 auto}
+#timer-ring svg{transform:rotate(-90deg)}
+#timer-ring .ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:5}
+#timer-ring .ring-fg{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 1s linear,stroke .3s}
+#timer-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--text)}
+.score-bar-wrap{background:rgba(255,255,255,.06);border-radius:4px;height:6px;margin-top:6px;overflow:hidden;width:120px}
+.score-bar-inner{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--blue));transition:width .5s ease}
+.plateau-title{font-family:'Orbitron',monospace;font-size:14px;color:var(--muted);text-align:center;letter-spacing:2px;text-transform:uppercase}
+.board{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.cell{aspect-ratio:1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;border:2px solid transparent;position:relative;transition:transform .2s,box-shadow .2s;cursor:default;user-select:none}
+.cell.available{cursor:pointer;animation:cellpulse 1.5s ease-in-out infinite}
+.cell.available:hover{transform:scale(1.08);z-index:5}
+@keyframes cellpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.2)}50%{box-shadow:0 0 0 6px rgba(255,255,255,0)}}
+.cell.done{opacity:.55}
+.cell.current{border-color:white!important;box-shadow:0 0 0 3px rgba(255,255,255,.25)!important}
+.cell.locked{opacity:.25}
+.cell .cell-num{font-family:'Orbitron',monospace;font-size:clamp(12px,2vw,18px);font-weight:900;line-height:1}
+.cell .cell-icon{font-size:clamp(14px,2vw,20px);line-height:1}
+.cell .cell-label{font-size:7px;font-family:'Orbitron',monospace;letter-spacing:.5px;opacity:.7;text-align:center;margin-top:2px;display:none}
+@media(min-width:500px){.cell .cell-label{display:block}}
+.cell[data-zone="robot"]{background:rgba(0,255,156,.12);border-color:rgba(0,255,156,.3);color:var(--green)}
+.cell[data-zone="robot"].available{box-shadow:0 0 16px rgba(0,255,156,.25)}
+.cell[data-zone="ia"]{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);color:var(--blue)}
+.cell[data-zone="ia"].available{box-shadow:0 0 16px rgba(59,130,246,.25)}
+.cell[data-zone="secu"]{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:var(--purple)}
+.cell[data-zone="secu"].available{box-shadow:0 0 16px rgba(139,92,246,.25)}
+.cell[data-zone="conception"]{background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3);color:var(--orange)}
+.cell[data-zone="conception"].available{box-shadow:0 0 16px rgba(249,115,22,.25)}
+.cell[data-zone="bonus"]{background:rgba(255,215,0,.12);border-color:rgba(255,215,0,.3);color:#FFD700}
+.cell[data-zone="bonus"].available{box-shadow:0 0 16px rgba(255,215,0,.25)}
+.cell[data-zone="minigame"]{background:rgba(255,100,200,.15);border-color:rgba(255,100,200,.4);color:#FF64C8;font-size:clamp(18px,3vw,26px)}
+.cell[data-zone="minigame"].available{box-shadow:0 0 20px rgba(255,100,200,.4);animation:gamecellanim 1s ease-in-out infinite}
+@keyframes gamecellanim{0%,100%{box-shadow:0 0 10px rgba(255,100,200,.4);transform:scale(1)}50%{box-shadow:0 0 25px rgba(255,100,200,.7);transform:scale(1.05)}}
+.cell[data-zone="start"]{background:rgba(0,255,156,.2);border-color:var(--green);color:var(--green)}
+.cell[data-zone="finish"]{background:linear-gradient(135deg,rgba(255,215,0,.2),rgba(249,115,22,.2));border-color:#FFD700;color:#FFD700}
+.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* QUESTION MODAL */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center;padding:16px}
+#modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-zone-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:30px;font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+.modal-q-num{color:var(--muted);font-size:12px;margin-bottom:10px;font-family:'Orbitron',monospace}
+.modal-question{font-size:clamp(15px,2.5vw,18px);font-weight:600;line-height:1.55;color:var(--text);margin-bottom:22px}
+.choices{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.choice-btn{background:var(--bg3);border:2px solid rgba(255,255,255,.08);border-radius:12px;padding:13px 18px;text-align:left;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .15s,background .15s}
+.choice-btn:not(:disabled):hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.2)}
+.choice-btn .choice-letter{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0}
+.choice-btn.correct{background:rgba(0,255,156,.12)!important;border-color:#00FF9C!important;color:#00FF9C!important}
+.choice-btn.correct .choice-letter{background:rgba(0,255,156,.2);color:#00FF9C}
+.choice-btn.wrong{background:rgba(239,68,68,.12)!important;border-color:#EF4444!important;color:#FCA5A5!important}
+.choice-btn.wrong .choice-letter{background:rgba(239,68,68,.2);color:#EF4444}
+.explication-box{background:rgba(0,255,156,.07);border:1px solid rgba(0,255,156,.25);border-radius:14px;padding:16px;margin-bottom:16px;display:none;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.explication-box.show{display:block}
+.explication-title{color:var(--green);font-size:12px;font-weight:700;font-family:'Orbitron',monospace;letter-spacing:1px;margin-bottom:8px}
+.explication-text{color:#A7F3D0;font-size:13px;line-height:1.6}
+.explication-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px}
+.pts-badge{font-weight:700;font-size:14px}
+.pts-badge.ok{color:var(--green)}
+.pts-badge.ko{color:var(--red)}
+.btn-next-q{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:1px;border:none;border-radius:10px;padding:10px 22px;cursor:pointer;color:#0D1117;text-transform:uppercase;background:var(--green)}
+
+/* MINI-GAME OVERLAY */
+#minigame-overlay{display:none;position:fixed;inset:0;background:#000;z-index:200;flex-direction:column;align-items:center;justify-content:center}
+#minigame-overlay.open{display:flex}
+#mg-title{font-family:'Orbitron',monospace;font-size:clamp(18px,4vw,32px);font-weight:900;color:#FF64C8;margin-bottom:6px;text-align:center}
+#mg-subtitle{font-family:'Orbitron',monospace;font-size:12px;color:var(--muted);margin-bottom:16px;letter-spacing:2px;text-align:center}
+#mg-score-display{font-family:'Orbitron',monospace;font-size:16px;color:#FFD700;margin-bottom:8px}
+#mg-time-display{font-family:'Orbitron',monospace;font-size:14px;color:var(--muted);margin-bottom:12px}
+#mg-canvas{border:2px solid #FF64C8;border-radius:8px;display:block;max-width:100%;box-shadow:0 0 30px rgba(255,100,200,.3)}
+#mg-instructions{font-size:13px;color:var(--muted);margin-top:10px;text-align:center;max-width:440px}
+#mg-result{display:none;flex-direction:column;align-items:center;gap:12px;text-align:center}
+#mg-result-icon{font-size:60px}
+#mg-result-title{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:#FF64C8}
+#mg-result-pts{font-family:'Orbitron',monospace;font-size:36px;font-weight:900;color:#FFD700}
+#mg-result-sub{color:var(--muted);font-size:14px}
+.btn-mg-continue{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,#FF64C8,#8B5CF6);color:#fff;border:none;border-radius:14px;padding:14px 36px;cursor:pointer;text-transform:uppercase;margin-top:8px}
+#mg-countdown{font-family:'Orbitron',monospace;font-size:72px;font-weight:900;color:#FF64C8;text-shadow:0 0 40px rgba(255,100,200,.8)}
+
+/* LEVEL UP */
+#screen-levelup{align-items:center;justify-content:center;padding:30px 20px;background:radial-gradient(ellipse at 50% 30%,rgba(0,255,156,.1) 0%,transparent 60%)}
+.levelup-wrap{text-align:center;max-width:480px}
+.levelup-icon{font-size:80px;margin-bottom:20px;animation:bounce .6s ease infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.levelup-title{font-family:'Orbitron',monospace;font-size:clamp(22px,4vw,36px);font-weight:900;color:var(--green);margin-bottom:8px;letter-spacing:2px}
+.levelup-sub{color:var(--muted);font-size:15px;margin-bottom:24px}
+.levelup-score{font-family:'Orbitron',monospace;font-size:40px;font-weight:900;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:28px}
+.btn-continue{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--green),#00CC7A);color:#0D1117;border:none;border-radius:14px;padding:16px 40px;cursor:pointer;text-transform:uppercase}
+
+/* FIN */
+#screen-fin{align-items:center;justify-content:center;padding:30px 20px;background:radial-gradient(ellipse at 50% 20%,rgba(255,215,0,.08) 0%,transparent 60%)}
+.fin-wrap{max-width:660px;width:100%;text-align:center}
+.fin-trophy{font-size:90px;margin-bottom:16px}
+.fin-title{font-family:'Orbitron',monospace;font-size:clamp(26px,5vw,44px);font-weight:900;letter-spacing:2px;margin-bottom:8px}
+.fin-sub{color:var(--muted);font-size:15px;margin-bottom:24px}
+.fin-score-big{font-family:'Orbitron',monospace;font-size:clamp(48px,9vw,72px);font-weight:900;margin-bottom:4px}
+.fin-score-max{color:var(--muted);font-size:16px;margin-bottom:6px}
+.fin-medaille{font-size:24px;font-weight:700;margin-bottom:28px}
+.fin-details{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:28px;text-align:left}
+.fin-zone-card{background:var(--bg2);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:16px}
+.fin-zone-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.fin-zone-pts{font-family:'Orbitron',monospace;font-size:18px;font-weight:700}
+.fin-bar-wrap{background:rgba(255,255,255,.06);border-radius:4px;height:6px;overflow:hidden;margin-top:8px}
+.fin-bar{height:100%;border-radius:4px;transition:width 1s .5s ease}
+.btn-restart{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;letter-spacing:2px;background:var(--bg2);color:var(--text);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:16px 40px;cursor:pointer;text-transform:uppercase}
+
+@media(max-width:480px){.zones-preview{grid-template-columns:1fr}.fin-details{grid-template-columns:1fr}.hud{grid-template-columns:1fr;text-align:center}.hud-right{align-items:center}.board{grid-template-columns:repeat(5,1fr)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ACCUEIL -->
+<div id="screen-accueil" class="screen active">
+  <div class="accueil-wrap">
+    <div class="logo-circuit">🤖</div>
+    <h1 class="game-title">TECHNOQUEST</h1>
+    <p class="game-subtitle">Technologie · 5ème · Jeu de Plateau</p>
+    <div class="zones-preview">
+      <div class="zone-card"><div class="zone-icon" style="background:rgba(0,255,156,.15)">🦾</div><div class="zone-info"><div class="zone-name" style="color:var(--green)">Robotique</div><div class="zone-count">9 questions</div></div></div>
+      <div class="zone-card"><div class="zone-icon" style="background:rgba(59,130,246,.15)">🧠</div><div class="zone-info"><div class="zone-name" style="color:var(--blue)">Intelligence Artificielle</div><div class="zone-count">9 questions</div></div></div>
+      <div class="zone-card"><div class="zone-icon" style="background:rgba(139,92,246,.15)">🔐</div><div class="zone-info"><div class="zone-name" style="color:var(--purple)">Sécurité Numérique</div><div class="zone-count">9 questions</div></div></div>
+      <div class="zone-card"><div class="zone-icon" style="background:rgba(249,115,22,.15)">⚙️</div><div class="zone-info"><div class="zone-name" style="color:var(--orange)">Conception d'Objets</div><div class="zone-count">8 questions</div></div></div>
+    </div>
+    <div class="accueil-stats">
+      <div class="stat-pill">⏱ <span>30 min</span></div>
+      <div class="stat-pill">❓ <span>35 questions</span></div>
+      <div class="stat-pill">🕹️ <span>7 mini-jeux</span></div>
+      <div class="stat-pill">🏆 <span>500 pts max</span></div>
+    </div>
+    <button class="btn-start" onclick="startGame()">▶ Lancer la Partie</button>
+    <p class="accueil-note">🕹️ Un mini-jeu bonus apparaît toutes les 5 questions !</p>
+  </div>
+</div>
+
+<!-- PLATEAU -->
+<div id="screen-plateau" class="screen">
+  <div class="plateau-inner">
+    <div class="hud">
+      <div class="hud-left">
+        <span class="hud-label">Score</span>
+        <span class="hud-val green" id="hud-score">0</span>
+        <div class="score-bar-wrap"><div class="score-bar-inner" id="score-bar" style="width:0%"></div></div>
+      </div>
+      <div class="hud-center">
+        <div id="timer-ring">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle class="ring-bg" cx="36" cy="36" r="30"/>
+            <circle class="ring-fg" id="ring-fg" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="0" stroke="var(--green)"/>
+          </svg>
+          <div id="timer-text">30:00</div>
+        </div>
+        <div class="hud-label" style="text-align:center;margin-top:4px">TEMPS</div>
+      </div>
+      <div class="hud-right">
+        <span class="hud-label">Niveau</span>
+        <span class="hud-val" id="hud-level">1 / 5</span>
+        <span style="color:var(--muted);font-size:11px" id="hud-progress">Case 0 / 35</span>
+      </div>
+    </div>
+    <div>
+      <p class="plateau-title" style="margin-bottom:10px">🗺️ Plateau de Jeu — 🕹️ = Mini-Jeu toutes les 5 cases</p>
+      <div class="board" id="board"></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Robotique</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>IA</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Sécurité</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Conception</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#FF64C8"></div>🕹️ Mini-Jeu</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#FFD700"></div>⭐ Bonus</div>
+    </div>
+  </div>
+</div>
+
+<!-- LEVEL UP -->
+<div id="screen-levelup" class="screen">
+  <div class="levelup-wrap">
+    <div class="levelup-icon" id="lu-icon">🎉</div>
+    <div class="levelup-title" id="lu-title">NIVEAU DÉBLOQUÉ !</div>
+    <div class="levelup-sub" id="lu-sub">Tu passes au niveau 2</div>
+    <div class="levelup-score" id="lu-score">+50 pts</div>
+    <button class="btn-continue" onclick="continuePlateau()">Continuer →</button>
+  </div>
+</div>
+
+<!-- FIN -->
+<div id="screen-fin" class="screen">
+  <div class="fin-wrap">
+    <div class="fin-trophy" id="fin-trophy">🏆</div>
+    <div class="fin-title" id="fin-title">MISSION ACCOMPLIE</div>
+    <div class="fin-sub" id="fin-sub"></div>
+    <div class="fin-score-big" id="fin-score-big">0</div>
+    <div class="fin-score-max">/ 500 points</div>
+    <div class="fin-medaille" id="fin-medaille"></div>
+    <div class="fin-details" id="fin-details"></div>
+    <button class="btn-restart" onclick="restartGame()">🔄 Nouvelle Partie</button>
+  </div>
+</div>
+
+</div>
+
+<!-- QUESTION MODAL -->
+<div id="modal-overlay">
+  <div class="modal">
+    <div class="modal-zone-badge" id="modal-badge"></div>
+    <div class="modal-q-num" id="modal-q-num"></div>
+    <div class="modal-question" id="modal-question"></div>
+    <div class="choices" id="modal-choices"></div>
+    <div class="explication-box" id="explication-box">
+      <div class="explication-title">💡 Explication</div>
+      <div class="explication-text" id="explication-text"></div>
+      <div class="explication-footer">
+        <span class="pts-badge" id="pts-badge"></span>
+        <button class="btn-next-q" id="btn-next-q" onclick="closeQuestion()">Suivant →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MINI-GAME OVERLAY -->
+<div id="minigame-overlay">
+  <div id="mg-countdown" style="display:none"></div>
+  <div id="mg-game-area" style="display:none;flex-direction:column;align-items:center">
+    <div id="mg-title"></div>
+    <div id="mg-subtitle"></div>
+    <div id="mg-score-display">Score : 0</div>
+    <div id="mg-time-display">Temps : 15s</div>
+    <canvas id="mg-canvas" width="440" height="300"></canvas>
+    <div id="mg-instructions"></div>
+  </div>
+  <div id="mg-result">
+    <div id="mg-result-icon">🎮</div>
+    <div id="mg-result-title">MINI-JEU TERMINÉ !</div>
+    <div id="mg-result-pts">+0 pts</div>
+    <div id="mg-result-sub"></div>
+    <button class="btn-mg-continue" onclick="closeMiniGame()">Continuer le Plateau →</button>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// DATA — QUESTIONS
+// ================================================================
+const ZONES={
+  robot:{label:'Robotique',icon:'🦾',color:'var(--green)',bg:'rgba(0,255,156,.15)'},
+  ia:{label:'IA',icon:'🧠',color:'var(--blue)',bg:'rgba(59,130,246,.15)'},
+  secu:{label:'Sécurité',icon:'🔐',color:'var(--purple)',bg:'rgba(139,92,246,.15)'},
+  conception:{label:'Conception',icon:'⚙️',color:'var(--orange)',bg:'rgba(249,115,22,.15)'},
+  bonus:{label:'Bonus',icon:'⭐',color:'#FFD700',bg:'rgba(255,215,0,.15)'},
+};
+
+const QUESTIONS={
+  robot:[
+    {q:"Qui est considéré comme le père de la robotique industrielle ?",choices:["Isaac Asimov","Joseph Engelberger","Nikola Tesla","Alan Turing"],answer:1,exp:"Joseph Engelberger (1925-2015) est surnommé le « père de la robotique industrielle ». Il a fondé Unimation et mis en place le premier robot industriel Unimate dans une usine General Motors en 1961."},
+    {q:"En quelle année est apparu le mot « robot » pour la première fois ?",choices:["1920","1945","1960","1985"],answer:0,exp:"Le mot « robot » vient de la pièce de théâtre R.U.R. de Karel Čapek en 1920. En tchèque, « robota » signifie « travail forcé »."},
+    {q:"Qu'est-ce qu'un robot industriel ?",choices:["Un robot qui cuisine","Une machine automatisée programmable pour tâches répétitives en usine","Un jouet électronique","Un aspirateur autonome"],answer:1,exp:"Un robot industriel est une machine programmable et multifonction conçue pour déplacer des matériaux ou outils selon des programmes variés. On les trouve en automobile, agroalimentaire, etc."},
+    {q:"Combien de lois de la robotique Asimov a-t-il formulées ?",choices:["2","3","4","5"],answer:1,exp:"Isaac Asimov a formulé 3 lois en 1942 : 1. Ne pas blesser un humain. 2. Obéir aux humains. 3. Protéger son existence. Il ajoutera plus tard une « loi zéro »."},
+    {q:"Quel est le rôle d'un capteur dans un robot ?",choices:["L'alimenter en électricité","Détecter des informations de l'environnement","Stocker les programmes","Faire bouger les roues"],answer:1,exp:"Un capteur détecte une information physique (lumière, température, distance…) et la convertit en signal électrique exploitable par le système de contrôle du robot."},
+    {q:"Comment s'appelle la partie du robot qui effectue les mouvements physiques ?",choices:["Le processeur","Le capteur","L'effecteur (ou actionneur)","La mémoire"],answer:2,exp:"L'effecteur (ou actionneur) est la partie qui réalise les actions physiques : moteurs, vérins, pinces, bras articulés. Il traduit les ordres électriques en mouvements mécaniques."},
+    {q:"Comment s'appelle un robot qui travaille aux côtés des humains en toute sécurité ?",choices:["Un androïde","Un cobot (robot collaboratif)","Un cyborg","Un drone"],answer:1,exp:"Les cobots (robots collaboratifs) sont conçus pour travailler en sécurité aux côtés des humains. Équipés de capteurs de force, ils s'arrêtent automatiquement en cas de contact non prévu."},
+    {q:"Quel était le nom du célèbre robot humanoïde de Honda ?",choices:["AIBO","ASIMO","NAO","Atlas"],answer:1,exp:"ASIMO (Advanced Step in Innovative MObility) est le robot humanoïde de Honda présenté en 2000. Il pouvait marcher, courir, monter des escaliers et interagir avec les humains."},
+    {q:"Qu'est-ce que la programmation d'un robot ?",choices:["Lui donner à manger","L'ensemble des instructions qui définissent ses actions","Sa couleur et sa forme","Le matériau dont il est fait"],answer:1,exp:"Programmer un robot consiste à écrire une suite d'instructions ordonnées qui définissent les actions à effectuer. Ces instructions sont stockées dans sa mémoire et exécutées par son processeur."},
+  ],
+  ia:[
+    {q:"Que signifie « IA » ?",choices:["Informatique Avancée","Intelligence Artificielle","Interface Automatique","Ingénierie Appliquée"],answer:1,exp:"IA signifie Intelligence Artificielle. C'est un domaine de l'informatique visant à créer des programmes capables d'imiter des capacités cognitives humaines : apprendre, raisonner, reconnaître des images ou la parole."},
+    {q:"Qui est considéré comme le père de l'intelligence artificielle ?",choices:["Albert Einstein","Alan Turing","Bill Gates","Steve Jobs"],answer:1,exp:"Alan Turing (1912-1954) est le père de l'IA. En 1950, il proposa le « test de Turing » pour évaluer si une machine peut penser. Il est aussi à l'origine de l'informatique moderne."},
+    {q:"Qu'est-ce que le « Machine Learning » ?",choices:["Un robot qui apprend à marcher","Un programme qui s'améliore grâce aux données","Un jeu vidéo intelligent","Un logiciel de calcul"],answer:1,exp:"Le Machine Learning est une branche de l'IA où l'algorithme apprend à partir de données sans être explicitement reprogrammé. Par exemple, un algorithme de reconnaissance d'images s'améliore en analysant des milliers de photos."},
+    {q:"Un assistant vocal (Siri, Google Assistant) utilise quelle technologie ?",choices:["La reconnaissance vocale et l'IA","Uniquement le WiFi","Un dictionnaire numérique","Des boutons cachés"],answer:0,exp:"Les assistants vocaux combinent la reconnaissance automatique de la parole (audio → texte) et le traitement du langage naturel (comprendre le sens). Ces deux technologies sont des branches de l'IA."},
+    {q:"Qu'est-ce qu'un algorithme ?",choices:["Un virus informatique","Une suite finie et ordonnée d'instructions pour résoudre un problème","Une marque d'ordinateur","Un type de câble réseau"],answer:1,exp:"Un algorithme est une suite finie et ordonnée d'instructions permettant de résoudre un problème. C'est la « recette » que suit l'ordinateur. Les algorithmes sont à la base de tout programme informatique."},
+    {q:"Laquelle de ces choses N'est PAS une application de l'IA ?",choices:["La recommandation YouTube","La détection de spam","L'ampoule électrique classique","La conduite autonome"],answer:2,exp:"L'ampoule électrique classique est une simple résistance qui émet de la lumière par chaleur, inventée au XIXe siècle. Elle ne contient aucun algorithme, contrairement aux ampoules connectées modernes."},
+    {q:"Qu'est-ce qu'une « donnée » en informatique ?",choices:["Un fil électrique","Une information stockée et traitée par un ordinateur","Un type de virus","Une marque de processeur"],answer:1,exp:"Une donnée est une information (texte, nombre, image, son…) stockée, traitée et transmise par un système informatique. Les données sont la matière première de l'IA."},
+    {q:"Les voitures autonomes utilisent l'IA pour :",choices:["Choisir la couleur de la voiture","Analyser l'environnement et prendre des décisions de conduite","Calculer le prix du carburant","Jouer de la musique"],answer:1,exp:"Les voitures autonomes utilisent l'IA pour traiter en temps réel les données de caméras, radars et lidars. Des algorithmes analysent l'environnement et prennent les décisions de conduite."},
+    {q:"En quelle année Deep Blue d'IBM a-t-il battu le champion du monde d'échecs ?",choices:["1985","1997","2005","2012"],answer:1,exp:"En mai 1997, Deep Blue (IBM) a battu Garry Kasparov lors d'un match en 6 parties. Ce fut un événement historique montrant la capacité des ordinateurs à surpasser l'humain dans des tâches complexes."},
+  ],
+  secu:[
+    {q:"Qu'est-ce qu'un mot de passe sécurisé ?",choices:["Son prénom suivi de 123","Un mot du dictionnaire","Un mélange de lettres, chiffres et symboles d'au moins 12 caractères","La date de naissance"],answer:2,exp:"Un mot de passe fort comporte au moins 12 caractères et mélange majuscules, minuscules, chiffres et symboles. Il ne doit pas contenir d'informations personnelles faciles à deviner."},
+    {q:"Qu'est-ce que le phishing (hameçonnage) ?",choices:["Un jeu de pêche en ligne","Une technique pour voler des informations en se faisant passer pour un service de confiance","Un antivirus","Une mise à jour système"],answer:1,exp:"Le phishing est une escroquerie où des cybercriminels envoient de faux e-mails ou créent de faux sites imitant des services connus pour voler vos identifiants ou données bancaires."},
+    {q:"Pourquoi ne faut-il pas utiliser le même mot de passe partout ?",choices:["C'est difficile à retenir","Si un site est piraté, tous vos comptes sont compromis","Pour être plus lent à se connecter","C'est une simple habitude"],answer:1,exp:"Si vous utilisez le même mot de passe et qu'un site est piraté, les hackers essaieront votre mot de passe sur tous les autres sites (attaque « credential stuffing »). Chaque compte doit avoir un mot de passe unique."},
+    {q:"Qu'est-ce qu'un antivirus ?",choices:["Un médicament pour ordinateur","Un logiciel qui détecte et supprime les programmes malveillants","Un type de connexion internet","Un système d'exploitation"],answer:1,exp:"Un antivirus est un logiciel de sécurité qui analyse le système, détecte les programmes malveillants (virus, trojans, ransomwares…) et les neutralise. Il doit être régulièrement mis à jour."},
+    {q:"Que signifie le « S » de HTTPS ?",choices:["Simple","Sécurisé — connexion chiffrée","Système","Synchronisé"],answer:1,exp:"Le « S » de HTTPS signifie Secure. La communication est chiffrée via SSL/TLS, protégeant les données échangées entre votre navigateur et le site. Un cadenas apparaît dans la barre d'adresse."},
+    {q:"Qu'est-ce qu'un ransomware ?",choices:["Un jeu vidéo","Un logiciel qui chiffre vos fichiers et demande une rançon","Un réseau social","Un outil de sauvegarde"],answer:1,exp:"Un ransomware (rançongiciel) chiffre les fichiers de la victime les rendant inaccessibles, puis exige une rançon en cryptomonnaie pour les déchiffrer. Il ne faut jamais payer la rançon !"},
+    {q:"Comment reconnaître un e-mail frauduleux ?",choices:["Il est écrit en français parfait","Il contient des fautes, une adresse suspecte et crée une urgence artificielle","Il vient toujours d'une adresse @gmail.com","Il ne contient jamais de pièce jointe"],answer:1,exp:"Indices d'un e-mail frauduleux : adresse expéditeur bizarre, fautes d'orthographe, urgence artificielle (« votre compte sera fermé dans 24h »), demande d'infos personnelles, lien vers un faux site."},
+    {q:"Qu'est-ce que l'authentification à deux facteurs (2FA) ?",choices:["Un double mot de passe identique","Une vérification en deux étapes (ex: mot de passe + code SMS)","Deux antivirus en même temps","Se connecter sur deux appareils"],answer:1,exp:"Le 2FA ajoute une couche de sécurité : après le mot de passe, un second facteur est demandé (code SMS, application d'authentification). Même si votre mot de passe est volé, le compte reste protégé."},
+    {q:"Pourquoi est-il risqué de se connecter au WiFi public sans précaution ?",choices:["C'est trop lent","Un attaquant peut intercepter vos données (attaque « man in the middle »)","Le WiFi public est toujours gratuit","La batterie se vide plus vite"],answer:1,exp:"Sur un WiFi public non sécurisé, un cybercriminel sur le même réseau peut intercepter les communications non chiffrées. Il est recommandé d'utiliser un VPN ou de n'accéder qu'à des sites HTTPS."},
+  ],
+  conception:[
+    {q:"Qu'est-ce qu'un cahier des charges ?",choices:["Le carnet de notes du professeur","Un document décrivant les besoins, contraintes et fonctions attendues d'un objet à concevoir","La liste des pièces à acheter","Le budget du projet"],answer:1,exp:"Le cahier des charges définit précisément les besoins du client, les fonctions attendues, les contraintes (coût, taille, matériaux, sécurité) et les critères de validation du projet."},
+    {q:"Quelle est la différence entre un prototype et un produit fini ?",choices:["Aucune différence","Un prototype est un premier modèle pour tester les idées, pas encore le produit final","Un prototype coûte plus cher","Le prototype est vendu en magasin"],answer:1,exp:"Un prototype est un premier exemplaire fonctionnel créé pour tester et valider les choix avant la fabrication en série. Il peut être en matériaux provisoires et sert à détecter les problèmes tôt."},
+    {q:"Qu'est-ce que la CAO (Conception Assistée par Ordinateur) ?",choices:["Utiliser internet pour chercher des idées","Créer et modéliser des objets en 3D sur ordinateur avant de les fabriquer","Imprimer des documents techniques","Commander des pièces en ligne"],answer:1,exp:"La CAO permet de modéliser virtuellement des objets en 2D ou 3D sur ordinateur. Cela évite des erreurs coûteuses avant la fabrication réelle. Logiciels : Onshape, Fusion 360, SolidWorks…"},
+    {q:"Quelle technologie fabrique un objet couche par couche à partir d'un fichier numérique ?",choices:["La découpe laser","L'impression 3D (fabrication additive)","Le tour à bois","La soudure"],answer:1,exp:"L'impression 3D construit un objet physique couche par couche à partir d'un modèle numérique 3D. Elle permet de fabriquer des prototypes rapidement et des formes très complexes."},
+    {q:"Que signifie « développement durable » dans la conception d'un objet ?",choices:["Concevoir un objet très cher","Concevoir en minimisant l'impact environnemental sans compromettre l'avenir","Utiliser uniquement des matériaux noirs","Fabriquer le plus rapidement possible"],answer:1,exp:"Le développement durable en conception implique des matériaux recyclables, moins d'énergie, la réparabilité et le recyclage en fin de vie. Triple pilier : économie, social, environnement."},
+    {q:"Qu'est-ce qu'un diagramme de Gantt ?",choices:["Un type de robot","Un outil de planification visuel montrant les tâches d'un projet dans le temps","Un logiciel de dessin","Un outil de mesure"],answer:1,exp:"Un diagramme de Gantt représente les tâches sous forme de barres horizontales sur un axe temporel. Il permet de visualiser qui fait quoi, quand, et de repérer les tâches parallèles."},
+    {q:"Qu'est-ce qu'une fonction d'usage d'un objet technique ?",choices:["La couleur de l'objet","Ce à quoi sert l'objet, sa raison d'être principale","Le matériau utilisé","La marque de l'objet"],answer:1,exp:"La fonction d'usage décrit ce que l'objet est censé faire pour l'utilisateur. Par exemple, la fonction d'usage d'une chaise est de permettre à une personne de s'asseoir."},
+    {q:"Qu'est-ce qu'un matériau composite ?",choices:["Un matériau très cher","Un matériau constitué d'au moins deux composants pour combiner leurs propriétés","Un métal pur","Un plastique recyclé"],answer:1,exp:"Un matériau composite associe au moins deux matériaux (ex: fibres de carbone + résine époxy) pour obtenir des propriétés supérieures à chacun seul : légèreté + résistance. Utilisé en aéronautique et sport."},
+  ],
+};
+
+const BONUS_Q=[
+  {q:"Quel robot français est utilisé dans les écoles pour apprendre la programmation ?",choices:["ASIMO","NAO (SoftBank Robotics)","Atlas","Spot"],answer:1,exp:"NAO est un robot humanoïde français créé par Aldebaran Robotics. Il mesure 58 cm, est programmable et utilisé dans plus de 70 pays pour enseigner la robotique et la programmation.",zone:'robot'},
+  {q:"Un bon mot de passe ressemble à :",choices:["azerty","12345678","P@ssw0rd!2024","motdepasse"],answer:2,exp:"P@ssw0rd!2024 combine majuscules, minuscules, chiffres (2024) et symboles (@, !). Il dépasse 12 caractères et la substitution de lettres par des symboles le rend bien plus résistant.",zone:'secu'},
+  {q:"La principale contrainte à respecter dans la conception d'un objet est :",choices:["Sa couleur uniquement","Le respect du cahier des charges (fonctionnel, sécurité, coût, environnement)","Qu'il soit le plus lourd possible","Qu'il soit fabriqué en plastique"],answer:1,exp:"Un objet technique doit répondre à TOUTES les contraintes du cahier des charges : fonctionnelles, de sécurité, économiques et environnementales. Négliger l'une rend le produit non viable.",zone:'conception'},
+];
+
+// ================================================================
+// BOARD LAYOUT — mini-jeux cases 5,10,15,20,25,30,35
+// ================================================================
+// 42 cells total: start + 35 questions + 7 minigames intercalated
+// Layout: start | q1..q5 | MG | q6..q10 | MG | ... | q31..q35 | MG (=finish MG)
+// We'll track separately: cellIndex counts only question cells (0..35)
+// boardCells array describes all cells in order
+
+function buildBoardLayout(){
+  const cells=[];
+  cells.push({type:'start'});
+  let qIdx=0;
+  for(let block=0;block<7;block++){
+    for(let i=0;i<5;i++){
+      qIdx++;
+      cells.push({type:'question',qIdx});
+    }
+    cells.push({type:'minigame',mgIdx:block});
+  }
+  return cells;
+}
+const BOARD_CELLS=buildBoardLayout(); // 1+35+7=43 cells
+
+// zone assignment for question cells
+const ZONE_SEQ=[
+  'robot','robot','ia','ia','secu',
+  'secu','conception','robot','ia','secu',
+  'robot','ia','secu','conception','conception',
+  'bonus','robot','ia','secu','conception',
+  'robot','ia','secu','conception','robot',
+  'ia','secu','conception','robot','ia',
+  'secu','conception','robot','ia','secu'
+];
+
+// Mini-game definitions
+const MINIGAMES=[
+  {id:'shooter',name:'SPACE SHOOTER',icon:'🚀',subtitle:'DÉTRUIRE LES ASTEROÏDES',instructions:'← → pour bouger · ESPACE pour tirer'},
+  {id:'car',name:'COURSE FOLLE',icon:'🚗',subtitle:'ÉVITE LES OBSTACLES !',instructions:'← → pour déplacer la voiture'},
+  {id:'avion',name:'PILOTE DE CHASSE',icon:'✈️',subtitle:'COLLECTE LES ÉTOILES !',instructions:'Souris ou tactile pour guider l\'avion'},
+  {id:'pong',name:'CYBER PONG',icon:'🏓',subtitle:'RENVOIE LA BALLE !',instructions:'← → pour déplacer la raquette'},
+  {id:'memory',name:'MÉMOIRE CIRCUITS',icon:'🧩',subtitle:'TROUVE LES PAIRES !',instructions:'Clique sur les cartes pour les retourner'},
+  {id:'dodge',name:'PIXEL DODGE',icon:'🛸',subtitle:'ESQUIVE LES LASERS !',instructions:'Déplace ta souris / appuie pour bouger'},
+  {id:'snake',name:'SNAKE TECHNO',icon:'🐍',subtitle:'MANGE LES PUCES !',instructions:'← ↑ → ↓ pour diriger le serpent'},
+];
+
+// ================================================================
+// STATE
+// ================================================================
+let timeLeft=30*60,timerInterval=null,timerRunning=false;
+let totalScore=0,cellIndex=0;
+let zoneScores={robot:0,ia:0,secu:0,conception:0,bonus:0};
+let zoneMaxes={robot:0,ia:0,secu:0,conception:0,bonus:0};
+let questionCounters={robot:0,ia:0,secu:0,conception:0,bonus:0};
+let pendingClose=null,currentAnswered=false,bonusIdx=0;
+let mgIdx=0; // which mini-game to show next
+
+const LEVEL_Q=[5,10,15,20,25,30,35];
+const CIRCUM=2*Math.PI*30;
+
+function $(id){return document.getElementById(id)}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active')}
+
+// ================================================================
+// TIMER
+// ================================================================
+function updateTimerUI(){
+  const m=Math.floor(timeLeft/60),s=timeLeft%60;
+  $('timer-text').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const pct=timeLeft/(30*60);
+  $('ring-fg').style.strokeDashoffset=CIRCUM*(1-pct);
+  const c=timeLeft<300?'var(--red)':timeLeft<600?'var(--orange)':'var(--green)';
+  $('ring-fg').style.stroke=c;
+  $('timer-text').style.color=timeLeft<300?'var(--red)':timeLeft<600?'var(--orange)':'var(--text)';
+}
+function startTimer(){
+  timerRunning=true;clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{if(timerRunning&&timeLeft>0){timeLeft--;updateTimerUI();if(timeLeft===0){stopTimer();endGame();}}},1000);
+}
+function stopTimer(){timerRunning=false;clearInterval(timerInterval)}
+
+// ================================================================
+// BOARD
+// ================================================================
+function buildBoard(){
+  const board=$('board');board.innerHTML='';
+  BOARD_CELLS.forEach((cell,i)=>{
+    const el=document.createElement('div');
+    el.className='cell locked';
+    el.setAttribute('data-board-idx',i);
+    if(cell.type==='start'){
+      el.setAttribute('data-zone','start');
+      el.innerHTML='<div class="cell-icon">🚀</div><div class="cell-label">DÉPART</div>';
+      el.classList.remove('locked');
+    } else if(cell.type==='minigame'){
+      el.setAttribute('data-zone','minigame');
+      el.setAttribute('data-mg',cell.mgIdx);
+      el.innerHTML='<div class="cell-icon">🕹️</div><div class="cell-label">JEU</div>';
+      el.onclick=()=>onBoardClick(i);
+    } else {
+      const zone=ZONE_SEQ[cell.qIdx-1];
+      const z=ZONES[zone];
+      el.setAttribute('data-zone',zone);
+      el.setAttribute('data-qidx',cell.qIdx);
+      el.innerHTML=`<div class="cell-num">${cell.qIdx}</div><div class="cell-label">${z.icon}</div>`;
+      el.onclick=()=>onBoardClick(i);
+      zoneMaxes[zone]=(zoneMaxes[zone]||0)+10;
+    }
+    board.appendChild(el);
+  });
+  updateBoardState();
+}
+
+function getBoardIdxForQIdx(qIdx){
+  return BOARD_CELLS.findIndex(c=>c.type==='question'&&c.qIdx===qIdx);
+}
+function getBoardIdxForMG(mgI){
+  return BOARD_CELLS.findIndex(c=>c.type==='minigame'&&c.mgIdx===mgI);
+}
+
+// nextExpected: the board index the player should click next
+function getNextExpectedBoardIdx(){
+  // After qIdx question cells answered, what's next?
+  // Find the next cell after current progress
+  if(cellIndex===0){
+    // First question cell is board idx 1
+    return 1;
+  }
+  // cellIndex = number of question cells answered
+  // After answering qIdx, check if a minigame follows before next question
+  const currentQBoardIdx=getBoardIdxForQIdx(cellIndex);
+  let nextBoardIdx=currentQBoardIdx+1;
+  if(nextBoardIdx<BOARD_CELLS.length&&BOARD_CELLS[nextBoardIdx].type==='minigame'&&mgIdx>BOARD_CELLS[nextBoardIdx].mgIdx) nextBoardIdx++;
+  if(nextBoardIdx<BOARD_CELLS.length) return nextBoardIdx;
+  return -1;
+}
+
+function updateBoardState(){
+  // Determine which board index is the next to click
+  const nextIdx=getNextExpectedBoardIdx();
+  document.querySelectorAll('.cell[data-board-idx]').forEach(el=>{
+    const bi=parseInt(el.getAttribute('data-board-idx'));
+    const cell=BOARD_CELLS[bi];
+    el.classList.remove('done','available','current','locked');
+    if(cell.type==='start'){return;}
+    if(cell.type==='question'){
+      const qi=cell.qIdx;
+      if(qi<=cellIndex){el.classList.add('done')}
+      else if(bi===nextIdx){el.classList.add('available')}
+      else{el.classList.add('locked')}
+    } else if(cell.type==='minigame'){
+      // MG is available if prev 5 questions done AND not yet cleared
+      const expectedAfterQ=cell.mgIdx*5+5; // after q5, q10 etc.
+      if(mgIdx>cell.mgIdx){el.classList.add('done')}
+      else if(bi===nextIdx&&cellIndex===expectedAfterQ){el.classList.add('available')}
+      else{el.classList.add('locked')}
+    }
+  });
+  $('hud-score').textContent=totalScore;
+  $('score-bar').style.width=Math.round((totalScore/500)*100)+'%';
+  const lvl=Math.min(5,Math.floor(cellIndex/7)+1);
+  $('hud-level').textContent=lvl+' / 5';
+  $('hud-progress').textContent='Case '+cellIndex+' / 35';
+}
+
+function onBoardClick(bi){
+  const nextIdx=getNextExpectedBoardIdx();
+  if(bi!==nextIdx)return;
+  const cell=BOARD_CELLS[bi];
+  if(cell.type==='question'){
+    openQuestion(cell.qIdx,ZONE_SEQ[cell.qIdx-1]);
+  } else if(cell.type==='minigame'){
+    openMiniGame(cell.mgIdx);
+  }
+}
+
+// ================================================================
+// QUESTIONS
+// ================================================================
+function getNextQuestion(zone){
+  if(zone==='bonus'){const q=BONUS_Q[bonusIdx%BONUS_Q.length];bonusIdx++;return q;}
+  const pool=QUESTIONS[zone];
+  const ci=questionCounters[zone]||0;
+  const q=pool[ci%pool.length];
+  questionCounters[zone]=ci+1;
+  return q;
+}
+
+function openQuestion(qIdx,zone){
+  stopTimer();
+  const q=getNextQuestion(zone);
+  const z=ZONES[zone];
+  currentAnswered=false;
+  pendingClose={qIdx,zone,q};
+  const badge=$('modal-badge');
+  badge.textContent=z.icon+' '+z.label;
+  badge.style.background=z.bg;badge.style.color=z.color;badge.style.border='1px solid rgba(255,255,255,.15)';
+  $('modal-q-num').textContent='Question '+qIdx+' / 35';
+  $('modal-question').textContent=q.q;
+  const choicesEl=$('modal-choices');choicesEl.innerHTML='';
+  q.choices.forEach((c,i)=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.innerHTML=`<span class="choice-letter">${['A','B','C','D'][i]}</span>${c}`;
+    btn.onclick=()=>handleAnswer(i,q,z);
+    choicesEl.appendChild(btn);
+  });
+  $('explication-box').classList.remove('show');
+  $('modal-overlay').classList.add('open');
+}
+
+function handleAnswer(idx,q,z){
+  if(currentAnswered)return;
+  currentAnswered=true;
+  const correct=idx===q.answer;
+  const pts=correct?10:0;
+  totalScore+=pts;
+  zoneScores[pendingClose.zone]=(zoneScores[pendingClose.zone]||0)+pts;
+  document.querySelectorAll('.choice-btn').forEach((btn,i)=>{
+    btn.disabled=true;
+    if(i===q.answer)btn.classList.add('correct');
+    else if(i===idx&&!correct)btn.classList.add('wrong');
+  });
+  $('explication-text').textContent=q.exp||'';
+  const pb=$('pts-badge');
+  pb.textContent=correct?'🎉 +10 points !':'😔 +0 point';
+  pb.className='pts-badge '+(correct?'ok':'ko');
+  $('btn-next-q').textContent='Case suivante →';
+  $('explication-box').classList.add('show');
+}
+
+function closeQuestion(){
+  $('modal-overlay').classList.remove('open');
+  if(!pendingClose)return;
+  cellIndex=pendingClose.qIdx;
+  updateBoardState();
+  pendingClose=null;
+  if(cellIndex===35&&mgIdx>=7){endGame();return;}
+  startTimer();
+}
+
+// ================================================================
+// LEVEL UP
+// ================================================================
+const LEVEL_ICONS=['','🔧','⚡','🤖','🧠','🔐'];
+const LEVEL_NAMES=['','Technicien','Ingénieur','Expert Robot','Maître IA','Gardien Cyber'];
+function showLevelUp(nextLevel){
+  $('lu-icon').textContent=LEVEL_ICONS[nextLevel]||'🎉';
+  $('lu-title').textContent='NIVEAU '+nextLevel+' DÉBLOQUÉ !';
+  $('lu-sub').textContent='Tu deviens '+LEVEL_NAMES[nextLevel];
+  $('lu-score').textContent='Score : '+totalScore+' pts';
+  showScreen('screen-levelup');
+}
+function continuePlateau(){showScreen('screen-plateau');updateBoardState();startTimer()}
+
+// ================================================================
+// MINI-GAMES ENGINE
+// ================================================================
+let mgCurrentIdx=-1,mgCanvas=null,mgCtx=null,mgAnimFrame=null,mgInterval=null;
+let mgGameScore=0,mgTimeLeft=15,mgGameRunning=false;
+// game-specific state
+let mgState={};
+
+function openMiniGame(idx){
+  stopTimer();
+  mgCurrentIdx=idx;
+  const mg=MINIGAMES[idx];
+  $('mg-title').textContent=mg.icon+' '+mg.name;
+  $('mg-subtitle').textContent=mg.subtitle;
+  $('mg-instructions').textContent='🎮 '+mg.instructions;
+  $('mg-countdown').style.display='none';
+  $('mg-game-area').style.display='none';
+  $('mg-result').style.display='none';
+  $('minigame-overlay').classList.add('open');
+  // countdown 3..2..1..GO
+  let count=3;
+  $('mg-countdown').style.display='block';
+  $('mg-countdown').textContent=count;
+  const ci=setInterval(()=>{
+    count--;
+    if(count>0){$('mg-countdown').textContent=count;}
+    else if(count===0){$('mg-countdown').textContent='GO !';}
+    else{
+      clearInterval(ci);
+      $('mg-countdown').style.display='none';
+      $('mg-game-area').style.display='flex';
+      startMiniGame(mg.id);
+    }
+  },800);
+}
+
+function startMiniGame(id){
+  mgCanvas=$('mg-canvas');mgCtx=mgCanvas.getContext('2d');
+  mgGameScore=0;mgTimeLeft=15;mgGameRunning=true;
+  $('mg-score-display').textContent='Score : 0';
+  $('mg-time-display').textContent='Temps : 15s';
+  if(id==='shooter') initShooter();
+  else if(id==='car') initCar();
+  else if(id==='avion') initAvion();
+  else if(id==='pong') initPong();
+  else if(id==='memory') initMemory();
+  else if(id==='dodge') initDodge();
+  else if(id==='snake') initSnake();
+
+  mgInterval=setInterval(()=>{
+    if(!mgGameRunning)return;
+    mgTimeLeft--;
+    $('mg-time-display').textContent='Temps : '+mgTimeLeft+'s';
+    if(mgTimeLeft<=0){endMiniGame();}
+  },1000);
+}
+
+function endMiniGame(){
+  mgGameRunning=false;
+  clearInterval(mgInterval);
+  cancelAnimationFrame(mgAnimFrame);
+  cleanupMiniGameListeners();
+  $('mg-game-area').style.display='none';
+  const bonus=Math.min(30,Math.round(mgGameScore/2))*Math.ceil(mgGameScore/10);
+  const bonusPts=Math.min(30,mgGameScore>=20?30:mgGameScore>=10?20:mgGameScore>=5?10:5);
+  totalScore+=bonusPts;
+  $('mg-result-icon').textContent=bonusPts>=25?'🏆':bonusPts>=15?'🥇':'🥈';
+  $('mg-result-title').textContent='MINI-JEU TERMINÉ !';
+  $('mg-result-pts').textContent='+'+bonusPts+' pts bonus !';
+  $('mg-result-sub').textContent='Score jeu : '+mgGameScore+' points';
+  $('mg-result').style.display='flex';
+}
+
+function closeMiniGame(){
+  $('minigame-overlay').classList.remove('open');
+  mgIdx++;
+  updateBoardState();
+  if(cellIndex===35&&mgIdx>=7){endGame();return;}
+  // Check level-up
+  if(LEVEL_Q.includes(cellIndex)&&cellIndex<35){
+    showLevelUp(Math.min(5,LEVEL_Q.indexOf(cellIndex)+2));
+  } else {
+    showScreen('screen-plateau');
+    startTimer();
+  }
+}
+
+let mgListeners=[];
+function addMGListener(el,ev,fn,opts){el.addEventListener(ev,fn,opts);mgListeners.push({el,ev,fn,opts})}
+let mgExtraCleanup=null;
+function cleanupMiniGameListeners(){if(mgExtraCleanup){mgExtraCleanup();mgExtraCleanup=null}mgListeners.forEach(({el,ev,fn,opts})=>el.removeEventListener(ev,fn,opts));mgListeners=[]}
+
+// ================================================================
+// GAME 1: SPACE SHOOTER
+// ================================================================
+function initShooter(){
+  const W=mgCanvas.width,H=mgCanvas.height;
+  const state={
+    ship:{x:W/2,y:H-50,w:30,h:30},
+    bullets:[],
+    asteroids:[],
+    keys:{},
+    spawnTimer:0,
+    bulletCool:0,
+  };
+  mgState=state;
+  function spawnAsteroid(){
+    state.asteroids.push({x:Math.random()*(W-30)+15,y:-20,r:Math.random()*12+8,vy:1.5+Math.random()*2,vx:(Math.random()-.5)*1.5});
+  }
+  const onKey=e=>{state.keys[e.code]=e.type==='keydown';if(e.code==='Space')e.preventDefault()};
+  addMGListener(window,'keydown',onKey);addMGListener(window,'keyup',onKey);
+  // Touch/mobile
+  const onTouch=e=>{
+    const r=mgCanvas.getBoundingClientRect();
+    const tx=(e.touches[0].clientX-r.left)*(W/r.width);
+    state.ship.x=Math.max(20,Math.min(W-20,tx));
+    // auto-shoot on touch
+    if(state.bulletCool<=0){state.bullets.push({x:state.ship.x,y:state.ship.y-20,vy:-8});state.bulletCool=8;}
+  };
+  addMGListener(mgCanvas,'touchmove',onTouch,{passive:true});
+  function loop(){
+    if(!mgGameRunning){return;}
+    mgAnimFrame=requestAnimationFrame(loop);
+    mgCtx.fillStyle='#000814';mgCtx.fillRect(0,0,W,H);
+    // stars
+    mgCtx.fillStyle='rgba(255,255,255,.4)';
+    for(let i=0;i<30;i++){mgCtx.fillRect((i*73+mgTimeLeft*2)%W,(i*47+mgTimeLeft*3)%H,1,1);}
+    // move ship
+    if(state.keys['ArrowLeft']||state.keys['KeyA'])state.ship.x=Math.max(20,state.ship.x-4);
+    if(state.keys['ArrowRight']||state.keys['KeyD'])state.ship.x=Math.min(W-20,state.ship.x+4);
+    if((state.keys['Space']||state.keys['ArrowUp'])&&state.bulletCool<=0){
+      state.bullets.push({x:state.ship.x,y:state.ship.y-20,vy:-8});state.bulletCool=8;
+    }
+    if(state.bulletCool>0)state.bulletCool--;
+    // bullets
+    state.bullets=state.bullets.filter(b=>{b.y+=b.vy;return b.y>0});
+    state.bullets.forEach(b=>{mgCtx.fillStyle='#00FF9C';mgCtx.fillRect(b.x-2,b.y,4,12);});
+    // asteroids
+    state.spawnTimer++;if(state.spawnTimer>45-(15-mgTimeLeft)*1.5){spawnAsteroid();state.spawnTimer=0;}
+    state.asteroids=state.asteroids.filter(a=>{a.x+=a.vx;a.y+=a.vy;return a.y<H+30&&a.x>-30&&a.x<W+30});
+    state.asteroids.forEach((a,ai)=>{
+      mgCtx.beginPath();mgCtx.arc(a.x,a.y,a.r,0,Math.PI*2);
+      mgCtx.fillStyle='#8B6914';mgCtx.fill();
+      mgCtx.strokeStyle='#F97316';mgCtx.lineWidth=1.5;mgCtx.stroke();
+      // collision bullets
+      state.bullets.forEach((b,bi)=>{
+        if(Math.abs(b.x-a.x)<a.r+3&&Math.abs(b.y-a.y)<a.r+6){
+          state.bullets.splice(bi,1);state.asteroids.splice(ai,1);
+          mgGameScore+=2;$('mg-score-display').textContent='Score : '+mgGameScore;
+        }
+      });
+    });
+    // draw ship
+    const sx=state.ship.x,sy=state.ship.y;
+    mgCtx.fillStyle='#3B82F6';
+    mgCtx.beginPath();mgCtx.moveTo(sx,sy-22);mgCtx.lineTo(sx-16,sy+12);mgCtx.lineTo(sx,sy+4);mgCtx.lineTo(sx+16,sy+12);mgCtx.closePath();mgCtx.fill();
+    mgCtx.fillStyle='#00FF9C';mgCtx.beginPath();mgCtx.arc(sx,sy-6,5,0,Math.PI*2);mgCtx.fill();
+    // engine fire
+    mgCtx.fillStyle='#F97316';
+    mgCtx.beginPath();mgCtx.moveTo(sx-8,sy+12);mgCtx.lineTo(sx,sy+22+Math.random()*8);mgCtx.lineTo(sx+8,sy+12);mgCtx.closePath();mgCtx.fill();
+  }
+  loop();
+}
+
+// ================================================================
+// GAME 2: CAR DODGE
+// ================================================================
+function initCar(){
+  const W=mgCanvas.width,H=mgCanvas.height;
+  const LANE_W=W/4;
+  const state={lane:1,y:H-80,cars:[],keys:{},spawnT:0,vy:0};
+  mgState=state;
+  const onKey=e=>{
+    if(e.type==='keydown'){
+      if((e.code==='ArrowLeft'||e.code==='KeyA')&&state.lane>0)state.lane--;
+      if((e.code==='ArrowRight'||e.code==='KeyD')&&state.lane<3)state.lane++;
+    }
+    e.preventDefault();
+  };
+  addMGListener(window,'keydown',onKey);addMGListener(window,'keyup',onKey);
+  addMGListener(mgCanvas,'touchstart',e=>{
+    const r=mgCanvas.getBoundingClientRect();
+    const tx=e.touches[0].clientX-r.left;
+    if(tx<r.width/2&&state.lane>0)state.lane--;
+    else if(tx>=r.width/2&&state.lane<3)state.lane++;
+  },{passive:true});
+
+  let alive=true;
+  function loop(){
+    if(!mgGameRunning)return;
+    mgAnimFrame=requestAnimationFrame(loop);
+    const ctx=mgCtx;
+    // road
+    ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#333';ctx.fillRect(0,0,W,H);
+    // lane lines
+    for(let l=1;l<4;l++){ctx.strokeStyle='rgba(255,255,255,.2)';ctx.setLineDash([20,15]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(l*LANE_W,0);ctx.lineTo(l*LANE_W,H);ctx.stroke();}
+    ctx.setLineDash([]);
+    // road markings move
+    const markSpeed=3+(15-mgTimeLeft)*.3;
+    state.vy=(state.vy||0)+markSpeed*.01;
+    // spawn cars
+    state.spawnT++;const spawnRate=Math.max(30,70-(15-mgTimeLeft)*3);
+    if(state.spawnT>spawnRate){
+      const ol=Math.floor(Math.random()*4);
+      state.cars.push({lane:ol,y:-60,vy:markSpeed*0.7+Math.random()*1.5,color:['#EF4444','#8B5CF6','#F97316','#FFD700'][Math.floor(Math.random()*4)]});
+      state.spawnT=0;
+    }
+    state.cars=state.cars.filter(c=>{c.y+=c.vy;return c.y<H+80});
+    // draw obstacles
+    state.cars.forEach(c=>{
+      const cx=c.lane*LANE_W+LANE_W/2;
+      ctx.fillStyle=c.color;ctx.beginPath();ctx.roundRect(cx-22,c.y-35,44,65,6);ctx.fill();
+      ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(cx-16,c.y-28,14,20);ctx.fillRect(cx+2,c.y-28,14,20);
+      // collision
+      if(alive&&c.lane===state.lane&&c.y+35>state.y-40&&c.y-35<state.y+40){
+        alive=false;mgGameRunning=false;setTimeout(endMiniGame,500);
+      }
+    });
+    // draw player
+    const px=state.lane*LANE_W+LANE_W/2;
+    ctx.fillStyle='#3B82F6';ctx.beginPath();ctx.roundRect(px-22,state.y-35,44,65,6);ctx.fill();
+    ctx.fillStyle='#00FF9C';ctx.fillRect(px-16,state.y-28,14,20);ctx.fillRect(px+2,state.y-28,14,20);
+    ctx.fillStyle='#FFD700';ctx.beginPath();ctx.arc(px-14,state.y+38,8,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(px+14,state.y+38,8,0,Math.PI*2);ctx.fill();
+    // score
+    if(alive){mgGameScore++;if(mgGameScore%30===0)$('mg-score-display').textContent='Score : '+Math.floor(mgGameScore/5);}
+    ctx.fillStyle='rgba(255,255,255,.8)';ctx.font='bold 14px Orbitron,monospace';ctx.fillText('Score: '+Math.floor(mgGameScore/5),10,24);
+  }
+  loop();
+}
+
+// ================================================================
+// GAME 3: AVION — collecte d'étoiles
+// ================================================================
+function initAvion(){
+  const W=mgCanvas.width,H=mgCanvas.height;
+  const state={x:W/2,y:H/2,stars:[],clouds:[],vx:0,vy:0};
+  mgState=state;
+  let mouseX=W/2,mouseY=H/2;
+  const onMouse=e=>{const r=mgCanvas.getBoundingClientRect();mouseX=(e.clientX-r.left)*(W/r.width);mouseY=(e.clientY-r.top)*(H/r.height)};
+  const onTouch=e=>{const r=mgCanvas.getBoundingClientRect();mouseX=(e.touches[0].clientX-r.left)*(W/r.width);mouseY=(e.touches[0].clientY-r.top)*(H/r.height);e.preventDefault()};
+  addMGListener(mgCanvas,'mousemove',onMouse);addMGListener(mgCanvas,'touchmove',onTouch,{passive:false});
+  // spawn stars
+  for(let i=0;i<8;i++)state.stars.push({x:Math.random()*W,y:Math.random()*H,r:10+Math.random()*8,collected:false});
+  for(let i=0;i<5;i++)state.clouds.push({x:Math.random()*W,y:Math.random()*H,w:60+Math.random()*40,vx:0.5+Math.random()});
+  function loop(){
+    if(!mgGameRunning)return;
+    mgAnimFrame=requestAnimationFrame(loop);
+    const ctx=mgCtx;
+    // sky gradient
+    const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0a0a2e');g.addColorStop(1,'#1a1a4e');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    // clouds
+    state.clouds.forEach(c=>{
+      c.x+=c.vx;if(c.x>W+60)c.x=-80;
+      ctx.fillStyle='rgba(255,255,255,.08)';ctx.beginPath();ctx.ellipse(c.x,c.y,c.w/2,18,0,0,Math.PI*2);ctx.fill();
+    });
+    // smooth follow
+    state.x+=(mouseX-state.x)*.08;state.y+=(mouseY-state.y)*.08;
+    state.x=Math.max(25,Math.min(W-25,state.x));state.y=Math.max(25,Math.min(H-25,state.y));
+    // stars
+    state.stars.forEach((s,i)=>{
+      if(s.collected)return;
+      // glow
+      const gg=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.r*2);
+      gg.addColorStop(0,'rgba(255,215,0,.6)');gg.addColorStop(1,'rgba(255,215,0,0)');
+      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(s.x,s.y,s.r*2,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#FFD700';
+      // draw star shape
+      drawStar(ctx,s.x,s.y,5,s.r,s.r/2);
+      if(Math.hypot(state.x-s.x,state.y-s.y)<s.r+18){
+        s.collected=true;mgGameScore+=5;$('mg-score-display').textContent='Score : '+mgGameScore;
+        // respawn
+        setTimeout(()=>{s.x=Math.random()*W;s.y=Math.random()*H;s.collected=false},1000);
+      }
+    });
+    // draw plane
+    const px=state.x,py=state.y;
+    ctx.save();ctx.translate(px,py);
+    // body
+    ctx.fillStyle='#3B82F6';ctx.beginPath();ctx.ellipse(0,0,30,10,0,0,Math.PI*2);ctx.fill();
+    // wings
+    ctx.fillStyle='#60A5FA';ctx.beginPath();ctx.moveTo(-5,-2);ctx.lineTo(-5,-18);ctx.lineTo(18,2);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(-5,2);ctx.lineTo(-5,18);ctx.lineTo(18,-2);ctx.closePath();ctx.fill();
+    // tail
+    ctx.fillStyle='#2563EB';ctx.beginPath();ctx.moveTo(-22,-2);ctx.lineTo(-30,-12);ctx.lineTo(-14,-2);ctx.closePath();ctx.fill();
+    // engine trail
+    ctx.fillStyle='rgba(249,115,22,.6)';ctx.beginPath();ctx.ellipse(-30,0,Math.random()*12+5,4,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    // HUD
+    ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='bold 13px Orbitron,monospace';ctx.fillText('Étoiles: '+mgGameScore/5,10,24);
+  }
+  loop();
+}
+function drawStar(ctx,x,y,pts,r1,r2){
+  ctx.beginPath();
+  for(let i=0;i<pts*2;i++){
+    const r=i%2===0?r1:r2,a=(i*Math.PI)/pts-Math.PI/2;
+    i===0?ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a)):ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));
+  }
+  ctx.closePath();ctx.fill();
+}
+
+// ================================================================
+// GAME 4: PONG
+// ================================================================
+function initPong(){
+  const W=mgCanvas.width,H=mgCanvas.height;
+  const state={
+    paddle:{x:W/2-40,w:80,h:12,y:H-30},
+    ball:{x:W/2,y:H/2,vx:3,vy:3,r:8},
+    keys:{},score:0,
+  };
+  mgState=state;
+  const onKey=e=>{state.keys[e.code]=e.type==='keydown';e.preventDefault()};
+  addMGListener(window,'keydown',onKey);addMGListener(window,'keyup',onKey);
+  const onMouse=e=>{const r=mgCanvas.getBoundingClientRect();state.paddle.x=Math.max(0,Math.min(W-state.paddle.w,(e.clientX-r.left)*(W/r.width)-state.paddle.w/2))};
+  const onTouch=e=>{const r=mgCanvas.getBoundingClientRect();state.paddle.x=Math.max(0,Math.min(W-state.paddle.w,(e.touches[0].clientX-r.left)*(W/r.width)-state.paddle.w/2))};
+  addMGListener(mgCanvas,'mousemove',onMouse);addMGListener(mgCanvas,'touchmove',onTouch,{passive:true});
+  function loop(){
+    if(!mgGameRunning)return;
+    mgAnimFrame=requestAnimationFrame(loop);
+    const ctx=mgCtx;
+    ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle='rgba(59,130,246,.15)';ctx.lineWidth=1;
+    for(let i=0;i<W;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();}
+    for(let i=0;i<H;i+=40){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
+    // paddle move
+    if(state.keys['ArrowLeft']||state.keys['KeyA'])state.paddle.x=Math.max(0,state.paddle.x-6);
+    if(state.keys['ArrowRight']||state.keys['KeyD'])state.paddle.x=Math.min(W-state.paddle.w,state.paddle.x+6);
+    // ball
+    state.ball.x+=state.ball.vx;state.ball.y+=state.ball.vy;
+    if(state.ball.x<state.ball.r||state.ball.x>W-state.ball.r)state.ball.vx*=-1;
+    if(state.ball.y<state.ball.r){state.ball.vy*=-1;state.score++;mgGameScore++;$('mg-score-display').textContent='Score : '+mgGameScore;}
+    // paddle collision
+    if(state.ball.y+state.ball.r>state.paddle.y&&state.ball.x>state.paddle.x&&state.ball.x<state.paddle.x+state.paddle.w){
+      state.ball.vy=-Math.abs(state.ball.vy)-0.1;
+      state.ball.vx+=(state.ball.x-(state.paddle.x+state.paddle.w/2))*0.05;
+    }
+    // lost
+    if(state.ball.y>H+20){
+      state.ball.x=W/2;state.ball.y=H/2;state.ball.vx=(Math.random()>.5?1:-1)*3;state.ball.vy=-3;
+    }
+    // AI block (ceiling)
+    const ai={x:W/2-30,w:60,h:12,y:18};
+    ctx.fillStyle='rgba(239,68,68,.8)';ctx.beginPath();ctx.roundRect(ai.x,ai.y,ai.w,ai.h,4);ctx.fill();
+    // draw paddle
+    const pg=ctx.createLinearGradient(state.paddle.x,0,state.paddle.x+state.paddle.w,0);
+    pg.addColorStop(0,'#3B82F6');pg.addColorStop(1,'#8B5CF6');
+    ctx.fillStyle=pg;ctx.beginPath();ctx.roundRect(state.paddle.x,state.paddle.y,state.paddle.w,state.paddle.h,4);ctx.fill();
+    // glow on paddle
+    ctx.shadowColor='#3B82F6';ctx.shadowBlur=12;ctx.fill();ctx.shadowBlur=0;
+    // draw ball
+    const bg2=ctx.createRadialGradient(state.ball.x,state.ball.y,0,state.ball.x,state.ball.y,state.ball.r);
+    bg2.addColorStop(0,'#fff');bg2.addColorStop(1,'#00FF9C');
+    ctx.fillStyle=bg2;ctx.beginPath();ctx.arc(state.ball.x,state.ball.y,state.ball.r,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(0,255,156,.3)';ctx.beginPath();ctx.arc(state.ball.x,state.ball.y,state.ball.r*2,0,Math.PI*2);ctx.fill();
+    // score
+    ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='bold 14px Orbitron,monospace';ctx.fillText('Rebonds: '+mgGameScore,10,50);
+  }
+  loop();
+}
+
+// ================================================================
+// GAME 5: MEMORY CARDS
+// ================================================================
+function initMemory(){
+  mgCanvas.style.display='none';
+  const symbols=['🤖','🧠','🔐','⚙️','🚀','💻','⚡','🎯'];
+  const cards=[...symbols,...symbols].sort(()=>Math.random()-.5).map((s,i)=>({id:i,symbol:s,flipped:false,matched:false}));
+  let first=null,second=null,locked=false;
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:380px;width:100%;margin:8px 0';
+  const cardEls=[];
+  function render(){
+    cardEls.forEach((el,i)=>{
+      const c=cards[i];
+      el.style.background=c.matched?'rgba(0,255,156,.25)':c.flipped?'rgba(59,130,246,.3)':'#21262D';
+      el.style.borderColor=c.matched?'#00FF9C':c.flipped?'#3B82F6':'rgba(255,100,200,.4)';
+      el.textContent=(c.flipped||c.matched)?c.symbol:'?';
+    });
+  }
+  cards.forEach((c,i)=>{
+    const el=document.createElement('button');
+    el.style.cssText='aspect-ratio:1;font-size:28px;border-radius:12px;border:2px solid;color:#fff;cursor:pointer;font-family:Orbitron,monospace;min-height:56px';
+    el.onclick=()=>{
+      if(!mgGameRunning||locked||c.flipped||c.matched)return;
+      c.flipped=true;render();
+      if(!first){first=c;return;}
+      second=c;locked=true;
+      if(first.symbol===second.symbol){
+        first.matched=second.matched=true;
+        mgGameScore+=5;$('mg-score-display').textContent='Score : '+mgGameScore;
+        first=second=null;locked=false;render();
+        if(cards.every(x=>x.matched)){
+          // nouvelle grille mélangée pour continuer à marquer
+          setTimeout(()=>{
+            if(!mgGameRunning)return;
+            cards.sort(()=>Math.random()-.5);
+            cards.forEach(x=>{x.matched=false;x.flipped=false});
+            render();
+          },400);
+        }
+      } else {
+        setTimeout(()=>{first.flipped=false;second.flipped=false;first=second=null;locked=false;render();},600);
+      }
+    };
+    cardEls.push(el);grid.appendChild(el);
+  });
+  render();
+  const area=$('mg-game-area');
+  area.insertBefore(grid,$('mg-instructions'));
+  mgExtraCleanup=()=>{grid.remove();mgCanvas.style.display='block'};
+}
+
+// ================================================================
+// GAME 6: PIXEL DODGE
+// ================================================================
+function initDodge(){
+  const W=mgCanvas.width,H=mgCanvas.height;
+  const state={x:W/2,y:H/2,lasers:[],t:0,spawn:0,hitCool:0};
+  mgState=state;
+  let mx=W/2,my=H/2;
+  const onMouse=e=>{const r=mgCanvas.getBoundingClientRect();mx=(e.clientX-r.left)*(W/r.width);my=(e.clientY-r.top)*(H/r.height)};
+  const onTouch=e=>{const r=mgCanvas.getBoundingClientRect();mx=(e.touches[0].clientX-r.left)*(W/r.width);my=(e.touches[0].clientY-r.top)*(H/r.height);e.preventDefault()};
+  addMGListener(mgCanvas,'mousemove',onMouse);
+  addMGListener(mgCanvas,'touchmove',onTouch,{passive:false});
+  addMGListener(mgCanvas,'touchstart',onTouch,{passive:false});
+  function loop(){
+    if(!mgGameRunning)return;
+    mgAnimFrame=requestAnimationFrame(loop);
+    const ctx=mgCtx;
+    ctx.fillStyle='#050510';ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(139,92,246,.12)';ctx.lineWidth=1;
+    for(let i=0;i<W;i+=22){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();}
+    for(let i=0;i<H;i+=22){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
+    state.t++;
+    state.x+=(mx-state.x)*.2;state.y+=(my-state.y)*.2;
+    state.x=Math.max(8,Math.min(W-8,state.x));state.y=Math.max(8,Math.min(H-8,state.y));
+    // survie
+    if(state.t%30===0){mgGameScore++;$('mg-score-display').textContent='Score : '+mgGameScore;}
+    // spawn lasers
+    state.spawn++;
+    const rate=Math.max(25,55-(15-mgTimeLeft)*2);
+    if(state.spawn>rate){
+      state.spawn=0;
+      const horiz=Math.random()<.5;
+      state.lasers.push({horiz,pos:horiz?20+Math.random()*(H-40):20+Math.random()*(W-40),age:0});
+    }
+    if(state.hitCool>0)state.hitCool--;
+    state.lasers=state.lasers.filter(l=>l.age<60);
+    state.lasers.forEach(l=>{
+      l.age++;
+      const active=l.age>35;
+      ctx.lineWidth=active?10:2;
+      ctx.strokeStyle=active?'#EF4444':'rgba(239,68,68,.5)';
+      if(active){ctx.shadowColor='#EF4444';ctx.shadowBlur=14;}
+      ctx.beginPath();
+      if(l.horiz){ctx.moveTo(0,l.pos);ctx.lineTo(W,l.pos);}else{ctx.moveTo(l.pos,0);ctx.lineTo(l.pos,H);}
+      ctx.stroke();ctx.shadowBlur=0;
+      if(active&&state.hitCool===0){
+        const d=l.horiz?Math.abs(state.y-l.pos):Math.abs(state.x-l.pos);
+        if(d<9){mgGameScore=Math.max(0,mgGameScore-3);state.hitCool=45;$('mg-score-display').textContent='Score : '+mgGameScore;}
+      }
+    });
+    // joueur
+    ctx.fillStyle=state.hitCool>0&&state.t%6<3?'#EF4444':'#00FF9C';
+    ctx.shadowColor='#00FF9C';ctx.shadowBlur=12;
+    ctx.fillRect(state.x-7,state.y-7,14,14);ctx.shadowBlur=0;
+  }
+  loop();
+}
+
+// ================================================================
+// GAME 7: SNAKE
+// ================================================================
+function initSnake(){
+  const W=mgCanvas.width,H=mgCanvas.height,S=20;
+  const cols=Math.floor(W/S),rows=Math.floor(H/S);
+  const state={body:[{x:5,y:7},{x:4,y:7},{x:3,y:7}],dir:{x:1,y:0},next:{x:1,y:0},food:null,tick:0};
+  mgState=state;
+  function placeFood(){
+    let p;
+    do{p={x:Math.floor(Math.random()*cols),y:Math.floor(Math.random()*rows)}}
+    while(state.body.some(b=>b.x===p.x&&b.y===p.y));
+    state.food=p;
+  }
+  placeFood();
+  const onKey=e=>{
+    const m={ArrowLeft:[-1,0],KeyA:[-1,0],ArrowRight:[1,0],KeyD:[1,0],ArrowUp:[0,-1],KeyW:[0,-1],ArrowDown:[0,1],KeyS:[0,1]}[e.code];
+    if(!m)return;
+    e.preventDefault();
+    if(e.type!=='keydown')return;
+    if(m[0]===-state.dir.x&&m[1]===-state.dir.y)return;
+    state.next={x:m[0],y:m[1]};
+  };
+  addMGListener(window,'keydown',onKey);
+  // tactile : glisser pour tourner
+  let tx=0,ty=0;
+  addMGListener(mgCanvas,'touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+  addMGListener(mgCanvas,'touchmove',e=>{
+    const dx=e.touches[0].clientX-tx,dy=e.touches[0].clientY-ty;
+    if(Math.abs(dx)<18&&Math.abs(dy)<18)return;
+    let n=Math.abs(dx)>Math.abs(dy)?{x:Math.sign(dx),y:0}:{x:0,y:Math.sign(dy)};
+    if(!(n.x===-state.dir.x&&n.y===-state.dir.y))state.next=n;
+    tx=e.touches[0].clientX;ty=e.touches[0].clientY;
+  },{passive:true});
+  function loop(){
+    if(!mgGameRunning)return;
+    mgAnimFrame=requestAnimationFrame(loop);
+    const ctx=mgCtx;
+    state.tick++;
+    if(state.tick%7===0){
+      state.dir=state.next;
+      const h=state.body[0];
+      const nh={x:(h.x+state.dir.x+cols)%cols,y:(h.y+state.dir.y+rows)%rows};
+      if(state.body.some(b=>b.x===nh.x&&b.y===nh.y)){
+        mgGameRunning=false;setTimeout(endMiniGame,400);return;
+      }
+      state.body.unshift(nh);
+      if(nh.x===state.food.x&&nh.y===state.food.y){
+        mgGameScore+=2;$('mg-score-display').textContent='Score : '+mgGameScore;placeFood();
+      } else state.body.pop();
+    }
+    ctx.fillStyle='#04120c';ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(0,255,156,.07)';ctx.lineWidth=1;
+    for(let i=0;i<=cols;i++){ctx.beginPath();ctx.moveTo(i*S,0);ctx.lineTo(i*S,H);ctx.stroke();}
+    for(let j=0;j<=rows;j++){ctx.beginPath();ctx.moveTo(0,j*S);ctx.lineTo(W,j*S);ctx.stroke();}
+    // puce
+    ctx.fillStyle='#FFD700';ctx.shadowColor='#FFD700';ctx.shadowBlur=10;
+    ctx.fillRect(state.food.x*S+4,state.food.y*S+4,S-8,S-8);ctx.shadowBlur=0;
+    // serpent
+    state.body.forEach((b,i)=>{
+      ctx.fillStyle=i===0?'#00FF9C':'#00CC7A';
+      ctx.fillRect(b.x*S+1,b.y*S+1,S-2,S-2);
+    });
+  }
+  loop();
+}
+
+// ================================================================
+// GAME FLOW
+// ================================================================
+function startGame(){
+  timeLeft=30*60;totalScore=0;cellIndex=0;mgIdx=0;bonusIdx=0;
+  zoneScores={robot:0,ia:0,secu:0,conception:0,bonus:0};
+  zoneMaxes={robot:0,ia:0,secu:0,conception:0,bonus:0};
+  questionCounters={robot:0,ia:0,secu:0,conception:0,bonus:0};
+  pendingClose=null;currentAnswered=false;
+  stopTimer();
+  showScreen('screen-plateau');
+  buildBoard();
+  updateTimerUI();
+  startTimer();
+}
+
+function endGame(){
+  stopTimer();
+  $('modal-overlay').classList.remove('open');
+  $('minigame-overlay').classList.remove('open');
+  const score=Math.min(500,totalScore);
+  const done=cellIndex>=35;
+  let trophy='🏆',medal='';
+  if(score>=400){trophy='🏆';medal='🥇 Médaille d\'Or — Expert Techno !'}
+  else if(score>=300){trophy='🎖️';medal='🥈 Médaille d\'Argent — Très bien !'}
+  else if(score>=200){trophy='🥉';medal='🥉 Médaille de Bronze — Bien joué !'}
+  else{trophy='🔧';medal='💪 Continue à t\'entraîner !'}
+  $('fin-trophy').textContent=trophy;
+  $('fin-title').textContent=done?'MISSION ACCOMPLIE':'TEMPS ÉCOULÉ !';
+  $('fin-sub').textContent=done?'Tu as terminé toutes les cases du plateau.':'Tu as atteint la case '+cellIndex+' / 35.';
+  $('fin-score-big').textContent=score;
+  $('fin-medaille').textContent=medal;
+  const cols={robot:'var(--green)',ia:'var(--blue)',secu:'var(--purple)',conception:'var(--orange)',bonus:'#FFD700'};
+  $('fin-details').innerHTML=Object.keys(ZONES).map(k=>{
+    const z=ZONES[k],max=zoneMaxes[k]||10,pts=zoneScores[k]||0;
+    return `<div class="fin-zone-card"><div class="fin-zone-header"><span style="font-size:22px">${z.icon}</span><span style="font-size:12px;color:var(--muted)">${z.label}</span></div><div class="fin-zone-pts" style="color:${cols[k]}">${pts} / ${max}</div><div class="fin-bar-wrap"><div class="fin-bar" style="width:${Math.round(pts/max*100)}%;background:${cols[k]}"></div></div></div>`;
+  }).join('');
+  showScreen('screen-fin');
+}
+
+function restartGame(){
+  showScreen('screen-accueil');
+}
+
+updateTimerUI();
+</script>
+</body>
+</html>
