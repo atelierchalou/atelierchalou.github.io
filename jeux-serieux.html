@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Accueil</title>
+<title>Jeux sérieux</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
@@ -22,8 +22,7 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:center;
-    gap:28px;
+    gap:12px;
     padding:40px 20px;
     background:var(--bg);
     color:var(--chalk);
@@ -35,12 +34,21 @@
     margin:0;
     text-align:center;
   }
+  .back{
+    color:var(--chalk-dim);
+    text-decoration:none;
+    font-size:.9rem;
+    margin-top:-14px;
+    margin-bottom:14px;
+  }
+  .back:hover{color:var(--accent);}
   .grid{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
     gap:18px;
     width:100%;
     max-width:640px;
+    margin-top:28px;
   }
   a.card{
     display:flex;
@@ -69,9 +77,8 @@
   }
   .site-logo img{
     display:block;
-    height:100px;
+    height:36px;
     width:auto;
-    max-width:70vw;
   }
 </style>
 </head>
@@ -79,27 +86,13 @@
   <a class="site-logo" href="index.html">
     <img src="logo-blanc.png" alt="Atelier Chalou">
   </a>
-  <h1>👋 Bienvenue</h1>
+  <a class="back" href="index.html">← Retour à l'accueil</a>
+  <h1>🎲 Jeux sérieux</h1>
   <div class="grid">
-    <a class="card" href="realisations.html">
-      <span class="emoji">🏆</span>
-      <span class="name">Mes réalisations</span>
-      <span class="desc">Un aperçu de mes projets et créations.</span>
-    </a>
-    <a class="card" href="applis.html">
-      <span class="emoji">🧩</span>
-      <span class="name">Mes applis</span>
-      <span class="desc">Les applications web que j'ai développées.</span>
-    </a>
-    <a class="card" href="atelier-construction.html">
-      <span class="emoji">🔧</span>
-      <span class="name">Atelier Construction</span>
-      <span class="desc">Concevoir, assembler et modéliser en 3D.</span>
-    </a>
-    <a class="card" href="jeux-serieux.html">
+    <a class="card" href="jeu-plateau-techno-5eme.html" target="_blank" rel="noopener">
       <span class="emoji">🎲</span>
-      <span class="name">Jeux sérieux</span>
-      <span class="desc">Apprendre en jouant.</span>
+      <span class="name">TechnoQuest</span>
+      <span class="desc">Jeu de plateau pour réviser la technologie en 5ème.</span>
     </a>
   </div>
 </body>
