@@ -4318,6 +4318,8 @@ const PLIES = [3, 4, 5, 6, 8];
 const POSTS = [[13,98],[66,100],[138,101.5],[30,64]], POST_R = 3.75;
 /* Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute : arrêtée à gauche par un plot, à droite par une butée */
 const BAT = {x0:70, L:48.5, H:26.5, T:17.5, z:90, stop:119};
+/* Impression 3D : chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) au plan x = SPLIT, assemblées par un tenon et une rainure collés */
+const SPLIT = 80, TNL = 8, SOLIDS = [[153,78]];   // vis supplémentaire dans le bloc plein de l'avant
 
 /* Composants : tailles proposées (mm) et limites pour « Autre » (pour que le trou tienne dans la coque) */
 const COMPS = {
@@ -4457,15 +4459,21 @@ function buildPrint(){
     for (const [x, z] of POSTS) res = keep(res.add(cylAxis(POST_R, -g.CY - .5, g.CY + .5, 1, [x, 0, z])));   // plots sur les parois latérales
     res = keep(res.add(box(BAT.stop, -g.CY - .5, 75.5, BAT.stop + 2.5, g.CY + .5, 104.5)));                  // butée de la pile 9 V
     for (const c of cutters()) res = keep(res.subtract(cylSolid(c, .5)));
-    for (const [x, z] of POSTS) {
+    for (const [x, z] of POSTS.concat(SOLIDS)) {
       res = keep(res.subtract(cylAxis(1.7, -g.W2 - 1, 0, 1, [x, 0, z])));                // trou de passage Ø3,4 (demi-coque droite)
       res = keep(res.subtract(cylAxis(3.2, -g.W2 - 1, -g.W2 + 2.5, 1, [x, 0, z])));      // lamage Ø6,4 pour la tête de vis
       res = keep(res.subtract(cylAxis(1.3, 0, 12, 1, [x, 0, z])));                        // avant-trou Ø2,6 (demi-coque gauche)
     }
-    return {
-      right: toGeometry(keep(res.intersect(box(-10,-30,-10,170,0,120)))),
-      left:  toGeometry(keep(res.intersect(box(-10,0,-10,170,30,120))))
-    };
+    const out = {};
+    for (const [nm, sgn] of [['r', -1], ['l', 1]]) {
+      const y0 = sgn < 0 ? -30 : 0, y1 = sgn < 0 ? 0 : 30, yc = sgn*(g.W2 - 2.5);                 // yc : milieu de la paroi latérale
+      const half = keep(res.intersect(box(-10, y0, -10, 170, y1, 120)));
+      const tongue = box(SPLIT - .5, yc - 1.2, 74, SPLIT + TNL, yc + 1.2, 106);                      // tenon de l'arrière
+      const groove = box(SPLIT - 1, yc - 1.4, 73.8, SPLIT + TNL + .4, yc + 1.4, 106.2);              // rainure de l'avant, jeu 0,2 mm
+      out[nm + 'r'] = toGeometry(keep(keep(half.intersect(box(-10, y0, -10, SPLIT, y1, 120))).add(tongue)));
+      out[nm + 'f'] = toGeometry(keep(keep(half.intersect(box(SPLIT, y0, -10, 170, y1, 120))).subtract(groove)));
+    }
+    return out;
   } finally { flush(); }
 }
 function buildLayers(){
@@ -4580,13 +4588,13 @@ function rebuild(){
     });
     lastParts = {layers: geos};
   } else {
-    const {left, right} = buildPrint();
-    [right, left].forEach((geo, i) => {
-      const mesh = new THREE.Mesh(geo, matPrint);
-      mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMatPrint));
-      mesh.userData.half = i ? 'left' : 'right'; modelGroup.add(mesh);
+    const P4 = buildPrint();
+    [['rr', 'right', 'rear'], ['rf', 'right', 'front'], ['lr', 'left', 'rear'], ['lf', 'left', 'front']].forEach(([k, half, seg]) => {
+      const mesh = new THREE.Mesh(P4[k], matPrint);
+      mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(P4[k], 30), edgeMatPrint));
+      mesh.userData.half = half; mesh.userData.seg = seg; modelGroup.add(mesh);
     });
-    lastParts = {left, right};
+    lastParts = P4;
   }
   buildComponents();
   applyExplode(); applyXray();
@@ -4596,7 +4604,7 @@ function applyExplode(){
   const n = G().n;
   modelGroup.children.forEach(m => {
     if (m.userData.k !== undefined) m.position.y = S.explode ? (m.userData.k - (n-1)/2) * 5 : 0;
-    else m.position.y = S.explode ? (m.userData.half === 'left' ? 24 : -24) : 0;
+    else { m.position.y = S.explode ? (m.userData.half === 'left' ? 24 : -24) : 0; m.position.x = S.explode && m.userData.seg === 'front' ? 16 : 0; }
   });
   compGroup.visible = $('optComp').checked;
 }
@@ -4662,7 +4670,7 @@ function renderJoin(){
     const m = halfCount(), seam = -g.W2 + m*g.t, len = Math.ceil((m*g.t + .7*(g.CY - seam))/5)*5;
     $('joinNote').textContent = `4 vis M3 de ${len} mm. Colle ensemble les couches C1 à C${m} (partie droite) et C${m+1} à C${g.n} (partie gauche), puis visse les 2 parties. Trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche ; les disques percés découpés dans les cadres sont les entretoises : empile-les au-dessus des trous.`;
   } else {
-    $('joinNote').textContent = '4 plots de vis dans la coque : vis M3 de 20 mm. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
+    $('joinNote').textContent = '5 plots de vis dans la coque : vis M3 de 20 mm. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) : la languette de l’arrière entre dans la rainure de l’avant, colle-les (colle cyanoacrylate ou PLA), la vis du plot avant (en haut à droite du canon) les tient en plus. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
   }
 }
 function refresh(){
@@ -4682,13 +4690,13 @@ function refresh(){
   btn.disabled = !st.ready;
   btn.textContent = S.proc === 'laser' ? 'Télécharger le plan de découpe (.svg)' : 'Télécharger les pièces à imprimer (.zip)';
   $('exportMsg').textContent = st.ready
-    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches.` : 'Tous les trous sont corrects. Le fichier contient les 2 demi-coques au format STL.')
+    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches.` : 'Tous les trous sont corrects. Le fichier contient les 2 demi-coques, chacune coupée en 2 pièces (4 fichiers STL).')
     : `Le téléchargement se débloque quand les 4 diamètres sont corrects (${st.n} / 4).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Numéros bleus : gravure. Colle les couches C1 à C${halfCount()} ensemble, C${halfCount()+1} à C${g.n} ensemble, puis visse les 2 parties (4 vis M3). Les disques percés et les rectangles découpés dans les cadres sont les entretoises et la butée de la pile : colle-les sur la plaque, à leur emplacement.`
-    : 'Pose chaque demi-coque sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Assemble avec 4 vis M3 de 20 mm.';
+    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Colle l’arrière et l’avant de chaque coque (languette dans la rainure), puis assemble les 2 coques avec 5 vis M3 de 20 mm.';
   const prev = $('exportPreview');
-  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">coque_droite.stl et coque_gauche.stl · 160 × 110 × 15 mm chacune · PLA</div>';
+  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 88 × 110 × 15 mm et les 2 avants 80 × 40 × 15 mm. Il faut un plateau d’au moins 90 × 110 mm.</div>';
   else prev.innerHTML = '';
   return st;
 }
@@ -4757,9 +4765,13 @@ function readme(){
 ======================================
 
 Fichiers :
-  coque_droite.stl  : demi-coque droite (avec le trou du bouton recharger)
-  coque_gauche.stl  : demi-coque gauche
-Unites : millimetres. Chaque piece mesure 160 x 110 x 15 mm.
+  coque_droite_arriere.stl : demi-coque droite, partie arriere avec la crosse (88 x 110 x 15 mm)
+  coque_droite_avant.stl   : demi-coque droite, partie avant (80 x 40 x 15 mm)
+  coque_gauche_arriere.stl : demi-coque gauche, partie arriere avec la crosse
+  coque_gauche_avant.stl   : demi-coque gauche, partie avant
+Unites : millimetres. Plateau d'impression minimal : 90 x 110 mm.
+Chaque demi-coque est coupee en x = 80 mm : la languette de la piece arriere
+s'enfile dans la rainure de la piece avant (a coller).
 
 Composants prevus :
   3 LED Ø ${fmt(C.led)} mm (trous Ø ${fmt(num(S.holes.led))} mm)
@@ -4778,7 +4790,7 @@ Montage :
      le bouton recharger (face droite) et le module laser (avant).
   2. Loge la carte Arduino Nano dans la poignee ; le cable USB sort par le bas.
   3. Pose la pile 9 V couchee dans la partie haute, bornes cote crosse (entre le plot de vis et la butee).
-  4. Assemble les deux demi-coques avec 4 vis M3 de 20 mm : tete de vis dans le lamage de la
+  4. Colle chaque piece arriere et avant (languette dans la rainure), puis assemble les deux demi-coques avec 5 vis M3 de 20 mm : tete de vis dans le lamage de la
      demi-coque droite, la vis se visse dans l'avant-trou du plot de la demi-coque gauche.
 
 Cablage : D2 gachette, D3 recharger, D4 D5 D6 LED, D8 laser.
@@ -4804,10 +4816,13 @@ async function doExport(){
   let r;
   if (S.proc === 'laser') r = await saveFile(`pistolet_decoupe_laser_${String(S.ply).replace('.', ',')}mm.svg`, laserSVG(false));
   else {
-    const {left, right} = lastParts && lastParts.left ? lastParts : buildPrint();
-    const R = stlBinary(right, (x,y,z) => [x, 110 - z, y + 15]);
-    const Lf = stlBinary(left, (x,y,z) => [x, z, 15 - y]);
-    r = await saveFile('pistolet_impression_3d.zip', zip([{name:'coque_droite.stl', data:R}, {name:'coque_gauche.stl', data:Lf}, {name:'LISEZ-MOI.txt', data:readme()}]));
+    const P = lastParts && lastParts.rr ? lastParts : buildPrint();
+    r = await saveFile('pistolet_impression_3d.zip', zip([
+      {name:'coque_droite_arriere.stl', data: stlBinary(P.rr, (x,y,z) => [x, 110 - z, y + 15])},
+      {name:'coque_droite_avant.stl', data: stlBinary(P.rf, (x,y,z) => [x - SPLIT, 110 - z, y + 15])},
+      {name:'coque_gauche_arriere.stl', data: stlBinary(P.lr, (x,y,z) => [x, z, 15 - y])},
+      {name:'coque_gauche_avant.stl', data: stlBinary(P.lf, (x,y,z) => [x - SPLIT, z - 70, 15 - y])},
+      {name:'LISEZ-MOI.txt', data:readme()}]));
   }
   btn.disabled = false;
   $('exportMsg').textContent = r.ok ? 'Fichier prêt. Vérifie ton dossier Téléchargements.' : r.msg;
