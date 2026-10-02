@@ -4320,6 +4320,8 @@ const POSTS = [[13,98],[66,100],[138,101.5],[30,64]], POST_R = 3.75;
 const BAT = {x0:70, L:48.5, H:26.5, T:17.5, z:90, stop:119};
 /* Impression 3D : chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) au plan x = SPLIT, assemblées par un tenon et une rainure collés */
 const SPLIT = 80, TNL = 8, SOLIDS = [[153,78]];   // vis supplémentaire dans le bloc plein de l'avant
+/* Vis de jonction des 4 pièces : traverse toute l'épaisseur dans la paroi du bas, au milieu des languettes */
+const JOINT = [SPLIT + TNL/2, 73];
 
 /* Composants : tailles proposées (mm) et limites pour « Autre » (pour que le trou tienne dans la coque) */
 const COMPS = {
@@ -4468,10 +4470,12 @@ function buildPrint(){
     for (const [nm, sgn] of [['r', -1], ['l', 1]]) {
       const y0 = sgn < 0 ? -30 : 0, y1 = sgn < 0 ? 0 : 30, yc = sgn*(g.W2 - 2.5);                 // yc : milieu de la paroi latérale
       const half = keep(res.intersect(box(-10, y0, -10, 170, y1, 120)));
-      const tongue = box(SPLIT - .5, yc - 1.2, 74, SPLIT + TNL, yc + 1.2, 106);                      // tenon de l'arrière
-      const groove = box(SPLIT - 1, yc - 1.4, 73.8, SPLIT + TNL + .4, yc + 1.4, 106.2);              // rainure de l'avant, jeu 0,2 mm
-      out[nm + 'r'] = toGeometry(keep(keep(half.intersect(box(-10, y0, -10, SPLIT, y1, 120))).add(tongue)));
-      out[nm + 'f'] = toGeometry(keep(keep(half.intersect(box(SPLIT, y0, -10, 170, y1, 120))).subtract(groove)));
+      const tongue = box(SPLIT - .5, yc - 1.2, 71, SPLIT + TNL, yc + 1.2, 106);                      // tenon de l'arrière (descend dans la paroi du bas)
+      const groove = box(SPLIT - 1, yc - 1.4, 70.8, SPLIT + TNL + .4, yc + 1.4, 106.2);              // rainure de l'avant, jeu 0,2 mm
+      const jHole = sgn < 0 ? cylAxis(1.7, y0 - 1, 0, 1, [JOINT[0], 0, JOINT[1]])                    // vis de jonction : passage Ø3,4 à droite
+                            : cylAxis(1.3, 0, y1 + 1, 1, [JOINT[0], 0, JOINT[1]]);                   // avant-trou Ø2,6 à gauche, jusqu'au bout
+      out[nm + 'r'] = toGeometry(keep(keep(keep(half.intersect(box(-10, y0, -10, SPLIT, y1, 120))).add(tongue)).subtract(jHole)));
+      out[nm + 'f'] = toGeometry(keep(keep(keep(half.intersect(box(SPLIT, y0, -10, 170, y1, 120))).subtract(groove)).subtract(jHole)));
     }
     return out;
   } finally { flush(); }
@@ -4670,7 +4674,7 @@ function renderJoin(){
     const m = halfCount(), seam = -g.W2 + m*g.t, len = Math.ceil((m*g.t + .7*(g.CY - seam))/5)*5;
     $('joinNote').textContent = `4 vis M3 de ${len} mm. Colle ensemble les couches C1 à C${m} (partie droite) et C${m+1} à C${g.n} (partie gauche), puis visse les 2 parties. Trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche ; les disques percés découpés dans les cadres sont les entretoises : empile-les au-dessus des trous.`;
   } else {
-    $('joinNote').textContent = '5 plots de vis dans la coque : vis M3 de 20 mm. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) : la languette de l’arrière entre dans la rainure de l’avant, colle-les (colle cyanoacrylate ou PLA), la vis du plot avant (en haut à droite du canon) les tient en plus. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
+    $('joinNote').textContent = '5 plots de vis dans la coque : vis M3 de 20 mm. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) : la languette de l’arrière entre dans la rainure de l’avant, colle-les (colle cyanoacrylate ou PLA), puis la vis de jonction (M3 de 30 mm, dans le bas du canon, juste devant la poignée) traverse les 4 pièces et les serre ensemble. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
   }
 }
 function refresh(){
@@ -4694,7 +4698,7 @@ function refresh(){
     : `Le téléchargement se débloque quand les 4 diamètres sont corrects (${st.n} / 4).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Numéros bleus : gravure. Colle les couches C1 à C${halfCount()} ensemble, C${halfCount()+1} à C${g.n} ensemble, puis visse les 2 parties (4 vis M3). Les disques percés et les rectangles découpés dans les cadres sont les entretoises et la butée de la pile : colle-les sur la plaque, à leur emplacement.`
-    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Colle l’arrière et l’avant de chaque coque (languette dans la rainure), puis assemble les 2 coques avec 5 vis M3 de 20 mm.';
+    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Colle l’arrière et l’avant de chaque coque (languette dans la rainure), assemble les 2 coques avec 5 vis M3 de 20 mm, puis serre les 4 pièces ensemble avec la vis de jonction M3 de 30 mm (bas du canon).';
   const prev = $('exportPreview');
   if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 88 × 110 × 15 mm et les 2 avants 80 × 40 × 15 mm. Il faut un plateau d’au moins 90 × 110 mm.</div>';
   else prev.innerHTML = '';
@@ -4771,7 +4775,8 @@ Fichiers :
   coque_gauche_avant.stl   : demi-coque gauche, partie avant
 Unites : millimetres. Plateau d'impression minimal : 90 x 110 mm.
 Chaque demi-coque est coupee en x = 80 mm : la languette de la piece arriere
-s'enfile dans la rainure de la piece avant (a coller).
+s'enfile dans la rainure de la piece avant (a coller). Une vis de jonction M3 de 30 mm
+traverse le bas du canon (juste devant la poignee) et serre les 4 pieces ensemble.
 
 Composants prevus :
   3 LED Ø ${fmt(C.led)} mm (trous Ø ${fmt(num(S.holes.led))} mm)
@@ -4792,6 +4797,8 @@ Montage :
   3. Pose la pile 9 V couchee dans la partie haute, bornes cote crosse (entre le plot de vis et la butee).
   4. Colle chaque piece arriere et avant (languette dans la rainure), puis assemble les deux demi-coques avec 5 vis M3 de 20 mm : tete de vis dans le lamage de la
      demi-coque droite, la vis se visse dans l'avant-trou du plot de la demi-coque gauche.
+  5. Visse la vis de jonction M3 de 30 mm par la droite, dans le bas du canon juste devant
+     la poignee : elle traverse les 2 languettes et les 4 pieces, qui sont alors tenues ensemble.
 
 Cablage : D2 gachette, D3 recharger, D4 D5 D6 LED, D8 laser.
 Securite : ne jamais viser les yeux avec le laser.
