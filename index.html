@@ -36,17 +36,21 @@
     text-align:center;
   }
   .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
     gap:18px;
     width:100%;
-    max-width:640px;
+    max-width:900px;
   }
+  .grid a.card{flex:0 0 calc((100% - 36px)/3);}
+  @media (max-width:760px){ .grid a.card{flex-basis:calc((100% - 18px)/2);} }
+  @media (max-width:480px){ .grid a.card{flex-basis:100%;} }
   a.card{
     display:flex;
     flex-direction:column;
     gap:8px;
-    padding:24px;
+    padding:20px;
     border-radius:14px;
     background:var(--panel);
     border:1px solid rgba(244,240,228,.14);
@@ -96,15 +100,15 @@
       <span class="name">Atelier Construction</span>
       <span class="desc">Concevoir, assembler et modéliser en 3D.</span>
     </a>
-    <a class="card" href="enquete-policiere.html">
-      <span class="emoji">🔎</span>
-      <span class="name">Enquête policière</span>
-      <span class="desc">Mener l'enquête, analyser les preuves, démasquer le coupable.</span>
-    </a>
     <a class="card" href="jeux-serieux.html">
       <span class="emoji">🎲</span>
       <span class="name">Jeux sérieux</span>
       <span class="desc">Apprendre en jouant.</span>
+    </a>
+    <a class="card" href="enquete-policiere.html">
+      <span class="emoji">🔎</span>
+      <span class="name">Enquête policière</span>
+      <span class="desc">Mener l'enquête, analyser les preuves, démasquer le coupable.</span>
     </a>
   </div>
 </body>
