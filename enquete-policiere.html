@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Enquêtes policières</title>
+<title>Enquête policière (ou pas)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
@@ -62,6 +62,9 @@
   }
   .teaser.night{border-left-color:var(--accent); margin-top:18px;}
   .teaser.night .stamp{color:var(--accent); border-color:var(--accent);}
+  .teaser.zero{border-left-color:#7fb3d5; margin-top:18px;}
+  .teaser.zero .stamp{color:#7fb3d5; border-color:#7fb3d5;}
+  .pair{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px;}
   .stamp{
     display:inline-block;
     font-weight:800;
@@ -124,7 +127,7 @@
     <img src="logo-blanc.png" alt="Atelier Chalou">
   </a>
   <a class="back" href="index.html">← Retour à l'accueil</a>
-  <h1>🔎 Enquêtes policières</h1>
+  <h1>🔎 Enquête policière <span style="font-size:.6em;color:var(--chalk-dim)">(ou pas)</span></h1>
 
   <div class="case">
     <article class="teaser">
@@ -159,6 +162,28 @@
       <span class="name">Ouvrir l'enquête : le Chat de Minuit</span>
       <span class="desc">Version guidée pas à pas : transformer les trous en nombres, puis en lettres, et décoder la carte du voleur.</span>
     </a>
+
+    <article class="teaser zero">
+      <span class="stamp">CASIER SOUS CADENAS · ACCÈS INTERDIT</span>
+      <h2>Le casier du Professeur Zéro 🔒</h2>
+      <p>Au collège, tout le monde le connaît : le <strong>Professeur Zéro</strong>. Il n'a jamais mis un seul 5/5 de sa vie.</p>
+      <p>Alors quand la principale prépare des <strong>cartes cadeaux 5/5</strong> pour récompenser les élèves, il les confisque toutes… et les enferme dans son casier, derrière un cadenas à code.</p>
+      <p>Sa seule faiblesse ? Il oublie tout. Le code est noté sur une <strong>carte perforée</strong>, que le concierge vient de retrouver coincée dans la photocopieuse. « Personne ne sait lire le binaire dans ce collège ! », ricane le professeur.</p>
+      <p class="hook">Il se croit à l'abri. Mais méfie-toi : le Professeur Zéro a plus d'un tour dans son sac…</p>
+    </article>
+
+    <div class="pair">
+      <a class="card" href="professeur-zero-niveau1.html" target="_blank" rel="noopener">
+        <span class="emoji">🔓</span>
+        <span class="name">Niveau 1 · Apprenti</span>
+        <span class="desc">Décoder la carte du professeur et ouvrir le casier.</span>
+      </a>
+      <a class="card" href="professeur-zero-niveau2.html" target="_blank" rel="noopener">
+        <span class="emoji">🧠</span>
+        <span class="name">Niveau 2 · Expert</span>
+        <span class="desc">Le professeur a changé son code… et tendu un piège. Sauras-tu le déjouer ?</span>
+      </a>
+    </div>
   </div>
 </body>
 </html>
