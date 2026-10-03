@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Chat de Minuit</title>
+<style>
+  :root{--bg:#f4f1ea;--ink:#1d1d1f;--mut:#5f5f66;--line:#ddd6c6;--night:#1b2340;--gold:#ffc83d;--acc:#2f6fed;--ok:#1e8e3e;--bad:#c62828;--paper:#fffdf6;--hole:#1d1d1f}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:18px;line-height:1.55}
+  header{background:var(--night);color:#fff;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+  header h1{margin:0;font-size:1.3rem;letter-spacing:.03em}
+  header .stars{margin-left:auto;background:var(--gold);color:var(--ink);font-weight:800;border-radius:999px;padding:4px 14px}
+  header .stars.bump{animation:bump .6s}
+  @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+  header input{font:inherit;font-size:.95rem;padding:5px 10px;border-radius:8px;border:0;width:170px;max-width:45vw}
+  nav{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;background:#e8e3d6;border-bottom:1px solid var(--line)}
+  nav button{font:inherit;font-size:.9rem;padding:7px 12px;border-radius:999px;border:2px solid var(--line);background:#fff;cursor:pointer}
+  nav button.on{background:var(--night);color:#fff;border-color:var(--night)}
+  nav button.done::after{content:" ✓";color:var(--ok);font-weight:800}
+  nav button.on.done::after{color:#9ff0b4}
+  nav button:disabled{opacity:.45;cursor:not-allowed}
+  nav .sp{flex:1}
+  main{max-width:960px;margin:0 auto;padding:16px}
+  section{display:none}
+  section.on{display:block}
+  h2{font-size:1.45rem;margin:4px 0 12px}
+  h3{font-size:1.15rem;margin:0 0 8px}
+  .panel{background:#fff;border:2px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+  .say{display:flex;gap:10px;align-items:flex-start}
+  .say p{margin:0 0 8px}
+  .speak{flex:none;border:0;background:#eef2ff;border-radius:50%;width:40px;height:40px;font-size:1.2rem;cursor:pointer}
+  .speak:hover{background:#dbe4ff}
+  button{font:inherit;padding:10px 18px;border-radius:12px;border:2px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
+  button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .next{display:flex;justify-content:flex-end;margin-top:10px}
+  .mission{counter-reset:m;list-style:none;padding:0;margin:8px 0}
+  .mission li{counter-increment:m;padding:6px 0 6px 46px;position:relative}
+  .mission li::before{content:counter(m);position:absolute;left:0;top:4px;width:32px;height:32px;border-radius:50%;background:var(--gold);font-weight:800;display:flex;align-items:center;justify-content:center}
+  .tip{background:#fff6d6;border:2px solid #f1d27a;border-radius:12px;padding:10px 14px;margin:10px 0}
+  /* calculette à trous */
+  .calc{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;max-width:560px;margin:10px 0}
+  .calc .w{text-align:center;font-weight:800;color:var(--acc);font-size:1rem}
+  .calc .h{aspect-ratio:1;border-radius:50%;border:3px dashed #b9b29c;background:var(--paper);cursor:pointer;padding:0;min-width:0}
+  .calc .h.on{background:var(--hole);border-style:solid;border-color:var(--hole)}
+  .calc.ro .h{cursor:default}
+  .calc .h:disabled{opacity:1;cursor:default}
+  .sum{font-size:1.25rem;font-weight:800;min-height:1.9rem}
+  .defi{border:2px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;background:#fcfbf7}
+  .defi.ok{border-color:var(--ok);background:#f1fbf4}
+  .defi h3 .st{float:right;font-size:1rem}
+  .fb{margin-top:8px;font-weight:700;min-height:1.4rem}
+  .fb.ok{color:var(--ok)}
+  .fb.ko{color:var(--bad)}
+  .hintbox{margin-top:8px;background:#eef2ff;border-radius:10px;padding:8px 12px;display:none}
+  .hintbox.on{display:block}
+  input.ans{font:inherit;font-size:1.3rem;width:90px;padding:6px 8px;border-radius:10px;border:2px solid #b9c3dd;text-align:center}
+  input.ans.letter{width:64px;text-transform:uppercase}
+  input.ans.good{border-color:var(--ok);background:#eaf8ee}
+  input.ans.bad{border-color:var(--bad);background:#fdecea}
+  /* table des lettres */
+  .abc{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin:10px 0}
+  .abc div{border:2px solid var(--line);border-radius:10px;text-align:center;padding:4px 0;background:#fff}
+  .abc b{display:block;font-size:1.3rem}
+  .abc span{color:var(--acc);font-weight:700}
+  .abc div.hl{border-color:var(--gold);background:#fff3c4}
+  details.ref{margin:10px 0}
+  details.ref summary{cursor:pointer;font-weight:700}
+  /* lignes de la carte */
+  .lines{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+  .line{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;align-items:center;border:2px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff}
+  .line.ok{border-color:var(--ok);background:#f1fbf4}
+  .line .n{font-weight:800;color:var(--mut)}
+  .line svg{width:100%;max-width:360px;height:auto;display:block}
+  .line .f{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+  .msg{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .msg div{width:56px;height:64px;border-radius:10px;border:3px dashed #b9b29c;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;background:#fff}
+  .msg div.on{border-style:solid;border-color:var(--ok);background:#eaf8ee}
+  .choice label{display:flex;gap:10px;align-items:center;border:2px solid var(--line);border-radius:12px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}
+  .choice label.good{border-color:var(--ok);background:#eaf8ee}
+  .choice label.bad{border-color:var(--bad);background:#fdecea}
+  .epi{display:none;border:3px solid var(--ok);border-radius:16px;padding:16px;background:var(--paper);margin-top:14px}
+  .epi.on{display:block}
+  .stamp{display:inline-block;border:3px solid var(--ok);color:var(--ok);padding:2px 12px;font-weight:900;letter-spacing:.1em;transform:rotate(-4deg)}
+  pre.mon{background:#0f1512;color:#9be29b;padding:10px;border-radius:12px;min-height:120px;max-height:260px;overflow:auto;font-size:.95rem;margin:8px 0;white-space:pre-wrap}
+  .ill{width:100%;height:auto;display:block;border-radius:14px}
+  table{border-collapse:collapse;width:100%}
+  th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{font-size:.85rem;color:var(--mut)}
+  .mut{color:var(--mut);font-size:.92rem}
+  @media(max-width:600px){body{font-size:17px}.calc{gap:4px}.calc .w{font-size:.82rem}header input{width:130px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🐈‍⬛ L'affaire du Chat de Minuit</h1>
+  <span class="stars" id="stars" title="Une étoile par défi réussi sans aide">⭐ 0</span>
+  <input id="agent" placeholder="Ton prénom" maxlength="30" aria-label="Ton prénom">
+</header>
+<nav id="nav">
+  <button data-s="1" class="on">1 · L'affaire</button>
+  <button data-s="2" disabled>2 · Trous → nombres</button>
+  <button data-s="3" disabled>3 · Nombres → lettres</button>
+  <button data-s="4" disabled>4 · La carte du Chat</button>
+  <button data-s="5" disabled>5 · Le lecteur et le bonus</button>
+  <span class="sp"></span>
+  <button data-s="prof">🔒 Prof</button>
+</nav>
+
+<main>
+<!-- ================= 1 · L'AFFAIRE ================= -->
+<section id="s1" class="on">
+  <div class="panel">
+    <svg class="ill" viewBox="0 0 640 300" role="img" aria-label="Au musée, un cadre vide. À la place du tableau, une carte perforée signée d'un chat noir.">
+      <rect width="640" height="300" fill="#7a2e3b"/>
+      <rect y="232" width="640" height="68" fill="#5a3b2a"/>
+      <g opacity=".15" fill="#fff"><rect x="0" y="40" width="640" height="2"/><rect x="0" y="120" width="640" height="2"/><rect x="0" y="200" width="640" height="2"/></g>
+      <rect x="60" y="54" width="110" height="140" fill="#c99a2e" stroke="#8a6a1c" stroke-width="5"/><rect x="72" y="66" width="86" height="116" fill="#3e6b8a"/><circle cx="115" cy="110" r="22" fill="#f1c27d"/>
+      <rect x="470" y="54" width="110" height="140" fill="#c99a2e" stroke="#8a6a1c" stroke-width="5"/><rect x="482" y="66" width="86" height="116" fill="#6b8a3e"/><path d="M482 182 L525 120 L568 182 Z" fill="#3e5a2a"/>
+      <rect x="230" y="30" width="180" height="190" fill="#e0b245" stroke="#8a6a1c" stroke-width="8"/>
+      <rect x="246" y="46" width="148" height="158" fill="#5e2430"/>
+      <text x="320" y="72" text-anchor="middle" font-size="12" fill="#e8c9cf" font-family="sans-serif">TABLEAU VOLÉ</text>
+      <g transform="rotate(-6 320 135)">
+        <rect x="268" y="88" width="104" height="96" rx="4" fill="#fffdf6" stroke="#b9b29c" stroke-width="2"/>
+        <circle cx="320" cy="84" r="5" fill="#c62828"/>
+        <g fill="#1d1d1f">
+          <circle cx="292" cy="104" r="3.4"/><circle cx="306" cy="104" r="3.4"/><circle cx="334" cy="116" r="3.4"/><circle cx="292" cy="116" r="3.4"/><circle cx="306" cy="128" r="3.4"/>
+          <circle cx="348" cy="128" r="3.4"/><circle cx="292" cy="140" r="3.4"/><circle cx="320" cy="140" r="3.4"/><circle cx="292" cy="152" r="3.4"/><circle cx="334" cy="152" r="3.4"/>
+        </g>
+        <path d="M300 172 q4 -8 8 0 q4 -12 8 0 q2 -4 6 -2 l-2 6 q-10 4 -20 -4z" fill="#1d1d1f"/>
+        <text x="320" y="182" text-anchor="middle" font-size="7" fill="#555" font-family="sans-serif">— le Chat de Minuit</text>
+      </g>
+      <g fill="#1d1d1f" opacity=".85">
+        <g transform="translate(210 262)"><ellipse cx="0" cy="0" rx="7" ry="6"/><circle cx="-7" cy="-9" r="2.6"/><circle cx="0" cy="-12" r="2.6"/><circle cx="7" cy="-9" r="2.6"/></g>
+        <g transform="translate(250 278)"><ellipse cx="0" cy="0" rx="7" ry="6"/><circle cx="-7" cy="-9" r="2.6"/><circle cx="0" cy="-12" r="2.6"/><circle cx="7" cy="-9" r="2.6"/></g>
+        <g transform="translate(395 262)"><ellipse cx="0" cy="0" rx="7" ry="6"/><circle cx="-7" cy="-9" r="2.6"/><circle cx="0" cy="-12" r="2.6"/><circle cx="7" cy="-9" r="2.6"/></g>
+        <g transform="translate(435 278)"><ellipse cx="0" cy="0" rx="7" ry="6"/><circle cx="-7" cy="-9" r="2.6"/><circle cx="0" cy="-12" r="2.6"/><circle cx="7" cy="-9" r="2.6"/></g>
+      </g>
+      <rect x="236" y="246" width="168" height="26" rx="4" fill="#fff8e1"/>
+      <text x="320" y="264" text-anchor="middle" font-size="13" font-weight="700" fill="#1d1d1f" font-family="sans-serif">⚠ Zone interdite au public</text>
+    </svg>
+  </div>
+  <div class="panel">
+    <div class="say"><button class="speak" title="Écouter" aria-label="Écouter le texte">🔊</button>
+      <div>
+        <p><b>Cette nuit, un tableau a disparu du musée !</b></p>
+        <p>Le voleur s'appelle <b>le Chat de Minuit</b>. Il ne laisse jamais d'empreintes. Il laisse seulement une <b>carte perforée</b> à la place du tableau.</p>
+        <p>Sur sa carte, il a caché le nom de l'endroit où il va voler la prochaine fois. Mais le message est écrit en <b>binaire</b> : avec des trous.</p>
+      </div>
+    </div>
+    <h3>Ta mission</h3>
+    <ol class="mission">
+      <li>Apprendre à transformer des <b>trous</b> en <b>nombres</b>.</li>
+      <li>Apprendre à transformer des <b>nombres</b> en <b>lettres</b>.</li>
+      <li><b>Décoder la carte</b> du Chat et trouver où il va frapper.</li>
+    </ol>
+    <div class="tip">💡 Pas de panique : à chaque étape, tu peux demander de l'aide. Tu gagnes une ⭐ pour chaque défi réussi <b>sans aide</b>.</div>
+    <div class="next"><button class="primary" id="go2">Je commence →</button></div>
+  </div>
+</section>
+
+<!-- ================= 2 · TROUS → NOMBRES ================= -->
+<section id="s2">
+  <div class="panel">
+    <h2>Les trous deviennent des nombres</h2>
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div>
+        <p>Sur une ligne de la carte, il y a <b>8 places</b>. Chaque place a une <b>valeur</b>, écrite en bleu au-dessus.</p>
+        <p>Pour trouver le nombre d'une ligne, on <b>additionne les valeurs des trous</b>. Les places sans trou ne comptent pas.</p>
+      </div>
+    </div>
+    <div class="tip">🧪 <b>Essaie !</b> Clique sur les ronds pour percer des trous. La calculette fait l'addition pour toi.</div>
+    <div id="play"></div>
+  </div>
+
+  <div class="defi" id="dA"><h3>Défi A · Perce les trous pour obtenir <b>3</b> <span class="st"></span></h3><div class="bld"></div>
+    <div class="row"><button class="hbtn">💡 Aide</button></div><div class="hintbox"></div><div class="fb"></div></div>
+  <div class="defi" id="dB"><h3>Défi B · Perce les trous pour obtenir <b>65</b> <span class="st"></span></h3><div class="bld"></div>
+    <div class="row"><button class="hbtn">💡 Aide</button></div><div class="hintbox"></div><div class="fb"></div></div>
+  <div class="defi" id="dC"><h3>Défi C · Quel nombre est caché dans cette ligne ? <span class="st"></span></h3><div class="bld"></div>
+    <div class="row"><label>Le nombre est : <input class="ans" type="number" inputmode="numeric" min="0" max="255"></label><button class="chk">Vérifier</button><button class="hbtn">💡 Aide</button></div>
+    <div class="hintbox"></div><div class="fb"></div></div>
+  <div class="next"><button class="primary" id="go3" disabled>Étape suivante →</button></div>
+</section>
+
+<!-- ================= 3 · NOMBRES → LETTRES ================= -->
+<section id="s3">
+  <div class="panel">
+    <h2>Les nombres deviennent des lettres</h2>
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div>
+        <p>Les ordinateurs n'écrivent pas avec des lettres : ils écrivent avec des <b>nombres</b>. Chaque lettre a son numéro. C'est le <b>code ASCII</b>.</p>
+        <p>Par exemple, <b>65</b> veut dire <b>A</b>, <b>66</b> veut dire <b>B</b>… Le Chat utilise ce code.</p>
+      </div>
+    </div>
+    <h3>📖 Le tableau des lettres</h3>
+    <div class="abc" id="abc"></div>
+  </div>
+  <div class="defi" id="dD"><h3>Défi D · Quelle lettre a le numéro <b>72</b> ? <span class="st"></span></h3>
+    <div class="row"><label>La lettre est : <input class="ans letter" maxlength="1" autocomplete="off"></label><button class="chk">Vérifier</button><button class="hbtn">💡 Aide</button></div>
+    <div class="hintbox"></div><div class="fb"></div></div>
+  <div class="defi" id="dE"><h3>Défi E · Quel est le numéro de la lettre <b>E</b> ? <span class="st"></span></h3>
+    <div class="row"><label>Le numéro est : <input class="ans" type="number" inputmode="numeric" min="0" max="255"></label><button class="chk">Vérifier</button><button class="hbtn">💡 Aide</button></div>
+    <div class="hintbox"></div><div class="fb"></div></div>
+  <div class="next"><button class="primary" id="go4" disabled>Décoder la carte du Chat →</button></div>
+</section>
+
+<!-- ================= 4 · LA CARTE DU CHAT ================= -->
+<section id="s4">
+  <div class="panel">
+    <h2>La carte du Chat de Minuit</h2>
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div>
+        <p>Voici les <b>5 lignes</b> de la carte. Pour chaque ligne : <b>1.</b> trouve le <b>nombre</b> en additionnant, <b>2.</b> trouve la <b>lettre</b> dans le tableau.</p>
+        <p>Les lettres apparaissent dans le message en bas. Si tu bloques, clique sur 💡 Aide.</p>
+      </div>
+    </div>
+    <details class="ref"><summary>📖 Ouvrir le tableau des lettres</summary><div class="abc" id="abc2"></div></details>
+    <div class="lines" id="lines1"></div>
+    <h3 style="margin-top:16px">Le message du Chat :</h3>
+    <div class="msg" id="msg1"></div>
+    <div id="where" style="display:none">
+      <h3>Où le Chat va-t-il frapper ?</h3>
+      <div class="choice" id="whereChoices"></div>
+      <div class="fb" id="whereFb"></div>
+    </div>
+    <div class="epi" id="epi1">
+      <p><span class="stamp">BRAVO, DÉTECTIVE !</span></p>
+      <svg class="ill" viewBox="0 0 640 260" role="img" aria-label="La nuit, un phare éclaire la mer. Des voitures de police attendent le Chat, qui est pris dans un filet.">
+        <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1430"/><stop offset="1" stop-color="#2a3a6e"/></linearGradient></defs>
+        <rect width="640" height="260" fill="url(#sky)"/>
+        <g fill="#fff"><circle cx="60" cy="30" r="1.5"/><circle cx="140" cy="60" r="1.2"/><circle cx="520" cy="40" r="1.5"/><circle cx="600" cy="80" r="1.2"/><circle cx="420" cy="22" r="1.2"/></g>
+        <circle cx="90" cy="54" r="22" fill="#f6f1d0"/><circle cx="82" cy="48" r="22" fill="#0d1430"/>
+        <polygon points="300,58 640,8 640,120" fill="#fff3b0" opacity=".22"/>
+        <rect y="200" width="640" height="60" fill="#1d3b6b"/>
+        <path d="M110 214 L120 198 L590 198 L600 214 Z" fill="#4a4f5c"/><rect x="110" y="212" width="490" height="6" fill="#3a3e48"/>
+        <path d="M0 232 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#6fa0d8" stroke-width="3"/>
+        <path d="M240 200 L270 70 L330 70 L360 200 Z" fill="#f2f2f2"/>
+        <path d="M262 106 L338 106 L344 132 L256 132 Z" fill="#d23b3b"/><path d="M250 158 L350 158 L356 184 L244 184 Z" fill="#d23b3b"/>
+        <rect x="266" y="44" width="68" height="28" rx="4" fill="#ffd54a"/><path d="M260 44 L300 20 L340 44 Z" fill="#d23b3b"/>
+        <g transform="translate(410 150)"><rect x="0" y="10" width="110" height="30" rx="8" fill="#e8eef8"/><rect x="18" y="-6" width="70" height="20" rx="6" fill="#e8eef8"/><rect x="0" y="22" width="110" height="7" fill="#2f6fed"/><circle cx="24" cy="42" r="9" fill="#222"/><circle cx="88" cy="42" r="9" fill="#222"/><rect x="40" y="-14" width="12" height="8" rx="2" fill="#2f6fed"/><rect x="54" y="-14" width="12" height="8" rx="2" fill="#e53935"/><text x="55" y="34" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="sans-serif">POLICE</text></g>
+        <g transform="translate(150 148)"><path d="M0 50 Q30 -10 60 50 Z" fill="none" stroke="#c9a46a" stroke-width="2"/><path d="M5 40 L55 40 M10 28 L50 28 M18 16 L42 16 M30 0 L30 50 M15 50 L22 6 M45 50 L38 6" stroke="#c9a46a" stroke-width="1.5"/>
+          <path d="M18 46 q2 -16 12 -18 l3 -8 l4 8 q8 2 10 18 z" fill="#111"/><circle cx="27" cy="32" r="1.8" fill="#ffd54a"/><circle cx="35" cy="32" r="1.8" fill="#ffd54a"/></g>
+        <text x="180" y="246" text-anchor="middle" font-size="14" font-weight="800" fill="#ffd54a" font-family="sans-serif">Pris au piège !</text>
+      </svg>
+      <p>Grâce à toi, la police attendait le Chat de Minuit <b>au phare</b>. Il est tombé droit dans le filet, avec le tableau volé sous le bras !</p>
+      <p><b>Tu as décodé un message en binaire, comme un vrai ordinateur.</b> Passe à l'étape 5 pour vérifier avec le vrai lecteur et relever le défi bonus.</p>
+      <div class="next"><button class="primary" id="go5">Étape 5 →</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 5 · LECTEUR ET BONUS ================= -->
+<section id="s5">
+  <div class="panel">
+    <h2>Vérifie avec le vrai lecteur</h2>
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div><p>Le lecteur de cartes fait le même travail que toi, mais tout seul ! Glisse la carte du Chat dans le lecteur : il affiche chaque ligne en binaire, en nombre et en lettre. Compare avec tes réponses.</p></div>
+    </div>
+    <div class="row">
+      <button class="primary" id="btnConn">🔌 Brancher le lecteur</button>
+      <button id="btnSim1">▶ Simuler la carte 1 (sans lecteur)</button>
+      <button id="btnSim2">▶ Simuler la carte 2</button>
+      <span class="mut" id="connSt">Lecteur non branché</span>
+    </div>
+    <pre class="mon" id="mon"></pre>
+    <p class="mut">Il faut Chrome ou Edge sur ordinateur, et le programme normal du lecteur dans la Nano. Glisse la carte face imprimée vers le haut, bord ↑ en premier.</p>
+  </div>
+  <div class="panel">
+    <h2>⭐ Défi bonus : à quelle heure ?</h2>
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div><p>Dans la poche du Chat, la police a trouvé une <b>deuxième carte</b>. Elle dit à quelle heure il voulait voler. Décode-la de la même façon !</p></div>
+    </div>
+    <div class="lines" id="lines2"></div>
+    <h3 style="margin-top:16px">Le message de la carte 2 :</h3>
+    <div class="msg" id="msg2"></div>
+    <div class="epi" id="epi2"><p><span class="stamp">AFFAIRE CLASSÉE</span></p>
+      <p>Le Chat de Minuit voulait frapper au <b>PHARE</b> à <b>MINUIT</b>… évidemment ! Tu as décodé les deux cartes : tu es un·e vrai·e expert·e du binaire.</p>
+      <p id="final" style="font-weight:800"></p></div>
+  </div>
+</section>
+
+<!-- ================= PROF ================= -->
+<section id="sprof">
+  <div class="panel" id="lock">
+    <h2>Espace enseignant</h2>
+    <p>Saisissez le code enseignant.</p>
+    <div class="row"><input id="tcode" type="password" style="font:inherit;padding:8px;border-radius:10px;border:2px solid var(--line)"><button id="btnUnlock">Ouvrir</button></div>
+    <p class="mut" id="tmsg"></p>
+  </div>
+  <div id="teacher" style="display:none">
+    <div class="panel">
+      <h2>L'activité en bref</h2>
+      <p>Version <b>simplifiée et guidée</b> pour des élèves en difficulté (5e – 3e). Durée : <b>une séance de 55 min</b>, en binôme ou seul·e. Il n'y a pas de programmation à écrire. Le lecteur sert seulement à vérifier le travail à la fin, et la simulation le remplace s'il n'est pas disponible.</p>
+      <table>
+        <tr><th>Étape</th><th>Notion</th><th>Durée</th></tr>
+        <tr><td>1 · L'affaire</td><td>Mise en situation</td><td>5 min</td></tr>
+        <tr><td>2 · Trous → nombres</td><td>Valeur de position, addition des poids (128 … 1)</td><td>15 min</td></tr>
+        <tr><td>3 · Nombres → lettres</td><td>Codage des caractères (ASCII), lecture d'un tableau</td><td>10 min</td></tr>
+        <tr><td>4 · La carte du Chat</td><td>Décodage complet de 5 octets</td><td>15 min</td></tr>
+        <tr><td>5 · Lecteur et bonus</td><td>Vérification avec la machine, réinvestissement (6 octets)</td><td>10 min</td></tr>
+      </table>
+      <h3 style="margin-top:14px">Aides prévues</h3>
+      <ul>
+        <li><b>🔊 Lecture à voix haute</b> de chaque consigne (synthèse vocale du navigateur).</li>
+        <li><b>Calculette à trous</b> : l'addition des poids s'affiche en direct.</li>
+        <li><b>Aides en 3 niveaux</b> : une méthode, puis le calcul à faire, puis la réponse. Chaque défi réussi sans aide rapporte une ⭐.</li>
+        <li>Une seule tâche à la fois, un retour immédiat, des étapes qui se débloquent au fur et à mesure.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>Préparation</h2>
+      <ul>
+        <li>Imprimez et perforez les <b>2 cartes</b> (carte 1 : PHARE, carte 2 : MINUIT), sur le même gabarit que les autres cartes.</li>
+        <li>Pour l'étape 5, la Nano du lecteur doit contenir le <b>programme normal du lecteur</b>. Remettez-le si vous venez de faire l'affaire NéoPulse : page principale, onglet « Fabriquer le lecteur ».</li>
+      </ul>
+      <div class="row"><button id="btnPrint">🖨️ Imprimer les 2 cartes à perforer</button><button id="btnLaser">⬇ Cartes pour découpe laser (SVG)</button><button id="btnAll">Débloquer toutes les étapes</button></div>
+      <p class="mut">Imprimez à 100 % sur bristol blanc mat. Perforez les cercles marqués d'une croix : 6 mm pour les données, 4 mm pour l'horloge.</p>
+    </div>
+    <div class="panel">
+      <h2>Solutions</h2>
+      <table id="solTable"></table>
+      <p>Défis : A = 2 + 1 · B = 64 + 1 · C = 72 · D = H · E = 69. Réponse : <b>le phare</b>. Code enseignant : <b>CHAT2026</b>.</p>
+      <p class="mut">Erreurs fréquentes : lire de droite à gauche (le poids 128 est à gauche), oublier un trou, confondre le numéro d'une lettre avec sa place dans l'alphabet (A = 65 et non 1). Prolongement : l'affaire NéoPulse, où les élèves programment eux-mêmes le lecteur.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const W = [128, 64, 32, 16, 8, 4, 2, 1];
+const CARD1 = 'PHARE', CARD2 = 'MINUIT';
+let stars = 0;
+const bits = v => W.map(w => (v & w) ? 1 : 0);
+const terms = v => W.filter(w => v & w);
+
+/* ---------- étoiles ---------- */
+function addStar() {
+  stars++;
+  const s = $('stars'); s.textContent = '⭐ ' + stars;
+  s.classList.remove('bump'); void s.offsetWidth; s.classList.add('bump');
+}
+
+/* ---------- navigation guidée ---------- */
+let reached = 1;
+function go(n) {
+  document.querySelectorAll('main > section').forEach(s => s.classList.toggle('on', s.id === 's' + n));
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.s === String(n)));
+  window.scrollTo(0, 0);
+}
+function unlock(n) {
+  reached = Math.max(reached, n);
+  document.querySelectorAll('#nav button[data-s]').forEach(b => {
+    const k = +b.dataset.s;
+    if (k) { b.disabled = k > reached; b.classList.toggle('done', k < reached); }
+  });
+}
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => go(b.dataset.s));
+$('go2').onclick = () => { unlock(2); go(2); };
+$('go3').onclick = () => { unlock(3); go(3); };
+$('go4').onclick = () => { unlock(4); go(4); };
+$('go5').onclick = () => { unlock(5); go(5); };
+
+/* ---------- lecture à voix haute ---------- */
+document.querySelectorAll('.speak').forEach(b => b.onclick = () => {
+  if (!('speechSynthesis' in window)) { alert('La lecture à voix haute n\'est pas disponible sur ce navigateur.'); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(b.nextElementSibling.innerText.replace(/→/g, ''));
+  u.lang = 'fr-FR'; u.rate = 0.92;
+  speechSynthesis.speak(u);
+});
+
+/* ---------- calculette à trous ---------- */
+function calc(container, opts) {
+  // opts : { value, readonly, onChange }
+  let v = opts.value || 0;
+  const el = document.createElement('div');
+  el.innerHTML = '<div class="calc' + (opts.readonly ? ' ro' : '') + '">' + W.map(w => '<div class="w">' + w + '</div>').join('') +
+    W.map((w, i) => '<button class="h" data-i="' + i + '" aria-label="place ' + w + '"' + (opts.readonly ? ' tabindex="-1"' : '') + '></button>').join('') + '</div>' +
+    (opts.readonly ? '' : '<div class="sum"></div>');
+  container.appendChild(el);
+  const holes = el.querySelectorAll('.h'), sum = el.querySelector('.sum');
+  function draw() {
+    holes.forEach((h, i) => { h.classList.toggle('on', !!(v & W[i])); h.setAttribute('aria-pressed', String(!!(v & W[i]))); });
+    if (sum) { const t = terms(v); sum.textContent = t.length ? t.join(' + ') + ' = ' + v : 'Aucun trou : 0'; }
+  }
+  if (!opts.readonly) holes.forEach((h, i) => h.onclick = () => { v ^= W[i]; draw(); if (opts.onChange) opts.onChange(v); });
+  draw();
+  return { get: () => v, set: x => { v = x; draw(); }, lock: () => holes.forEach(h => { h.disabled = true; }) };
+}
+calc($('play'), { value: 5 });
+
+/* ---------- défis ---------- */
+const done = {};
+function defi(id, cfg) {
+  const box = $(id), hb = box.querySelector('.hintbox'), fb = box.querySelector('.fb'), st = box.querySelector('.st');
+  let level = 0, ok = false;
+  const win = () => {
+    if (ok) return; ok = true; done[id] = true;
+    box.classList.add('ok');
+    const clean = level === 0;
+    if (clean) addStar();
+    st.textContent = clean ? '⭐' : '✔';
+    fb.className = 'fb ok'; fb.textContent = '✅ ' + (cfg.bravo || 'Bravo !') + (clean ? ' Tu gagnes une étoile.' : '');
+    box.querySelectorAll('button,input').forEach(e => { e.disabled = true; });
+    if (cfg.after) cfg.after();
+  };
+  box.querySelector('.hbtn').onclick = () => {
+    if (ok) return;
+    level = Math.min(level + 1, cfg.hints.length);
+    hb.classList.add('on');
+    hb.innerHTML = cfg.hints.slice(0, level).map((h, i) => '<div>💡 <b>Aide ' + (i + 1) + ' :</b> ' + h + '</div>').join('');
+    if (level === cfg.hints.length) box.querySelector('.hbtn').textContent = '💡 (plus d\'aide)';
+  };
+  if (cfg.build) {
+    const c = calc(box.querySelector('.bld'), { onChange: v => {
+      if (v === cfg.target) win();
+      else if (v > cfg.target) { fb.className = 'fb ko'; fb.textContent = '🤔 C\'est trop : ' + v + '. Enlève un trou.'; }
+      else { fb.className = 'fb'; fb.textContent = ''; }
+    } });
+  }
+  if (cfg.show !== undefined) calc(box.querySelector('.bld'), { value: cfg.show, readonly: true });
+  const inp = box.querySelector('input.ans');
+  if (inp) {
+    const check = () => {
+      const a = inp.value.trim().toUpperCase();
+      if (a === '') return;
+      if (a === String(cfg.answer)) { inp.classList.add('good'); win(); }
+      else { inp.classList.add('bad'); fb.className = 'fb ko'; fb.textContent = '🤔 Pas encore… Vérifie ton calcul, ou demande une aide 💡.'; }
+    };
+    box.querySelector('.chk').onclick = check;
+    inp.onkeydown = e => { if (e.key === 'Enter') check(); };
+    inp.oninput = () => { inp.classList.remove('bad'); fb.textContent = ''; };
+  }
+}
+const s2 = () => { if (done.dA && done.dB && done.dC) $('go3').disabled = false; };
+const s3 = () => { if (done.dD && done.dE) $('go4').disabled = false; };
+defi('dA', { build: true, target: 3, after: s2, bravo: '2 + 1 = 3, parfait !', hints: ['Les valeurs à droite sont les plus petites : 2 et 1.', 'Perce le trou <b>2</b> et le trou <b>1</b> (les deux à droite).'] });
+defi('dB', { build: true, target: 65, after: s2, bravo: '64 + 1 = 65. Retiens bien ce nombre : il servira à l\'étape 3 !', hints: ['Commence par la plus grande valeur qui ne dépasse pas 65.', '64 ne dépasse pas 65. Il manque 65 − 64 = 1.', 'Perce le trou <b>64</b> et le trou <b>1</b>.'] });
+defi('dC', { show: 72, answer: 72, after: s2, bravo: '64 + 8 = 72. Bien joué !', hints: ['Regarde les nombres bleus au-dessus des trous noirs, puis additionne-les.', 'Il y a deux trous : sous le <b>64</b> et sous le <b>8</b>. Combien font 64 + 8 ?', 'Le nombre est <b>72</b>.'] });
+
+/* ---------- table des lettres ---------- */
+function abc(target) {
+  let h = '';
+  for (let c = 65; c <= 90; c++) h += '<div data-c="' + c + '"><b>' + String.fromCharCode(c) + '</b><span>' + c + '</span></div>';
+  target.innerHTML = h;
+}
+abc($('abc')); abc($('abc2'));
+const hl = (n, on) => document.querySelectorAll('.abc div[data-c="' + n + '"]').forEach(d => d.classList.toggle('hl', on));
+defi('dD', { answer: 'H', after: s3, bravo: '72 = H. Tu sais lire le code ASCII !', hints: ['Cherche le nombre <b>72</b> dans le tableau des lettres, juste au-dessus.', 'La lettre est <b>H</b>.'] });
+defi('dE', { answer: 69, after: s3, bravo: 'E = 69. Bravo !', hints: ['Cherche la lettre <b>E</b> dans le tableau : son numéro est écrit en bleu dessous.', 'Le numéro est <b>69</b>.'] });
+
+/* ---------- décodage d'une carte ---------- */
+function lineSVG(v) {
+  let s = '<svg viewBox="0 0 360 64" role="img" aria-label="Ligne de la carte">';
+  s += '<rect x="1" y="1" width="358" height="62" rx="8" fill="#fffdf6" stroke="#b9b29c" stroke-width="2"/>';
+  W.forEach((w, i) => {
+    const cx = 26 + 38 * i;
+    s += '<text x="' + cx + '" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#2f6fed" font-family="sans-serif">' + w + '</text>';
+    s += (v & w) ? '<circle cx="' + cx + '" cy="41" r="12" fill="#1d1d1f"/>' : '<circle cx="' + cx + '" cy="41" r="12" fill="none" stroke="#c9c2ad" stroke-width="2" stroke-dasharray="3 3"/>';
+  });
+  s += '<circle cx="335" cy="41" r="7" fill="#1d1d1f"/><text x="335" y="18" text-anchor="middle" font-size="10" fill="#777" font-family="sans-serif">⏱</text>';
+  return s + '</svg>';
+}
+function card(word, linesId, msgId, onDone) {
+  const L = $(linesId), M = $(msgId);
+  M.innerHTML = [...word].map(() => '<div></div>').join('');
+  const solved = {};
+  [...word].forEach((ch, k) => {
+    const v = ch.charCodeAt(0);
+    const d = document.createElement('div');
+    d.className = 'line';
+    d.innerHTML = '<span class="n">Ligne ' + (k + 1) + '</span>' + lineSVG(v) +
+      '<div class="f"><label>Nombre : <input class="ans num" type="number" inputmode="numeric" min="0" max="255"></label>' +
+      '<label>Lettre : <input class="ans letter" maxlength="1" autocomplete="off" disabled></label>' +
+      '<button class="hbtn">💡 Aide</button><span class="fbl" style="font-weight:700"></span></div>' +
+      '<div class="hintbox" style="grid-column:1/-1"></div>';
+    L.appendChild(d);
+    const num = d.querySelector('.num'), let_ = d.querySelector('.letter'), fbl = d.querySelector('.fbl'), hb = d.querySelector('.hintbox');
+    let help = 0, nOk = false;
+    const finish = () => {
+      d.classList.add('ok'); let_.classList.add('good'); let_.disabled = true; d.querySelector('.hbtn').disabled = true;
+      const clean = help === 0;
+      if (clean) addStar();
+      fbl.style.color = 'var(--ok)'; fbl.textContent = clean ? '✅ ⭐' : '✅';
+      hl(v, false);
+      const cell = M.children[k]; cell.textContent = ch; cell.classList.add('on');
+      solved[k] = true;
+      if (Object.keys(solved).length === word.length) onDone();
+      else { const nx = L.querySelectorAll('.num:not(:disabled)')[0]; if (nx) nx.focus(); }
+    };
+    const checkNum = () => {
+      if (num.value === '') return;
+      if (+num.value === v) {
+        nOk = true; num.classList.add('good'); num.disabled = true; let_.disabled = false;
+        fbl.style.color = 'var(--ok)'; fbl.textContent = '👍 Maintenant, la lettre !'; hb.classList.remove('on'); let_.focus();
+      } else {
+        num.classList.add('bad'); fbl.style.color = 'var(--bad)';
+        fbl.textContent = +num.value > 255 ? '🤔 Une ligne ne dépasse jamais 255.' : '🤔 Pas encore. Additionne seulement les valeurs des trous noirs.';
+      }
+    };
+    const checkLet = () => {
+      const a = let_.value.trim().toUpperCase();
+      if (!a) return;
+      if (a === ch) finish();
+      else { let_.classList.add('bad'); fbl.style.color = 'var(--bad)'; fbl.textContent = '🤔 Ce n\'est pas ' + a + '. Cherche ' + v + ' dans le tableau des lettres.'; }
+    };
+    num.onchange = checkNum; num.onkeydown = e => { if (e.key === 'Enter') checkNum(); };
+    num.oninput = () => { num.classList.remove('bad'); };
+    let_.oninput = () => { let_.classList.remove('bad'); if (let_.value) checkLet(); };
+    d.querySelector('.hbtn').onclick = () => {
+      help++;
+      hb.classList.add('on');
+      if (!nOk) {
+        const t = terms(v);
+        const H = ['Regarde les nombres bleus au-dessus des trous noirs, puis additionne-les.',
+          'Le calcul à faire : <b>' + t.join(' + ') + '</b> = ?',
+          'Le nombre est <b>' + v + '</b>. Écris-le dans la case.'];
+        const lv = Math.min(help, 3);
+        hb.innerHTML = H.slice(0, lv).map((h, i) => '<div>💡 <b>Aide ' + (i + 1) + ' :</b> ' + h + '</div>').join('');
+      } else {
+        const lv = Math.min(help, 2);
+        hl(v, true);
+        hb.innerHTML = ['Cherche <b>' + v + '</b> dans le tableau des lettres (il est surligné en jaune).', 'La lettre est <b>' + ch + '</b>.']
+          .slice(0, lv).map((h, i) => '<div>💡 <b>Aide ' + (i + 1) + ' :</b> ' + h + '</div>').join('');
+        if (!$('abc2').closest('details').open && linesId === 'lines1') $('abc2').closest('details').open = true;
+      }
+    };
+  });
+}
+card(CARD1, 'lines1', 'msg1', () => {
+  $('where').style.display = '';
+  $('where').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+const PLACES = [['La gare', 0], ['Le phare', 1], ['Le port', 0], ['Le musée', 0]];
+$('whereChoices').innerHTML = PLACES.map((p, i) => '<label><input type="radio" name="where" value="' + i + '"> ' + p[0] + '</label>').join('');
+document.querySelectorAll('input[name=where]').forEach(r => r.onchange = () => {
+  const lab = r.closest('label');
+  if (PLACES[+r.value][1]) {
+    lab.classList.add('good');
+    document.querySelectorAll('input[name=where]').forEach(x => { x.disabled = true; });
+    $('whereFb').className = 'fb ok'; $('whereFb').textContent = '✅ Oui : PHARE, c\'est le phare !';
+    $('epi1').classList.add('on'); unlock(5);
+    setTimeout(() => $('epi1').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  } else {
+    lab.classList.add('bad'); r.disabled = true;
+    $('whereFb').className = 'fb ko'; $('whereFb').textContent = '🤔 Non. Relis le message du Chat, lettre par lettre.';
+  }
+});
+card(CARD2, 'lines2', 'msg2', () => {
+  $('epi2').classList.add('on');
+  $('final').textContent = '⭐ Tu as gagné ' + stars + ' étoile' + (stars > 1 ? 's' : '') + ' sur 16' + ($('agent').value ? ', ' + $('agent').value : '') + ' !';
+  document.querySelector('#nav button[data-s="5"]').classList.add('done');
+});
+
+/* ---------- lecteur (programme normal : lignes « R:01010000 » et « END ») ---------- */
+const mon = $('mon');
+let reading = [];
+function showRow(b) {
+  const v = parseInt(b, 2), ch = v >= 32 && v < 127 ? String.fromCharCode(v) : '?';
+  reading.push(ch);
+  mon.textContent += b + '  →  ' + String(v).padStart(3, ' ') + '  →  ' + ch + '\n';
+  mon.scrollTop = mon.scrollHeight;
+}
+function endCard() {
+  if (reading.length) mon.textContent += '────── Message : ' + reading.join('') + ' ──────\n\n';
+  reading = []; mon.scrollTop = mon.scrollHeight;
+}
+let port = null;
+$('btnConn').onclick = async () => {
+  if (port) return;
+  if (!('serial' in navigator)) { alert('Il faut Chrome ou Edge sur ordinateur pour brancher le lecteur.'); return; }
+  try { port = await navigator.serial.requestPort(); await port.open({ baudRate: 115200 }); }
+  catch (e) { port = null; return; }
+  $('connSt').textContent = 'Lecteur branché : glisse une carte !';
+  $('btnConn').disabled = true;
+  const dec = new TextDecoderStream(); port.readable.pipeTo(dec.writable).catch(() => {});
+  const rd = dec.readable.getReader(); let buf = '';
+  try {
+    for (;;) {
+      const { value, done } = await rd.read(); if (done) break;
+      buf += value; let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+        if (/^R:[01]{8}$/.test(l)) showRow(l.slice(2));
+        else if (l === 'END') endCard();
+      }
+    }
+  } catch (e) {}
+  port = null; $('btnConn').disabled = false; $('connSt').textContent = 'Lecteur débranché';
+};
+function simulate(word) {
+  mon.textContent += '(simulation) La carte passe dans le lecteur…\n';
+  [...word].forEach((ch, k) => setTimeout(() => showRow(ch.charCodeAt(0).toString(2).padStart(8, '0')), 500 * (k + 1)));
+  setTimeout(endCard, 500 * (word.length + 1) + 200);
+}
+$('btnSim1').onclick = () => simulate(CARD1);
+$('btnSim2').onclick = () => simulate(CARD2);
+
+/* ---------- prénom ---------- */
+$('agent').oninput = () => {};
+
+/* ---------- enseignant ---------- */
+$('btnUnlock').onclick = () => {
+  if (btoa($('tcode').value.trim().toUpperCase()) === 'Q0hBVDIwMjY=') { $('lock').style.display = 'none'; $('teacher').style.display = ''; }
+  else $('tmsg').textContent = 'Code incorrect.';
+};
+$('tcode').onkeydown = e => { if (e.key === 'Enter') $('btnUnlock').click(); };
+$('btnAll').onclick = () => { unlock(5); $('go3').disabled = false; $('go4').disabled = false; };
+$('solTable').innerHTML = '<tr><th>Carte</th><th>Ligne</th><th>Binaire</th><th>Calcul</th><th>Nombre</th><th>Lettre</th></tr>' +
+  [[1, CARD1], [2, CARD2]].map(([n, w]) => [...w].map((ch, k) => { const v = ch.charCodeAt(0);
+    return '<tr><td>' + (k ? '' : 'Carte ' + n) + '</td><td>' + (k + 1) + '</td><td style="font-family:monospace">' + v.toString(2).padStart(8, '0') + '</td><td>' + terms(v).join(' + ') + '</td><td>' + v + '</td><td><b>' + ch + '</b></td></tr>'; }).join('')).join('');
+
+function cardSVG(word, title, sub, laser) {
+  const Wd = 120, Hd = 132, mx = 6, top = 22, p = 12;
+  const cut = 'fill="none" stroke="#ff0000" stroke-width="0.1"';
+  let s = '<svg xmlns="http://www.w3.org/2000/svg" width="' + Wd + 'mm" height="' + Hd + 'mm" viewBox="0 0 ' + Wd + ' ' + Hd + '" font-family="sans-serif">';
+  s += laser ? '<rect x="0" y="0" width="' + Wd + '" height="' + Hd + '" ' + cut + '/>' : '<rect x="0.15" y="0.15" width="' + (Wd - 0.3) + '" height="' + (Hd - 0.3) + '" fill="none" stroke="#000" stroke-width="0.3"/>';
+  if (!laser) {
+    s += '<text x="6" y="7" font-size="3.2" font-weight="700">↑ CE BORD ENTRE EN PREMIER</text>';
+    W.forEach((v, i) => { s += '<text x="' + (mx + p * (i + 0.5)) + '" y="' + (top - 8) + '" font-size="3.6" text-anchor="middle">' + v + '</text>'; });
+  }
+  [...word].forEach((ch, r) => {
+    const v = ch.charCodeAt(0), cy = top + p * (r + 0.5);
+    for (let c = 0; c < 8; c++) {
+      const cx = mx + p * (c + 0.5), on = (v >> (7 - c)) & 1;
+      if (laser) { if (on) s += '<circle cx="' + cx + '" cy="' + cy + '" r="3" ' + cut + '/>'; }
+      else if (on) s += '<circle cx="' + cx + '" cy="' + cy + '" r="3" fill="none" stroke="#000" stroke-width="0.5"/><path d="M' + (cx - 1.6) + ',' + (cy - 1.6) + 'L' + (cx + 1.6) + ',' + (cy + 1.6) + 'M' + (cx + 1.6) + ',' + (cy - 1.6) + 'L' + (cx - 1.6) + ',' + (cy + 1.6) + '" stroke="#000" stroke-width="0.35"/>';
+      else s += '<circle cx="' + cx + '" cy="' + cy + '" r="3" fill="none" stroke="#aaa" stroke-width="0.2" stroke-dasharray="0.8 0.8"/>';
+    }
+    const kx = mx + p * 8.5;
+    s += laser ? '<circle cx="' + kx + '" cy="' + cy + '" r="2" ' + cut + '/>' : '<circle cx="' + kx + '" cy="' + cy + '" r="2" fill="none" stroke="#000" stroke-width="0.4"/><path d="M' + (kx - 1) + ',' + (cy - 1) + 'L' + (kx + 1) + ',' + (cy + 1) + 'M' + (kx + 1) + ',' + (cy - 1) + 'L' + (kx - 1) + ',' + (cy + 1) + '" stroke="#000" stroke-width="0.3"/>';
+  });
+  // aucune inscription au-delà de x = 95 mm : la colonne d'horloge (x = 108 mm) doit rester vierge
+  const ty = top + p * word.length + 14;
+  s += '<text x="8" y="' + ty + '" font-size="6" font-weight="800"' + (laser ? ' fill="#000"' : '') + '>' + title + '</text>';
+  s += '<text x="8" y="' + (ty + 7) + '" font-size="4"' + (laser ? ' fill="#000"' : '') + '>' + sub + '</text>';
+  if (!laser) s += '<text x="8" y="' + (Hd - 10) + '" font-size="3" fill="#555">Perforer les cercles marqués d\'une croix :</text><text x="8" y="' + (Hd - 6) + '" font-size="3" fill="#555">données 6 mm, horloge 4 mm.</text>';
+  return s + '</svg>';
+}
+const CARDS = [[CARD1, 'CARTE 1', 'Laissée au musée par le Chat'], [CARD2, 'CARTE 2', 'Trouvée dans la poche du Chat']];
+$('btnPrint').onclick = () => {
+  const w = window.open('', '_blank');
+  if (!w) { alert('Autorisez les fenêtres pop-up pour imprimer.'); return; }
+  w.document.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Cartes du Chat de Minuit</title></head><body style="margin:10mm">' +
+    CARDS.map((c, i) => '<div style="page-break-after:' + (i ? 'auto' : 'always') + '">' + cardSVG(c[0], c[1], c[2], false) + '</div>').join('') +
+    '<script>setTimeout(function(){print()},300)<\/script></body></html>');
+  w.document.close();
+};
+$('btnLaser').onclick = () => {
+  const inner = t => t.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="250mm" height="132mm" viewBox="0 0 250 132" font-family="sans-serif">' +
+    '<!-- Rouge = découpe, noir = gravure légère -->' +
+    '<g>' + inner(cardSVG(CARDS[0][0], CARDS[0][1], CARDS[0][2], true)) + '</g><g transform="translate(130 0)">' + inner(cardSVG(CARDS[1][0], CARDS[1][1], CARDS[1][2], true)) + '</g></svg>';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  a.download = 'cartes_chat_de_minuit_laser.svg'; document.body.appendChild(a); a.click(); a.remove();
+};
+</script>
+</body>
+</html>
