@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Accueil</title>
+<script src="acces.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
@@ -228,6 +229,9 @@
       };
     }, (cards.length - 1)*stagger + fly + 250);
   }
+  /* Le mot de passe est géré par acces.js : tant que l'accès n'est pas validé, rien ne s'anime.
+     Une fois le mot de passe accepté, la page se recharge et les boutons arrivent. */
+  if (document.documentElement.classList.contains('acces-verrou')) return;
   if (layout()) { play(); animated = true; }
   var t;
   window.addEventListener('resize', function(){ clearTimeout(t); t = setTimeout(layout, 120); });
