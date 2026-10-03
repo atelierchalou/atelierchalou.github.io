@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enquêtes policières</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#152720;
+    --panel:#1c332a;
+    --chalk:#f4f0e2;
+    --chalk-dim:#b9c2b6;
+    --accent:#e8c468;
+    --alert:#e06b5b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    padding:40px 20px;
+    background:var(--bg);
+    color:var(--chalk);
+    font-family:'Nunito Sans',system-ui,sans-serif;
+  }
+  h1{
+    font-family:'Kalam',cursive;
+    font-size:2rem;
+    margin:0;
+    text-align:center;
+  }
+  .back{
+    color:var(--chalk-dim);
+    text-decoration:none;
+    font-size:.9rem;
+    margin-top:-14px;
+    margin-bottom:14px;
+  }
+  .back:hover{color:var(--accent);}
+  .case{
+    width:100%;
+    max-width:640px;
+    margin-top:28px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .teaser{
+    position:relative;
+    background:var(--panel);
+    border:1px solid rgba(244,240,228,.14);
+    border-left:4px solid var(--alert);
+    border-radius:14px;
+    padding:26px 24px 22px;
+    line-height:1.6;
+  }
+  .stamp{
+    display:inline-block;
+    font-weight:800;
+    font-size:.75rem;
+    letter-spacing:.12em;
+    color:var(--alert);
+    border:2px solid var(--alert);
+    border-radius:6px;
+    padding:2px 8px;
+    transform:rotate(-3deg);
+    margin-bottom:12px;
+  }
+  .teaser h2{
+    font-family:'Kalam',cursive;
+    font-size:1.4rem;
+    margin:0 0 10px;
+    color:var(--accent);
+  }
+  .teaser p{margin:0 0 12px;}
+  .teaser .time{font-weight:800; color:var(--accent);}
+  .teaser .hook{
+    font-weight:800;
+    font-size:1.05rem;
+    margin:16px 0 0;
+  }
+  a.card{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:24px;
+    border-radius:14px;
+    background:var(--panel);
+    border:1px solid rgba(244,240,228,.14);
+    color:var(--chalk);
+    text-decoration:none;
+    transition:border-color .15s, transform .1s;
+  }
+  a.card:hover{
+    border-color:var(--accent);
+    transform:translateY(-2px);
+  }
+  a.card .emoji{font-size:1.8rem;}
+  a.card .name{font-weight:800; font-size:1.1rem;}
+  a.card .desc{color:var(--chalk-dim); font-size:.9rem; line-height:1.4;}
+  .site-logo{
+    position:fixed;
+    top:16px;
+    left:16px;
+    z-index:10;
+  }
+  .site-logo img{
+    display:block;
+    height:36px;
+    width:auto;
+  }
+</style>
+</head>
+<body>
+  <a class="site-logo" href="index.html">
+    <img src="logo-blanc.png" alt="Atelier Chalou">
+  </a>
+  <a class="back" href="index.html">← Retour à l'accueil</a>
+  <h1>🔎 Enquêtes policières</h1>
+
+  <div class="case">
+    <article class="teaser">
+      <span class="stamp">DOSSIER N° 2026-117 · CONFIDENTIEL</span>
+      <h2>L'affaire NéoPulse</h2>
+      <p>Vendredi, 7 h 30. Le téléphone sonne. Chez <strong>NéoPulse Médical</strong>, qui fabrique des stimulateurs cardiaques connectés, les plans du prototype secret <strong>PULSAR-7</strong> ont disparu dans la nuit.</p>
+      <p><span class="time">01 h 31</span> : un badge ouvre la salle des serveurs.<br>
+         <span class="time">01 h 47</span> : la caméra n° 4 filme une silhouette cagoulée qui s'enfuit… par une fenêtre.<br>
+         <span class="time">01 h 52</span> : un virus efface toutes les traces et paralyse les lecteurs de badges.</p>
+      <p>Mais dans sa fuite, le voleur a laissé tomber un badge. Il est désormais sous scellé, et plus aucun lecteur de l'entreprise ne peut le déchiffrer.</p>
+      <p>Pour faire parler la seule preuve, il te faudra construire et programmer ton propre lecteur, puis croiser chaque indice avec le dossier.</p>
+      <p class="hook">Qui se cache sous la cagoule ? À toi de le découvrir, enquêteur·rice.</p>
+    </article>
+
+    <a class="card" href="enquete-neopulse.html" target="_blank" rel="noopener">
+      <span class="emoji">🕵️</span>
+      <span class="name">Ouvrir l'enquête : Affaire NéoPulse</span>
+      <span class="desc">Programmer une carte Arduino, lire les badges perforés et démasquer le coupable.</span>
+    </a>
+  </div>
+</body>
+</html>
