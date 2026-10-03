@@ -6,184 +6,317 @@
 <title>Enquête policière (ou pas)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#152720;
-    --panel:#1c332a;
     --chalk:#f4f0e2;
     --chalk-dim:#b9c2b6;
     --accent:#e8c468;
-    --alert:#e06b5b;
+    --paper:#f4ecd8;
+    --paper-dark:#e6dbc0;
+    --ink:#2a2420;
+    --ink-soft:#5c5148;
+    --red:#a32a22;
+    --leather:#4a1715;
+    --type:'Special Elite', 'Courier New', monospace;
+    --serif:'Crimson Pro', Georgia, serif;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:12px;
-    padding:40px 20px;
-    background:var(--bg);
-    color:var(--chalk);
-    font-family:'Nunito Sans',system-ui,sans-serif;
+    margin:0; min-height:100vh;
+    background:radial-gradient(ellipse at 50% 0%, #24402f 0%, var(--bg) 55%, #0e1a15 100%);
+    color:var(--chalk); font-family:'Nunito Sans',system-ui,sans-serif;
+    padding:24px 16px 48px;
+    display:flex; flex-direction:column; align-items:center;
   }
-  h1{
-    font-family:'Kalam',cursive;
-    font-size:2rem;
-    margin:0;
-    text-align:center;
-  }
-  .back{
-    color:var(--chalk-dim);
-    text-decoration:none;
-    font-size:.9rem;
-    margin-top:-14px;
-    margin-bottom:14px;
-  }
+  .site-logo{position:fixed; top:16px; left:16px; z-index:10;}
+  .site-logo img{display:block; height:36px; width:auto;}
+  .back{color:var(--chalk-dim); text-decoration:none; font-size:.9rem; margin:6px 0 18px;}
   .back:hover{color:var(--accent);}
-  .case{
-    width:100%;
-    max-width:640px;
-    margin-top:28px;
-    display:flex;
-    flex-direction:column;
-    gap:18px;
+
+  /* ===== Le livre ===== */
+  .book{width:100%; max-width:860px; margin-top:14px;}
+  .tabs{display:flex; gap:4px; padding:0 18px 0 46px; overflow-x:auto; scrollbar-width:thin; position:relative; z-index:1;}
+  .tab{
+    flex:0 0 auto; border:0; cursor:pointer;
+    font-family:var(--type); font-size:.92rem; color:#2a2420;
+    padding:10px 16px 12px; margin-bottom:-6px;
+    border-radius:8px 8px 0 0;
+    background:var(--c); filter:saturate(.75) brightness(.86);
+    box-shadow:inset 0 -6px 8px -6px rgba(0,0,0,.35);
+    transform:translateY(6px); transition:transform .18s, filter .18s;
   }
-  .teaser{
+  .tab:hover{transform:translateY(2px); filter:saturate(.9) brightness(.95);}
+  .tab[aria-selected="true"]{transform:translateY(0); filter:none; box-shadow:none; font-weight:700;}
+  .tab:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .tab small{opacity:.7; margin-right:4px;}
+
+  .volume{
+    position:relative; display:flex;
+    border-radius:4px 10px 10px 4px;
+    box-shadow:0 24px 50px rgba(0,0,0,.55), 0 4px 10px rgba(0,0,0,.4);
+  }
+  .spine{
+    flex:0 0 34px; border-radius:4px 0 0 4px;
+    background:linear-gradient(90deg, #2a0c0b 0%, var(--leather) 40%, #5d1f1b 60%, #2a0c0b 100%);
+    box-shadow:inset -3px 0 6px rgba(0,0,0,.5);
     position:relative;
-    background:var(--panel);
-    border:1px solid rgba(244,240,228,.14);
-    border-left:4px solid var(--alert);
-    border-radius:14px;
-    padding:26px 24px 22px;
-    line-height:1.6;
   }
-  .teaser.night{border-left-color:var(--accent); margin-top:18px;}
-  .teaser.night .stamp{color:var(--accent); border-color:var(--accent);}
-  .teaser.zero{border-left-color:#7fb3d5; margin-top:18px;}
-  .teaser.zero .stamp{color:#7fb3d5; border-color:#7fb3d5;}
-  .pair{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px;}
+  .spine::before, .spine::after{content:""; position:absolute; left:6px; right:6px; height:2px; background:#b8903f; opacity:.7;}
+  .spine::before{top:40px;} .spine::after{bottom:40px;}
+  .leaves{
+    flex:1; position:relative; overflow:hidden;
+    border-radius:0 10px 10px 0;
+    background:var(--paper);
+    /* tranche du livre : feuilles empilées sur la droite */
+    box-shadow:inset 18px 0 22px -14px rgba(60,40,20,.45), 3px 0 0 #e9dfc6, 6px 0 0 #ddd1b4, 9px 0 0 #cfc29f;
+  }
+  .page{
+    display:none; min-height:560px; padding:38px 44px 30px 40px;
+    color:var(--ink); font-family:var(--serif); font-size:1.12rem; line-height:1.6;
+    background:
+      radial-gradient(circle at 90% 12%, transparent 0 38px, rgba(120,80,30,.16) 39px 41px, rgba(120,80,30,.05) 42px 44px, transparent 45px),   /* trace de tasse de café */
+      linear-gradient(180deg, rgba(255,255,255,.35), rgba(0,0,0,0) 30%),
+      var(--paper);
+    transform-origin:left center;
+  }
+  .page.on{display:block;}
+  .page.fwd{animation:flipFwd .5s cubic-bezier(.2,.8,.3,1);}
+  .page.bwd{animation:flipBwd .5s cubic-bezier(.2,.8,.3,1);}
+  @keyframes flipFwd{from{transform:perspective(1800px) rotateY(-18deg) translateX(30px); opacity:0;} to{transform:none; opacity:1;}}
+  @keyframes flipBwd{from{transform:perspective(1800px) rotateY(10deg) translateX(-20px); opacity:0;} to{transform:none; opacity:1;}}
+  @media (prefers-reduced-motion: reduce){ .page.fwd, .page.bwd{animation:none;} }
+
+  .kicker{font-family:var(--type); font-size:.85rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 4px;}
+  .page h2{font-family:var(--type); font-weight:400; font-size:2rem; line-height:1.15; margin:0 0 14px; color:#1e1915;}
+  .page p{margin:0 0 12px;}
+  .page strong{color:#1e1915;}
   .stamp{
-    display:inline-block;
-    font-weight:800;
-    font-size:.75rem;
-    letter-spacing:.12em;
-    color:var(--alert);
-    border:2px solid var(--alert);
-    border-radius:6px;
-    padding:2px 8px;
-    transform:rotate(-3deg);
-    margin-bottom:12px;
+    display:inline-block; font-family:var(--type); font-size:.85rem; letter-spacing:.12em;
+    color:var(--red); border:3px double var(--red); border-radius:4px; padding:3px 10px;
+    transform:rotate(-4deg); margin:2px 0 16px; opacity:.85; mix-blend-mode:multiply;
   }
-  .teaser h2{
-    font-family:'Kalam',cursive;
-    font-size:1.4rem;
-    margin:0 0 10px;
-    color:var(--accent);
+  .clip{position:absolute; top:-8px; right:120px; width:22px; height:62px; border:3px solid #8f9399; border-radius:12px; border-bottom-color:transparent; transform:rotate(8deg);}
+  .facts{
+    display:grid; grid-template-columns:auto 1fr; gap:4px 14px;
+    font-family:var(--type); font-size:.9rem; color:var(--ink-soft);
+    border-top:1px dashed #b9a982; border-bottom:1px dashed #b9a982; padding:10px 0; margin:6px 0 16px;
   }
-  .teaser p{margin:0 0 12px;}
-  .teaser .time{font-weight:800; color:var(--accent);}
-  .teaser .hook{
-    font-weight:800;
-    font-size:1.05rem;
-    margin:16px 0 0;
+  .facts dt{color:var(--ink);} .facts dd{margin:0;}
+  .hook{font-style:italic; font-weight:600; font-size:1.18rem;}
+  .open{
+    display:inline-flex; align-items:center; gap:10px; margin:10px 12px 4px 0;
+    font-family:var(--type); font-size:1rem; text-decoration:none;
+    color:var(--paper); background:#2a2420; padding:11px 18px; border-radius:4px;
+    box-shadow:3px 3px 0 var(--red); transition:transform .12s, box-shadow .12s;
   }
-  a.card{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    padding:24px;
-    border-radius:14px;
-    background:var(--panel);
-    border:1px solid rgba(244,240,228,.14);
-    color:var(--chalk);
-    text-decoration:none;
-    transition:border-color .15s, transform .1s;
+  .open:hover{transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--red);}
+  .open small{opacity:.75; font-size:.8rem;}
+  .pagefoot{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-top:26px; padding-top:12px; border-top:1px solid #d6c9a8;
+    font-family:var(--type); font-size:.88rem; color:var(--ink-soft);
   }
-  a.card:hover{
-    border-color:var(--accent);
-    transform:translateY(-2px);
+  .pagefoot button{font:inherit; color:var(--ink); background:none; border:0; cursor:pointer; padding:4px 2px;}
+  .pagefoot button:hover{color:var(--red);}
+  .pagefoot button[disabled]{visibility:hidden;}
+
+  /* ===== Couverture ===== */
+  .page.cover{
+    color:#e9d9a8; text-align:center;
+    background:
+      radial-gradient(ellipse at 50% 35%, rgba(255,220,150,.10), transparent 60%),
+      repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 2px, transparent 2px 6px),
+      linear-gradient(160deg, #5a1d1a, #3a0f0d 70%);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    border:0; box-shadow:inset 0 0 0 10px #3a0f0d, inset 0 0 0 12px #b8903f;
   }
-  a.card .emoji{font-size:1.8rem;}
-  a.card .name{font-weight:800; font-size:1.1rem;}
-  a.card .desc{color:var(--chalk-dim); font-size:.9rem; line-height:1.4;}
-  .site-logo{
-    position:fixed;
-    top:16px;
-    left:16px;
-    z-index:10;
-  }
-  .site-logo img{
-    display:block;
-    height:36px;
-    width:auto;
+  .page.cover.on{display:flex;}
+  .cover .series{font-family:var(--type); letter-spacing:.3em; font-size:.85rem; opacity:.8;}
+  .cover h1{font-family:var(--type); font-weight:400; font-size:clamp(2.2rem, 6vw, 3.4rem); line-height:1.05; margin:14px 0 4px; color:#f1dfa9; text-shadow:0 2px 0 rgba(0,0,0,.4);}
+  .cover .oupas{font-family:var(--serif); font-style:italic; font-size:1.5rem; color:#d7b96a;}
+  .cover .print{width:120px; margin:22px auto 16px; opacity:.85;}
+  .cover p.blurb{font-family:var(--serif); font-size:1.12rem; max-width:470px; color:#ecdcb3; margin:0 auto 18px;}
+  .toc{list-style:none; padding:0; margin:0 auto 22px; width:100%; max-width:420px; text-align:left; font-family:var(--type); font-size:.95rem;}
+  .toc li{display:flex; align-items:baseline; gap:6px;}
+  .toc button{font:inherit; color:#f1dfa9; background:none; border:0; padding:4px 0; cursor:pointer; text-align:left;}
+  .toc button:hover{color:#fff; text-decoration:underline;}
+  .toc .dots{flex:1; border-bottom:2px dotted rgba(233,217,168,.35); transform:translateY(-4px);}
+  .toc .pg{opacity:.75;}
+  .cover .start{font-family:var(--type); font-size:1rem; color:#3a0f0d; background:#e2c27a; border:0; border-radius:4px; padding:11px 22px; cursor:pointer; box-shadow:0 3px 0 #8a6a2a;}
+  .cover .start:hover{background:#f0d48f;}
+
+  /* ===== Formation : tableau des grades ===== */
+  .grades{width:100%; border-collapse:collapse; font-size:1rem; margin:6px 0 14px;}
+  .grades th{font-family:var(--type); font-weight:400; font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); text-align:left; border-bottom:2px solid #b9a982; padding:4px 6px;}
+  .grades td{border-bottom:1px dashed #cdbf9c; padding:6px 6px; vertical-align:top;}
+  .grades button{font:inherit; color:var(--red); background:none; border:0; padding:0; cursor:pointer; text-decoration:underline; text-align:left;}
+
+  @media (max-width:640px){
+    .page{padding:28px 20px 22px 22px; font-size:1.05rem;}
+    .page h2{font-size:1.6rem;}
+    .spine{flex-basis:14px;}
+    .tabs{padding-left:20px;}
+    .clip{right:40px;}
+    .page:not(.cover){background:linear-gradient(180deg, rgba(255,255,255,.35), rgba(0,0,0,0) 30%), var(--paper);}
   }
 </style>
 </head>
 <body>
-  <a class="site-logo" href="index.html">
-    <img src="logo-blanc.png" alt="Atelier Chalou">
-  </a>
+  <a class="site-logo" href="index.html"><img src="logo-blanc.png" alt="Atelier Chalou"></a>
   <a class="back" href="index.html">← Retour à l'accueil</a>
-  <h1>🔎 Enquête policière <span style="font-size:.6em;color:var(--chalk-dim)">(ou pas)</span></h1>
 
-  <div class="case">
-    <article class="teaser">
-      <span class="stamp">DOSSIER N° 2026-117 · CONFIDENTIEL</span>
-      <h2>L'affaire NéoPulse</h2>
-      <p>Vendredi, 7 h 30. Le téléphone sonne. Chez <strong>NéoPulse Médical</strong>, qui fabrique des stimulateurs cardiaques connectés, les plans du prototype secret <strong>PULSAR-7</strong> ont disparu dans la nuit.</p>
-      <p><span class="time">01 h 31</span> : un badge ouvre la salle des serveurs.<br>
-         <span class="time">01 h 47</span> : la caméra n° 4 filme une silhouette cagoulée qui s'enfuit… par une fenêtre.<br>
-         <span class="time">01 h 52</span> : un virus efface toutes les traces et paralyse les lecteurs de badges.</p>
-      <p>Mais dans sa fuite, le voleur a laissé tomber un badge. Il est désormais sous scellé, et plus aucun lecteur de l'entreprise ne peut le déchiffrer.</p>
-      <p>Pour faire parler la seule preuve, il te faudra construire et programmer ton propre lecteur, puis croiser chaque indice avec le dossier.</p>
-      <p class="hook">Qui se cache sous la cagoule ? À toi de le découvrir, enquêteur·rice.</p>
-    </article>
+  <div class="book">
+    <div class="tabs" role="tablist" aria-label="Chapitres du livre">
+      <button class="tab" role="tab" id="t-couverture" data-p="couverture" style="--c:#c9a24f">Couverture</button>
+      <button class="tab" role="tab" id="t-formation"  data-p="formation"  style="--c:#e8c468"><small>0</small>Formation</button>
+      <button class="tab" role="tab" id="t-chat"       data-p="chat"       style="--c:#b7a3d9"><small>I</small>Le Chat de Minuit</button>
+      <button class="tab" role="tab" id="t-zero"       data-p="zero"       style="--c:#9cc3df"><small>II</small>Professeur Zéro</button>
+      <button class="tab" role="tab" id="t-neopulse"   data-p="neopulse"   style="--c:#e39a8c"><small>III</small>NéoPulse</button>
+    </div>
 
-    <a class="card" href="enquete-neopulse.html" target="_blank" rel="noopener">
-      <span class="emoji">🕵️</span>
-      <span class="name">Ouvrir l'enquête : Affaire NéoPulse</span>
-      <span class="desc">Programmer une carte Arduino, lire les badges perforés et démasquer le coupable.</span>
-    </a>
+    <div class="volume">
+      <div class="spine" aria-hidden="true"></div>
+      <div class="leaves">
 
-    <article class="teaser night">
-      <span class="stamp">AVIS DE RECHERCHE · URGENT</span>
-      <h2>L'affaire du Chat de Minuit 🐈‍⬛</h2>
-      <p>Au musée, ce matin, un cadre est vide. Le tableau s'est volatilisé pendant la nuit, et les alarmes n'ont rien vu.</p>
-      <p>Le coupable, on le connaît : <strong>le Chat de Minuit</strong>. Un voleur insaisissable, qui ne laisse jamais la moindre empreinte… seulement une étrange <strong>carte percée de trous</strong>, posée à la place du chef-d'œuvre.</p>
-      <p>Ces trous ne sont pas là par hasard. Ils cachent un message codé en <strong>binaire</strong> : le nom du prochain lieu qu'il va cambrioler.</p>
-      <p class="hook">La police n'a qu'une nuit pour le décoder. Sauras-tu deviner où le Chat va frapper avant qu'il ne soit trop tard ?</p>
-    </article>
+        <!-- ===== COUVERTURE ===== -->
+        <section class="page cover" id="p-couverture" role="tabpanel" aria-labelledby="t-couverture">
+          <div class="series">DOSSIERS CLASSÉS · ATELIER CHALOU</div>
+          <h1>Enquête policière</h1>
+          <div class="oupas">(ou pas)</div>
+          <svg class="print" viewBox="0 0 100 120" aria-hidden="true" fill="none" stroke="#d7b96a" stroke-width="2.2" stroke-linecap="round">
+            <path d="M50 10c-22 0-38 18-38 42"/><path d="M50 18c-17 0-30 14-30 34v14"/><path d="M50 26c-13 0-22 11-22 26v26"/>
+            <path d="M50 34c-8 0-14 7-14 18v34"/><path d="M50 42c-4 0-6 4-6 10v40"/><path d="M50 10c22 0 38 18 38 42v20"/>
+            <path d="M50 18c17 0 30 14 30 34v30"/><path d="M50 26c13 0 22 11 22 26v40"/><path d="M50 34c8 0 14 7 14 18v46"/>
+            <path d="M50 42c4 0 6 4 6 10v52"/><path d="M50 52v58"/>
+          </svg>
+          <p class="blurb">Un tableau volé. Un casier sous cadenas. Les plans secrets d'un stimulateur cardiaque dérobés en pleine nuit. Trois affaires, et un seul indice commun : des cartes percées de trous.<br>Pour les résoudre, il faudra parler la langue des machines.</p>
+          <ol class="toc">
+            <li><button data-go="formation">0 · Formation de l'enquêteur</button><span class="dots"></span><span class="pg">p. 1</span></li>
+            <li><button data-go="chat">I · L'affaire du Chat de Minuit</button><span class="dots"></span><span class="pg">p. 2</span></li>
+            <li><button data-go="zero">II · Le casier du Professeur Zéro</button><span class="dots"></span><span class="pg">p. 3</span></li>
+            <li><button data-go="neopulse">III · L'affaire NéoPulse</button><span class="dots"></span><span class="pg">p. 4</span></li>
+          </ol>
+          <button class="start" data-go="formation">Ouvrir le livre →</button>
+        </section>
 
-    <a class="card" href="chat-de-minuit.html" target="_blank" rel="noopener">
-      <span class="emoji">🐈‍⬛</span>
-      <span class="name">Ouvrir l'enquête : le Chat de Minuit</span>
-      <span class="desc">Version guidée pas à pas : transformer les trous en nombres, puis en lettres, et décoder la carte du voleur.</span>
-    </a>
+        <!-- ===== FORMATION ===== -->
+        <section class="page" id="p-formation" role="tabpanel" aria-labelledby="t-formation">
+          <span class="clip" aria-hidden="true"></span>
+          <p class="kicker">Avant de commencer</p>
+          <h2>École de police scientifique</h2>
+          <span class="stamp">TEST D'APTITUDE · OBLIGATOIRE</span>
+          <p>On ne confie pas une enquête au premier venu. Avant de te remettre un dossier, l'École de police scientifique doit connaître ton niveau en <strong>binaire</strong>, le langage des machines… et des cartes perforées.</p>
+          <dl class="facts">
+            <dt>Épreuve</dt><dd>6 fiches de cours, chacune suivie d'un petit test (25 questions)</dd>
+            <dt>Règle</dt><dd>un seul essai par question ; « Je ne sais pas » vaut mieux qu'une réponse au hasard</dd>
+            <dt>À la fin</dt><dd>ton grade, l'enquête faite pour toi, et un rapport à remettre à ton professeur</dd>
+          </dl>
+          <table class="grades">
+            <tr><th>Grade</th><th>Enquête conseillée</th></tr>
+            <tr><td>🔰 Recrue</td><td><button data-go="chat">I · Le Chat de Minuit</button></td></tr>
+            <tr><td>🥉 Agent</td><td><button data-go="zero">II · Professeur Zéro, niveau Apprenti</button></td></tr>
+            <tr><td>🥈 Inspecteur</td><td><button data-go="zero">II · Professeur Zéro, niveau Expert</button></td></tr>
+            <tr><td>🥇 Lieutenant</td><td><button data-go="neopulse">III · L'affaire NéoPulse</button></td></tr>
+          </table>
+          <p class="hook">Alors, simple recrue ou futur lieutenant ? Il n'y a qu'une façon de le savoir.</p>
+          <a class="open" href="formation-police-scientifique.html" target="_blank" rel="noopener">🪪 Passer le test d'aptitude</a>
+          <div class="pagefoot"><button data-step="-1">← Couverture</button><span>— 1 —</span><button data-step="1">Chapitre I →</button></div>
+        </section>
 
-    <article class="teaser zero">
-      <span class="stamp">CASIER SOUS CADENAS · ACCÈS INTERDIT</span>
-      <h2>Le casier du Professeur Zéro 🔒</h2>
-      <p>Au collège, tout le monde le connaît : le <strong>Professeur Zéro</strong>. Il n'a jamais mis un seul 5/5 de sa vie.</p>
-      <p>Alors quand la principale prépare des <strong>cartes cadeaux 5/5</strong> pour récompenser les élèves, il les confisque toutes… et les enferme dans son casier, derrière un cadenas à code.</p>
-      <p>Sa seule faiblesse ? Il oublie tout. Le code est noté sur une <strong>carte perforée</strong>, que le concierge vient de retrouver coincée dans la photocopieuse. « Personne ne sait lire le binaire dans ce collège ! », ricane le professeur.</p>
-      <p class="hook">Il se croit à l'abri. Mais méfie-toi : le Professeur Zéro a plus d'un tour dans son sac…</p>
-    </article>
+        <!-- ===== CHAPITRE I · CHAT DE MINUIT ===== -->
+        <section class="page" id="p-chat" role="tabpanel" aria-labelledby="t-chat">
+          <p class="kicker">Chapitre I</p>
+          <h2>L'affaire du Chat de Minuit 🐈‍⬛</h2>
+          <span class="stamp">AVIS DE RECHERCHE · URGENT</span>
+          <p>Au musée, ce matin, un cadre est vide. Le tableau s'est volatilisé pendant la nuit, et les alarmes n'ont rien vu.</p>
+          <p>Le coupable, on le connaît : <strong>le Chat de Minuit</strong>. Un voleur insaisissable, qui ne laisse jamais la moindre empreinte… seulement une étrange <strong>carte percée de trous</strong>, posée à la place du chef-d'œuvre.</p>
+          <p>Ces trous ne sont pas là par hasard. Ils cachent un message codé en <strong>binaire</strong> : le nom du prochain lieu qu'il va cambrioler.</p>
+          <dl class="facts">
+            <dt>Grade conseillé</dt><dd>🔰 Recrue</dd>
+            <dt>Type</dt><dd>enquête très guidée, pas à pas, avec des aides</dd>
+          </dl>
+          <p class="hook">La police n'a qu'une nuit pour le décoder. Sauras-tu deviner où le Chat va frapper avant qu'il ne soit trop tard ?</p>
+          <a class="open" href="chat-de-minuit.html" target="_blank" rel="noopener">📂 Ouvrir le dossier</a>
+          <div class="pagefoot"><button data-step="-1">← Formation</button><span>— 2 —</span><button data-step="1">Chapitre II →</button></div>
+        </section>
 
-    <div class="pair">
-      <a class="card" href="professeur-zero-niveau1.html" target="_blank" rel="noopener">
-        <span class="emoji">🔓</span>
-        <span class="name">Niveau 1 · Apprenti</span>
-        <span class="desc">Décoder la carte du professeur et ouvrir le casier.</span>
-      </a>
-      <a class="card" href="professeur-zero-niveau2.html" target="_blank" rel="noopener">
-        <span class="emoji">🧠</span>
-        <span class="name">Niveau 2 · Expert</span>
-        <span class="desc">Le professeur a changé son code… et tendu un piège. Sauras-tu le déjouer ?</span>
-      </a>
+        <!-- ===== CHAPITRE II · PROFESSEUR ZÉRO ===== -->
+        <section class="page" id="p-zero" role="tabpanel" aria-labelledby="t-zero">
+          <span class="clip" aria-hidden="true"></span>
+          <p class="kicker">Chapitre II</p>
+          <h2>Le casier du Professeur Zéro 🔒</h2>
+          <span class="stamp">CASIER SOUS CADENAS · ACCÈS INTERDIT</span>
+          <p>Au collège, tout le monde le connaît : le <strong>Professeur Zéro</strong>. Il n'a jamais mis un seul 5/5 de sa vie.</p>
+          <p>Alors quand la principale prépare des <strong>cartes cadeaux 5/5</strong> pour récompenser les élèves, il les confisque toutes… et les enferme dans son casier, derrière un cadenas à code.</p>
+          <p>Sa seule faiblesse ? Il oublie tout. Le code est noté sur une <strong>carte perforée</strong>, que le concierge vient de retrouver coincée dans la photocopieuse. « Personne ne sait lire le binaire dans ce collège ! », ricane le professeur.</p>
+          <dl class="facts">
+            <dt>Grade conseillé</dt><dd>🥉 Agent (niveau 1) · 🥈 Inspecteur (niveau 2)</dd>
+            <dt>Deux dossiers</dt><dd>le niveau 2 reprend l'affaire… avec un piège en plus</dd>
+          </dl>
+          <p class="hook">Il se croit à l'abri. Mais méfie-toi : le Professeur Zéro a plus d'un tour dans son sac…</p>
+          <a class="open" href="professeur-zero-niveau1.html" target="_blank" rel="noopener">📂 Niveau 1 · Apprenti</a>
+          <a class="open" href="professeur-zero-niveau2.html" target="_blank" rel="noopener">📂 Niveau 2 · Expert</a>
+          <div class="pagefoot"><button data-step="-1">← Chapitre I</button><span>— 3 —</span><button data-step="1">Chapitre III →</button></div>
+        </section>
+
+        <!-- ===== CHAPITRE III · NÉOPULSE ===== -->
+        <section class="page" id="p-neopulse" role="tabpanel" aria-labelledby="t-neopulse">
+          <p class="kicker">Chapitre III</p>
+          <h2>L'affaire NéoPulse</h2>
+          <span class="stamp">DOSSIER N° 2026-117 · CONFIDENTIEL</span>
+          <p>Vendredi, 7 h 30. Le téléphone sonne. Chez <strong>NéoPulse Médical</strong>, qui fabrique des stimulateurs cardiaques connectés, les plans du prototype secret <strong>PULSAR-7</strong> ont disparu dans la nuit.</p>
+          <p><strong>01 h 31</strong> : un badge ouvre la salle des serveurs.<br>
+             <strong>01 h 47</strong> : la caméra n° 4 filme une silhouette cagoulée qui s'enfuit… par une fenêtre.<br>
+             <strong>01 h 52</strong> : un virus efface toutes les traces et paralyse les lecteurs de badges.</p>
+          <p>Mais dans sa fuite, le voleur a laissé tomber un badge. Il est désormais sous scellé, et plus aucun lecteur de l'entreprise ne peut le déchiffrer.</p>
+          <dl class="facts">
+            <dt>Grade conseillé</dt><dd>🥇 Lieutenant</dd>
+            <dt>Au programme</dt><dd>programmer une carte Arduino, câbler le lecteur, lire les badges</dd>
+          </dl>
+          <p class="hook">Qui se cache sous la cagoule ? À toi de le découvrir, enquêteur·rice.</p>
+          <a class="open" href="enquete-neopulse.html" target="_blank" rel="noopener">📂 Ouvrir le dossier</a>
+          <div class="pagefoot"><button data-step="-1">← Chapitre II</button><span>— 4 —</span><button data-step="1" disabled>→</button></div>
+        </section>
+
+      </div>
     </div>
   </div>
+
+<script>
+/* Navigation du livre : onglets, liens du sommaire, bas de page, flèches du clavier, et #ancre dans l'adresse */
+(function(){
+  var ORDER = ['couverture', 'formation', 'chat', 'zero', 'neopulse'];
+  var cur = -1;
+  function go(name, push){
+    var i = ORDER.indexOf(name); if (i < 0) i = 0;
+    if (i === cur) return;
+    var dir = i > cur ? 'fwd' : 'bwd';
+    ORDER.forEach(function(n, k){
+      var p = document.getElementById('p-' + n), t = document.getElementById('t-' + n);
+      p.classList.remove('on', 'fwd', 'bwd');
+      if (k === i) { p.classList.add('on'); if (cur >= 0) p.classList.add(dir); }
+      t.setAttribute('aria-selected', k === i ? 'true' : 'false');
+      t.tabIndex = k === i ? 0 : -1;
+    });
+    cur = i;
+    var at = document.getElementById('t-' + ORDER[i]);
+    if (at.scrollIntoView) at.scrollIntoView({block:'nearest', inline:'nearest'});
+    if (push !== false) history.replaceState(null, '', '#' + ORDER[i]);
+    var book = document.querySelector('.book');
+    if (book.getBoundingClientRect().top < 0) book.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  document.querySelectorAll('.tab').forEach(function(b){ b.addEventListener('click', function(){ go(b.dataset.p); }); });
+  document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click', function(){ go(b.dataset.go); }); });
+  document.querySelectorAll('[data-step]').forEach(function(b){ b.addEventListener('click', function(){ go(ORDER[Math.max(0, Math.min(ORDER.length - 1, cur + (+b.dataset.step)))]); }); });
+  document.addEventListener('keydown', function(e){
+    if (e.target.closest && e.target.closest('input, textarea')) return;
+    if (e.key === 'ArrowRight' && cur < ORDER.length - 1) go(ORDER[cur + 1]);
+    if (e.key === 'ArrowLeft' && cur > 0) go(ORDER[cur - 1]);
+  });
+  go((location.hash || '#couverture').slice(1), false);
+})();
+</script>
 </body>
 </html>
