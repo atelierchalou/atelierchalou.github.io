@@ -9,42 +9,29 @@
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#152720;
-    --chalk:#f4f0e2;
-    --chalk-dim:#b9c2b6;
-    --accent:#e8c468;
-    --paper:#f4ecd8;
-    --paper-dark:#e6dbc0;
-    --ink:#2a2420;
-    --ink-soft:#5c5148;
-    --red:#a32a22;
-    --leather:#4a1715;
-    --type:'Special Elite', 'Courier New', monospace;
-    --serif:'Crimson Pro', Georgia, serif;
+    --bg:#152720; --chalk:#f4f0e2; --chalk-dim:#b9c2b6; --accent:#e8c468;
+    --paper:#f4ecd8; --ink:#2a2420; --ink-soft:#5c5148; --red:#a32a22; --leather:#4a1715;
+    --type:'Special Elite', 'Courier New', monospace; --serif:'Crimson Pro', Georgia, serif;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0; min-height:100vh;
-    background:radial-gradient(ellipse at 50% 0%, #24402f 0%, var(--bg) 55%, #0e1a15 100%);
+    margin:0; min-height:100dvh; display:flex; flex-direction:column; align-items:center; padding:14px 16px 18px;
     color:var(--chalk); font-family:'Nunito Sans',system-ui,sans-serif;
-    padding:24px 16px 48px;
-    display:flex; flex-direction:column; align-items:center;
+    background:radial-gradient(ellipse at 50% 0%, #24402f 0%, var(--bg) 55%, #0e1a15 100%);
   }
+  @media (min-width:900px) and (min-height:560px){ body{height:100dvh; overflow:hidden;} }
   .site-logo{position:fixed; top:16px; left:16px; z-index:10;}
   .site-logo img{display:block; height:36px; width:auto;}
-  .back{color:var(--chalk-dim); text-decoration:none; font-size:.9rem; margin:6px 0 18px;}
+  .back{color:var(--chalk-dim); text-decoration:none; font-size:.9rem; padding:4px 0 10px;}
   .back:hover{color:var(--accent);}
 
   /* ===== Le livre ===== */
-  .book{width:100%; max-width:860px; margin-top:14px;}
-  .tabs{display:flex; gap:4px; padding:0 18px 0 46px; overflow-x:auto; scrollbar-width:thin; position:relative; z-index:1;}
+  .book{width:100%; max-width:1180px; flex:1; min-height:0; display:flex; flex-direction:column;}
+  .tabs{display:flex; gap:4px; padding:0 22px 0 40px; overflow-x:auto; scrollbar-width:thin; flex:0 0 auto; position:relative; z-index:1;}
   .tab{
-    flex:0 0 auto; border:0; cursor:pointer;
-    font-family:var(--type); font-size:.92rem; color:#2a2420;
-    padding:10px 16px 12px; margin-bottom:-6px;
-    border-radius:8px 8px 0 0;
-    background:var(--c); filter:saturate(.75) brightness(.86);
-    box-shadow:inset 0 -6px 8px -6px rgba(0,0,0,.35);
+    flex:0 0 auto; border:0; cursor:pointer; font-family:var(--type); font-size:.92rem; color:#2a2420;
+    padding:9px 16px 11px; margin-bottom:-6px; border-radius:8px 8px 0 0;
+    background:var(--c); filter:saturate(.75) brightness(.86); box-shadow:inset 0 -6px 8px -6px rgba(0,0,0,.35);
     transform:translateY(6px); transition:transform .18s, filter .18s;
   }
   .tab:hover{transform:translateY(2px); filter:saturate(.9) brightness(.95);}
@@ -53,114 +40,104 @@
   .tab small{opacity:.7; margin-right:4px;}
 
   .volume{
-    position:relative; display:flex;
-    border-radius:4px 10px 10px 4px;
+    flex:1; min-height:0; max-height:700px; position:relative; display:flex;
+    border-radius:6px; padding:8px; background:linear-gradient(160deg, #5a1d1a, #3a0f0d);     /* couverture rigide autour des pages */
     box-shadow:0 24px 50px rgba(0,0,0,.55), 0 4px 10px rgba(0,0,0,.4);
   }
-  .spine{
-    flex:0 0 34px; border-radius:4px 0 0 4px;
-    background:linear-gradient(90deg, #2a0c0b 0%, var(--leather) 40%, #5d1f1b 60%, #2a0c0b 100%);
-    box-shadow:inset -3px 0 6px rgba(0,0,0,.5);
-    position:relative;
+  .leaf{display:none; flex:1; min-height:0; grid-template-columns:1fr 1fr;}
+  .leaf.on{display:grid;}
+  .leaf.fwd{animation:flipFwd .5s cubic-bezier(.2,.8,.3,1);}
+  .leaf.bwd{animation:flipBwd .5s cubic-bezier(.2,.8,.3,1);}
+  @keyframes flipFwd{from{transform:perspective(1800px) rotateY(-10deg) translateX(24px); opacity:0;} to{transform:none; opacity:1;}}
+  @keyframes flipBwd{from{transform:perspective(1800px) rotateY(8deg) translateX(-18px); opacity:0;} to{transform:none; opacity:1;}}
+  .pg{
+    position:relative; min-height:0; overflow-y:auto; scrollbar-width:thin; display:flex; flex-direction:column;
+    padding:26px 34px 40px; color:var(--ink); font-family:var(--serif); font-size:1.06rem; line-height:1.55; background:var(--paper);
   }
-  .spine::before, .spine::after{content:""; position:absolute; left:6px; right:6px; height:2px; background:#b8903f; opacity:.7;}
-  .spine::before{top:40px;} .spine::after{bottom:40px;}
-  .leaves{
-    flex:1; position:relative; overflow:hidden;
-    border-radius:0 10px 10px 0;
-    background:var(--paper);
-    /* tranche du livre : feuilles empilées sur la droite */
-    box-shadow:inset 18px 0 22px -14px rgba(60,40,20,.45), 3px 0 0 #e9dfc6, 6px 0 0 #ddd1b4, 9px 0 0 #cfc29f;
-  }
-  .page{
-    display:none; min-height:560px; padding:38px 44px 30px 40px;
-    color:var(--ink); font-family:var(--serif); font-size:1.12rem; line-height:1.6;
-    background:
-      radial-gradient(circle at 90% 12%, transparent 0 38px, rgba(120,80,30,.16) 39px 41px, rgba(120,80,30,.05) 42px 44px, transparent 45px),   /* trace de tasse de café */
-      linear-gradient(180deg, rgba(255,255,255,.35), rgba(0,0,0,0) 30%),
-      var(--paper);
-    transform-origin:left center;
-  }
-  .page.on{display:block;}
-  .page.fwd{animation:flipFwd .5s cubic-bezier(.2,.8,.3,1);}
-  .page.bwd{animation:flipBwd .5s cubic-bezier(.2,.8,.3,1);}
-  @keyframes flipFwd{from{transform:perspective(1800px) rotateY(-18deg) translateX(30px); opacity:0;} to{transform:none; opacity:1;}}
-  @keyframes flipBwd{from{transform:perspective(1800px) rotateY(10deg) translateX(-20px); opacity:0;} to{transform:none; opacity:1;}}
-  @media (prefers-reduced-motion: reduce){ .page.fwd, .page.bwd{animation:none;} }
+  .pg.left{border-radius:3px 0 0 3px; background:linear-gradient(90deg, rgba(0,0,0,0) 85%, rgba(60,40,20,.22)), linear-gradient(180deg, rgba(255,255,255,.35), rgba(0,0,0,0) 30%), var(--paper);}
+  .pg.right{border-radius:0 3px 3px 0; background:
+      radial-gradient(circle at 88% 90%, transparent 0 36px, rgba(120,80,30,.16) 37px 39px, rgba(120,80,30,.05) 40px 42px, transparent 43px),
+      linear-gradient(90deg, rgba(60,40,20,.25), rgba(0,0,0,0) 14%), linear-gradient(180deg, rgba(255,255,255,.35), rgba(0,0,0,0) 30%), var(--paper);}
+  .folio{position:absolute; bottom:12px; font-family:var(--type); font-size:.85rem; color:var(--ink-soft);}
+  .left .folio{left:34px;} .right .folio{right:34px;}
 
-  .kicker{font-family:var(--type); font-size:.85rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 4px;}
-  .page h2{font-family:var(--type); font-weight:400; font-size:2rem; line-height:1.15; margin:0 0 14px; color:#1e1915;}
-  .page p{margin:0 0 12px;}
-  .page strong{color:#1e1915;}
+  .kicker{font-family:var(--type); font-size:.82rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 4px;}
+  .pg h2{font-family:var(--type); font-weight:400; font-size:1.8rem; line-height:1.15; margin:0 0 10px; color:#1e1915;}
+  .pg p{margin:0 0 10px;}
+  .pg strong{color:#1e1915;}
   .stamp{
-    display:inline-block; font-family:var(--type); font-size:.85rem; letter-spacing:.12em;
-    color:var(--red); border:3px double var(--red); border-radius:4px; padding:3px 10px;
-    transform:rotate(-4deg); margin:2px 0 16px; opacity:.85; mix-blend-mode:multiply;
+    align-self:flex-start; font-family:var(--type); font-size:.82rem; letter-spacing:.12em; color:var(--red);
+    border:3px double var(--red); border-radius:4px; padding:3px 10px; transform:rotate(-3deg); margin:0 0 14px; opacity:.85; mix-blend-mode:multiply;
   }
-  .clip{position:absolute; top:-8px; right:120px; width:22px; height:62px; border:3px solid #8f9399; border-radius:12px; border-bottom-color:transparent; transform:rotate(8deg);}
-  .facts{
-    display:grid; grid-template-columns:auto 1fr; gap:4px 14px;
-    font-family:var(--type); font-size:.9rem; color:var(--ink-soft);
-    border-top:1px dashed #b9a982; border-bottom:1px dashed #b9a982; padding:10px 0; margin:6px 0 16px;
-  }
+  .clip{position:absolute; top:-6px; right:110px; width:22px; height:62px; border:3px solid #8f9399; border-radius:12px; border-bottom-color:transparent; transform:rotate(8deg);}
+  .facts{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-family:var(--type); font-size:.88rem; color:var(--ink-soft);
+         border-top:1px dashed #b9a982; border-bottom:1px dashed #b9a982; padding:9px 0; margin:4px 0 14px;}
   .facts dt{color:var(--ink);} .facts dd{margin:0;}
-  .hook{font-style:italic; font-weight:600; font-size:1.18rem;}
+  .hook{font-style:italic; font-weight:600; font-size:1.14rem;}
   .open{
-    display:inline-flex; align-items:center; gap:10px; margin:10px 12px 4px 0;
-    font-family:var(--type); font-size:1rem; text-decoration:none;
-    color:var(--paper); background:#2a2420; padding:11px 18px; border-radius:4px;
-    box-shadow:3px 3px 0 var(--red); transition:transform .12s, box-shadow .12s;
+    align-self:flex-start; display:inline-flex; align-items:center; gap:10px; margin:6px 10px 4px 0;
+    font-family:var(--type); font-size:1rem; text-decoration:none; color:var(--paper); background:#2a2420;
+    padding:10px 18px; border-radius:4px; box-shadow:3px 3px 0 var(--red); transition:transform .12s, box-shadow .12s;
   }
   .open:hover{transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--red);}
-  .open small{opacity:.75; font-size:.8rem;}
-  .pagefoot{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    margin-top:26px; padding-top:12px; border-top:1px solid #d6c9a8;
-    font-family:var(--type); font-size:.88rem; color:var(--ink-soft);
-  }
-  .pagefoot button{font:inherit; color:var(--ink); background:none; border:0; cursor:pointer; padding:4px 2px;}
+  .btns{display:flex; flex-wrap:wrap;}
+  .pagefoot{display:flex; justify-content:space-between; gap:10px; margin-top:auto; padding-top:12px; font-family:var(--type); font-size:.88rem;}
+  .pagefoot button{font:inherit; color:var(--ink-soft); background:none; border:0; cursor:pointer; padding:4px 2px;}
   .pagefoot button:hover{color:var(--red);}
-  .pagefoot button[disabled]{visibility:hidden;}
 
-  /* ===== Couverture ===== */
-  .page.cover{
-    color:#e9d9a8; text-align:center;
-    background:
-      radial-gradient(ellipse at 50% 35%, rgba(255,220,150,.10), transparent 60%),
-      repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 2px, transparent 2px 6px),
-      linear-gradient(160deg, #5a1d1a, #3a0f0d 70%);
-    display:none; flex-direction:column; align-items:center; justify-content:center;
-    border:0; box-shadow:inset 0 0 0 10px #3a0f0d, inset 0 0 0 12px #b8903f;
+  /* pièce à conviction */
+  .evidence{margin:4px 0 14px; align-self:center; width:min(100%, 300px);}
+  .bag{background:linear-gradient(160deg, rgba(255,255,255,.55), rgba(220,230,235,.35)); border:1px solid rgba(80,90,100,.35); border-radius:6px; box-shadow:0 6px 14px rgba(60,40,20,.18); overflow:hidden; transform:rotate(1.5deg);}
+  .bag .seal{background:var(--red); color:#fff; font-family:var(--type); font-size:.72rem; letter-spacing:.1em; padding:4px 10px;}
+  .bag svg{display:block; width:100%; height:auto;}
+  .evidence figcaption{font-family:var(--type); font-size:.78rem; color:var(--ink-soft); text-align:center; margin-top:6px;}
+
+  /* ===== Couverture (page de gauche) et sommaire ===== */
+  .pg.cover{
+    color:#e9d9a8; text-align:center; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at 50% 35%, rgba(255,220,150,.10), transparent 60%), repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 2px, transparent 2px 6px), linear-gradient(160deg, #5a1d1a, #3a0f0d 70%);
+    box-shadow:inset 0 0 0 10px #3a0f0d, inset 0 0 0 12px #b8903f;
   }
-  .page.cover.on{display:flex;}
-  .cover .series{font-family:var(--type); letter-spacing:.3em; font-size:.85rem; opacity:.8;}
-  .cover h1{font-family:var(--type); font-weight:400; font-size:clamp(2.2rem, 6vw, 3.4rem); line-height:1.05; margin:14px 0 4px; color:#f1dfa9; text-shadow:0 2px 0 rgba(0,0,0,.4);}
-  .cover .oupas{font-family:var(--serif); font-style:italic; font-size:1.5rem; color:#d7b96a;}
-  .cover .print{width:120px; margin:22px auto 16px; opacity:.85;}
-  .cover p.blurb{font-family:var(--serif); font-size:1.12rem; max-width:470px; color:#ecdcb3; margin:0 auto 18px;}
-  .toc{list-style:none; padding:0; margin:0 auto 22px; width:100%; max-width:420px; text-align:left; font-family:var(--type); font-size:.95rem;}
-  .toc li{display:flex; align-items:baseline; gap:6px;}
-  .toc button{font:inherit; color:#f1dfa9; background:none; border:0; padding:4px 0; cursor:pointer; text-align:left;}
-  .toc button:hover{color:#fff; text-decoration:underline;}
-  .toc .dots{flex:1; border-bottom:2px dotted rgba(233,217,168,.35); transform:translateY(-4px);}
-  .toc .pg{opacity:.75;}
-  .cover .start{font-family:var(--type); font-size:1rem; color:#3a0f0d; background:#e2c27a; border:0; border-radius:4px; padding:11px 22px; cursor:pointer; box-shadow:0 3px 0 #8a6a2a;}
+  .cover .series{font-family:var(--type); letter-spacing:.3em; font-size:.8rem; opacity:.8;}
+  .cover h1{font-family:var(--type); font-weight:400; font-size:clamp(2rem, 4vw, 3.1rem); line-height:1.05; margin:12px 0 4px; color:#f1dfa9; text-shadow:0 2px 0 rgba(0,0,0,.4);}
+  .cover .oupas{font-family:var(--serif); font-style:italic; font-size:1.45rem; color:#d7b96a;}
+  .cover .print{width:110px; margin:22px auto 14px; opacity:.85;}
+  .cover .start{font-family:var(--type); font-size:1rem; color:#3a0f0d; background:#e2c27a; border:0; border-radius:4px; padding:10px 22px; cursor:pointer; box-shadow:0 3px 0 #8a6a2a; margin-top:8px;}
   .cover .start:hover{background:#f0d48f;}
+  .toc{list-style:none; padding:0; margin:6px 0 16px; font-family:var(--type); font-size:.98rem;}
+  .toc li{display:flex; align-items:baseline; gap:6px;}
+  .toc button{font:inherit; color:var(--ink); background:none; border:0; padding:6px 0; cursor:pointer; text-align:left;}
+  .toc button:hover{color:var(--red); text-decoration:underline;}
+  .toc .dots{flex:1; border-bottom:2px dotted #b9a982; transform:translateY(-4px);}
+  .toc .pg-n{color:var(--ink-soft);}
 
-  /* ===== Formation : tableau des grades ===== */
-  .grades{width:100%; border-collapse:collapse; font-size:1rem; margin:6px 0 14px;}
-  .grades th{font-family:var(--type); font-weight:400; font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); text-align:left; border-bottom:2px solid #b9a982; padding:4px 6px;}
-  .grades td{border-bottom:1px dashed #cdbf9c; padding:6px 6px; vertical-align:top;}
+  .grades{width:100%; border-collapse:collapse; font-size:1rem; margin:4px 0 14px;}
+  .grades th{font-family:var(--type); font-weight:400; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); text-align:left; border-bottom:2px solid #b9a982; padding:4px 6px;}
+  .grades td{border-bottom:1px dashed #cdbf9c; padding:6px; vertical-align:top;}
   .grades button{font:inherit; color:var(--red); background:none; border:0; padding:0; cursor:pointer; text-decoration:underline; text-align:left;}
 
-  @media (max-width:640px){
-    .page{padding:28px 20px 22px 22px; font-size:1.05rem;}
-    .page h2{font-size:1.6rem;}
-    .spine{flex-basis:14px;}
-    .tabs{padding-left:20px;}
-    .clip{right:40px;}
-    .page:not(.cover){background:linear-gradient(180deg, rgba(255,255,255,.35), rgba(0,0,0,0) 30%), var(--paper);}
+  @media (min-width:821px) and (max-height:780px){
+    .pg{font-size:1rem; padding:20px 30px 36px;}
+    .pg h2{font-size:1.6rem;}
+    .evidence{width:min(100%, 250px); margin-bottom:10px;}
+    .facts{margin-bottom:10px;}
   }
+  @media (max-width:820px){
+    .volume{max-height:none; padding:6px;}
+    .leaf.on{display:block;}
+    .pg{overflow:visible; padding:24px 22px 40px;}
+    .pg.left{border-radius:3px 3px 0 0;}
+    .pg.right{border-radius:0 0 3px 3px; border-top:2px dashed #cdbf9c;}
+    .pg.cover{min-height:420px;}
+    .tabs{padding-left:12px;}
+  }
+  @media (max-width:599px){
+    body{padding-top:62px;}
+    .back{position:absolute; top:24px; right:16px; padding:0;}
+    .pg h2{font-size:1.5rem;}
+    .clip{right:40px;}
+  }
+  @media (prefers-reduced-motion: reduce){ .leaf.fwd, .leaf.bwd{animation:none;} }
 </style>
 </head>
 <body>
@@ -177,11 +154,10 @@
     </div>
 
     <div class="volume">
-      <div class="spine" aria-hidden="true"></div>
-      <div class="leaves">
 
-        <!-- ===== COUVERTURE ===== -->
-        <section class="page cover" id="p-couverture" role="tabpanel" aria-labelledby="t-couverture">
+      <!-- ===== COUVERTURE + SOMMAIRE ===== -->
+      <section class="leaf" id="p-couverture" role="tabpanel" aria-labelledby="t-couverture">
+        <div class="pg left cover">
           <div class="series">DOSSIERS CLASSÉS · ATELIER CHALOU</div>
           <h1>Enquête policière</h1>
           <div class="oupas">(ou pas)</div>
@@ -191,19 +167,27 @@
             <path d="M50 18c17 0 30 14 30 34v30"/><path d="M50 26c13 0 22 11 22 26v40"/><path d="M50 34c8 0 14 7 14 18v46"/>
             <path d="M50 42c4 0 6 4 6 10v52"/><path d="M50 52v58"/>
           </svg>
-          <p class="blurb">Un tableau volé. Un casier sous cadenas. Les plans secrets d'un stimulateur cardiaque dérobés en pleine nuit. Trois affaires, et un seul indice commun : des cartes percées de trous.<br>Pour les résoudre, il faudra parler la langue des machines.</p>
-          <ol class="toc">
-            <li><button data-go="formation">0 · Formation de l'enquêteur</button><span class="dots"></span><span class="pg">p. 1</span></li>
-            <li><button data-go="chat">I · L'affaire du Chat de Minuit</button><span class="dots"></span><span class="pg">p. 2</span></li>
-            <li><button data-go="zero">II · Le casier du Professeur Zéro</button><span class="dots"></span><span class="pg">p. 3</span></li>
-            <li><button data-go="neopulse">III · L'affaire NéoPulse</button><span class="dots"></span><span class="pg">p. 4</span></li>
-          </ol>
           <button class="start" data-go="formation">Ouvrir le livre →</button>
-        </section>
-
-        <!-- ===== FORMATION ===== -->
-        <section class="page" id="p-formation" role="tabpanel" aria-labelledby="t-formation">
+        </div>
+        <div class="pg right">
           <span class="clip" aria-hidden="true"></span>
+          <p class="kicker">Avant-propos</p>
+          <h2>Sommaire</h2>
+          <p>Un tableau volé. Un casier sous cadenas. Les plans secrets d'un stimulateur cardiaque dérobés en pleine nuit. Trois affaires, et un seul indice commun : des cartes percées de trous.</p>
+          <p class="hook">Pour les résoudre, il faudra parler la langue des machines.</p>
+          <ol class="toc">
+            <li><button data-go="formation">0 · Formation de l'enquêteur</button><span class="dots"></span><span class="pg-n">p. 3</span></li>
+            <li><button data-go="chat">I · L'affaire du Chat de Minuit</button><span class="dots"></span><span class="pg-n">p. 5</span></li>
+            <li><button data-go="zero">II · Le casier du Professeur Zéro</button><span class="dots"></span><span class="pg-n">p. 7</span></li>
+            <li><button data-go="neopulse">III · L'affaire NéoPulse</button><span class="dots"></span><span class="pg-n">p. 9</span></li>
+          </ol>
+          <div class="folio">2</div>
+        </div>
+      </section>
+
+      <!-- ===== FORMATION ===== -->
+      <section class="leaf" id="p-formation" role="tabpanel" aria-labelledby="t-formation">
+        <div class="pg left">
           <p class="kicker">Avant de commencer</p>
           <h2>École de police scientifique</h2>
           <span class="stamp">TEST D'APTITUDE · OBLIGATOIRE</span>
@@ -213,6 +197,11 @@
             <dt>Règle</dt><dd>un seul essai par question ; « Je ne sais pas » vaut mieux qu'une réponse au hasard</dd>
             <dt>À la fin</dt><dd>ton grade, l'enquête faite pour toi, et un rapport à remettre à ton professeur</dd>
           </dl>
+          <div class="folio">3</div>
+        </div>
+        <div class="pg right">
+          <span class="clip" aria-hidden="true"></span>
+          <p class="kicker">Ton grade, ton enquête</p>
           <table class="grades">
             <tr><th>Grade</th><th>Enquête conseillée</th></tr>
             <tr><td>🔰 Recrue</td><td><button data-go="chat">I · Le Chat de Minuit</button></td></tr>
@@ -222,47 +211,65 @@
           </table>
           <p class="hook">Alors, simple recrue ou futur lieutenant ? Il n'y a qu'une façon de le savoir.</p>
           <a class="open" href="formation-police-scientifique.html" target="_blank" rel="noopener">🪪 Passer le test d'aptitude</a>
-          <div class="pagefoot"><button data-step="-1">← Couverture</button><span>— 1 —</span><button data-step="1">Chapitre I →</button></div>
-        </section>
+          <div class="pagefoot"><button data-step="-1">← Sommaire</button><button data-step="1">Chapitre I →</button></div>
+          <div class="folio">4</div>
+        </div>
+      </section>
 
-        <!-- ===== CHAPITRE I · CHAT DE MINUIT ===== -->
-        <section class="page" id="p-chat" role="tabpanel" aria-labelledby="t-chat">
+      <!-- ===== CHAPITRE I ===== -->
+      <section class="leaf" id="p-chat" role="tabpanel" aria-labelledby="t-chat">
+        <div class="pg left">
           <p class="kicker">Chapitre I</p>
           <h2>L'affaire du Chat de Minuit 🐈‍⬛</h2>
           <span class="stamp">AVIS DE RECHERCHE · URGENT</span>
           <p>Au musée, ce matin, un cadre est vide. Le tableau s'est volatilisé pendant la nuit, et les alarmes n'ont rien vu.</p>
           <p>Le coupable, on le connaît : <strong>le Chat de Minuit</strong>. Un voleur insaisissable, qui ne laisse jamais la moindre empreinte… seulement une étrange <strong>carte percée de trous</strong>, posée à la place du chef-d'œuvre.</p>
           <p>Ces trous ne sont pas là par hasard. Ils cachent un message codé en <strong>binaire</strong> : le nom du prochain lieu qu'il va cambrioler.</p>
+          <div class="folio">5</div>
+        </div>
+        <div class="pg right">
+          <figure class="evidence"><div class="bag"><div class="seal">PIÈCE À CONVICTION · N° 1</div><svg viewBox="0 0 230 150" aria-hidden="true"><rect x="18" y="30" width="194" height="108" rx="6" fill="#fffaf0" stroke="#b9a982" stroke-width="2" transform="rotate(-3 115 84)"/><g transform="rotate(-3 115 84)"><circle cx="40" cy="52" r="5" fill="#2a2420"/><circle cx="60" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="52" r="5" fill="#2a2420"/><circle cx="100" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="52" r="5" fill="#2a2420"/><circle cx="160" cy="52" r="5" fill="#2a2420"/><circle cx="180" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="70" r="5" fill="#2a2420"/><circle cx="60" cy="70" r="5" fill="#2a2420"/><circle cx="80" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="70" r="5" fill="#2a2420"/><circle cx="40" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="88" r="5" fill="#2a2420"/><circle cx="160" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="106" r="5" fill="#2a2420"/><circle cx="60" cy="106" r="5" fill="#2a2420"/><circle cx="80" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="124" r="5" fill="#2a2420"/><circle cx="60" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="124" r="5" fill="#2a2420"/><circle cx="100" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="124" r="5" fill="#2a2420"/><circle cx="160" cy="124" r="5" fill="#2a2420"/><circle cx="180" cy="124" r="5" fill="#2a2420"/><circle cx="196" cy="52" r="3.5" fill="#2a2420"/><circle cx="196" cy="70" r="3.5" fill="#2a2420"/><circle cx="196" cy="88" r="3.5" fill="#2a2420"/><circle cx="196" cy="106" r="3.5" fill="#2a2420"/><circle cx="196" cy="124" r="3.5" fill="#2a2420"/></g><text x="200" y="26" font-size="22" text-anchor="middle">🐾</text></svg></div><figcaption>Carte laissée au musée, à la place du tableau.</figcaption></figure>
           <dl class="facts">
             <dt>Grade conseillé</dt><dd>🔰 Recrue</dd>
             <dt>Type</dt><dd>enquête très guidée, pas à pas, avec des aides</dd>
           </dl>
           <p class="hook">La police n'a qu'une nuit pour le décoder. Sauras-tu deviner où le Chat va frapper avant qu'il ne soit trop tard ?</p>
           <a class="open" href="chat-de-minuit.html" target="_blank" rel="noopener">📂 Ouvrir le dossier</a>
-          <div class="pagefoot"><button data-step="-1">← Formation</button><span>— 2 —</span><button data-step="1">Chapitre II →</button></div>
-        </section>
+          <div class="pagefoot"><button data-step="-1">← Formation</button><button data-step="1">Chapitre II →</button></div>
+          <div class="folio">6</div>
+        </div>
+      </section>
 
-        <!-- ===== CHAPITRE II · PROFESSEUR ZÉRO ===== -->
-        <section class="page" id="p-zero" role="tabpanel" aria-labelledby="t-zero">
-          <span class="clip" aria-hidden="true"></span>
+      <!-- ===== CHAPITRE II ===== -->
+      <section class="leaf" id="p-zero" role="tabpanel" aria-labelledby="t-zero">
+        <div class="pg left">
           <p class="kicker">Chapitre II</p>
           <h2>Le casier du Professeur Zéro 🔒</h2>
           <span class="stamp">CASIER SOUS CADENAS · ACCÈS INTERDIT</span>
           <p>Au collège, tout le monde le connaît : le <strong>Professeur Zéro</strong>. Il n'a jamais mis un seul 5/5 de sa vie.</p>
           <p>Alors quand la principale prépare des <strong>cartes cadeaux 5/5</strong> pour récompenser les élèves, il les confisque toutes… et les enferme dans son casier, derrière un cadenas à code.</p>
           <p>Sa seule faiblesse ? Il oublie tout. Le code est noté sur une <strong>carte perforée</strong>, que le concierge vient de retrouver coincée dans la photocopieuse. « Personne ne sait lire le binaire dans ce collège ! », ricane le professeur.</p>
+          <div class="folio">7</div>
+        </div>
+        <div class="pg right">
+          <figure class="evidence"><div class="bag"><div class="seal">PIÈCE À CONVICTION · N° 2</div><svg viewBox="0 0 230 150" aria-hidden="true"><rect x="18" y="30" width="194" height="108" rx="6" fill="#fffaf0" stroke="#b9a982" stroke-width="2" transform="rotate(-3 115 84)"/><g transform="rotate(-3 115 84)"><circle cx="40" cy="52" r="5" fill="#2a2420"/><circle cx="60" cy="52" r="5" fill="#2a2420"/><circle cx="80" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="52" r="5" fill="#2a2420"/><circle cx="120" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="52" r="5" fill="#2a2420"/><circle cx="160" cy="52" r="5" fill="#2a2420"/><circle cx="180" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="70" r="5" fill="#2a2420"/><circle cx="60" cy="70" r="5" fill="#2a2420"/><circle cx="80" cy="70" r="5" fill="#2a2420"/><circle cx="100" cy="70" r="5" fill="#2a2420"/><circle cx="120" cy="70" r="5" fill="#2a2420"/><circle cx="140" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="70" r="5" fill="#2a2420"/><circle cx="180" cy="70" r="5" fill="#2a2420"/><circle cx="40" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="88" r="5" fill="#2a2420"/><circle cx="120" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="88" r="5" fill="#2a2420"/><circle cx="160" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="88" r="5" fill="#2a2420"/><circle cx="40" cy="106" r="5" fill="#2a2420"/><circle cx="60" cy="106" r="5" fill="#2a2420"/><circle cx="80" cy="106" r="5" fill="#2a2420"/><circle cx="100" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="106" r="5" fill="#2a2420"/><circle cx="140" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="106" r="5" fill="#2a2420"/><circle cx="40" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="124" r="5" fill="#2a2420"/><circle cx="80" cy="124" r="5" fill="#2a2420"/><circle cx="100" cy="124" r="5" fill="#2a2420"/><circle cx="120" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="124" r="5" fill="#2a2420"/><circle cx="160" cy="124" r="5" fill="#2a2420"/><circle cx="180" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="196" cy="52" r="3.5" fill="#2a2420"/><circle cx="196" cy="70" r="3.5" fill="#2a2420"/><circle cx="196" cy="88" r="3.5" fill="#2a2420"/><circle cx="196" cy="106" r="3.5" fill="#2a2420"/><circle cx="196" cy="124" r="3.5" fill="#2a2420"/></g><text x="200" y="26" font-size="22" text-anchor="middle">🔒</text></svg></div><figcaption>Retrouvée coincée dans la photocopieuse.</figcaption></figure>
           <dl class="facts">
             <dt>Grade conseillé</dt><dd>🥉 Agent (niveau 1) · 🥈 Inspecteur (niveau 2)</dd>
             <dt>Deux dossiers</dt><dd>le niveau 2 reprend l'affaire… avec un piège en plus</dd>
           </dl>
           <p class="hook">Il se croit à l'abri. Mais méfie-toi : le Professeur Zéro a plus d'un tour dans son sac…</p>
-          <a class="open" href="professeur-zero-niveau1.html" target="_blank" rel="noopener">📂 Niveau 1 · Apprenti</a>
-          <a class="open" href="professeur-zero-niveau2.html" target="_blank" rel="noopener">📂 Niveau 2 · Expert</a>
-          <div class="pagefoot"><button data-step="-1">← Chapitre I</button><span>— 3 —</span><button data-step="1">Chapitre III →</button></div>
-        </section>
+          <div class="btns">
+            <a class="open" href="professeur-zero-niveau1.html" target="_blank" rel="noopener">📂 Niveau 1 · Apprenti</a>
+            <a class="open" href="professeur-zero-niveau2.html" target="_blank" rel="noopener">📂 Niveau 2 · Expert</a>
+          </div>
+          <div class="pagefoot"><button data-step="-1">← Chapitre I</button><button data-step="1">Chapitre III →</button></div>
+          <div class="folio">8</div>
+        </div>
+      </section>
 
-        <!-- ===== CHAPITRE III · NÉOPULSE ===== -->
-        <section class="page" id="p-neopulse" role="tabpanel" aria-labelledby="t-neopulse">
+      <!-- ===== CHAPITRE III ===== -->
+      <section class="leaf" id="p-neopulse" role="tabpanel" aria-labelledby="t-neopulse">
+        <div class="pg left">
           <p class="kicker">Chapitre III</p>
           <h2>L'affaire NéoPulse</h2>
           <span class="stamp">DOSSIER N° 2026-117 · CONFIDENTIEL</span>
@@ -271,51 +278,48 @@
              <strong>01 h 47</strong> : la caméra n° 4 filme une silhouette cagoulée qui s'enfuit… par une fenêtre.<br>
              <strong>01 h 52</strong> : un virus efface toutes les traces et paralyse les lecteurs de badges.</p>
           <p>Mais dans sa fuite, le voleur a laissé tomber un badge. Il est désormais sous scellé, et plus aucun lecteur de l'entreprise ne peut le déchiffrer.</p>
+          <div class="folio">9</div>
+        </div>
+        <div class="pg right">
+          <figure class="evidence"><div class="bag"><div class="seal">PIÈCE À CONVICTION · N° 3</div><svg viewBox="0 0 230 150" aria-hidden="true"><rect x="18" y="30" width="194" height="108" rx="6" fill="#fffaf0" stroke="#b9a982" stroke-width="2" transform="rotate(-3 115 84)"/><g transform="rotate(-3 115 84)"><circle cx="40" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="52" r="5" fill="#2a2420"/><circle cx="180" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="70" r="5" fill="#2a2420"/><circle cx="100" cy="70" r="5" fill="#2a2420"/><circle cx="120" cy="70" r="5" fill="#2a2420"/><circle cx="140" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="70" r="5" fill="#2a2420"/><circle cx="40" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="88" r="5" fill="#2a2420"/><circle cx="140" cy="88" r="5" fill="#2a2420"/><circle cx="160" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="88" r="5" fill="#2a2420"/><circle cx="40" cy="106" r="5" fill="#2a2420"/><circle cx="60" cy="106" r="5" fill="#2a2420"/><circle cx="80" cy="106" r="5" fill="#2a2420"/><circle cx="100" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="106" r="5" fill="#2a2420"/><circle cx="140" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="124" r="5" fill="#2a2420"/><circle cx="120" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="196" cy="52" r="3.5" fill="#2a2420"/><circle cx="196" cy="70" r="3.5" fill="#2a2420"/><circle cx="196" cy="88" r="3.5" fill="#2a2420"/><circle cx="196" cy="106" r="3.5" fill="#2a2420"/><circle cx="196" cy="124" r="3.5" fill="#2a2420"/></g><text x="200" y="26" font-size="22" text-anchor="middle">🪪</text></svg></div><figcaption>Badge perdu dans la fuite, placé sous scellé.</figcaption></figure>
           <dl class="facts">
             <dt>Grade conseillé</dt><dd>🥇 Lieutenant</dd>
             <dt>Au programme</dt><dd>programmer une carte Arduino, câbler le lecteur, lire les badges</dd>
           </dl>
           <p class="hook">Qui se cache sous la cagoule ? À toi de le découvrir, enquêteur·rice.</p>
           <a class="open" href="enquete-neopulse.html" target="_blank" rel="noopener">📂 Ouvrir le dossier</a>
-          <div class="pagefoot"><button data-step="-1">← Chapitre II</button><span>— 4 —</span><button data-step="1" disabled>→</button></div>
-        </section>
+          <div class="pagefoot"><button data-step="-1">← Chapitre II</button><span></span></div>
+          <div class="folio">10</div>
+        </div>
+      </section>
 
-      </div>
     </div>
   </div>
 
 <script>
-/* Navigation du livre : onglets, liens du sommaire, bas de page, flèches du clavier, et #ancre dans l'adresse */
+/* Navigation du livre : onglets, sommaire, bas de page, flèches du clavier, #ancre dans l'adresse */
 (function(){
-  var ORDER = ['couverture', 'formation', 'chat', 'zero', 'neopulse'];
-  var cur = -1;
-  function go(name, push){
-    var i = ORDER.indexOf(name); if (i < 0) i = 0;
-    if (i === cur) return;
+  var ORDER = ['couverture', 'formation', 'chat', 'zero', 'neopulse'], cur = -1;
+  function go(name){
+    var i = ORDER.indexOf(name); if (i < 0) i = 0; if (i === cur) return;
     var dir = i > cur ? 'fwd' : 'bwd';
     ORDER.forEach(function(n, k){
       var p = document.getElementById('p-' + n), t = document.getElementById('t-' + n);
       p.classList.remove('on', 'fwd', 'bwd');
-      if (k === i) { p.classList.add('on'); if (cur >= 0) p.classList.add(dir); }
-      t.setAttribute('aria-selected', k === i ? 'true' : 'false');
-      t.tabIndex = k === i ? 0 : -1;
+      if (k === i) { p.classList.add('on'); if (cur >= 0) p.classList.add(dir); p.querySelectorAll('.pg').forEach(function(x){ x.scrollTop = 0; }); }
+      t.setAttribute('aria-selected', k === i ? 'true' : 'false'); t.tabIndex = k === i ? 0 : -1;
     });
-    cur = i;
-    var at = document.getElementById('t-' + ORDER[i]);
-    if (at.scrollIntoView) at.scrollIntoView({block:'nearest', inline:'nearest'});
-    if (push !== false) history.replaceState(null, '', '#' + ORDER[i]);
-    var book = document.querySelector('.book');
-    if (book.getBoundingClientRect().top < 0) book.scrollIntoView({behavior:'smooth', block:'start'});
+    cur = i; history.replaceState(null, '', '#' + ORDER[i]);
+    document.getElementById('t-' + ORDER[i]).scrollIntoView({block:'nearest', inline:'nearest'});
   }
   document.querySelectorAll('.tab').forEach(function(b){ b.addEventListener('click', function(){ go(b.dataset.p); }); });
   document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click', function(){ go(b.dataset.go); }); });
   document.querySelectorAll('[data-step]').forEach(function(b){ b.addEventListener('click', function(){ go(ORDER[Math.max(0, Math.min(ORDER.length - 1, cur + (+b.dataset.step)))]); }); });
   document.addEventListener('keydown', function(e){
-    if (e.target.closest && e.target.closest('input, textarea')) return;
     if (e.key === 'ArrowRight' && cur < ORDER.length - 1) go(ORDER[cur + 1]);
     if (e.key === 'ArrowLeft' && cur > 0) go(ORDER[cur - 1]);
   });
-  go((location.hash || '#couverture').slice(1), false);
+  go((location.hash || '#couverture').slice(1));
 })();
 </script>
 </body>

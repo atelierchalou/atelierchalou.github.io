@@ -9,221 +9,367 @@
 <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#152720;
-    --panel:#1c332a;
-    --chalk:#f4f0e2;
-    --chalk-dim:#b9c2b6;
-    --accent:#e8c468;
+    --bg:#152720; --panel:#1c332a; --chalk:#f4f0e2; --chalk-dim:#b9c2b6; --accent:#e8c468;
+    --c1:#2f7d6b; --c2:#1d4f45;                 /* couleurs de la catégorie affichée (changées par le script) */
   }
   *{box-sizing:border-box;}
   body{
-    margin:0;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:12px;
-    padding:40px 20px;
-    background:var(--bg);
-    color:var(--chalk);
-    font-family:'Nunito Sans',system-ui,sans-serif;
+    margin:0; min-height:100dvh; display:flex; flex-direction:column; align-items:center;
+    padding:14px 16px 18px; color:var(--chalk); font-family:'Nunito Sans',system-ui,sans-serif;
+    background:radial-gradient(ellipse at 50% 40%, #213d33 0%, var(--bg) 60%, #0e1a15 100%);
   }
-  h1{
-    font-family:'Kalam',cursive;
-    font-size:2rem;
-    margin:0;
-    text-align:center;
-  }
-  .back{
-    color:var(--chalk-dim);
-    text-decoration:none;
-    font-size:.9rem;
-    margin-top:-14px;
-    margin-bottom:14px;
-  }
+  @media (min-width:900px) and (min-height:560px){ body{height:100dvh; overflow:hidden;} }
+  .site-logo{position:fixed; top:16px; left:16px; z-index:10;}
+  .site-logo img{display:block; height:36px; width:auto;}
+  .back{color:var(--chalk-dim); text-decoration:none; font-size:.9rem; padding:4px 0 10px;}
   .back:hover{color:var(--accent);}
-  section.category{
-    width:100%;
-    max-width:640px;
-    margin-top:28px;
+
+  /* ===== Onglets : une catégorie par onglet ===== */
+  .tabs{display:flex; gap:8px; max-width:100%; overflow-x:auto; padding:2px 4px 12px; scrollbar-width:thin;}
+  .tab{
+    flex:0 0 auto; display:flex; align-items:center; gap:7px; cursor:pointer;
+    font:inherit; font-size:.92rem; font-weight:700; color:var(--chalk);
+    background:rgba(244,240,228,.06); border:1px solid rgba(244,240,228,.16); border-radius:999px; padding:7px 14px;
+    transition:background .2s, border-color .2s;
   }
-  section.category h2{
-    font-family:'Kalam',cursive;
-    font-size:1.3rem;
-    margin:0 0 14px;
-    color:var(--accent);
+  .tab:hover{border-color:var(--accent);}
+  .tab[aria-selected="true"]{background:var(--accent); border-color:var(--accent); color:#152720;}
+  .tab .n{font-size:.75rem; font-weight:800; background:rgba(0,0,0,.18); border-radius:999px; padding:1px 7px;}
+  .tab:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  /* ===== Le smartphone ===== */
+  .stage{flex:1; min-height:0; width:100%; display:flex; justify-content:center; align-items:flex-start; gap:22px;}
+  .phone{
+    position:relative; flex:0 0 auto;
+    height:min(760px, calc(100dvh - 150px)); aspect-ratio:9/19;
+    background:#0b0f0e; border-radius:46px; padding:12px;
+    box-shadow:0 0 0 2px #2b3431, 0 0 0 4px #0b0f0e, 0 30px 60px rgba(0,0,0,.6);
   }
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:18px;
-    width:100%;
+  .phone::before, .phone::after{content:""; position:absolute; width:4px; border-radius:2px; background:#2b3431;}
+  .phone::before{left:-6px; top:110px; height:56px;}     /* boutons de volume */
+  .phone::after{right:-6px; top:150px; height:80px;}     /* bouton marche */
+  .screen{
+    position:relative; height:100%; border-radius:35px; overflow:hidden; display:flex; flex-direction:column;
+    background:linear-gradient(165deg, var(--c1), var(--c2) 70%);
+    transition:background .4s;
   }
-  .empty-cat{
-    color:var(--chalk-dim);
-    font-size:.9rem;
-    font-style:italic;
-    border:1px dashed rgba(244,240,228,.2);
-    border-radius:14px;
-    padding:20px;
+  .island{position:absolute; top:10px; left:50%; transform:translateX(-50%); width:25%; height:22px; background:#000; border-radius:999px; z-index:3;}
+  .status{display:flex; justify-content:space-between; align-items:center; padding:12px 18px 0 24px; height:42px; font-size:.78rem; font-weight:800; flex:0 0 auto;}
+  .status svg{height:10px; width:auto; margin-left:4px; vertical-align:middle;}
+  .apphead{padding:8px 20px 10px; flex:0 0 auto;}
+  .apphead small{display:block; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; opacity:.75;}
+  .apphead h1{font-family:'Kalam',cursive; font-size:1.6rem; line-height:1.15; margin:2px 0 0;}
+  .list{
+    flex:1; min-height:0; overflow-y:auto; scroll-snap-type:y mandatory; scroll-behavior:smooth;
+    padding:6px 14px 30px; display:flex; flex-direction:column; gap:12px; scrollbar-width:none;
   }
-  a.card{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    padding:24px;
-    border-radius:14px;
-    background:var(--panel);
-    border:1px solid rgba(244,240,228,.14);
-    color:var(--chalk);
-    text-decoration:none;
-    transition:border-color .15s, transform .1s;
+  .list::-webkit-scrollbar{display:none;}
+  .list.swap{animation:swapIn .35s ease-out;}
+  @keyframes swapIn{from{opacity:0; transform:translateX(30px);} to{opacity:1; transform:none;}}
+  .app{
+    scroll-snap-align:start; flex:0 0 auto;
+    display:flex; flex-direction:column; gap:10px; text-decoration:none; color:inherit;
+    background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.18); border-radius:22px; padding:14px;
+    backdrop-filter:blur(6px); transition:background .2s, transform .15s;
   }
-  a.card:hover{
-    border-color:var(--accent);
-    transform:translateY(-2px);
+  .app:hover{background:rgba(255,255,255,.22);}
+  .app.focus{background:rgba(255,255,255,.24); transform:scale(1.015);}
+  .app .row{display:flex; align-items:center; gap:12px;}
+  .icon{
+    flex:0 0 auto; width:58px; height:58px; border-radius:16px; display:grid; place-items:center; font-size:1.9rem;
+    background:linear-gradient(145deg, rgba(255,255,255,.95), rgba(255,255,255,.7));
+    box-shadow:0 4px 10px rgba(0,0,0,.25);
   }
-  a.card .emoji{font-size:1.8rem;}
-  a.card .name{font-weight:800; font-size:1.1rem;}
-  a.card .desc{color:var(--chalk-dim); font-size:.9rem; line-height:1.4;}
-  .site-logo{
-    position:fixed;
-    top:16px;
-    left:16px;
-    z-index:10;
+  .app .name{font-weight:800; font-size:1.02rem; line-height:1.2;}
+  .app .desc{font-size:.86rem; line-height:1.4; opacity:.92;}
+  .app .open{align-self:flex-start; font-size:.78rem; font-weight:800; letter-spacing:.08em; background:#fff; color:var(--c2); border-radius:999px; padding:5px 14px;}
+  .home{position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:36%; height:5px; border-radius:3px; background:rgba(255,255,255,.75); z-index:3;}
+  .fade{position:absolute; left:0; right:0; bottom:0; height:46px; background:linear-gradient(transparent, var(--c2)); pointer-events:none; z-index:2;}
+
+  /* ===== Commandes à côté du téléphone ===== */
+  .ctrl{display:flex; flex-direction:column; align-items:center; gap:10px; align-self:center;}
+  .ctrl button{
+    width:46px; height:46px; border-radius:50%; cursor:pointer; font-size:1.1rem; color:var(--chalk);
+    background:rgba(244,240,228,.08); border:1px solid rgba(244,240,228,.2);
   }
-  .site-logo img{
-    display:block;
-    height:36px;
-    width:auto;
+  .ctrl button:hover{border-color:var(--accent);}
+  .ctrl button[aria-pressed="true"]{background:var(--accent); color:#152720; border-color:var(--accent);}
+  .ctrl .count{font-size:.85rem; color:var(--chalk-dim); min-width:46px; text-align:center;}
+  .ctrl .lbl{font-size:.72rem; color:var(--chalk-dim); text-align:center; max-width:70px;}
+
+  /* ===== Petit écran : on est déjà sur un téléphone, pas besoin d'en dessiner un ===== */
+  @media (max-width:599px){
+    body{padding-top:62px;}
+    .back{position:absolute; top:24px; right:16px; padding:0;}
+    .stage{display:block;}
+    .phone{height:auto; aspect-ratio:auto; width:100%; padding:0; background:none; box-shadow:none; border-radius:0;}
+    .phone::before, .phone::after, .island, .status, .home, .fade, .ctrl{display:none;}
+    .screen{border-radius:22px; height:auto; overflow:visible;}
+    .list{overflow:visible; scroll-snap-type:none; padding-bottom:16px;}
+    .apphead{padding-top:16px;}
   }
+  @media (prefers-reduced-motion: reduce){ .list{scroll-behavior:auto;} .list.swap{animation:none;} }
 </style>
 </head>
 <body>
-  <a class="site-logo" href="index.html">
-    <img src="logo-blanc.png" alt="Atelier Chalou">
-  </a>
+  <a class="site-logo" href="index.html"><img src="logo-blanc.png" alt="Atelier Chalou"></a>
   <a class="back" href="index.html">← Retour à l'accueil</a>
-  <h1>🧩 Mes applis</h1>
 
-  <section class="category">
-    <h2>Les outils du prof</h2>
-    <div class="grid">
-      <a class="card" href="ardoise-du-prof.html" target="_blank" rel="noopener">
-        <span class="emoji">🖍️</span>
-        <span class="name">Ardoise du Prof</span>
-        <span class="desc">Consignes au tableau, minuteur, tour de rôle, diffusion en direct.</span>
-      </a>
-      <a class="card" href="tableau-classe-standalone.html" target="_blank" rel="noopener">
-        <span class="emoji">📋</span>
-        <span class="name">Tableau de classe</span>
-        <span class="desc">Diffusion en direct vers les téléphones des élèves.</span>
-      </a>
-    </div>
-  </section>
+  <div class="tabs" role="tablist" aria-label="Catégories d'applis" id="tabs"></div>
 
-  <section class="category">
-    <h2>Vidéo et image</h2>
-    <div class="grid">
-      <a class="card" href="editeur-video.html" target="_blank" rel="noopener">
-        <span class="emoji">🎬</span>
-        <span class="name">Éditeur vidéo</span>
-        <span class="desc">Montage et retouche vidéo directement dans le navigateur.</span>
-      </a>
-      <a class="card" href="stop-motion-studio.html" target="_blank" rel="noopener">
-        <span class="emoji">🎞️</span>
-        <span class="name">Stop-Motion Studio</span>
-        <span class="desc">Créer un film d'animation image par image, caméra ou photos importées.</span>
-      </a>
-      <a class="card" href="atelier-teintes.html" target="_blank" rel="noopener">
-        <span class="emoji">🎨</span>
-        <span class="name">Atelier Teintes</span>
-        <span class="desc">Explorer et composer des palettes de couleurs.</span>
-      </a>
-      <a class="card" href="modeleur-volumique.html" target="_blank" rel="noopener">
-        <span class="emoji">🧊</span>
-        <span class="name">Modeleur Volumique</span>
-        <span class="desc">Créer et manipuler des formes en volume.</span>
-      </a>
-      <a class="card" href="realise-ton-scenario.html" target="_blank" rel="noopener">
-        <span class="emoji">🎥</span>
-        <span class="name">Réalise ton scénario</span>
-        <span class="desc">Écrire et mettre en scène un scénario, étape par étape.</span>
-      </a>
-      <a class="card" href="photo-co.html" target="_blank" rel="noopener">
-        <span class="emoji">🧭</span>
-        <span class="name">Photo CO</span>
-        <span class="desc">Course d'orientation photo : rejoindre des objectifs, les prendre en photo, puis revoir son parcours sur la carte.</span>
-      </a>
+  <div class="stage">
+    <div class="phone">
+      <div class="screen">
+        <div class="island" aria-hidden="true"></div>
+        <div class="status" aria-hidden="true">
+          <span id="clock">9:41</span>
+          <span>
+            <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#fff"/><rect x="5" y="5" width="3" height="7" rx="1" fill="#fff"/><rect x="10" y="2" width="3" height="10" rx="1" fill="#fff"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#fff" opacity=".45"/></svg>
+            <svg viewBox="0 0 16 12"><path d="M8 11.5 L5.6 8.6 A3.6 3.6 0 0 1 10.4 8.6 Z M2.6 5.8 A7.7 7.7 0 0 1 13.4 5.8 L11.9 7.4 A5.6 5.6 0 0 0 4.1 7.4 Z M0 3 A11.6 11.6 0 0 1 16 3 L14.5 4.6 A9.5 9.5 0 0 0 1.5 4.6 Z" fill="#fff"/></svg>
+            <svg viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="#fff" opacity=".6"/><rect x="2" y="2" width="16" height="8" rx="1.5" fill="#fff"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#fff" opacity=".6"/></svg>
+          </span>
+        </div>
+        <div class="apphead"><small>Atelier Chalou · Mes applis</small><h1 id="catTitle"></h1><small id="catCount"></small></div>
+        <div class="list" id="list" role="tabpanel" aria-live="polite"></div>
+        <div class="fade" aria-hidden="true"></div>
+        <div class="home" aria-hidden="true"></div>
+      </div>
     </div>
-  </section>
+    <div class="ctrl">
+      <button id="up" aria-label="Appli précédente">▲</button>
+      <span class="count" id="pos">1 / 1</span>
+      <button id="down" aria-label="Appli suivante">▼</button>
+      <button id="auto" aria-pressed="true" aria-label="Défilement automatique" title="Défilement automatique">⏯</button>
+      <span class="lbl">défilement auto</span>
+    </div>
+  </div>
 
-  <section class="category">
-    <h2>Animations interactives</h2>
-    <div class="grid">
-      <a class="card" href="banc-optique.html" target="_blank" rel="noopener">
-        <span class="emoji">🔭</span>
-        <span class="name">Banc optique</span>
-        <span class="desc">Simulateur interactif de trajet de la lumière et des lentilles.</span>
-      </a>
-      <a class="card" href="comment-apprend-une-ia.html" target="_blank" rel="noopener">
-        <span class="emoji">🐱</span>
-        <span class="name">Comment apprend une IA</span>
-        <span class="desc">Un réseau de neurones qui apprend, étape par étape, sous vos yeux.</span>
-      </a>
-      <a class="card" href="ecluse.html" target="_blank" rel="noopener">
-        <span class="emoji">🚤</span>
-        <span class="name">Simulateur d'écluse</span>
-        <span class="desc">Faire franchir une écluse à un bateau, en manuel ou en automatique.</span>
-      </a>
-      <a class="card" href="atelier-reseau.html" target="_blank" rel="noopener">
-        <span class="emoji">🕸️</span>
-        <span class="name">Atelier Réseau</span>
-        <span class="desc">Explorer et construire un réseau de manière interactive.</span>
-      </a>
-      <a class="card" href="chaines-information-energie.html" target="_blank" rel="noopener">
-        <span class="emoji">⚙️</span>
-        <span class="name">Chaînes d'information et d'énergie</span>
-        <span class="desc">Explorer les chaînes d'information et d'énergie de 4 objets techniques.</span>
-      </a>
-      <a class="card" href="soufflerie.html" target="_blank" rel="noopener">
-        <span class="emoji">💨</span>
-        <span class="name">Soufflerie 2D</span>
-        <span class="desc">Simulateur aérodynamique : tester la forme d'un objet dans un flux d'air.</span>
-      </a>
-    </div>
-  </section>
+<script>
+/* ===== Les applis, rangées par catégorie (pour en ajouter une : ajouter une ligne dans la bonne catégorie) ===== */
+var CATS = [
+ {
+  "name": "Les outils du prof",
+  "apps": [
+   {
+    "href": "ardoise-du-prof.html",
+    "ico": "🖍️",
+    "name": "Ardoise du Prof",
+    "desc": "Consignes au tableau, minuteur, tour de rôle, diffusion en direct."
+   },
+   {
+    "href": "tableau-classe-standalone.html",
+    "ico": "📋",
+    "name": "Tableau de classe",
+    "desc": "Diffusion en direct vers les téléphones des élèves."
+   }
+  ],
+  "ico": "🧑‍🏫",
+  "c1": "#2f7d6b",
+  "c2": "#1d4f45"
+ },
+ {
+  "name": "Vidéo et image",
+  "apps": [
+   {
+    "href": "editeur-video.html",
+    "ico": "🎬",
+    "name": "Éditeur vidéo",
+    "desc": "Montage et retouche vidéo directement dans le navigateur."
+   },
+   {
+    "href": "stop-motion-studio.html",
+    "ico": "🎞️",
+    "name": "Stop-Motion Studio",
+    "desc": "Créer un film d'animation image par image, caméra ou photos importées."
+   },
+   {
+    "href": "atelier-teintes.html",
+    "ico": "🎨",
+    "name": "Atelier Teintes",
+    "desc": "Explorer et composer des palettes de couleurs."
+   },
+   {
+    "href": "modeleur-volumique.html",
+    "ico": "🧊",
+    "name": "Modeleur Volumique",
+    "desc": "Créer et manipuler des formes en volume."
+   },
+   {
+    "href": "realise-ton-scenario.html",
+    "ico": "🎥",
+    "name": "Réalise ton scénario",
+    "desc": "Écrire et mettre en scène un scénario, étape par étape."
+   },
+   {
+    "href": "photo-co.html",
+    "ico": "🧭",
+    "name": "Photo CO",
+    "desc": "Course d'orientation photo : rejoindre des objectifs, les prendre en photo, puis revoir son parcours sur la carte."
+   }
+  ],
+  "ico": "🎬",
+  "c1": "#8a4fd1",
+  "c2": "#4a2a7a"
+ },
+ {
+  "name": "Animations interactives",
+  "apps": [
+   {
+    "href": "banc-optique.html",
+    "ico": "🔭",
+    "name": "Banc optique",
+    "desc": "Simulateur interactif de trajet de la lumière et des lentilles."
+   },
+   {
+    "href": "comment-apprend-une-ia.html",
+    "ico": "🐱",
+    "name": "Comment apprend une IA",
+    "desc": "Un réseau de neurones qui apprend, étape par étape, sous vos yeux."
+   },
+   {
+    "href": "ecluse.html",
+    "ico": "🚤",
+    "name": "Simulateur d'écluse",
+    "desc": "Faire franchir une écluse à un bateau, en manuel ou en automatique."
+   },
+   {
+    "href": "atelier-reseau.html",
+    "ico": "🕸️",
+    "name": "Atelier Réseau",
+    "desc": "Explorer et construire un réseau de manière interactive."
+   },
+   {
+    "href": "chaines-information-energie.html",
+    "ico": "⚙️",
+    "name": "Chaînes d'information et d'énergie",
+    "desc": "Explorer les chaînes d'information et d'énergie de 4 objets techniques."
+   },
+   {
+    "href": "soufflerie.html",
+    "ico": "💨",
+    "name": "Soufflerie 2D",
+    "desc": "Simulateur aérodynamique : tester la forme d'un objet dans un flux d'air."
+   }
+  ],
+  "ico": "✨",
+  "c1": "#2f6fed",
+  "c2": "#1f3f8a"
+ },
+ {
+  "name": "Vie de classe",
+  "apps": [
+   {
+    "href": "type-de-memoire.html",
+    "ico": "🧠",
+    "name": "Quel type de mémoire ?",
+    "desc": "Découvrir comment on mémorise le mieux, avec questions et petits jeux."
+   },
+   {
+    "href": "forces-de-caractere.html",
+    "ico": "🌟",
+    "name": "Les 24 forces de caractère",
+    "desc": "Découvrir ses forces principales et comment les utiliser au quotidien."
+   },
+   {
+    "href": "grammaire-5eme.html",
+    "ico": "🗡️",
+    "name": "La Quête des Mots",
+    "desc": "Réviser la grammaire de 5ème sous forme de quête, niveau par niveau."
+   }
+  ],
+  "ico": "🏫",
+  "c1": "#d9822b",
+  "c2": "#7a4417"
+ },
+ {
+  "name": "Outils divers",
+  "apps": [
+   {
+    "href": "generateur-qr.html",
+    "ico": "🔳",
+    "name": "Atelier QR",
+    "desc": "Générer un QR code à partir d'une adresse, personnaliser son rendu et le télécharger."
+   }
+  ],
+  "ico": "🧰",
+  "c1": "#6b7a8f",
+  "c2": "#39424f"
+ }
+];
 
-  <section class="category">
-    <h2>Vie de classe</h2>
-    <div class="grid">
-      <a class="card" href="type-de-memoire.html" target="_blank" rel="noopener">
-        <span class="emoji">🧠</span>
-        <span class="name">Quel type de mémoire ?</span>
-        <span class="desc">Découvrir comment on mémorise le mieux, avec questions et petits jeux.</span>
-      </a>
-      <a class="card" href="forces-de-caractere.html" target="_blank" rel="noopener">
-        <span class="emoji">🌟</span>
-        <span class="name">Les 24 forces de caractère</span>
-        <span class="desc">Découvrir ses forces principales et comment les utiliser au quotidien.</span>
-      </a>
-      <a class="card" href="grammaire-5eme.html" target="_blank" rel="noopener">
-        <span class="emoji">🗡️</span>
-        <span class="name">La Quête des Mots</span>
-        <span class="desc">Réviser la grammaire de 5ème sous forme de quête, niveau par niveau.</span>
-      </a>
-    </div>
-  </section>
+(function(){
+  var tabs = document.getElementById('tabs'), list = document.getElementById('list');
+  var cur = 0, focus = 0, timer = null, auto = true, userTook = false;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) auto = false;
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
-  <section class="category">
-    <h2>Outils divers</h2>
-    <div class="grid">
-      <a class="card" href="generateur-qr.html" target="_blank" rel="noopener">
-        <span class="emoji">🔳</span>
-        <span class="name">Atelier QR</span>
-        <span class="desc">Générer un QR code à partir d'une adresse, personnaliser son rendu et le télécharger.</span>
-      </a>
-    </div>
-  </section>
+  CATS.forEach(function(c, i){
+    var b = document.createElement('button');
+    b.className = 'tab'; b.setAttribute('role', 'tab'); b.id = 'tab' + i;
+    b.innerHTML = '<span>' + c.ico + '</span>' + esc(c.name) + '<span class="n">' + c.apps.length + '</span>';
+    b.addEventListener('click', function(){ show(i); });
+    tabs.appendChild(b);
+  });
+
+  function show(i){
+    cur = i; focus = 0;
+    var c = CATS[i], root = document.documentElement.style;
+    root.setProperty('--c1', c.c1); root.setProperty('--c2', c.c2);
+    tabs.querySelectorAll('.tab').forEach(function(t, k){ t.setAttribute('aria-selected', k === i ? 'true' : 'false'); t.tabIndex = k === i ? 0 : -1; });
+    document.getElementById('tab' + i).scrollIntoView({block:'nearest', inline:'nearest'});
+    document.getElementById('catTitle').textContent = c.ico + ' ' + c.name;
+    document.getElementById('catCount').textContent = c.apps.length + (c.apps.length > 1 ? ' applis' : ' appli');
+    list.setAttribute('aria-labelledby', 'tab' + i);
+    list.innerHTML = c.apps.map(function(a){
+      return '<a class="app" href="' + a.href + '" target="_blank" rel="noopener">' +
+        '<div class="row"><span class="icon">' + a.ico + '</span><span class="name">' + esc(a.name) + '</span></div>' +
+        '<span class="desc">' + esc(a.desc) + '</span><span class="open">OUVRIR</span></a>';
+    }).join('');
+    list.classList.remove('swap'); void list.offsetWidth; list.classList.add('swap');
+    list.style.scrollBehavior = 'auto'; list.scrollTop = 0; list.style.scrollBehavior = '';
+    mark(); restart();
+  }
+  function items(){ return list.querySelectorAll('.app'); }
+  function mark(){
+    var it = items();
+    it.forEach(function(a, k){ a.classList.toggle('focus', k === focus && it.length > 1); });
+    document.getElementById('pos').textContent = (it.length ? focus + 1 : 0) + ' / ' + it.length;
+  }
+  function goTo(k){
+    var it = items(); if (!it.length) return;
+    focus = (k + it.length) % it.length;
+    list.scrollTo({top: it[focus].offsetTop - list.offsetTop - 6});
+    mark();
+  }
+  /* défilement automatique : une appli toutes les 3,5 s, s'arrête dès qu'on touche au téléphone */
+  function restart(){
+    clearInterval(timer);
+    document.getElementById('auto').setAttribute('aria-pressed', auto ? 'true' : 'false');
+    if (!auto || window.innerWidth < 600) return;
+    timer = setInterval(function(){ goTo(focus + 1); }, 3500);
+  }
+  function stopAuto(){ if (auto) { auto = false; restart(); } }
+  ['wheel', 'touchstart', 'mousedown', 'keydown'].forEach(function(ev){ list.addEventListener(ev, stopAuto, {passive:true}); });
+  list.addEventListener('scroll', function(){                        // suivre l'appli visible quand on fait défiler à la main
+    var it = items(), top = list.scrollTop, best = 0, bd = 1e9;
+    it.forEach(function(a, k){ var d = Math.abs(a.offsetTop - list.offsetTop - top); if (d < bd) { bd = d; best = k; } });
+    if (best !== focus) { focus = best; mark(); }
+  }, {passive:true});
+  document.getElementById('up').addEventListener('click', function(){ stopAuto(); goTo(focus - 1); });
+  document.getElementById('down').addEventListener('click', function(){ stopAuto(); goTo(focus + 1); });
+  document.getElementById('auto').addEventListener('click', function(){ auto = !auto; restart(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight') show((cur + 1) % CATS.length);
+    else if (e.key === 'ArrowLeft') show((cur - 1 + CATS.length) % CATS.length);
+    else if (e.key === 'ArrowDown') { e.preventDefault(); stopAuto(); goTo(focus + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); stopAuto(); goTo(focus - 1); }
+  });
+  function tick(){ var d = new Date(); document.getElementById('clock').textContent = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  tick(); setInterval(tick, 20000);
+  var start = Math.max(0, CATS.findIndex(function(c){ return '#' + c.name.toLowerCase().replace(/[^a-z]+/g, '-') === location.hash; }));
+  show(start);
+})();
+</script>
 </body>
 </html>
