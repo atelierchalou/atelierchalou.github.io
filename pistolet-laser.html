@@ -4720,17 +4720,20 @@ import ManifoldModule from 'manifold-3d';
 const NL = window.NB.p;                                   // 3 ou 5 LED de munitions
 const LEDXS = NL === 5 ? [20, 29, 38, 47, 56] : [24, 36, 48];   // entre les plots de vis (x 13 et 66)
 const PROFILE = [[0,70],[12,70],[4,0],[50,0],[55,32],[55,70],[160,70],[160,106],[156,110],[6,110],[0,104]];
-const CAVITY  = [[8,76],[17,76],[17,-1],[44,-1],[44,76],[146,76],[146,104],[8,104]];
-const INNER   = [[0,70],[12,70],[4,0],[17,0],[17,76],[8,76],[8,104],[146,104],[146,76],[44,76],[44,0],[50,0],[55,32],[55,70],[160,70],[160,106],[156,110],[6,110],[0,104]];
+const FRONT = 154;   // fond de la cavité : paroi avant (canon) de 6 mm, la carte du laser KY-008 tient derrière
+const CAVITY  = [[8,76],[17,76],[17,-1],[44,-1],[44,76],[FRONT,76],[FRONT,104],[8,104]];
+const INNER   = [[0,70],[12,70],[4,0],[17,0],[17,76],[8,76],[8,104],[FRONT,104],[FRONT,76],[44,76],[44,0],[50,0],[55,32],[55,70],[160,70],[160,106],[156,110],[6,110],[0,104]];
 const PLIES = [3, 4, 5, 6, 8];
 /* Plots de vis M3 qui relient les deux demi-coques (position x, z dans la cavité) */
 const POSTS = [[13,98],[66,100],[138,101.5],[30,64]], POST_R = 3.75;
 /* Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute : arrêtée à gauche par un plot, à droite par une butée */
 const BAT = {x0:70, L:48.5, H:26.5, T:17.5, z:90, stop:119};
 /* Impression 3D : chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) au plan x = SPLIT, assemblées par un tenon et une rainure collés */
-const SPLIT = 80, TNL = 8, SOLIDS = [[153,78]];   // vis supplémentaire dans le bloc plein de l'avant
+const SPLIT = 80, TNL = 8, SOLIDS = [[150,78.5]];   // vis supplémentaire dans le bloc plein de l'avant
 /* Vis de jonction des 4 pièces : traverse toute l'épaisseur dans la paroi du bas, au milieu des languettes */
 const JOINT = [SPLIT + TNL/2, 73];
+/* Passage des 3 fils du laser : encoche en bas de la butée de la pile + rigole dans le plancher, sous la pile, jusqu'à la poignée */
+const WIRE = {x0:40, hw:3.5, z0:74.8, notchTop:80};
 
 /* Composants : tailles proposées (mm) et limites pour « Autre » (pour que le trou tienne dans la coque) */
 const COMPS = {
@@ -4831,7 +4834,9 @@ function layerPlan(k, ext){
     if (inner) shapes.push({type:'ring', x, z, r:POST_R, h: mid < 0 ? 1.7 : 1.3});   // entretoise percée (Ø3,4 à droite, Ø2,6 à gauche)
     else if (mid < 0) shapes.push({type:'circ', x, z, r:1.7});                         // trou de passage dans la plaque droite
   }
-  if (inner) shapes.push({type:'blk', x0:BAT.stop, x1:BAT.stop + 2.5, z0:76, z1:104});   // butée de la pile 9 V (pièce à coller)
+  const wire = b > -WIRE.hw + .01 && a < WIRE.hw - .01;                                    // couche traversée par le passage des fils
+  if (inner) shapes.push({type:'blk', x0:BAT.stop, x1:BAT.stop + 2.5, z0:wire ? WIRE.notchTop : 76, z1:104});   // butée de la pile 9 V (pièce à coller, encochée au milieu)
+  if (inner && wire) shapes.push({type:'rect', x0:44, x1:BAT.stop + 2.5, z0:WIRE.z0, z1:76});                        // rigole des fils dans le plancher
   return {k, a, b, inner, shapes};
 }
 
@@ -4957,8 +4962,10 @@ function buildPrint(){
   const g = G();
   try {
     let res = keep(slab(PROFILE, -g.W2, g.W2).subtract(slab(CAVITY, -g.CY, g.CY)));
-    for (const [x, z] of POSTS) res = keep(res.add(cylAxis(POST_R, -g.CY - .5, g.CY + .5, 1, [x, 0, z])));   // plots sur les parois latérales
+    for (const [x, z] of POSTS.concat(SOLIDS)) res = keep(res.add(cylAxis(POST_R, -g.CY - .5, g.CY + .5, 1, [x, 0, z])));   // plots sur les parois latérales
     res = keep(res.add(box(BAT.stop, -g.CY - .5, 75.5, BAT.stop + 2.5, g.CY + .5, 104.5)));                  // butée de la pile 9 V
+    res = keep(res.subtract(box(BAT.stop - 1, -WIRE.hw, WIRE.z0, BAT.stop + 3.5, WIRE.hw, WIRE.notchTop)));        // encoche des 3 fils du laser
+    res = keep(res.subtract(box(WIRE.x0, -WIRE.hw, WIRE.z0, BAT.stop + 1, WIRE.hw, 76.5)));                       // rigole sous la pile vers la poignée
     for (const c of cutters()) res = keep(res.subtract(cylSolid(c, .5)));
     res = keep(res.subtract(decorCut(-1, DEC.d))); res = keep(res.subtract(decorCut(1, DEC.d)));             // décors en creux
     res = keep(res.subtract(box(SIGHT.rear.x0 - .2, -SIGHT.rear.hw - .15, SIGHT.z0, SIGHT.rear.x1 + .2, SIGHT.rear.hw + .15, 111)));       // logement de la hausse
@@ -5067,8 +5074,8 @@ function buildComponents(){
   }
   g.add(cyl(C.gach/2, 41, 55, 0, [0,0,52], grey)); g.add(cyl(C.gach*.38, 55, 60, 0, [0,0,52], m(0xe0304a)));
   g.add(cyl(C.rech/2, -W2, -W2 + 11, 1, [62,0,90], grey)); g.add(cyl(C.rech*.37, -W2 - 4, -W2, 1, [62,0,90], blue));
-  g.add(cyl(C.laser/2, 144, 163, 0, [0,0,90], brass));
-  const board = new THREE.Mesh(new THREE.BoxGeometry(18, 1.6, 15), pcb); board.position.set(135, 0, 90); g.add(board);
+  g.add(cyl(C.laser/2, FRONT - 1, 163, 0, [0,0,90], brass));
+  const board = new THREE.Mesh(new THREE.BoxGeometry(18, 1.6, 15), pcb); board.position.set(FRONT - 9.5, 0, 90); g.add(board);   // carte KY-008 derrière la paroi du canon
 
   /* Carte Arduino Nano (18 × 43 mm) debout dans la crosse, prise USB vers le bas */
   const nano = new THREE.Group();
@@ -5189,7 +5196,7 @@ function renderPly(){
 }
 function renderBatt(){
   const g = G(), w = 2*g.CY;
-  $('battNote').textContent = `Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute de la coque, entre un plot de vis (à gauche) et une butée (à droite), bornes côté crosse. Les fils vont vers la Nano. Cavité de ${fmt(w)} mm d'épaisseur : ` + (w >= 18 ? 'la pile y rentre.' : 'trop étroite pour la pile, choisis une plaque de 3 à 6 mm.');
+  $('battNote').textContent = `Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute de la coque, entre un plot de vis (à gauche) et une butée (à droite), bornes côté crosse. Les fils vont vers la Nano. Les 3 fils du laser passent par l’encoche en bas de la butée puis par la rigole creusée dans le plancher, sous la pile, jusqu’à la poignée. Paroi avant du canon : 6 mm, la carte du laser (18 mm) tient derrière, entre la paroi et la butée. Cavité de ${fmt(w)} mm d'épaisseur : ` + (w >= 18 ? 'la pile y rentre.' : 'trop étroite pour la pile, choisis une plaque de 3 à 6 mm.');
 }
 function renderJoin(){
   const g = G();
@@ -5337,7 +5344,8 @@ Montage :
   1. Place les ${NL} LED (dessus), le bouton gachette (avant de la poignee),
      le bouton recharger (face droite) et le module laser (avant).
   2. Loge la carte Arduino Nano dans la poignee ; le cable USB sort par le bas.
-  3. Pose la pile 9 V couchee dans la partie haute, bornes cote crosse (entre le plot de vis et la butee).
+  3. Passe les 3 fils du laser dans l'encoche en bas de la butee, puis dans la rigole du plancher jusqu'a la
+     poignee. Pose ensuite la pile 9 V couchee par-dessus, bornes cote crosse (entre le plot de vis et la butee).
   4. Colle chaque piece arriere et avant (languette dans la rainure), puis assemble les deux demi-coques avec 5 vis M3 de 20 mm : tete de vis dans le lamage de la
      demi-coque droite, la vis se visse dans l'avant-trou du plot de la demi-coque gauche.
   5. Visse la vis de jonction M3 de 30 mm par la droite, dans le bas du canon juste devant
