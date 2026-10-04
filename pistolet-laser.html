@@ -573,6 +573,7 @@ table.vis small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px
             <label class="tog"><input type="checkbox" id="optComp" checked> Composants</label>
             <label class="tog"><input type="checkbox" id="optXray"> Transparent</label>
             <label class="tog"><input type="checkbox" id="optExplode"> <span id="explodeLbl">Vue éclatée</span></label>
+            <label class="tog" id="openRow"><input type="checkbox" id="optOpen"> Avant ouvert (charnière, pour changer la pile)</label>
           </div>
           <div class="vp" id="vp"><div class="vp-msg" id="vpMsg">Chargement du modeleur 3D…</div></div>
           <p class="vp-help">Glisser : tourner · Molette : zoom · Clic droit : déplacer · Repère : <b class="ax-x">X</b> vers l'avant, <b class="ax-y">Y</b> vers la gauche, <b class="ax-z">Z</b> vers le haut</p>
@@ -4749,19 +4750,17 @@ const BAT = {x0:70, L:48.5, H:26.5, T:17.5, z:90, stop:134};   // stop : petit r
 const POCKET = {x0:94, x1:134, hw:12.5, z0:73.5, z1:106.5};
 /* Vis en bas de la crosse (pièces arrière), dans la matière pleine derrière la Nano */
 const GRIP_SCREW = [11.5, 5.5];
-/* Impression 3D : chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) autour de x = SPLIT, assemblées par des queues d'aronde */
-const SPLIT = 80, TNL = 12, SOLIDS = [[185,78.5]];   // vis supplémentaire dans le bloc plein de l'avant
+/* Impression 3D : chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) en x = SPLIT ; l'avant pivote sur une charnière */
+const SPLIT = 85, TNL = 12, SOLIDS = [[185,78.5]];   // vis supplémentaire dans le bloc plein de l'avant
 /* Vis de jonction des 4 pièces : traverse toute l'épaisseur dans la paroi du bas, au milieu des languettes */
 const JOINTS = [[SPLIT + TNL/2, 73.2], [SPLIT + TNL/2, 106.5]];
-/* Jonction avant / arrière : 2 queues d'aronde de l'arrière (en bas : plancher, en haut : dessus du canon), qui
-   s'élargissent vers l'avant (8 → 12 mm), et entre elles une queue de l'avant (24 → 16 mm). Le profil est tracé dans le
-   plan de la coque (x, z) et traverse toute l'épaisseur : l'impression se fait à plat, sans porte-à-faux ni piliers.
-   Les 2 vis de jonction traversent les 2 queues de l'arrière. Jeu de 0,2 mm. */
-const DOVE = (() => {
-  const a = SPLIT, b = SPLIT + TNL, j = .2;
-  return {rear: [[-10,-10],[b,-10],[b,82],[a,78],[a,102],[b,98],[b,130],[-10,130]],
-          cut:  [[-10,-10],[b + j,-10],[b + j,82 + j],[a - j,78 + j],[a - j,102 - j],[b + j,98 - j],[b + j,130],[-10,130]]};
-})();   // 2 vis de jonction : en bas (plancher) et en haut (paroi du dessus)
+/* Charnière avant / arrière : la partie avant pivote vers le bas autour d'un axe (vis M3) placé sous le canon, juste
+   devant la poignée. Pour que tout s'imprime à plat sans support, chaque demi-coque porte une seule chape sur toute son
+   épaisseur : la chape de la demi-coque GAUCHE appartient à l'ARRIÈRE, celle de la demi-coque DROITE à l'AVANT ; la vis
+   d'axe les traverse toutes les deux. En haut, la demi-coque gauche arrière avance de 10 mm (languette) sous la vis de
+   fermeture, qui la relie à la demi-coque droite avant. Tout le reste de la coupe est droit (x = SPLIT). */
+const HINGE = {x:SPLIT, z:64.5, r:5, web:[SPLIT - 9, SPLIT + 9], gap:.25, lock:[SPLIT + 5, 106.5], tab:[SPLIT + 10, 100], open:60};
+  // 2 vis de jonction : en bas (plancher) et en haut (paroi du dessus)
 /* Passage des 3 fils du laser : encoche en bas de la butée de la pile + rigole dans le plancher, sous la pile, jusqu'à la poignée */
 const WIRE = {x0:40, hw:3.5, z0:74.8, notchTop:80};
 /* Bouton recharger (face droite) : assez loin du plot de vis (66, 100) même avec un bouton de Ø 16 à 18 mm */
@@ -5049,7 +5048,7 @@ function visserie(){
     return [[4, `vis M3 × ${len} mm`, 'assemblage des 2 parties (trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche)']];
   }
   return [[6, 'vis M3 × 20 mm', '4 plots de la coque + 1 plot à l’avant du canon + 1 en bas de la crosse (tête dans le lamage, côté droit)'],
-          [2, 'vis M3 × 30 mm', 'vis de jonction des parties avant et arrière : en bas et en haut du canon, devant la poignée'],
+          [2, 'vis M3 × 30 mm', 'l’une sert d’axe à la charnière (sous le canon), l’autre ferme l’avant (en haut du canon) ; ne serre pas trop celle de la charnière'],
           ...(adjOn() ? [[1, 'vis M3 × 16 mm', 'réglage haut / bas du laser, par le dessus du canon'], [1, 'vis M3 × 12 mm', 'réglage gauche / droite du laser, par le côté gauche'],
                          [2, 'petits ressorts (ressort de stylo coupé, Ø 4 à 6 mm) ou morceaux de mousse', 'en face des 2 vis : ils repoussent le support du laser']] : [])];
 }
@@ -5127,18 +5126,22 @@ function buildPrint(){
     for (const [nm, sgn] of [['r', -1], ['l', 1]]) {
       const y0 = sgn < 0 ? -30 : 0, y1 = sgn < 0 ? 0 : 30, yc = sgn*(g.W2 - 2.5);                 // yc : milieu de la paroi latérale
       const half = keep(res.intersect(box(-10, y0, -10, 215, y1, 130)));
-      // jonction en queue d'aronde « puzzle » : profil dessiné dans le plan de la coque et extrudé sur toute son épaisseur,
-      // donc rien en porte-à-faux à l'impression ; les 2 pièces s'emboîtent à plat, l'une sur l'autre.
-      const rearZone = keep(slab(DOVE.rear, y0 - 1, y1 + 1)), frontCut = keep(slab(DOVE.cut, y0 - 1, y1 + 1));
+      // coupe droite + charnière en bas + languette de fermeture en haut (demi-coque gauche)
+      const H = HINGE, sideY = sgn < 0 ? [-g.W2, -H.gap] : [H.gap, g.W2];
+      const lug = (xa, xb) => keep(keep(cylAxis(H.r, sideY[0], sideY[1], 1, [H.x, 0, H.z])).add(box(xa, sideY[0], H.z - H.r, xb, sideY[1], 70.5)));   // chape (oeil + voile)
+      const rearZone = sgn > 0 ? keep(slab([[-10,-10],[SPLIT,-10],[SPLIT,H.tab[1]],[H.tab[0],H.tab[1]],[H.tab[0],130],[-10,130]], y0 - 1, y1 + 1)) : box(-10, y0 - 1, -10, SPLIT, y1 + 1, 130);
+      const frontCut = sgn > 0 ? keep(slab([[-10,-10],[SPLIT + .2,-10],[SPLIT + .2,H.tab[1] - .2],[H.tab[0] + .2,H.tab[1] - .2],[H.tab[0] + .2,130],[-10,130]], y0 - 1, y1 + 1)) : box(-10, y0 - 1, -10, SPLIT + .2, y1 + 1, 130);
       let jHole = null;
-      for (const [jx, jz] of JOINTS) {                                                               // 2 vis de jonction dans les 2 queues d'aronde de l'arrière
-        const h = sgn < 0 ? cylAxis(1.7, y0 - 1, 0, 1, [jx, 0, jz])                                  // passage Ø3,4 à droite
-                          : cylAxis(1.25, 0, y1 + 1, 1, [jx, 0, jz]);                                // avant-trou Ø2,5 à gauche, sur toute l'épaisseur
+      for (const [jx, jz] of [[H.x, H.z], H.lock]) {                                                 // axe de la charnière + vis de fermeture
+        const h = sgn < 0 ? cylAxis(1.7, y0 - 1, 0, 1, [jx, 0, jz])                                  // passage Ø3,4 à droite (l'avant tourne autour de la vis)
+                          : cylAxis(1.25, 0, y1 + 1, 1, [jx, 0, jz]);                                // avant-trou Ø2,5 à gauche
         jHole = jHole ? keep(jHole.add(h)) : h;
       }
-      const rear = keep(half.intersect(rearZone));
+      let rear = keep(half.intersect(rearZone)), front = keep(half.subtract(frontCut));
+      if (sgn > 0) rear = keep(rear.add(lug(H.web[0], SPLIT)));                                        // chape gauche : sur l'arrière
+      else front = keep(front.add(lug(SPLIT + .2, H.web[1])));                                        // chape droite : sur l'avant
       out[nm + 'r'] = toGeometry(keep(rear.subtract(jHole)));
-      out[nm + 'f'] = toGeometry(keep(keep(half.subtract(frontCut)).subtract(jHole)));
+      out[nm + 'f'] = toGeometry(keep(front.subtract(jHole)));
     }
     out.cover = toGeometry(buildCover().cover);
     if (adjOn()) out.holder = toGeometry(buildAdjHolder());
@@ -5285,12 +5288,27 @@ function rebuild(){
   applyExplode(); applyXray();
   vp.dataset.buildMs = Math.round(performance.now() - t0);
 }
+function hingeTurn(o){                                      // tourne un objet autour de l'axe de la charnière (avant ouvert)
+  const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), HINGE.open*Math.PI/180), piv = new THREE.Vector3(HINGE.x, 0, HINGE.z);
+  o.position.sub(piv).applyQuaternion(q).add(piv); o.quaternion.premultiply(q);
+}
 function applyExplode(){
   const n = G().n;
   modelGroup.children.forEach(m => {
-    if (m.userData.part) { m.position.set(0, 0, S.explode ? (m.userData.part === 'cover' ? -18 : m.userData.part === 'holder' ? 30 : 14) : 0); return; }
+    if (m.userData.part) { m.position.set(0, 0, S.explode ? (m.userData.part === 'cover' ? -18 : m.userData.part === 'holder' ? 30 : 14) : 0); m.quaternion.identity(); if (m.userData.part === 'holder' && S.open && !S.explode) hingeTurn(m); return; }
     if (m.userData.k !== undefined) m.position.y = S.explode ? (m.userData.k - (n-1)/2) * 5 : 0;
-    else { m.position.y = S.explode ? (m.userData.half === 'left' ? 24 : -24) : 0; m.position.x = S.explode && m.userData.seg === 'front' ? 16 : 0; }
+    else {
+      m.position.y = S.explode ? (m.userData.half === 'left' ? 24 : -24) : 0; m.position.x = S.explode && m.userData.seg === 'front' ? 16 : 0; m.position.z = 0; m.quaternion.identity();
+      if (S.open && !S.explode && m.userData.seg === 'front') {                                   // l'avant tourne autour de l'axe de la charnière
+        m.position.set(0, 0, 0); hingeTurn(m);
+      }
+    }
+  });
+  $('openRow').hidden = S.proc === 'laser';
+  compGroup.children.forEach(o => {                                                           // composants de l'avant (laser, pile…) : ils suivent l'avant
+    if (!o.userData.p0) { const c = new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()); o.userData.p0 = o.position.clone(); o.userData.q0 = o.quaternion.clone(); o.userData.front = c.x > SPLIT + 5; }
+    o.position.copy(o.userData.p0); o.quaternion.copy(o.userData.q0);
+    if (o.userData.front && S.open && !S.explode) hingeTurn(o);
   });
   compGroup.visible = $('optComp').checked;
 }
@@ -5358,7 +5376,7 @@ function renderJoin(){
     $('joinNote').textContent = `4 vis M3 de ${len} mm. Colle ensemble les couches C1 à C${m} (partie droite) et C${m+1} à C${g.n} (partie gauche), puis visse les 2 parties. Trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche ; les disques percés découpés dans les cadres sont les entretoises : empile-les au-dessus des trous.`;
   } else {
     $('pillarRow').hidden = true;
-    $('joinNote').textContent = '6 vis M3 de 20 mm : 4 plots, 1 plot à l’avant du canon et 1 vis en bas de la crosse. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) et s’assemble comme un puzzle : 2 queues d’aronde de l’arrière (en bas et en haut du canon) prennent en sandwich une queue de l’avant ; pose l’arrière à plat et enfonce l’avant par-dessus (les pièces ne peuvent plus se séparer en tirant). Profil sur toute l’épaisseur : rien en porte-à-faux, pas de piliers. Un point de colle (cyanoacrylate ou PLA) si besoin, puis les 2 vis de jonction (M3 de 30 mm, en bas et en haut du canon, juste devant la poignée) traversent les 2 queues de l’arrière des 2 coques ; avant-trous Ø 2,5 mm sur toute l’épaisseur à gauche. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
+    $('joinNote').textContent = '6 vis M3 de 20 mm : 4 plots, 1 plot à l’avant du canon et 1 vis en bas de la crosse. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) et l’avant pivote vers le bas sur une charnière pour changer la pile. Sous le canon, juste devant la poignée : une chape sur l’arrière gauche et une chape sur l’avant droit, traversées par une vis M3 de 30 mm qui sert d’axe (ne la serre pas trop, l’avant doit tourner). En haut : une vis M3 de 30 mm de fermeture traverse la languette de l’arrière gauche et l’avant droit ; enlève-la pour ouvrir. Chaque chape fait toute l’épaisseur de sa demi-coque : impression à plat, sans support. Avant-trous Ø 2,5 mm à gauche. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
   }
 }
 function refresh(){
@@ -5382,9 +5400,9 @@ function refresh(){
     : `Le téléchargement se débloque quand les ${GROUPS.length} diamètres sont corrects (${st.n} / ${GROUPS.length}).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Numéros bleus : gravure. C${g.n} est dessinée retournée (décors gravés) : pose-la face gravée vers l’extérieur. Colle les couches C1 à C${halfCount()} ensemble, C${halfCount()+1} à C${g.n} ensemble, puis visse les 2 parties (4 vis M3). Les disques percés et les rectangles découpés dans les cadres sont les entretoises et le rebord devant la pile : colle-les sur la plaque, à leur emplacement.`
-    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Emboîte l’arrière et l’avant de chaque coque (queues d’aronde, à plat ; un point de colle si besoin), assemble les 2 coques avec 6 vis M3 de 20 mm, puis serre les 4 pièces ensemble avec les 2 vis de jonction M3 de 30 mm (en bas et en haut du canon). Couvercle : talon sur le plateau. Les viseurs sont imprimés avec les coques, sans supports (profil en rampe).';
+    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Assemble les 2 arrières avec les vis M3 de 20 mm, les 2 avants de même, puis relie-les par la vis d’axe de la charnière (M3 × 30, sous le canon) et la vis de fermeture (M3 × 30, en haut). Couvercle : talon sur le plateau. Les viseurs sont imprimés avec les coques, sans supports (profil en rampe).';
   const prev = $('exportPreview');
-  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 92 × 116 × 15 mm (viseur compris) et les 2 avants 115 × 46 × 15 mm (viseur compris). Plus le couvercle de la crosse (46 × 30 mm). Les viseurs sont intégrés aux coques. Il faut un plateau d’au moins 120 × 120 mm (l’avant fait 115 mm de long : pose-le en diagonale si besoin).</div>';
+  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 95 × 116 × 15 mm au plus (viseur et chape compris) et les 2 avants 115 × 57 × 15 mm au plus (viseur et chape compris). Plus le couvercle de la crosse (46 × 30 mm). Les viseurs sont intégrés aux coques. Il faut un plateau d’au moins 120 × 120 mm (l’avant fait 115 mm de long : pose-le en diagonale si besoin).</div>';
   else prev.innerHTML = '';
   return st;
 }
@@ -5419,6 +5437,7 @@ function laserSVG(preview){
   const size = preview ? 'width="100%"' : `width="${Wd}mm" height="${Hd}mm"`;
   return `<svg xmlns="http://www.w3.org/2000/svg" ${size} viewBox="0 0 ${Wd} ${Hd}"><title>Pistolet laser : ${g.n} couches de ${fmt(g.t)} mm</title>${body}</svg>`;
 }
+const minX = g => (g.computeBoundingBox(), g.boundingBox.min.x), minZ = g => (g.computeBoundingBox(), g.boundingBox.min.z);
 function stlBinary(geo, map){
   const pos = geo.attributes.position, n = pos.count/3;
   const buf = new ArrayBuffer(84 + 50*n), dv = new DataView(buf);
@@ -5463,18 +5482,18 @@ function readme(){
 ======================================
 
 Fichiers :
-  coque_droite_arriere.stl : demi-coque droite, partie arriere avec la crosse (92 x 116 x 15 mm, viseur compris)
-  coque_droite_avant.stl   : demi-coque droite, partie avant (115 x 46 x 15 mm, viseur compris)
+  coque_droite_arriere.stl : demi-coque droite, partie arriere avec la crosse (85 x 116 x 15 mm, viseur compris)
+  coque_droite_avant.stl   : demi-coque droite, partie avant avec la chape de la charniere (115 x 57 x 15 mm, viseur compris)
   coque_gauche_arriere.stl : demi-coque gauche, partie arriere avec la crosse
   coque_gauche_avant.stl   : demi-coque gauche, partie avant
   couvercle_crosse.stl : couvercle a emboiter sous la poignee (talon 46 x 30 x 2 mm + cadre encliquetable)${adjOn() ? '\n  support_laser.stl : support reglable de la tete du laser (rotule + tube), a imprimer debout, tube sur le plateau' : ''}
 Unites : millimetres. Plateau d'impression minimal : 120 x 120 mm.
 Decors en bas-relief : glissiere, stries, fenetre d'ejection, bouche du canon et plaquette
 de crosse striee, creuses de 0,8 mm dans les faces exterieures.
-Chaque demi-coque est coupee vers x = 80 mm et s'assemble comme un puzzle : 2 queues d'aronde de
-l'arriere (en bas et en haut du canon) serrent une queue de l'avant (profil sur toute l'epaisseur,
-impression a plat sans support). Deux vis de jonction M3 de 30 mm
-traversent le canon en bas et en haut (juste devant la poignee) et serrent les 4 pieces ensemble.
+Chaque demi-coque est coupee en x = 85 mm. L'avant pivote vers le bas sur une charniere placee sous
+le canon, juste devant la poignee (chape sur l'arriere gauche + chape sur l'avant droit, axe = vis
+M3 x 30). En haut, une vis M3 x 30 de fermeture relie la languette de l'arriere gauche a l'avant droit.
+Les chapes font toute l'epaisseur de leur demi-coque : impression a plat sans support.
 Logement de la pile agrandi de 5 mm dans les pieces avant, petit rebord devant la pile.
 
 Composants prevus :
@@ -5501,10 +5520,12 @@ Montage :
   2. Loge la carte Arduino Nano dans la poignee ; le cable USB sort par le bas.
   3. Passe les 3 fils du laser au milieu du petit rebord, puis dans la rigole du plancher jusqu'a la
      poignee. Pose ensuite la pile 9 V couchee par-dessus, bornes cote crosse (entre le plot de vis et le rebord).
-  4. Emboite chaque piece arriere et avant a plat (queues d'aronde, un point de colle si besoin), puis assemble les deux demi-coques avec 6 vis M3 de 20 mm (dont 1 en bas de la crosse) : tete de vis dans le lamage de la
-     demi-coque droite, la vis se visse dans l'avant-trou du plot de la demi-coque gauche.
-  5. Visse les 2 vis de jonction M3 de 30 mm par la droite, en bas et en haut du canon juste devant
-     la poignee : elles traversent les queues d'aronde des 2 coques, qui sont alors tenues ensemble.
+  4. Assemble les 2 arrieres ensemble, puis les 2 avants ensemble, avec les vis M3 de 20 mm (dont 1 en bas de la
+     crosse) : tete de vis dans le lamage de la demi-coque droite, la vis se visse dans l'avant-trou de la gauche.
+  5. Charniere : place l'avant contre l'arriere, chape droite (avant) contre chape gauche (arriere), et visse
+     la vis d'axe M3 x 30 par la droite sans trop serrer : l'avant doit pivoter vers le bas. Laisse assez de
+     longueur aux fils du laser. Ferme, puis visse la vis M3 x 30 du haut (fermeture).
+     Changer la pile : devisse la vis du haut, bascule l'avant vers le bas, remplace la pile, referme.
   6. Les viseurs (hausse a l'arriere, guidon a l'avant) font partie des coques.
      La ligne de visee passe 2,6 cm au-dessus du laser : a 10 m, vise un peu au-dessus de la cible.
   7. Emboite le couvercle sous la poignee : le cadre entre dans l'ouverture et se clipse.
@@ -5536,9 +5557,9 @@ async function doExport(){
     const P = lastParts && lastParts.rr ? lastParts : buildPrint();
     r = await saveFile('pistolet_impression_3d.zip', zip([
       {name:'coque_droite_arriere.stl', data: stlBinary(P.rr, (x,y,z) => [x, 110 - z, y + 15])},
-      {name:'coque_droite_avant.stl', data: stlBinary(P.rf, (x,y,z) => [x - SPLIT + .2, 110 - z, y + 15])},
-      {name:'coque_gauche_arriere.stl', data: stlBinary(P.lr, (x,y,z) => [x, z, 15 - y])},
-      {name:'coque_gauche_avant.stl', data: stlBinary(P.lf, (x,y,z) => [x - SPLIT + .2, z - 70, 15 - y])},
+      {name:'coque_droite_avant.stl', data: stlBinary(P.rf, (x,y,z) => [x - minX(P.rf), 110 - z, y + 15])},
+      {name:'coque_gauche_arriere.stl', data: stlBinary(P.lr, (x,y,z) => [x, z - minZ(P.lr), 15 - y])},
+      {name:'coque_gauche_avant.stl', data: stlBinary(P.lf, (x,y,z) => [x - minX(P.lf), z - 70, 15 - y])},
       {name:'couvercle_crosse.stl', data: stlBinary(P.cover, (x,y,z) => [x - 4, y + G().W2, z + 2])},
       ...(P.holder ? [{name:'support_laser.stl', data: stlBinary(P.holder, (x,y,z) => [y + ADJ.r, z - 90 + ADJ.r, x - ADJ.x0])}] : []),
       {name:'LISEZ-MOI.txt', data:readme()}]));
@@ -5558,7 +5579,7 @@ function showMain(){
   $('cadSetup').hidden = true; $('cadMain').hidden = false;
   $('barProc').textContent = PROC[S.proc].name;
   $('explodeLbl').textContent = S.proc === 'laser' ? 'Écarter les couches' : 'Ouvrir les demi-coques';
-  $('optExplode').checked = !!S.explode;
+  $('optExplode').checked = !!S.explode; $('optOpen').checked = !!S.open;
   renderRows(); refresh();
   if (ready) { resize(); rebuild(); }
 }
@@ -5570,6 +5591,7 @@ ROOT.querySelectorAll('[data-ply]').forEach(b => b.addEventListener('click', () 
 $('optComp').addEventListener('change', applyExplode);
 $('optXray').addEventListener('change', applyXray);
 $('optExplode').addEventListener('change', e => { S.explode = e.target.checked; save(); applyExplode(); });
+$('optOpen').addEventListener('change', e => { S.open = e.target.checked; save(); applyExplode(); });
 for (const [k, id] of [['textR', 'txtR'], ['textL', 'txtL']]) { $(id).value = S[k] || ''; $(id).addEventListener('input', e => { S[k] = e.target.value; save(); refresh(); later(); }); }
 $('optAdj').addEventListener('change', e => { S.adjLaser = e.target.checked; save(); refresh(); later(); });
 $('optPillars').addEventListener('change', e => { S.pillars = e.target.checked; save(); refresh(); later(); });
