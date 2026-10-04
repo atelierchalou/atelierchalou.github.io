@@ -631,7 +631,7 @@ RF24 radio(<span class="n">9</span>, <span class="n">10</span>);</pre>
           <section class="panel side-block" id="t-plyBlock" hidden>
             <h3>Épaisseur des plaques</h3>
             <div class="sizes big" role="group" aria-label="Épaisseur des plaques">
-              <button type="button" data-ply="3">3 mm</button><button type="button" data-ply="4">4 mm</button><button type="button" data-ply="5">5 mm</button><button type="button" data-ply="6">6 mm</button><button type="button" data-ply="8">8 mm</button>
+              <button type="button" data-ply="2">2 mm</button><button type="button" data-ply="3">3 mm</button><button type="button" data-ply="4">4 mm</button><button type="button" data-ply="5">5 mm</button><button type="button" data-ply="6">6 mm</button><button type="button" data-ply="8">8 mm</button>
             </div>
             <p class="small-note" id="t-plyNote"></p>
           </section>
@@ -878,7 +878,7 @@ RF24 radio(<span class="n">9</span>, <span class="n">10</span>);</pre>
           <section class="panel side-block" id="r-plyBlock" hidden>
             <h3>Épaisseur des plaques</h3>
             <div class="sizes big" role="group" aria-label="Épaisseur des plaques">
-              <button type="button" data-ply="3">3 mm</button><button type="button" data-ply="4">4 mm</button><button type="button" data-ply="5">5 mm</button><button type="button" data-ply="6">6 mm</button><button type="button" data-ply="8">8 mm</button>
+              <button type="button" data-ply="2">2 mm</button><button type="button" data-ply="3">3 mm</button><button type="button" data-ply="4">4 mm</button><button type="button" data-ply="5">5 mm</button><button type="button" data-ply="6">6 mm</button><button type="button" data-ply="8">8 mm</button>
             </div>
             <p class="small-note" id="r-plyNote"></p>
           </section>
@@ -1128,7 +1128,7 @@ RF24 radio(<span class="n">9</span>, <span class="n">10</span>);
           <section class="panel side-block" id="l-plyBlock" hidden>
             <h3>Épaisseur des plaques</h3>
             <div class="sizes big" role="group" aria-label="Épaisseur des plaques">
-              <button type="button" data-ply="3">3 mm</button><button type="button" data-ply="4">4 mm</button><button type="button" data-ply="5">5 mm</button><button type="button" data-ply="6">6 mm</button><button type="button" data-ply="8">8 mm</button>
+              <button type="button" data-ply="2">2 mm</button><button type="button" data-ply="3">3 mm</button><button type="button" data-ply="4">4 mm</button><button type="button" data-ply="5">5 mm</button><button type="button" data-ply="6">6 mm</button><button type="button" data-ply="8">8 mm</button>
             </div>
             <p class="small-note" id="l-plyNote"></p>
           </section>
@@ -3023,8 +3023,10 @@ const REMOTE_BOM = {key:'bom-telecommande-v1', cadKey:'telecommande-modeleur-v1'
     {title:'Câblage, visserie et matière', rows:[
       R_('fil', 1, 'Fil souple de câblage 0,25 mm²', 'environ 1 m, plusieurs couleurs (ou fils Dupont)', ''),
       R_('mousse', 1, 'Mousse adhésive double face', 'pour caler la pile et la radio', ''),
-      R_('vis', 4, 'Vis M3 × 16 mm', 'ferment le couvercle', '', {}),
-      R_('bois', 1, 'Plaque de contreplaqué 3 à 8 mm', 'environ 300 × 200 mm', '', {proc:'laser'}),
+      R_('vis', 4, 'Vis M3 × 16 mm', 'ferment le couvercle', '', {proc:'print'}),
+      R_('bois', 1, 'Plaque de contreplaqué 2 à 8 mm', 'environ 340 × 200 mm : 6 planches (fond, dessus, 4 côtés)', '', {proc:'laser'}),
+      R_('colle', 1, 'Colle à bois', 'pour emboîter les 4 côtés et le fond', '', {proc:'laser'}),
+      R_('colliers', 2, 'Colliers de câble 2,5 mm', 'maintiennent la pile dans le fond', '', {proc:'laser'}),
       R_('pla', 1, 'Filament PLA', 'environ 90 g', '', {proc:'print'})]}
   ]};
 const ROBOT_BASE_ROWS = [
@@ -3051,7 +3053,7 @@ const ROBOT_BOM = {key:'bom-robot-v1', cadKey:'robot-modeleur-v1', title:'Nomenc
       R_('collier', 8, 'Colliers de câble 2,5 mm', 'moteurs et support de piles', '', {proc:'print'}),
       R_('colliers', 14, 'Colliers de câble 2,5 mm', 'moteurs, support de piles et Nano', '', {proc:'laser'}),
       R_('entr', 4, 'Entretoises M3 de 6 mm + vis M3 × 8', 'carte L298N', ''),
-      R_('bois', 1, 'Plaque de contreplaqué 3 à 8 mm', 'environ 600 × 300 mm', '', {proc:'laser'}),
+      R_('bois', 1, 'Plaque de contreplaqué 2 à 8 mm', 'environ 600 × 300 mm', '', {proc:'laser'}),
       R_('pla', 1, 'Filament PLA', 'environ 160 g', '', {proc:'print'})]}
   ]};
 const LINE_BOM = {key:'bom-ligne-v1', cadKey:'robot-ligne-modeleur-v1', title:'Nomenclature : robot suiveur de ligne',
@@ -3069,7 +3071,7 @@ const LINE_BOM = {key:'bom-ligne-v1', cadKey:'robot-ligne-modeleur-v1', title:'N
       R_('collier', 8, 'Colliers de câble 2,5 mm', 'moteurs et support de piles', '', {proc:'print'}),
       R_('colliers', 14, 'Colliers de câble 2,5 mm', 'moteurs, support de piles et Nano', '', {proc:'laser'}),
       R_('entr', 4, 'Entretoises M3 de 6 mm + vis M3 × 8', 'carte L298N', ''),
-      R_('bois', 1, 'Plaque de contreplaqué 3 à 8 mm', 'environ 600 × 300 mm', '', {proc:'laser'}),
+      R_('bois', 1, 'Plaque de contreplaqué 2 à 8 mm', 'environ 600 × 300 mm', '', {proc:'laser'}),
       R_('pla', 1, 'Filament PLA', 'environ 170 g', '', {proc:'print'})]}
   ]};
 
@@ -3184,27 +3186,46 @@ const rmHoles = S => {                                      // trous du dessus :
   if (d('sw') > 0) out.push([...RM_POS.sw, d('sw')]);
   return out;
 };
-const rmLayers = t => { const n = Math.max(3, Math.round(RM.H/t)); return {n, t, H:n*t, pilotN:Math.max(1, Math.min(n - 2, Math.ceil(14/t)))}; };
+/* Laser : boîte de 6 planches (fond, dessus, 4 côtés) assemblées par des dents imbriquées. */
+const rmBox = t => ({t, H:Math.max(RM.H, 2*t + 24), dx:Math.min(0, RM.L - t - RM_NANO.w - 1 - RM_NANO.x0)});
+const fingerSegs = (a, b, t) => {                        // nombre impair de tronçons : pairs = paroi, impairs = planche voisine
+  const len = b - a, target = Math.max(8, 3*t); let n = Math.max(3, Math.round(len/target)); if (n % 2 === 0) n++;
+  return Array.from({length:n}, (_, i) => [a + len*i/n, a + len*(i + 1)/n]);
+};
+const MAT = (c0, c1, c2, tr) => [...c0, 0, ...c1, 0, ...c2, 0, ...tr, 1];
 function rmLaser(S){
-  const t = S.ply, g = rmLayers(t), out = [];
-  const outer = rrect(0, -RM.W/2, RM.L, RM.W/2, RM.R);
-  let cavity = inset(outer, RM.WALLL);
-  RM_POSTS.forEach(([x, y]) => { cavity = sub(cavity, circ(x, y, 4.5)); });
-  for (let k = 0; k < g.n; k++) {
-    const z0 = k*t, z1 = z0 + t;
-    let cs, name;
-    if (k === 0) { cs = outer; name = 'Fond'; }
-    else if (k === g.n - 1) {
-      cs = outer; name = 'Dessus';
-      for (const [x, y, d] of rmHoles(S)) cs = sub(cs, circ(x, y, d/2));
-      for (const [x, y] of RM_POSTS) cs = sub(cs, circ(x, y, 1.7));
-    } else {
-      cs = sub(outer, cavity); name = 'Cadre ' + k;
-      if (z1 > RM_USB.z0 && z0 < RM_USB.z1) cs = sub(cs, rect(RM_USB.x0, -RM.W/2 - 1, RM_USB.x1, -RM.W/2 + RM.WALLL + .1));   // passage du câble USB
-      if (k > g.n - 2 - g.pilotN) for (const [x, y] of RM_POSTS) cs = sub(cs, circ(x, y, 1.3, 32));                                   // avant-trous des vis
-    }
-    out.push({id:'c' + k, name, cs, t, place:m => keep(m.translate([0, 0, z0])), layer:k, flat:true});
-  }
+  const {L, W} = RM, t = S.ply, {H, dx} = rmBox(t), h = W/2, out = [];
+  const xS = fingerSegs(0, L, t), yS = fingerSegs(-h + t, h - t, t), zS = fingerSegs(0, H, t);
+  const odd = a => a.filter((_, i) => i % 2 === 1);
+  /* parois avant et arrière (x, z) : elles tiennent tous les coins */
+  const wall = (usb) => {
+    let cs = rect(0, 0, L, H);
+    for (const [s0, s1] of odd(zS)) cs = sub(cs, rect(0, s0, t, s1), rect(L - t, s0, L, s1));
+    for (const [s0, s1] of odd(xS)) cs = sub(cs, rect(s0, 0, s1, t), rect(s0, H - t, s1, H));
+    if (usb) cs = sub(cs, rect(RM_USB.x0 + dx, t + 1, RM_USB.x1 + dx, t + 9.5));                    // passage du câble USB
+    return cs;
+  };
+  out.push({id:'usb', name:'Paroi USB', cs:wall(true), t, flat:false, place:m => keep(m.transform(MAT([1, 0, 0], [0, 0, 1], [0, -1, 0], [0, -h + t, 0])))});
+  out.push({id:'arriere', name:'Paroi arrière', cs:wall(false), t, flat:false, place:m => keep(m.transform(MAT([-1, 0, 0], [0, 0, 1], [0, 1, 0], [L, h - t, 0])))});
+  /* côtés gauche et droit (y, z) */
+  let side = rect(-h + t, 0, h - t, H);
+  for (const [s0, s1] of odd(zS)) side = add(side, rect(-h, s0, -h + t, s1), rect(h - t, s0, h, s1));
+  for (const [s0, s1] of odd(yS)) side = sub(side, rect(s0, 0, s1, t), rect(s0, H - t, s1, H));
+  out.push({id:'gauche', name:'Côté gauche', cs:side, t, flat:false, place:m => keep(m.transform(MAT([0, 1, 0], [0, 0, 1], [1, 0, 0], [0, 0, 0])))});
+  out.push({id:'droit', name:'Côté droit', cs:side, t, flat:false, place:m => keep(m.transform(MAT([0, -1, 0], [0, 0, 1], [-1, 0, 0], [L, 0, 0])))});
+  /* fond et dessus (x, y) */
+  const plate = () => {
+    let cs = rect(t, -h + t, L - t, h - t);
+    for (const [s0, s1] of odd(xS)) cs = add(cs, rect(s0, -h, s1, -h + t), rect(s0, h - t, s1, h));
+    for (const [s0, s1] of odd(yS)) cs = add(cs, rect(0, s0, t, s1), rect(L - t, s0, L, s1));
+    return cs;
+  };
+  let fond = plate();
+  for (const xt of [RM_BAT.x0 + 10, RM_BAT.x0 + RM_BAT.L - 10]) for (const yc of [RM_BAT.y0 - 3, RM_BAT.y0 + RM_BAT.W + 3]) fond = sub(fond, rect(xt - 2.5, yc - 1.5, xt + 2.5, yc + 1.5));   // colliers de la pile
+  out.push({id:'fond', name:'Fond', cs:fond, t, flat:true, place:m => keep(m.translate([0, 0, 0]))});
+  let dessus = plate();
+  for (const [x, y, d] of rmHoles(S)) dessus = sub(dessus, circ(x, y, d/2));
+  out.push({id:'dessus', name:'Dessus', cs:dessus, t, flat:true, place:m => keep(m.translate([0, 0, H - t]))});
   return out;
 }
 function rmPrint(S){
@@ -3323,7 +3344,7 @@ function rbPrint(S){
 }
 const dsw = S => num(S.holes.sw), dled = S => num(S.holes.led);
 
-return {RM, RM_POS, RM_POSTS, RM_USB, RM_NANO, RM_BAT, rmLayers, rmLaser, rmPrint, RB, RB_TT, RB_SONAR, RB_SW, RB_LED, RB_MODE, RB_LINE, RB_CASTER, RB_NANO_TOP, RB_NANO_BOX, RB_TOPHOLES, rbLaserGeo, rbPrintGeo, rbLaser, rbPrint, flush, keep, num};
+return {RM, RM_POS, RM_POSTS, RM_USB, RM_NANO, RM_BAT, rmBox, rmLaser, rmPrint, RB, RB_TT, RB_SONAR, RB_SW, RB_LED, RB_MODE, RB_LINE, RB_CASTER, RB_NANO_TOP, RB_NANO_BOX, RB_TOPHOLES, rbLaserGeo, rbPrintGeo, rbLaser, rbPrint, flush, keep, num};
 }
 
 /* ================= Modeleur 3D : télécommande et robot (découpe laser ou impression 3D) ================= */
@@ -3595,7 +3616,7 @@ function refresh(){
     : `Le téléchargement se débloque quand les ${GROUPS.length} diamètres sont corrects (${st.n} / ${GROUPS.length}).`;
   $('exportNote').textContent = info.exportNote;
   const prev = $('exportPreview');
-  if (st.ready) { if (S.proc === 'laser') { try { const pl = cfg.laser(S, GEO); prev.innerHTML = laserSheet(pl, cfg.title, true); GEO.flush(); } catch(e) { console.error(e); } } else prev.innerHTML = `<div class="stlinfo">${info.stlInfo}</div>`; }
+  if (st.ready) { if (S.proc === 'laser') { try { const pl = cfg.laser(S, GEO); prev.innerHTML = laserSheet(pl, cfg.title, true, cfg.sheetW || 600); GEO.flush(); } catch(e) { console.error(e); } } else prev.innerHTML = `<div class="stlinfo">${info.stlInfo}</div>`; }
   else prev.innerHTML = '';
   return st;
 }
@@ -3607,7 +3628,7 @@ async function doExport(){
   try {
     if (S.proc === 'laser') {
       const pl = cfg.laser(S, GEO);
-      const svg = laserSheet(pl, cfg.title + ' : plan de découpe', false);
+      const svg = laserSheet(pl, cfg.title + ' : plan de découpe', false, cfg.sheetW || 600);
       GEO.flush();
       r = await saveFile(`${cfg.file}_decoupe_laser_${String(S.ply).replace('.', ',')}mm.svg`, svg);
     } else {
@@ -3668,8 +3689,9 @@ const CadHelp = {
 const fmtN = n => (Math.round(n*100)/100).toString().replace('.', ',');
 
 /* ---------- Télécommande ---------- */
+const G_BOX = t => ({H:Math.max(30, 2*t + 24)});
 const REMOTE_CAD = {
-  key:'telecommande-modeleur-v1', title:'Boîtier de la télécommande', file:'telecommande',
+  key:'telecommande-modeleur-v1', title:'Boîtier de la télécommande', file:'telecommande', sheetW:340,
   comps:{
     dir:{label:'Boutons de direction (×4)', sizes:[6,7,12,16], min:4, max:16, def:12, ref:v => `bouton poussoir à écrou : le filetage fait Ø ${fmtN(v)} mm`},
     turbo:{label:'Bouton turbo', sizes:[7,12,16,19], min:4, max:19, def:16, ref:v => `gros bouton poussoir : le filetage fait Ø ${fmtN(v)} mm`},
@@ -3684,9 +3706,9 @@ const REMOTE_CAD = {
   print:(S, G) => G.rmPrint(S),
   components(THREE, S, G){
     const H = CadHelp.mats(THREE), g = new THREE.Group(), B = (m, ...a) => CadHelp.box(THREE, m, ...a), Z = (m, ...a) => CadHelp.cylZ(THREE, m, ...a);
-    const laser = S.proc === 'laser', top = laser ? G.rmLayers(S.ply).H : G.RM.H, fl = laser ? S.ply : G.RM.FLOOR;
+    const laser = S.proc === 'laser', top = laser ? G.rmBox(S.ply).H : G.RM.H, fl = laser ? S.ply : G.RM.FLOOR, dx = laser ? G.rmBox(S.ply).dx : 0;
     const d = k => Math.max(1, G.num(S.comp[k]));
-    const N = G.RM_NANO, Bt = G.RM_BAT;
+    const N = Object.assign({}, G.RM_NANO, {x0:G.RM_NANO.x0 + dx}), Bt = G.RM_BAT;
     g.add(B(H.pcb, N.x0, N.y0, fl + 1, N.x0 + N.w, N.y0 + N.l, fl + 2.6));
     g.add(B(H.metal, N.x0 + 4, N.y0 - 3, fl + 2.6, N.x0 + N.w - 4, N.y0 + 4, fl + 6.5));
     g.add(B(H.black, N.x0 + 3, N.y0 + 14, fl + 2.6, N.x0 + N.w - 3, N.y0 + 26, fl + 4.2));
@@ -3701,24 +3723,23 @@ const REMOTE_CAD = {
     const [sx, sy] = G.RM_POS.sw; g.add(Z(H.silver, d('sw')/2 - .3, sx, sy, top - 10, top + 2)); g.add(B(H.black, sx - 1.5, sy - 4, top + 2, sx + 1.5, sy + 4, top + 7));
     return g;
   },
-  explode:(u, S) => S.proc === 'laser' ? [0, 0, (u.idx || 0)*9] : [0, 0, u.part === 'couvercle' ? 40 : 0],
+  explode:(u, S) => S.proc === 'laser' ? ({fond:[0, 0, -22], dessus:[0, 0, 26], usb:[0, -34, 0], arriere:[0, 34, 0], gauche:[-34, 0, 0], droit:[34, 0, 0]}[u.part] || [0, 0, 0]) : [0, 0, u.part === 'couvercle' ? 40 : 0],
   info(S){
-    const laser = S.proc === 'laser', L = laser ? this._lay(S) : null, t = S.ply;
-    const lenScrew = laser ? '16' : '16';
+    const laser = S.proc === 'laser', B = laser ? G_BOX(S.ply) : null, t = S.ply;
+    const lenScrew = '16';
     return {
-      ply: laser ? `Plaques de ${t} mm : ${L.n} couches empilées et collées, soit ${fmtN(L.H)} mm de hauteur. Plus c'est fin, plus il y a de plaques à coller.` : '',
+      ply: laser ? `Planches de ${t} mm : le boîtier est fait de 6 planches (fond, dessus et 4 côtés) qui s'emboîtent par des dents, hauteur ${fmtN(B.H)} mm.` : '',
       assembly: laser
-        ? `Colle les cadres entre le <b>fond</b> et le <b>dessus</b> en suivant la numérotation, puis ferme avec 4 vis M3. L'encoche d'un des cadres laisse passer le câble USB de la Nano.`
+        ? `Emboîte les 4 côtés et le <b>fond</b> par leurs dents (un point de colle à bois sur chaque dent). Fixe la pile avec 2 colliers dans les fentes du fond, câble, puis pose le <b>dessus</b> sans le coller pour pouvoir changer la pile. La <b>paroi USB</b> a une encoche pour le câble de la Nano.`
         : `Pose la Nano, la pile 9 V et la radio dans la <b>cuve</b>, relie les fils, puis ferme avec le <b>couvercle</b> : 4 vis M3. La prise USB de la Nano est accessible par l'encoche de la paroi.`,
-      vis:[[4, `Vis M3 × ${lenScrew} mm`, laser ? 'dans les avant-trous des cadres du haut' : 'dans les plots de la cuve (avant-trous Ø 2,6 mm)'], [5, 'Boutons poussoirs', '4 directions + 1 turbo'], [1, 'Interrupteur', 'marche / arrêt'], [1, 'LED + résistance 220 Ω', 'turbo']],
+      vis:[laser ? [1, 'Colle à bois', 'sur les dents ; le dessus reste amovible'] : [4, `Vis M3 × ${lenScrew} mm`, 'dans les plots de la cuve (avant-trous Ø 2,6 mm)'], [5, 'Boutons poussoirs', '4 directions + 1 turbo'], [1, 'Interrupteur', 'marche / arrêt'], [1, 'LED + résistance 220 Ω', 'turbo']],
       visNote:'Le module radio nRF24L01 et la pile 9 V se fixent avec un peu de mousse adhésive double face.',
-      layout: laser ? `Les ${L.n} plaques sont rangées sur une planche d'environ 600 mm de large.` : 'La cuve se pose sur son fond, le couvercle à l’envers : aucun support nécessaire.',
-      nPlates: laser ? L.n : 2, nStl: 2,
+      layout: laser ? `Les 6 planches tiennent sur une plaque d'environ 340 × 200 mm.` : 'La cuve se pose sur son fond, le couvercle à l’envers : aucun support nécessaire.',
+      nPlates: laser ? 6 : 2, nStl: 2,
       exportNote: laser ? 'Fichier SVG : traits rouges de 0,1 mm = découpe. Dans le logiciel de la découpeuse, vérifie que l’échelle est bien 1:1 (mm).' : 'Imprime en PLA, hauteur de couche 0,2 mm, 3 parois, 15 % de remplissage, sans support.',
       stlInfo: 'cuve + couvercle (pose le couvercle face plane sur le plateau)'
     };
   },
-  _lay(S){ const n = Math.max(3, Math.round(30/S.ply)); return {n, H:n*S.ply}; },
   readme(S){
     const d = k => S.holes[k];
     return `BOITIER DE LA TELECOMMANDE (impression 3D)
