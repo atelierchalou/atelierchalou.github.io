@@ -340,6 +340,8 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:.01em}
 .ampbar i.hot{background:#ff4d61}
 
 #c-cab,#u-cab{min-width:780px}
+.txt-in{display:flex;align-items:center;gap:10px;font-size:14px;margin:6px 0}
+.txt-in input{flex:1;min-width:0;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);text-transform:uppercase}
 table.vis{width:100%;border-collapse:collapse;font-size:14px;margin:2px 0 6px}
 table.vis td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:top}
 table.vis tr:first-child td{border-top:0}
@@ -594,6 +596,13 @@ table.vis small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px
           <section class="panel side-block" id="extraBlock">
             <h3>Viseur, couvercle de crosse et décors</h3>
             <p class="small-note" id="extraNote"></p>
+          </section>
+
+          <section class="panel side-block" id="textBlock">
+            <h3>Texte en bas-relief au-dessus de la crosse</h3>
+            <label class="txt-in">Côté droit <input id="txtR" maxlength="16" autocomplete="off" placeholder="ex. LASER 1"></label>
+            <label class="txt-in">Côté gauche <input id="txtL" maxlength="16" autocomplete="off" placeholder="ex. TEAM BLEUE"></label>
+            <p class="small-note" id="textNote"></p>
           </section>
 
           <section class="panel side-block" id="visBlock">
@@ -4719,6 +4728,7 @@ import ManifoldModule from 'manifold-3d';
    Origine : arrière du pistolet (X = 0), bas de la poignée (Z = 0), milieu de l'épaisseur (Y = 0). */
 const NL = window.NB.p;                                   // 3 ou 5 LED de munitions
 const LEDXS = NL === 5 ? [20, 29, 38, 47, 56] : [24, 36, 48];   // entre les plots de vis (x 13 et 66)
+const LEDZ = 104.5;                                                // LED sur la face droite, en haut (au-dessus du bouton recharger)
 const PROFILE = [[0,70],[12,70],[4,0],[50,0],[55,32],[55,70],[160,70],[160,106],[156,110],[6,110],[0,104]];
 const FRONT = 154;   // fond de la cavité : paroi avant (canon) de 6 mm, la carte du laser KY-008 tient derrière
 const CAVITY  = [[8,76],[17,76],[17,-1],[44,-1],[44,76],[FRONT,76],[FRONT,104],[8,104]];
@@ -4763,7 +4773,7 @@ const PROC = {
 
 /* ================= État ================= */
 const KEY = 'pistolet-cao-v2';
-let S = {proc:null, started:false, ply:3, holes:{led:'',gach:'',rech:'',laser:''}, comp:{led:5,gach:12,rech:7,laser:6}, explode:false, pillars:true};
+let S = {proc:null, started:false, ply:3, holes:{led:'',gach:'',rech:'',laser:''}, comp:{led:5,gach:12,rech:7,laser:6}, explode:false, pillars:true, textR:'', textL:''};
 try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) { S = Object.assign(S, s); S.comp = Object.assign({led:5,gach:12,rech:7,laser:6}, s.comp); } } catch(e) {}
 if (S.comp.led > COMPS.led.max) S.comp.led = COMPS.led.max;   // 5 LED : Ø 8 mm au plus
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
@@ -4782,7 +4792,7 @@ function G(){
 function HOLES(){
   const g = G();
   return [
-    ...LEDXS.map((x, k) => ({id:'led' + (k + 1), comp:'led', p:[x,0,110], dir:'-Z', depth:8})),
+    ...LEDXS.map((x, k) => ({id:'led' + (k + 1), comp:'led', p:[x,-g.W2,LEDZ], dir:'+Y', depth:(g.W2 - g.CY) + 2})),
     {id:'gach', comp:'gach', p:[55,0,52],        dir:'-X', depth:13},
     {id:'rech', comp:'rech', p:[RECH[0],-g.W2,RECH[1]], dir:'+Y', depth:(g.W2 - g.CY) + 2},
     {id:'laser',comp:'laser',p:[160,0,90],       dir:'-X', depth:16}
@@ -4849,7 +4859,7 @@ function layerPlan(k, ext){
 }
 
 /* ================= Viseur, couvercle de la crosse et décors en bas-relief ================= */
-const SIGHT = {z0:110, zb:111, top:117, notch:3.6, blade:2.4,
+const SIGHT = {z0:110, zb:111, top:116, notch:3.6, blade:2.4,
   rear:{x0:6.5, x1:14.5, hw:5},          // hausse : base 8 × 10 mm, 2 oreilles, cran de 3,6 mm
   front:{x0:144, x1:152, hw:4}};         // guidon : base 8 × 8 mm, lame de 2,4 mm
 /* Pied en T sous chaque viseur : il descend dans une encoche du dessus, coupée en deux par le plan
@@ -4865,7 +4875,7 @@ function decorLines(side){
   const L = [], seg = (a, b) => L.push([a, b]);
   const rr = (num(S.holes.rech) || S.comp.rech)/2 + 2;
   if (side < 0) { seg([2,92],[RECH[0] - rr,92]); seg([RECH[0] + rr,92],[158,92]); } else seg([2,92],[158,92]);   // glissière
-  for (let i = 0; i < 5; i++) seg([20 + i*3, 96], [20 + i*3, 107]);                                     // stries arrière de la glissière
+  if (side > 0) for (let i = 0; i < 5; i++) seg([20 + i*3, 96], [20 + i*3, 107]);   // (côté droit : place des LED)                                     // stries arrière de la glissière
   for (let i = 0; i < 4; i++) seg([120 + i*3, 96], [120 + i*3, 107]);                                   // stries avant
   const EJ = [[92,96],[116,96],[116,106],[92,106]]; EJ.forEach((p, i) => seg(p, EJ[(i+1) % 4]));         // fenêtre d'éjection
   seg([146,72],[146,108]);                                                                              // bouche du canon
@@ -4878,8 +4888,58 @@ function segPoly([a, b], w){
   const dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz), ux = dx/l*w/2, uz = dz/l*w/2;
   return [[a[0]-ux-uz, a[1]-uz+ux], [b[0]+ux-uz, b[1]+uz+ux], [b[0]+ux+uz, b[1]+uz-ux], [a[0]-ux+uz, a[1]-uz-ux]];
 }
+/* ================= Texte en bas-relief au-dessus de la crosse (police à traits, grille 4 × 6) ================= */
+const FONT = (() => {
+  const O = [[1,0],[0,1],[0,5],[1,6],[3,6],[4,5],[4,1],[3,0],[1,0]], P = [[0,0],[0,6],[3,6],[4,5],[4,4],[3,3],[0,3]];
+  return {
+    A:[[[0,0],[0,4],[2,6],[4,4],[4,0]],[[0,3],[4,3]]], B:[[[0,0],[0,6],[3,6],[4,5],[4,4],[3,3],[0,3]],[[3,3],[4,2],[4,1],[3,0],[0,0]]],
+    C:[[[4,5],[3,6],[1,6],[0,5],[0,1],[1,0],[3,0],[4,1]]], D:[[[0,0],[0,6],[2,6],[4,4],[4,2],[2,0],[0,0]]],
+    E:[[[4,6],[0,6],[0,0],[4,0]],[[0,3],[3,3]]], F:[[[4,6],[0,6],[0,0]],[[0,3],[3,3]]],
+    G:[[[4,5],[3,6],[1,6],[0,5],[0,1],[1,0],[3,0],[4,1],[4,3],[2,3]]], H:[[[0,0],[0,6]],[[4,0],[4,6]],[[0,3],[4,3]]],
+    I:[[[1,6],[3,6]],[[2,6],[2,0]],[[1,0],[3,0]]], J:[[[4,6],[4,1],[3,0],[1,0],[0,1]]],
+    K:[[[0,0],[0,6]],[[4,6],[0,2]],[[1.3,3.3],[4,0]]], L:[[[0,6],[0,0],[4,0]]],
+    M:[[[0,0],[0,6],[2,3],[4,6],[4,0]]], N:[[[0,0],[0,6],[4,0],[4,6]]], O:[O], P:[P],
+    Q:[O,[[2.5,1.5],[4,0]]], R:[P,[[2,3],[4,0]]],
+    S:[[[4,5],[3,6],[1,6],[0,5],[0,4],[1,3],[3,3],[4,2],[4,1],[3,0],[1,0],[0,1]]], T:[[[0,6],[4,6]],[[2,6],[2,0]]],
+    U:[[[0,6],[0,1],[1,0],[3,0],[4,1],[4,6]]], V:[[[0,6],[2,0],[4,6]]], W:[[[0,6],[1,0],[2,3],[3,0],[4,6]]],
+    X:[[[0,6],[4,0]],[[0,0],[4,6]]], Y:[[[0,6],[2,3],[4,6]],[[2,3],[2,0]]], Z:[[[0,6],[4,6],[0,0],[4,0]]],
+    '0':[O,[[1,1],[3,5]]], '1':[[[1,5],[2,6],[2,0]],[[1,0],[3,0]]], '2':[[[0,5],[1,6],[3,6],[4,5],[4,4],[0,0],[4,0]]],
+    '3':[[[0,5],[1,6],[3,6],[4,5],[4,4],[3,3],[4,2],[4,1],[3,0],[1,0],[0,1]],[[1.5,3],[3,3]]], '4':[[[3,0],[3,6],[0,2],[4,2]]],
+    '5':[[[4,6],[0,6],[0,3],[3,3],[4,2],[4,1],[3,0],[0,0]]], '6':[[[4,5],[3,6],[1,6],[0,5],[0,1],[1,0],[3,0],[4,1],[4,2],[3,3],[0,3]]],
+    '7':[[[0,6],[4,6],[1,0]]], '8':[[[1,3],[0,4],[0,5],[1,6],[3,6],[4,5],[4,4],[3,3],[1,3],[0,2],[0,1],[1,0],[3,0],[4,1],[4,2],[3,3]]],
+    '9':[[[0,1],[1,0],[3,0],[4,1],[4,5],[3,6],[1,6],[0,5],[0,4],[1,3],[4,3]]],
+    '-':[[[1,3],[3,3]]], '.':[[[2,0],[2,.6]]], '!':[[[2,6],[2,2]],[[2,.6],[2,0]]], "'":[[[2,6],[2,4.5]]],
+    '+':[[[2,1.5],[2,4.5]],[[.5,3],[3.5,3]]], '/':[[[0,0],[4,6]]], ':':[[[2,4.2],[2,3.6]],[[2,1.2],[2,.6]]], ' ':[]
+  };
+})();
+const TXT = {x0:6, x1:44, z0:74, z1:89, maxH:9, minH:4, adv:5.6};   // zone au-dessus de la crosse, sous la ligne de glissière
+const cleanText = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().split('').filter(c => FONT[c]).join('').replace(/^ +| +$/g, '');
+function textLayout(raw){
+  let t = cleanText(raw), W = TXT.x1 - TXT.x0, cut = false;
+  const nMax = Math.floor((W/(TXT.minH/6) + 1.6)/TXT.adv);
+  if (t.length > nMax) { t = t.slice(0, nMax).trimEnd(); cut = true; }
+  if (!t) return {t, segs:[], H:0, cut};
+  const n = t.length, s = Math.min(TXT.maxH/6, W/(n*TXT.adv - 1.6)), H = 6*s, w = Math.max(.8, Math.min(1.2, H*.14));
+  const width = (n*TXT.adv - 1.6)*s, x0 = (TXT.x0 + TXT.x1)/2 - width/2, z0 = (TXT.z0 + TXT.z1)/2 - H/2, segs = [];
+  [...t].forEach((c, i) => FONT[c].forEach(pl => { for (let k = 1; k < pl.length; k++) {
+    const a = pl[k-1], b = pl[k]; if (a[0] === b[0] && a[1] === b[1]) continue;
+    segs.push([[x0 + (i*TXT.adv + a[0])*s, z0 + a[1]*s], [x0 + (i*TXT.adv + b[0])*s, z0 + b[1]*s], w]);
+  } }));
+  return {t, segs, H, cut};
+}
+function textSegs(side){                  // côté gauche : texte retourné pour se lire de l'extérieur
+  const L = textLayout(side < 0 ? S.textR : S.textL).segs, c = TXT.x0 + TXT.x1;
+  return side < 0 ? L : L.map(([a, b, w]) => [[c - a[0], a[1]], [c - b[0], b[1]], w]);
+}
+function renderText(){
+  const parts = [['R', 'droit', S.textR], ['L', 'gauche', S.textL]].map(([k, nm, v]) => {
+    const L = textLayout(v); if (!L.t) return `côté ${nm} : pas de texte`;
+    return `côté ${nm} : « ${L.t} », lettres de ${fmt(Math.round(L.H*10)/10)} mm` + (L.cut ? ' (texte trop long : coupé)' : '');
+  });
+  $('textNote').textContent = `${parts.join(' · ')}. Lettres majuscules, chiffres et - . ! ' + / : (les accents sont enlevés). ` + (S.proc === 'laser' ? 'Gravé sur C1 (droite) et sur la dernière couche (gauche).' : `Creusé de ${fmt(DEC.d)} mm dans la face extérieure.`);
+}
 function decorCut(side, depth){          // rainures des décors sur une face
-  const g = G(), polys = decorLines(side).map(s => ccw(segPoly(s, DEC.w)));
+  const g = G(), polys = decorLines(side).concat(textSegs(side)).map(s => ccw(segPoly(s, s[2] || DEC.w)));
   const y0 = side < 0 ? -g.W2 - 1 : g.W2 - depth, y1 = side < 0 ? -g.W2 + depth : g.W2 + 1;
   return keep(keep(keep(Manifold.extrude(polys, y1 - y0)).rotate([90,0,0])).translate([0, y1, 0]));
 }
@@ -4904,6 +4964,15 @@ function buildSights(){
   let front = keep(box(F.x0, -F.hw, SIGHT.z0, F.x1, F.hw, SIGHT.zb).add(box(F.x0, -SIGHT.blade/2, SIGHT.zb - .01, F.x1, SIGHT.blade/2, SIGHT.top)));
   rear = keep(rear.add(foot(R.x0, R.x1))); front = keep(front.add(foot(F.x0, F.x1)));
   return {rear, front};
+}
+/* Viseurs intégrés aux demi-coques : profil en rampe (pente de moins de 45°) pour s'imprimer sans support,
+   chaque demi-coque porte la moitié de la hausse (une oreille) et la moitié du guidon. */
+function sightSolids(){
+  const W = G().W2, h = SIGHT.top - 110, n2 = SIGHT.notch/2, b2 = SIGHT.blade/2;
+  const ext = (poly, x0, x1) => keep(keep(keep(Manifold.extrude([ccw(poly)], x1 - x0)).rotate([90, 0, 90])).translate([x0, 0, 0]));
+  const rear = [[-W,109.9],[W,109.9],[W,110],[12,110],[5,110 + h],[n2,110 + h],[n2,110 + h - 3],[-n2,110 + h - 3],[-n2,110 + h],[-5,110 + h],[-12,110],[-W,110]];
+  const front = [[-W,109.9],[W,109.9],[W,110],[9,110],[b2,110 + h],[-b2,110 + h],[-9,110],[-W,110]];
+  return keep(ext(rear, SIGHT.rear.x0, SIGHT.rear.x1).add(ext(front, SIGHT.front.x0, SIGHT.front.x1)));
 }
 function sightSlot(V){                    // encoche en T dans le dessus (coupée en 2 par le plan des demi-coques)
   const x0 = V.x0 + 1 - FOOT.gap, x1 = V.x1 + FOOT.gap, sw = FOOT.stem + FOOT.gap, lw = FOOT.lug + FOOT.gap;
@@ -4930,10 +4999,10 @@ function visserie(){
 function renderExtra(){
   const g = G(), laser = S.proc === 'laser';
   $('visList').innerHTML = '<table class="vis">' + visserie().map(r => `<tr><td>${r[0]} ×</td><td><b>${r[1]}</b><small>${r[2]}</small></td></tr>`).join('') + '</table>'
-    + `<p class="small-note">${laser ? 'Pas de vis pour le viseur ni pour le couvercle : le viseur est découpé dans les couches, le couvercle s’emboîte à frottement.' : 'Pas de vis ni de colle pour les viseurs : leur pied en T est enfermé entre les 2 demi-coques. Le couvercle s’encliquette.'}</p>`;
+    + `<p class="small-note">${laser ? 'Pas de vis pour le viseur ni pour le couvercle : le viseur est découpé dans les couches, le couvercle s’emboîte à frottement.' : 'Les viseurs font partie des coques. Le couvercle s’encliquette (sans vis).'}</p>`;
   $('extraNote').innerHTML = laser
     ? `<b>Viseur</b> : le guidon (à l’avant) et la hausse (à l’arrière) sont des bosses de ${fmt(SIGHT.top - 110)} mm sur le profil des couches du milieu : guidon sur ${[...Array(g.n).keys()].filter(k => sightKind(k) === 'blade').map(k => 'C' + (k+1)).join(' et ')}, oreilles de la hausse sur ${[...Array(g.n).keys()].filter(k => sightKind(k) === 'ears').map(k => 'C' + (k+1)).join(' et ')}.<br><b>Couvercle de la crosse</b> : un talon et ${Math.max(1, Math.round(6/g.t))} cadre${Math.round(6/g.t) > 1 ? 's' : ''} à coller dessus ; le cadre s’emboîte à frottement dans l’ouverture sous la poignée. Le talon est percé pour le câble USB.<br><b>Décors</b> : glissière, stries, fenêtre d’éjection, bouche du canon et plaquette striée de la crosse sont gravés (traits bleus) sur C1 et C${g.n}. C${g.n} est dessinée retournée : pose-la face gravée vers l’extérieur.`
-    : `<b>Viseur</b> : une hausse à cran (à l’arrière) et un guidon (à l’avant), imprimés à part. Leur pied en T se pose dans une encoche du dessus avant de fermer la coque : une fois les 2 demi-coques vissées, les viseurs sont enfermés, sans colle. La ligne de visée passe ${fmt(SIGHT.top - 90)} mm au-dessus du laser : à 10 m, le point laser arrive environ ${fmt((SIGHT.top - 90)/10)} cm sous le point visé.<br><b>Couvercle de la crosse</b> : un talon de 2 mm avec un cadre qui entre dans l’ouverture sous la poignée ; 2 bourrelets s’encliquettent dans 2 rainures des parois. Le talon est percé pour le câble USB et a une encoche pour le soulever avec un tournevis plat.<br><b>Décors en bas-relief</b> : glissière, stries, fenêtre d’éjection, bouche du canon et plaquette striée de la crosse, creusés de ${fmt(DEC.d)} mm dans les deux faces extérieures (en creux pour que la pièce reste bien à plat sur le plateau).`;
+    : `<b>Viseur</b> : une hausse à cran (à l’arrière) et un guidon (à l’avant), intégrés aux 2 demi-coques : chaque coque porte une oreille de la hausse et la moitié du guidon. Leur profil en rampe s’imprime sans support et ne s’affaisse pas. La ligne de visée passe ${fmt(SIGHT.top - 90)} mm au-dessus du laser : à 10 m, le point laser arrive environ ${fmt((SIGHT.top - 90)/10)} cm sous le point visé.<br><b>Couvercle de la crosse</b> : un talon de 2 mm avec un cadre qui entre dans l’ouverture sous la poignée ; 2 bourrelets s’encliquettent dans 2 rainures des parois. Le talon est percé pour le câble USB et a une encoche pour le soulever avec un tournevis plat.<br><b>Décors en bas-relief</b> : glissière, stries, fenêtre d’éjection, bouche du canon et plaquette striée de la crosse, creusés de ${fmt(DEC.d)} mm dans les deux faces extérieures (en creux pour que la pièce reste bien à plat sur le plateau).`;
 }
 /* Piliers coniques sous la languette : pendant l'impression, la languette dépasse de 8 mm
    au-dessus du vide ; ces petits cônes la soutiennent, posés sur un petit radeau qui colle
@@ -4988,8 +5057,7 @@ function buildPrint(){
     res = keep(res.subtract(box(WIRE.x0, -WIRE.hw, WIRE.z0, POCKET.x0 + 1, WIRE.hw, 76.5)));                     // rigole sous la pile vers la poignée
     for (const c of cutters()) res = keep(res.subtract(cylSolid(c, .5)));
     res = keep(res.subtract(decorCut(-1, DEC.d))); res = keep(res.subtract(decorCut(1, DEC.d)));             // décors en creux
-    res = keep(res.subtract(sightSlot(SIGHT.rear)));    // encoche en T de la hausse
-    res = keep(res.subtract(sightSlot(SIGHT.front)));   // encoche en T du guidon
+    res = keep(res.add(sightSolids()));                 // hausse et guidon, intégrés aux coques
     for (const s of [-1, 1]) res = keep(res.subtract(box(19, s > 0 ? g.CY - .01 : -g.CY - .8, 3.4, 42, s > 0 ? g.CY + .8 : -g.CY + .01, 4.6)));   // rainures du couvercle
     for (const [x, z] of POSTS.concat(SOLIDS, [GRIP_SCREW])) {
       res = keep(res.subtract(cylAxis(1.7, -g.W2 - 1, 0, 1, [x, 0, z])));                // trou de passage Ø3,4 (demi-coque droite)
@@ -5013,8 +5081,7 @@ function buildPrint(){
       out[nm + 'r'] = toGeometry(keep(rear.subtract(jHole)));
       out[nm + 'f'] = toGeometry(keep(keep(keep(half.intersect(box(SPLIT, y0, -10, 170, y1, 120))).subtract(groove)).subtract(jHole)));
     }
-    const sg = buildSights();
-    out.sightRear = toGeometry(sg.rear); out.sightFront = toGeometry(sg.front); out.cover = toGeometry(buildCover().cover);
+    out.cover = toGeometry(buildCover().cover);
     return out;
   } finally { flush(); }
 }
@@ -5091,10 +5158,10 @@ function buildComponents(){
   const red = m(0xff3048), grey = m(0x3a4148), blue = m(0x2f8fd0), brass = m(0xc9a44c), pcb = m(0x1f6b3a);
   const rl = C.led/2;
   for (const x of LEDXS) {
-    g.add(cyl(rl, 103, 110 + rl*.4, 2, [x,0,0], red));
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(rl, 24, 12, 0, Math.PI*2, 0, Math.PI/2), red); dome.rotation.x = Math.PI/2; dome.position.set(x,0,110 + rl*.4); g.add(dome);
-    g.add(cyl(rl*1.16, 102, 103, 2, [x,0,0], red));
-    g.add(cyl(.25, 88, 102, 2, [x-1.27,0,0], grey)); g.add(cyl(.25, 88, 102, 2, [x+1.27,0,0], grey));
+    g.add(cyl(rl, -W2 - rl*.4, -W2 + 7, 1, [x,0,LEDZ], red));                                   // LED couchée, tête qui sort de la face droite
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(rl, 24, 12, 0, Math.PI*2, 0, Math.PI/2), red); dome.rotation.x = Math.PI; dome.position.set(x, -W2 - rl*.4, LEDZ); g.add(dome);
+    g.add(cyl(rl*1.16, -W2 + 7, -W2 + 8, 1, [x,0,LEDZ], red));
+    g.add(cyl(.25, -W2 + 8, -W2 + 20, 1, [x-1.27,0,LEDZ], grey)); g.add(cyl(.25, -W2 + 8, -W2 + 20, 1, [x+1.27,0,LEDZ], grey));
   }
   g.add(cyl(C.gach/2, 41, 55, 0, [0,0,52], grey)); g.add(cyl(C.gach*.38, 55, 60, 0, [0,0,52], m(0xe0304a)));
   g.add(cyl(C.rech/2, -W2, -W2 + 11, 1, [RECH[0],0,RECH[1]], grey)); g.add(cyl(C.rech*.37, -W2 - 4, -W2, 1, [RECH[0],0,RECH[1]], blue));
@@ -5146,7 +5213,7 @@ function rebuild(){
       mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(P4[k], 30), edgeMatPrint));
       mesh.userData.half = half; mesh.userData.seg = seg; modelGroup.add(mesh);
     });
-    [['sightRear', 'sight'], ['sightFront', 'sight'], ['cover', 'cover']].forEach(([k, part]) => {
+    [['cover', 'cover']].forEach(([k, part]) => {
       const mesh = new THREE.Mesh(P4[k], matPrint);
       mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(P4[k], 30), edgeMatPrint));
       mesh.userData.part = part; modelGroup.add(mesh);
@@ -5242,7 +5309,7 @@ function refresh(){
     $('ref-' + g.comp).textContent = COMPS[g.comp].ref(S.comp[g.comp]);
     markSizes(g.comp);
   }
-  renderPly(); renderJoin(); renderBatt(); renderExtra();
+  renderPly(); renderJoin(); renderBatt(); renderExtra(); renderText();
   const pill = $('barState');
   pill.textContent = `${st.n} / 4 diamètres corrects`;
   pill.className = 'pill ' + (st.ready ? 'done' : 'wait');
@@ -5250,13 +5317,13 @@ function refresh(){
   btn.disabled = !st.ready;
   btn.textContent = S.proc === 'laser' ? 'Télécharger le plan de découpe (.svg)' : 'Télécharger les pièces à imprimer (.zip)';
   $('exportMsg').textContent = st.ready
-    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches.` : 'Tous les trous sont corrects. Le fichier contient les 4 pièces de la coque, le couvercle de la crosse et les viseurs (6 fichiers STL).')
+    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches.` : 'Tous les trous sont corrects. Le fichier contient les 4 pièces de la coque et le couvercle de la crosse (5 fichiers STL). Les viseurs font partie des coques.')
     : `Le téléchargement se débloque quand les 4 diamètres sont corrects (${st.n} / 4).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Numéros bleus : gravure. C${g.n} est dessinée retournée (décors gravés) : pose-la face gravée vers l’extérieur. Colle les couches C1 à C${halfCount()} ensemble, C${halfCount()+1} à C${g.n} ensemble, puis visse les 2 parties (4 vis M3). Les disques percés et les rectangles découpés dans les cadres sont les entretoises et le rebord devant la pile : colle-les sur la plaque, à leur emplacement.`
-    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Colle l’arrière et l’avant de chaque coque (languette dans la rainure), assemble les 2 coques avec 6 vis M3 de 20 mm, puis serre les 4 pièces ensemble avec les 2 vis de jonction M3 de 30 mm (en bas et en haut du canon). Couvercle : talon sur le plateau. Viseurs : bases sur le plateau, puis colle-les dans leurs logements sur le dessus.';
+    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Colle l’arrière et l’avant de chaque coque (languette dans la rainure), assemble les 2 coques avec 6 vis M3 de 20 mm, puis serre les 4 pièces ensemble avec les 2 vis de jonction M3 de 30 mm (en bas et en haut du canon). Couvercle : talon sur le plateau. Les viseurs sont imprimés avec les coques, sans supports (profil en rampe).';
   const prev = $('exportPreview');
-  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 92 × 110 × 15 mm et les 2 avants 80 × 40 × 15 mm. Plus le couvercle de la crosse (46 × 30 mm) et les 2 viseurs. Il faut un plateau d’au moins 95 × 110 mm.</div>';
+  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 92 × 116 × 15 mm (viseur compris) et les 2 avants 80 × 40 × 15 mm. Plus le couvercle de la crosse (46 × 30 mm). Les viseurs sont intégrés aux coques. Il faut un plateau d’au moins 95 × 120 mm.</div>';
   else prev.innerHTML = '';
   return st;
 }
@@ -5277,7 +5344,7 @@ function laserSVG(preview){
       else if (s.type === 'circ') body += `<circle ${cut} cx="${X(s.x)}" cy="${Y(s.z)}" r="${s.r.toFixed(3)}"/>`;
       else body += `<rect ${cut} x="${X(s.x0)}" y="${Y(s.z1)}" width="${(s.x1-s.x0).toFixed(3)}" height="${(s.z1-s.z0).toFixed(3)}"/>`;
     }
-    if (k === 0 || MIR) body += `<path fill="none" stroke="#0000FF" stroke-width="0.1" d="${decorLines(MIR ? 1 : -1).map(([a, b]) => `M${X(a[0])} ${Y(a[1])} L${X(b[0])} ${Y(b[1])}`).join(' ')}"/>`;
+    if (k === 0 || MIR) body += `<path fill="none" stroke="#0000FF" stroke-width="0.1" d="${decorLines(MIR ? 1 : -1).concat(textSegs(MIR ? 1 : -1)).map(([a, b]) => `M${X(a[0])} ${Y(a[1])} L${X(b[0])} ${Y(b[1])}`).join(' ')}"/>`;
     body += `<text x="${X(MIR ? 136 : 128)}" y="${Y(71.6)}" font-family="Arial, sans-serif" font-size="4" fill="#0000FF">C${k+1}${MIR ? ' (retournée)' : ''}</text></g>`;
   }
   { const f = v => v.toFixed(3), W = 2*g.W2, cy = g.CY, nb = Math.max(1, Math.round(6/g.t)), x0 = 5, y0 = coverY;
@@ -5335,14 +5402,12 @@ function readme(){
 ======================================
 
 Fichiers :
-  coque_droite_arriere.stl : demi-coque droite, partie arriere avec la crosse (92 x 110 x 15 mm, languettes comprises)
+  coque_droite_arriere.stl : demi-coque droite, partie arriere avec la crosse (92 x 116 x 15 mm, languettes et viseur compris)
   coque_droite_avant.stl   : demi-coque droite, partie avant (80 x 40 x 15 mm)
   coque_gauche_arriere.stl : demi-coque gauche, partie arriere avec la crosse
   coque_gauche_avant.stl   : demi-coque gauche, partie avant
   couvercle_crosse.stl : couvercle a emboiter sous la poignee (talon 46 x 30 x 2 mm + cadre encliquetable)
-  viseurs.stl : hausse (a l'arriere) et guidon (a l'avant), avec un pied en T ; ils sont deja debout
-                sur leur face avant (pas de supports). Le pied s'enferme entre les 2 demi-coques.
-Unites : millimetres. Plateau d'impression minimal : 95 x 110 mm.
+Unites : millimetres. Plateau d'impression minimal : 95 x 120 mm.
 Decors en bas-relief : glissiere, stries, fenetre d'ejection, bouche du canon et plaquette
 de crosse striee, creuses de 0,8 mm dans les faces exterieures.
 Chaque demi-coque est coupee en x = 80 mm : la languette de la piece arriere
@@ -5358,7 +5423,7 @@ Composants prevus :
 
 Visserie :
 ${visserie().map(r => `  ${r[0]} x ${r[1].replace('×', 'x')} : ${r[2]}`).join('\n').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/’/g, "'")}
-  Viseurs : enfermes entre les 2 demi-coques (sans vis ni colle) ; couvercle : encliquete (sans vis).
+  Viseurs : integres aux coques ; couvercle : encliquete (sans vis).
 
 Impression conseillee :
   - Matiere : PLA
@@ -5367,20 +5432,18 @@ Impression conseillee :
   - Les pieces sont deja posees sur leur face exterieure : pas de supports.
 
 Montage :
-  1. Place les ${NL} LED (dessus), le bouton gachette (avant de la poignee),
+  1. Place les ${NL} LED (face droite, en haut), le bouton gachette (avant de la poignee),
      le bouton recharger (face droite) et le module laser (avant).
   2. Loge la carte Arduino Nano dans la poignee ; le cable USB sort par le bas.
   3. Passe les 3 fils du laser au milieu du petit rebord, puis dans la rigole du plancher jusqu'a la
      poignee. Pose ensuite la pile 9 V couchee par-dessus, bornes cote crosse (entre le plot de vis et le rebord).
-  4. Pose le pied en T de la hausse (cran a l'arriere) et du guidon (a l'avant) dans les demi-encoches
-     du dessus de la demi-coque droite : la semelle du viseur repose sur le dessus de la coque.
-  5. Colle chaque piece arriere et avant (languette dans la rainure), puis assemble les deux demi-coques avec 6 vis M3 de 20 mm (dont 1 en bas de la crosse) : tete de vis dans le lamage de la
+  4. Colle chaque piece arriere et avant (languette dans la rainure), puis assemble les deux demi-coques avec 6 vis M3 de 20 mm (dont 1 en bas de la crosse) : tete de vis dans le lamage de la
      demi-coque droite, la vis se visse dans l'avant-trou du plot de la demi-coque gauche.
-  6. Visse les 2 vis de jonction M3 de 30 mm par la droite, en bas et en haut du canon juste devant
+  5. Visse les 2 vis de jonction M3 de 30 mm par la droite, en bas et en haut du canon juste devant
      la poignee : elles traversent les 2 languettes et les 4 pieces, qui sont alors tenues ensemble.
-${S.pillars ? '  Avant le montage : casse a la pince le radeau et les petits piliers coniques sous les 2 languettes, puis ponce.\n' : ''}  7. En fermant la coque, les 2 viseurs sont enfermes : verifie qu'ils ne bougent plus.
-     La ligne de visee passe 2,7 cm au-dessus du laser : a 10 m, vise un peu au-dessus de la cible.
-  8. Emboite le couvercle sous la poignee : le cadre entre dans l'ouverture et se clipse.
+${S.pillars ? '  Avant le montage : casse a la pince le radeau et les petits piliers coniques sous les 2 languettes, puis ponce.\n' : ''}  6. Les viseurs (hausse a l'arriere, guidon a l'avant) font partie des coques.
+     La ligne de visee passe 2,6 cm au-dessus du laser : a 10 m, vise un peu au-dessus de la cible.
+  7. Emboite le couvercle sous la poignee : le cadre entre dans l'ouverture et se clipse.
      Pour l'ouvrir, glisse un tournevis plat dans l'encoche a l'arriere. Le cable USB passe par la fente.
 
 Cablage : D6 gachette, D5 recharger, ${NL === 5 ? 'D2 D3 D4 D7 D8' : 'D2 D3 D4'} LED, D9 laser.
@@ -5413,7 +5476,6 @@ async function doExport(){
       {name:'coque_gauche_arriere.stl', data: stlBinary(P.lr, (x,y,z) => [x, z, 15 - y])},
       {name:'coque_gauche_avant.stl', data: stlBinary(P.lf, (x,y,z) => [x - SPLIT, z - 70, 15 - y])},
       {name:'couvercle_crosse.stl', data: stlBinary(P.cover, (x,y,z) => [x - 4, y + G().W2, z + 2])},
-      {name:'viseurs.stl', data: stlCat(stlBinary(P.sightRear, (x,y,z) => [5 - y, z - FOOT.z0, SIGHT.rear.x1 - x]), stlBinary(P.sightFront, (x,y,z) => [18 - y, z - FOOT.z0, SIGHT.front.x1 - x]))},
       {name:'LISEZ-MOI.txt', data:readme()}]));
   }
   btn.disabled = false;
@@ -5443,6 +5505,7 @@ ROOT.querySelectorAll('[data-ply]').forEach(b => b.addEventListener('click', () 
 $('optComp').addEventListener('change', applyExplode);
 $('optXray').addEventListener('change', applyXray);
 $('optExplode').addEventListener('change', e => { S.explode = e.target.checked; save(); applyExplode(); });
+for (const [k, id] of [['textR', 'txtR'], ['textL', 'txtL']]) { $(id).value = S[k] || ''; $(id).addEventListener('input', e => { S[k] = e.target.value; save(); refresh(); later(); }); }
 $('optPillars').addEventListener('change', e => { S.pillars = e.target.checked; save(); refresh(); later(); });
 $('exportBtn').addEventListener('click', doExport);
 
