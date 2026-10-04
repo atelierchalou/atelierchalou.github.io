@@ -4727,11 +4727,16 @@ const PLIES = [3, 4, 5, 6, 8];
 /* Plots de vis M3 qui relient les deux demi-coques (position x, z dans la cavité) */
 const POSTS = [[13,98],[66,100],[138,101.5],[30,64]], POST_R = 3.75;
 /* Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute : arrêtée à gauche par un plot, à droite par une butée */
-const BAT = {x0:70, L:48.5, H:26.5, T:17.5, z:90, stop:119};
+const BAT = {x0:70, L:48.5, H:26.5, T:17.5, z:90, stop:124};   // stop : petit rebord devant la pile (5 mm plus loin qu'avant)
+/* Parties avant : logement de la pile agrandi de 5 mm en tout (2,5 mm de chaque côté, en haut et en bas),
+   de la fin des languettes jusqu'au rebord ; les parois y font 2,5 mm. */
+const POCKET = {x0:94, x1:124, hw:12.5, z0:73.5, z1:106.5};
+/* Vis en bas de la crosse (pièces arrière), dans la matière pleine derrière la Nano */
+const GRIP_SCREW = [11.5, 5.5];
 /* Impression 3D : chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) au plan x = SPLIT, assemblées par un tenon et une rainure collés */
-const SPLIT = 80, TNL = 8, SOLIDS = [[150,78.5]];   // vis supplémentaire dans le bloc plein de l'avant
+const SPLIT = 80, TNL = 12, SOLIDS = [[150,78.5]];   // vis supplémentaire dans le bloc plein de l'avant
 /* Vis de jonction des 4 pièces : traverse toute l'épaisseur dans la paroi du bas, au milieu des languettes */
-const JOINT = [SPLIT + TNL/2, 73];
+const JOINTS = [[SPLIT + TNL/2, 73.2], [SPLIT + TNL/2, 106.5]];   // 2 vis de jonction : en bas (plancher) et en haut (paroi du dessus)
 /* Passage des 3 fils du laser : encoche en bas de la butée de la pile + rigole dans le plancher, sous la pile, jusqu'à la poignée */
 const WIRE = {x0:40, hw:3.5, z0:74.8, notchTop:80};
 /* Bouton recharger (face droite) : assez loin du plot de vis (66, 100) même avec un bouton de Ø 16 à 18 mm */
@@ -4837,8 +4842,9 @@ function layerPlan(k, ext){
     else if (mid < 0) shapes.push({type:'circ', x, z, r:1.7});                         // trou de passage dans la plaque droite
   }
   const wire = b > -WIRE.hw + .01 && a < WIRE.hw - .01;                                    // couche traversée par le passage des fils
-  if (inner) shapes.push({type:'blk', x0:BAT.stop, x1:BAT.stop + 2.5, z0:wire ? WIRE.notchTop : 76, z1:104});   // butée de la pile 9 V (pièce à coller, encochée au milieu)
-  if (inner && wire) shapes.push({type:'rect', x0:44, x1:BAT.stop + 2.5, z0:WIRE.z0, z1:76});                        // rigole des fils dans le plancher
+  if (inner && !wire) shapes.push({type:'blk', x0:BAT.stop, x1:BAT.stop + 2.5, z0:76, z1:80});   // petit rebord devant la pile (pièce à coller, pas au milieu : passage des fils)
+  if (inner && wire) shapes.push({type:'rect', x0:44, x1:POCKET.x0 + 1, z0:WIRE.z0, z1:76});        // rigole des fils dans le plancher
+  if (a >= -POCKET.hw - .01 && b <= POCKET.hw + .01) shapes.push({type:'rect', x0:POCKET.x0, x1:POCKET.x1, z0:POCKET.z0, z1:POCKET.z1});   // logement de la pile agrandi
   return {k, a, b, inner, shapes};
 }
 
@@ -4863,9 +4869,9 @@ function decorLines(side){
   for (let i = 0; i < 4; i++) seg([120 + i*3, 96], [120 + i*3, 107]);                                   // stries avant
   const EJ = [[92,96],[116,96],[116,106],[92,106]]; EJ.forEach((p, i) => seg(p, EJ[(i+1) % 4]));         // fenêtre d'éjection
   seg([146,72],[146,108]);                                                                              // bouche du canon
-  const PL = [[11,8],[44,8],[48.5,30],[48.5,58],[16.4,58]]; PL.forEach((p, i) => seg(p, PL[(i+1) % PL.length]));   // plaquette de crosse
-  const xl = z => 11 + 5.4*(z - 8)/50, xr = z => z < 30 ? 44 + 4.5*(z - 8)/22 : 48.5;
-  for (let z = 13; z <= 53; z += 4) seg([xl(z) + 2.5, z], [xr(z) - 2.5, z]);                            // stries de la poignée
+  const PL = [[11.3,10],[44.4,10],[48.5,30],[48.5,58],[16.4,58]]; PL.forEach((p, i) => seg(p, PL[(i+1) % PL.length]));   // plaquette de crosse
+  const xl = z => 11.3 + 5.1*(z - 10)/48, xr = z => z < 30 ? 44.4 + 4.1*(z - 10)/20 : 48.5;
+  for (let z = 15; z <= 53; z += 4) seg([xl(z) + 2.5, z], [xr(z) - 2.5, z]);                            // stries de la poignée
   return L;
 }
 function segPoly([a, b], w){
@@ -4918,8 +4924,8 @@ function visserie(){
     const m = halfCount(), seam = -g.W2 + m*g.t, len = Math.ceil((m*g.t + .7*(g.CY - seam))/5)*5;
     return [[4, `vis M3 × ${len} mm`, 'assemblage des 2 parties (trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche)']];
   }
-  return [[5, 'vis M3 × 20 mm', '4 plots de la coque + 1 plot à l’avant du canon (tête dans le lamage, côté droit)'],
-          [1, 'vis M3 × 30 mm', 'vis de jonction, dans le bas du canon devant la poignée']];
+  return [[6, 'vis M3 × 20 mm', '4 plots de la coque + 1 plot à l’avant du canon + 1 en bas de la crosse (tête dans le lamage, côté droit)'],
+          [2, 'vis M3 × 30 mm', 'vis de jonction des parties avant et arrière : en bas et en haut du canon, devant la poignée']];
 }
 function renderExtra(){
   const g = G(), laser = S.proc === 'laser';
@@ -4932,7 +4938,7 @@ function renderExtra(){
 /* Piliers coniques sous la languette : pendant l'impression, la languette dépasse de 8 mm
    au-dessus du vide ; ces petits cônes la soutiennent, posés sur un petit radeau qui colle
    bien au plateau ; le tout se casse à la pince. */
-const PILLAR = {xs:[81.6, 86.4], z0:73.5, z1:104, dz:3.4, rBase:1, rTip:.4, raft:.4};   // radeau : plaque de 0,4 mm (2 couches) sur le plateau
+const PILLAR = {xs:[81.6, 86, 90.4], z0:73.5, z1:107, dz:3.4, rBase:1, rTip:.4, raft:.4};   // radeau : plaque de 0,4 mm (2 couches) sur le plateau
 function tonguePillars(sgn, yc){
   const g = G(), yBed = sgn*g.W2, yFace = yc - sgn*1.2, h = Math.abs(yBed - yFace) + .05;
   let all = null;
@@ -4941,7 +4947,7 @@ function tonguePillars(sgn, yc){
     c = keep(keep(c.rotate([sgn < 0 ? -90 : 90, 0, 0])).translate([x, yBed, z]));
     all = all ? keep(all.add(c)) : c;
   }
-  const raft = sgn < 0 ? box(80.4, yBed, 72, 87.8, yBed + PILLAR.raft, 105.5) : box(80.4, yBed - PILLAR.raft, 72, 87.8, yBed, 105.5);   // radeau sous les piliers
+  const raft = sgn < 0 ? box(80.4, yBed, 72, SPLIT + TNL - .2, yBed + PILLAR.raft, 108) : box(80.4, yBed - PILLAR.raft, 72, SPLIT + TNL - .2, yBed, 108);   // radeau sous les piliers
   return keep(all.add(raft));
 }
 function halfCount(){ const g = G(); let m = 0; for (let k = 0; k < g.n; k++) if (-g.W2 + g.t*(k + .5) < 0) m++; return m; }
@@ -4977,15 +4983,15 @@ function buildPrint(){
   try {
     let res = keep(slab(PROFILE, -g.W2, g.W2).subtract(slab(CAVITY, -g.CY, g.CY)));
     for (const [x, z] of POSTS.concat(SOLIDS)) res = keep(res.add(cylAxis(POST_R, -g.CY - .5, g.CY + .5, 1, [x, 0, z])));   // plots sur les parois latérales
-    res = keep(res.add(box(BAT.stop, -g.CY - .5, 75.5, BAT.stop + 2.5, g.CY + .5, 104.5)));                  // butée de la pile 9 V
-    res = keep(res.subtract(box(BAT.stop - 1, -WIRE.hw, WIRE.z0, BAT.stop + 3.5, WIRE.hw, WIRE.notchTop)));        // encoche des 3 fils du laser
-    res = keep(res.subtract(box(WIRE.x0, -WIRE.hw, WIRE.z0, BAT.stop + 1, WIRE.hw, 76.5)));                       // rigole sous la pile vers la poignée
+    res = keep(res.subtract(box(POCKET.x0, -POCKET.hw, POCKET.z0, POCKET.x1, POCKET.hw, POCKET.z1)));     // logement de la pile agrandi (parties avant)
+    for (const s of [-1, 1]) res = keep(res.add(box(BAT.stop, s < 0 ? -g.CY - .5 : WIRE.hw, 75.5, BAT.stop + 2.5, s < 0 ? -WIRE.hw : g.CY + .5, 80)));   // petit rebord (2 morceaux, passage des fils au milieu)
+    res = keep(res.subtract(box(WIRE.x0, -WIRE.hw, WIRE.z0, POCKET.x0 + 1, WIRE.hw, 76.5)));                     // rigole sous la pile vers la poignée
     for (const c of cutters()) res = keep(res.subtract(cylSolid(c, .5)));
     res = keep(res.subtract(decorCut(-1, DEC.d))); res = keep(res.subtract(decorCut(1, DEC.d)));             // décors en creux
     res = keep(res.subtract(sightSlot(SIGHT.rear)));    // encoche en T de la hausse
     res = keep(res.subtract(sightSlot(SIGHT.front)));   // encoche en T du guidon
     for (const s of [-1, 1]) res = keep(res.subtract(box(19, s > 0 ? g.CY - .01 : -g.CY - .8, 3.4, 42, s > 0 ? g.CY + .8 : -g.CY + .01, 4.6)));   // rainures du couvercle
-    for (const [x, z] of POSTS.concat(SOLIDS)) {
+    for (const [x, z] of POSTS.concat(SOLIDS, [GRIP_SCREW])) {
       res = keep(res.subtract(cylAxis(1.7, -g.W2 - 1, 0, 1, [x, 0, z])));                // trou de passage Ø3,4 (demi-coque droite)
       res = keep(res.subtract(cylAxis(3.2, -g.W2 - 1, -g.W2 + 2.5, 1, [x, 0, z])));      // lamage Ø6,4 pour la tête de vis
       res = keep(res.subtract(cylAxis(1.3, 0, 12, 1, [x, 0, z])));                        // avant-trou Ø2,6 (demi-coque gauche)
@@ -4994,10 +5000,14 @@ function buildPrint(){
     for (const [nm, sgn] of [['r', -1], ['l', 1]]) {
       const y0 = sgn < 0 ? -30 : 0, y1 = sgn < 0 ? 0 : 30, yc = sgn*(g.W2 - 2.5);                 // yc : milieu de la paroi latérale
       const half = keep(res.intersect(box(-10, y0, -10, 170, y1, 120)));
-      const tongue = box(SPLIT - .5, yc - 1.2, 71, SPLIT + TNL, yc + 1.2, 106);                      // tenon de l'arrière (descend dans la paroi du bas)
-      const groove = box(SPLIT - 1, yc - 1.4, 70.8, SPLIT + TNL + .4, yc + 1.4, 106.2);              // rainure de l'avant, jeu 0,2 mm
-      const jHole = sgn < 0 ? cylAxis(1.7, y0 - 1, 0, 1, [JOINT[0], 0, JOINT[1]])                    // vis de jonction : passage Ø3,4 à droite
-                            : cylAxis(1.3, 0, y1 + 1, 1, [JOINT[0], 0, JOINT[1]]);                   // avant-trou Ø2,6 à gauche, jusqu'au bout
+      const tongue = box(SPLIT - .5, yc - 1.2, 71, SPLIT + TNL, yc + 1.2, 108.6);                    // tenon de l'arrière : 12 mm de long, du plancher jusque dans la paroi du dessus
+      const groove = box(SPLIT - 1, yc - 1.4, 70.8, SPLIT + TNL + .4, yc + 1.4, 108.8);              // rainure de l'avant, jeu 0,2 mm
+      let jHole = null;
+      for (const [jx, jz] of JOINTS) {                                                               // 2 vis de jonction au milieu des languettes (4,3 mm de matière autour)
+        const h = sgn < 0 ? cylAxis(1.7, y0 - 1, 0, 1, [jx, 0, jz])                                  // passage Ø3,4 à droite
+                          : cylAxis(1.25, 0, y1 + 1, 1, [jx, 0, jz]);                                // avant-trou Ø2,5 à gauche, sur toute l'épaisseur
+        jHole = jHole ? keep(jHole.add(h)) : h;
+      }
       let rear = keep(keep(half.intersect(box(-10, y0, -10, SPLIT, y1, 120))).add(tongue));
       if (S.pillars) rear = keep(rear.add(tonguePillars(sgn, yc)));                                       // piliers sous la languette (à casser)
       out[nm + 'r'] = toGeometry(keep(rear.subtract(jHole)));
@@ -5210,7 +5220,7 @@ function renderPly(){
 }
 function renderBatt(){
   const g = G(), w = 2*g.CY;
-  $('battNote').textContent = `Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute de la coque, entre un plot de vis (à gauche) et une butée (à droite), bornes côté crosse. Les fils vont vers la Nano. Les 3 fils du laser passent par l’encoche en bas de la butée puis par la rigole creusée dans le plancher, sous la pile, jusqu’à la poignée. Paroi avant du canon : 6 mm, la carte du laser (18 mm) tient derrière, entre la paroi et la butée. Cavité de ${fmt(w)} mm d'épaisseur : ` + (w >= 18 ? 'la pile y rentre.' : 'trop étroite pour la pile, choisis une plaque de 3 à 6 mm.');
+  $('battNote').textContent = `Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute de la coque, entre un plot de vis (à gauche) et un petit rebord (à droite), bornes côté crosse. Dans les parties avant, le logement est agrandi de 5 mm en tout (largeur ${fmt(2*POCKET.hw)} mm, hauteur ${fmt(POCKET.z1 - POCKET.z0)} mm) et la pile a 54 mm de long avec son clip. Les fils vont vers la Nano. Les 3 fils du laser passent au milieu du rebord puis par la rigole creusée dans le plancher, sous la pile, jusqu’à la poignée. Paroi avant du canon : 6 mm, la carte du laser (18 mm) tient derrière, entre la paroi et le rebord. Cavité de ${fmt(w)} mm d'épaisseur : ` + (w >= 18 ? 'la pile y rentre.' : 'trop étroite pour la pile, choisis une plaque de 3 à 6 mm.');
 }
 function renderJoin(){
   const g = G();
@@ -5220,7 +5230,7 @@ function renderJoin(){
     $('joinNote').textContent = `4 vis M3 de ${len} mm. Colle ensemble les couches C1 à C${m} (partie droite) et C${m+1} à C${g.n} (partie gauche), puis visse les 2 parties. Trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche ; les disques percés découpés dans les cadres sont les entretoises : empile-les au-dessus des trous.`;
   } else {
     $('pillarRow').hidden = false; $('optPillars').checked = !!S.pillars;
-    $('joinNote').textContent = (S.pillars ? 'Piliers activés : des petits cônes posés sur un radeau de 0,4 mm soutiennent les 2 languettes pendant l’impression ; casse le radeau et les cônes à la pince puis ponce légèrement. ' : 'Sans piliers, la languette (8 mm au-dessus du vide) peut s’affaisser à l’impression. ') + '5 plots de vis dans la coque : vis M3 de 20 mm. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) : la languette de l’arrière entre dans la rainure de l’avant, colle-les (colle cyanoacrylate ou PLA), puis la vis de jonction (M3 de 30 mm, dans le bas du canon, juste devant la poignée) traverse les 4 pièces et les serre ensemble. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
+    $('joinNote').textContent = (S.pillars ? 'Piliers activés : des petits cônes posés sur un radeau de 0,4 mm soutiennent les 2 languettes pendant l’impression ; casse le radeau et les cônes à la pince puis ponce légèrement. ' : 'Sans piliers, la languette (12 mm au-dessus du vide) peut s’affaisser à l’impression. ') + '6 vis M3 de 20 mm : 4 plots, 1 plot à l’avant du canon et 1 vis en bas de la crosse. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) : la languette de l’arrière entre dans la rainure de l’avant, colle-les (colle cyanoacrylate ou PLA), puis les 2 vis de jonction (M3 de 30 mm, en bas et en haut du canon, juste devant la poignée) traversent les 4 pièces et les serrent ensemble. Languettes de 12 mm : 4,3 mm de matière autour de chaque trou ; avant-trous Ø 2,5 mm sur toute l’épaisseur à gauche. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
   }
 }
 function refresh(){
@@ -5243,10 +5253,10 @@ function refresh(){
     ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches.` : 'Tous les trous sont corrects. Le fichier contient les 4 pièces de la coque, le couvercle de la crosse et les viseurs (6 fichiers STL).')
     : `Le téléchargement se débloque quand les 4 diamètres sont corrects (${st.n} / 4).`;
   $('exportNote').textContent = S.proc === 'laser'
-    ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Numéros bleus : gravure. C${g.n} est dessinée retournée (décors gravés) : pose-la face gravée vers l’extérieur. Colle les couches C1 à C${halfCount()} ensemble, C${halfCount()+1} à C${g.n} ensemble, puis visse les 2 parties (4 vis M3). Les disques percés et les rectangles découpés dans les cadres sont les entretoises et la butée de la pile : colle-les sur la plaque, à leur emplacement.`
-    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Colle l’arrière et l’avant de chaque coque (languette dans la rainure), assemble les 2 coques avec 5 vis M3 de 20 mm, puis serre les 4 pièces ensemble avec la vis de jonction M3 de 30 mm (bas du canon). Couvercle : talon sur le plateau. Viseurs : bases sur le plateau, puis colle-les dans leurs logements sur le dessus.';
+    ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Numéros bleus : gravure. C${g.n} est dessinée retournée (décors gravés) : pose-la face gravée vers l’extérieur. Colle les couches C1 à C${halfCount()} ensemble, C${halfCount()+1} à C${g.n} ensemble, puis visse les 2 parties (4 vis M3). Les disques percés et les rectangles découpés dans les cadres sont les entretoises et le rebord devant la pile : colle-les sur la plaque, à leur emplacement.`
+    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Colle l’arrière et l’avant de chaque coque (languette dans la rainure), assemble les 2 coques avec 6 vis M3 de 20 mm, puis serre les 4 pièces ensemble avec les 2 vis de jonction M3 de 30 mm (en bas et en haut du canon). Couvercle : talon sur le plateau. Viseurs : bases sur le plateau, puis colle-les dans leurs logements sur le dessus.';
   const prev = $('exportPreview');
-  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 88 × 110 × 15 mm et les 2 avants 80 × 40 × 15 mm. Plus le couvercle de la crosse (46 × 30 mm) et les 2 viseurs. Il faut un plateau d’au moins 90 × 110 mm.</div>';
+  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 92 × 110 × 15 mm et les 2 avants 80 × 40 × 15 mm. Plus le couvercle de la crosse (46 × 30 mm) et les 2 viseurs. Il faut un plateau d’au moins 95 × 110 mm.</div>';
   else prev.innerHTML = '';
   return st;
 }
@@ -5325,19 +5335,20 @@ function readme(){
 ======================================
 
 Fichiers :
-  coque_droite_arriere.stl : demi-coque droite, partie arriere avec la crosse (88 x 110 x 15 mm)
+  coque_droite_arriere.stl : demi-coque droite, partie arriere avec la crosse (92 x 110 x 15 mm, languettes comprises)
   coque_droite_avant.stl   : demi-coque droite, partie avant (80 x 40 x 15 mm)
   coque_gauche_arriere.stl : demi-coque gauche, partie arriere avec la crosse
   coque_gauche_avant.stl   : demi-coque gauche, partie avant
   couvercle_crosse.stl : couvercle a emboiter sous la poignee (talon 46 x 30 x 2 mm + cadre encliquetable)
   viseurs.stl : hausse (a l'arriere) et guidon (a l'avant), avec un pied en T ; ils sont deja debout
                 sur leur face avant (pas de supports). Le pied s'enferme entre les 2 demi-coques.
-Unites : millimetres. Plateau d'impression minimal : 90 x 110 mm.
+Unites : millimetres. Plateau d'impression minimal : 95 x 110 mm.
 Decors en bas-relief : glissiere, stries, fenetre d'ejection, bouche du canon et plaquette
 de crosse striee, creuses de 0,8 mm dans les faces exterieures.
 Chaque demi-coque est coupee en x = 80 mm : la languette de la piece arriere
-s'enfile dans la rainure de la piece avant (a coller). Une vis de jonction M3 de 30 mm
-traverse le bas du canon (juste devant la poignee) et serre les 4 pieces ensemble.
+s'enfile dans la rainure de la piece avant (a coller). Deux vis de jonction M3 de 30 mm
+traversent le canon en bas et en haut (juste devant la poignee) et serrent les 4 pieces ensemble.
+Logement de la pile agrandi de 5 mm dans les pieces avant, petit rebord devant la pile.
 
 Composants prevus :
   ${NL} LED Ø ${fmt(C.led)} mm (trous Ø ${fmt(num(S.holes.led))} mm)
@@ -5359,14 +5370,14 @@ Montage :
   1. Place les ${NL} LED (dessus), le bouton gachette (avant de la poignee),
      le bouton recharger (face droite) et le module laser (avant).
   2. Loge la carte Arduino Nano dans la poignee ; le cable USB sort par le bas.
-  3. Passe les 3 fils du laser dans l'encoche en bas de la butee, puis dans la rigole du plancher jusqu'a la
-     poignee. Pose ensuite la pile 9 V couchee par-dessus, bornes cote crosse (entre le plot de vis et la butee).
+  3. Passe les 3 fils du laser au milieu du petit rebord, puis dans la rigole du plancher jusqu'a la
+     poignee. Pose ensuite la pile 9 V couchee par-dessus, bornes cote crosse (entre le plot de vis et le rebord).
   4. Pose le pied en T de la hausse (cran a l'arriere) et du guidon (a l'avant) dans les demi-encoches
      du dessus de la demi-coque droite : la semelle du viseur repose sur le dessus de la coque.
-  5. Colle chaque piece arriere et avant (languette dans la rainure), puis assemble les deux demi-coques avec 5 vis M3 de 20 mm : tete de vis dans le lamage de la
+  5. Colle chaque piece arriere et avant (languette dans la rainure), puis assemble les deux demi-coques avec 6 vis M3 de 20 mm (dont 1 en bas de la crosse) : tete de vis dans le lamage de la
      demi-coque droite, la vis se visse dans l'avant-trou du plot de la demi-coque gauche.
-  6. Visse la vis de jonction M3 de 30 mm par la droite, dans le bas du canon juste devant
-     la poignee : elle traverse les 2 languettes et les 4 pieces, qui sont alors tenues ensemble.
+  6. Visse les 2 vis de jonction M3 de 30 mm par la droite, en bas et en haut du canon juste devant
+     la poignee : elles traversent les 2 languettes et les 4 pieces, qui sont alors tenues ensemble.
 ${S.pillars ? '  Avant le montage : casse a la pince le radeau et les petits piliers coniques sous les 2 languettes, puis ponce.\n' : ''}  7. En fermant la coque, les 2 viseurs sont enfermes : verifie qu'ils ne bougent plus.
      La ligne de visee passe 2,7 cm au-dessus du laser : a 10 m, vise un peu au-dessus de la cible.
   8. Emboite le couvercle sous la poignee : le cadre entre dans l'ouverture et se clipse.
