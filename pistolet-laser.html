@@ -539,7 +539,7 @@ table.vis small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px
     </div>
   </div>
   <div id="modCad" class="module" role="tabpanel" aria-labelledby="tabCad" hidden>
-    <p class="mod-intro">Modélise la coque du pistolet. Un viseur, un couvercle sous la crosse et des décors en bas-relief sont prévus. Les trous doivent laisser passer les <x-n data-g="p" data-v5="5">3</x-n> LED, les 2 boutons et le module laser. À la fin, télécharge le fichier pour la machine.</p>
+    <p class="mod-intro">Modélise la coque du pistolet. Un viseur, un couvercle sous la crosse et des décors en bas-relief sont prévus. Les trous doivent laisser passer les <x-n data-g="p" data-v5="5">3</x-n> LED, les 2 boutons, le bouton marche/arrêt (face gauche) et le module laser. À la fin, télécharge le fichier pour la machine.</p>
 
     <section class="panel cad-setup" id="cadSetup">
       <fieldset class="bigchoice">
@@ -561,7 +561,7 @@ table.vis small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px
     <div id="cadMain" hidden>
       <div class="cad-bar panel">
         <span>Fabrication : <b id="barProc"></b></span>
-        <span class="pill wait" id="barState">0 / 4 diamètres corrects</span>
+        <span class="pill wait" id="barState">0 / 5 diamètres corrects</span>
         <button class="ghost" id="cadChange" type="button">Changer de procédé</button>
       </div>
       <div class="cad-work">
@@ -596,6 +596,12 @@ table.vis small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px
           <section class="panel side-block" id="extraBlock">
             <h3>Viseur, couvercle de crosse et décors</h3>
             <p class="small-note" id="extraNote"></p>
+          </section>
+
+          <section class="panel side-block" id="adjBlock">
+            <h3>Réglage du laser</h3>
+            <label class="tog" id="adjRow"><input type="checkbox" id="optAdj"> Laser réglable (rotule + 2 vis)</label>
+            <p class="small-note" id="adjNote"></p>
           </section>
 
           <section class="panel side-block" id="textBlock">
@@ -4729,39 +4735,43 @@ import ManifoldModule from 'manifold-3d';
 const NL = window.NB.p;                                   // 3 ou 5 LED de munitions
 const LEDXS = NL === 5 ? [20, 29, 38, 47, 56] : [24, 36, 48];   // entre les plots de vis (x 13 et 66)
 const LEDZ = 104.5;                                                // LED sur la face droite, en haut (au-dessus du bouton recharger)
-const PROFILE = [[0,70],[12,70],[4,0],[50,0],[55,32],[55,70],[160,70],[160,106],[156,110],[6,110],[0,104]];
-const FRONT = 154;   // fond de la cavité : paroi avant (canon) de 6 mm, la carte du laser KY-008 tient derrière
+const PROFILE = [[0,70],[12,70],[4,0],[50,0],[55,32],[55,70],[180,70],[180,106],[176,110],[6,110],[0,104]];
+const FRONT = 174;   // fond de la cavité : paroi avant (canon) de 6 mm, la carte du laser KY-008 tient derrière
 const CAVITY  = [[8,76],[17,76],[17,-1],[44,-1],[44,76],[FRONT,76],[FRONT,104],[8,104]];
-const INNER   = [[0,70],[12,70],[4,0],[17,0],[17,76],[8,76],[8,104],[FRONT,104],[FRONT,76],[44,76],[44,0],[50,0],[55,32],[55,70],[160,70],[160,106],[156,110],[6,110],[0,104]];
+const INNER   = [[0,70],[12,70],[4,0],[17,0],[17,76],[8,76],[8,104],[FRONT,104],[FRONT,76],[44,76],[44,0],[50,0],[55,32],[55,70],[180,70],[180,106],[176,110],[6,110],[0,104]];
 const PLIES = [3, 4, 5, 6, 8];
 /* Plots de vis M3 qui relient les deux demi-coques (position x, z dans la cavité) */
-const POSTS = [[13,98],[66,100],[138,101.5],[30,64]], POST_R = 3.75;
+const POSTS = [[13,98],[66,100],[158,101.5],[30,64]], POST_R = 3.75;
 /* Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute : arrêtée à gauche par un plot, à droite par une butée */
-const BAT = {x0:70, L:48.5, H:26.5, T:17.5, z:90, stop:124};   // stop : petit rebord devant la pile (5 mm plus loin qu'avant)
+const BAT = {x0:70, L:48.5, H:26.5, T:17.5, z:90, stop:134};   // stop : petit rebord devant la pile (parties avant rallongées de 2 cm : +1 cm pour la pile, +1 cm pour le laser)
 /* Parties avant : logement de la pile agrandi de 5 mm en tout (2,5 mm de chaque côté, en haut et en bas),
    de la fin des languettes jusqu'au rebord ; les parois y font 2,5 mm. */
-const POCKET = {x0:94, x1:124, hw:12.5, z0:73.5, z1:106.5};
+const POCKET = {x0:94, x1:134, hw:12.5, z0:73.5, z1:106.5};
 /* Vis en bas de la crosse (pièces arrière), dans la matière pleine derrière la Nano */
 const GRIP_SCREW = [11.5, 5.5];
 /* Impression 3D : chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) au plan x = SPLIT, assemblées par un tenon et une rainure collés */
-const SPLIT = 80, TNL = 12, SOLIDS = [[150,78.5]];   // vis supplémentaire dans le bloc plein de l'avant
+const SPLIT = 80, TNL = 12, SOLIDS = [[170,78.5]];   // vis supplémentaire dans le bloc plein de l'avant
 /* Vis de jonction des 4 pièces : traverse toute l'épaisseur dans la paroi du bas, au milieu des languettes */
-const JOINTS = [[SPLIT + TNL/2, 73.2], [SPLIT + TNL/2, 106.5]];   // 2 vis de jonction : en bas (plancher) et en haut (paroi du dessus)
+const JOINTS = [[SPLIT + TNL/2, 73.2], [SPLIT + TNL/2, 106.5]];
+const TENONS = [[71, 76.5], [103, 108.6]];   // hauteurs des 2 tenons de l'arrière (autour des 2 vis)   // 2 vis de jonction : en bas (plancher) et en haut (paroi du dessus)
 /* Passage des 3 fils du laser : encoche en bas de la butée de la pile + rigole dans le plancher, sous la pile, jusqu'à la poignée */
 const WIRE = {x0:40, hw:3.5, z0:74.8, notchTop:80};
 /* Bouton recharger (face droite) : assez loin du plot de vis (66, 100) même avec un bouton de Ø 16 à 18 mm */
 const RECH = [54, 90];
+/* Bouton marche/arrêt (face gauche, partie arrière, au-dessus de la crosse) : devant le texte, derrière la pile */
+const SW = [52, 86];
 
 /* Composants : tailles proposées (mm) et limites pour « Autre » (pour que le trou tienne dans la coque) */
 const COMPS = {
   led:   {label:`LED (× ${NL})`,        name:'LED',              sizes:NL === 5 ? [3,5,8] : [3,5,8,10],  min:2, max:NL === 5 ? 8 : 10, def:5,  ref:d => `LED Ø ${fmt(d)} mm`},
   gach:  {label:'Bouton gâchette',  name:'bouton gâchette',  sizes:[7,12,16,19], min:4, max:20, def:12, ref:d => `bouton poussoir à visser, corps Ø ${fmt(d)} mm`},
   rech:  {label:'Bouton recharger', name:'bouton recharger', sizes:[6,7,12,16],  min:4, max:18, def:7,  ref:d => `bouton poussoir à visser, corps Ø ${fmt(d)} mm`},
-  laser: {label:'Module laser',     name:'module laser',     sizes:[6,9,12],     min:4, max:14, def:6,  ref:d => `tête du laser Ø ${fmt(d)} mm`}
+  laser: {label:'Module laser',     name:'module laser',     sizes:[6,9,12],     min:4, max:14, def:6,  ref:d => `tête du laser Ø ${fmt(d)} mm`},
+  sw:    {label:'Bouton marche/arrêt', name:'bouton marche/arrêt', sizes:[7,12,16,20], min:5, max:20, def:12, ref:d => `interrupteur rond à visser (poussoir à accrochage ou bascule ronde), Ø ${fmt(d)} mm`}
 };
 const GROUPS = [
   {comp:'led', holes:LEDXS.map((x, k) => 'led' + (k + 1))}, {comp:'gach', holes:['gach']},
-  {comp:'rech', holes:['rech']}, {comp:'laser', holes:['laser']}
+  {comp:'rech', holes:['rech']}, {comp:'laser', holes:['laser']}, {comp:'sw', holes:['sw']}
 ];
 const DIRS = {'+X':[0,1],'-X':[0,-1],'+Y':[1,1],'-Y':[1,-1],'+Z':[2,1],'-Z':[2,-1]};
 const PROC = {
@@ -4773,8 +4783,8 @@ const PROC = {
 
 /* ================= État ================= */
 const KEY = 'pistolet-cao-v2';
-let S = {proc:null, started:false, ply:3, holes:{led:'',gach:'',rech:'',laser:''}, comp:{led:5,gach:12,rech:7,laser:6}, explode:false, pillars:true, textR:'', textL:''};
-try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) { S = Object.assign(S, s); S.comp = Object.assign({led:5,gach:12,rech:7,laser:6}, s.comp); } } catch(e) {}
+let S = {proc:null, started:false, ply:3, holes:{led:'',gach:'',rech:'',laser:'',sw:''}, comp:{led:5,gach:12,rech:7,laser:6,sw:12}, explode:false, pillars:true, textR:'', textL:'', adjLaser:true};
+try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) { S = Object.assign(S, s); S.comp = Object.assign({led:5,gach:12,rech:7,laser:6,sw:12}, s.comp); S.holes = Object.assign({led:'',gach:'',rech:'',laser:'',sw:''}, s.holes); } } catch(e) {}
 if (S.comp.led > COMPS.led.max) S.comp.led = COMPS.led.max;   // 5 LED : Ø 8 mm au plus
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
 const $ = id => document.getElementById(id), ROOT = document.getElementById('modCad');
@@ -4795,7 +4805,8 @@ function HOLES(){
     ...LEDXS.map((x, k) => ({id:'led' + (k + 1), comp:'led', p:[x,-g.W2,LEDZ], dir:'+Y', depth:(g.W2 - g.CY) + 2})),
     {id:'gach', comp:'gach', p:[55,0,52],        dir:'-X', depth:13},
     {id:'rech', comp:'rech', p:[RECH[0],-g.W2,RECH[1]], dir:'+Y', depth:(g.W2 - g.CY) + 2},
-    {id:'laser',comp:'laser',p:[160,0,90],       dir:'-X', depth:16}
+    {id:'laser',comp:'laser',p:[180,0,90],       dir:'-X', depth:16},
+    {id:'sw',   comp:'sw',   p:[SW[0], g.W2, SW[1]], dir:'-Y', depth:(g.W2 - g.CY) + 2}   // bouton marche/arrêt : face gauche, au-dessus de la crosse
   ];
 }
 
@@ -4861,7 +4872,7 @@ function layerPlan(k, ext){
 /* ================= Viseur, couvercle de la crosse et décors en bas-relief ================= */
 const SIGHT = {z0:110, zb:111, top:116, notch:3.6, blade:2.4,
   rear:{x0:6.5, x1:14.5, hw:5},          // hausse : base 8 × 10 mm, 2 oreilles, cran de 3,6 mm
-  front:{x0:144, x1:152, hw:4}};         // guidon : base 8 × 8 mm, lame de 2,4 mm
+  front:{x0:164, x1:172, hw:4}};         // guidon : base 8 × 8 mm, lame de 2,4 mm
 /* Pied en T sous chaque viseur : il descend dans une encoche du dessus, coupée en deux par le plan
    des demi-coques ; une fois les 2 coques vissées, le pied est enfermé (pas de colle).
    Le pied commence 1 mm après l'arrière du viseur (garde de la matière au coin arrière de la coque). */
@@ -4874,11 +4885,11 @@ const DEC = {w:1.2, d:.8};                 // décors : largeur et profondeur de
 function decorLines(side){
   const L = [], seg = (a, b) => L.push([a, b]);
   const rr = (num(S.holes.rech) || S.comp.rech)/2 + 2;
-  if (side < 0) { seg([2,92],[RECH[0] - rr,92]); seg([RECH[0] + rr,92],[158,92]); } else seg([2,92],[158,92]);   // glissière
+  if (side < 0) { seg([2,92],[RECH[0] - rr,92]); seg([RECH[0] + rr,92],[178,92]); } else { const rs = (num(S.holes.sw) || S.comp.sw)/2 + 2; seg([2,92],[SW[0] - rs,92]); seg([SW[0] + rs,92],[178,92]); }   // glissière (interrompue autour des boutons)
   if (side > 0) for (let i = 0; i < 5; i++) seg([20 + i*3, 96], [20 + i*3, 107]);   // (côté droit : place des LED)                                     // stries arrière de la glissière
-  for (let i = 0; i < 4; i++) seg([120 + i*3, 96], [120 + i*3, 107]);                                   // stries avant
+  for (let i = 0; i < 4; i++) seg([140 + i*3, 96], [140 + i*3, 107]);                                   // stries avant
   const EJ = [[92,96],[116,96],[116,106],[92,106]]; EJ.forEach((p, i) => seg(p, EJ[(i+1) % 4]));         // fenêtre d'éjection
-  seg([146,72],[146,108]);                                                                              // bouche du canon
+  seg([166,72],[166,108]);                                                                              // bouche du canon
   const PL = [[11.3,10],[44.4,10],[48.5,30],[48.5,58],[16.4,58]]; PL.forEach((p, i) => seg(p, PL[(i+1) % PL.length]));   // plaquette de crosse
   const xl = z => 11.3 + 5.1*(z - 10)/48, xr = z => z < 30 ? 44.4 + 4.1*(z - 10)/20 : 48.5;
   for (let z = 15; z <= 53; z += 4) seg([xl(z) + 2.5, z], [xr(z) - 2.5, z]);                            // stries de la poignée
@@ -4912,7 +4923,7 @@ const FONT = (() => {
     '+':[[[2,1.5],[2,4.5]],[[.5,3],[3.5,3]]], '/':[[[0,0],[4,6]]], ':':[[[2,4.2],[2,3.6]],[[2,1.2],[2,.6]]], ' ':[]
   };
 })();
-const TXT = {x0:6, x1:44, z0:74, z1:89, maxH:9, minH:4, adv:5.6};   // zone au-dessus de la crosse, sous la ligne de glissière
+const TXT = {x0:6, x1:40, z0:74, z1:89, maxH:9, minH:4, adv:5.6};   // zone au-dessus de la crosse, sous la ligne de glissière
 const cleanText = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().split('').filter(c => FONT[c]).join('').replace(/^ +| +$/g, '');
 function textLayout(raw){
   let t = cleanText(raw), W = TXT.x1 - TXT.x0, cut = false;
@@ -4951,7 +4962,7 @@ function sightKind(k){
 function layerPoly(L){
   const poly = (L.inner ? INNER : PROFILE).slice(), kind = sightKind(L.k);
   if (!kind) return poly;
-  const [x0, x1] = kind === 'blade' ? [146, 152] : [6.5, 12.5], i = poly.findIndex(p => p[0] === 156 && p[1] === 110);
+  const [x0, x1] = kind === 'blade' ? [166, 172] : [6.5, 12.5], i = poly.findIndex(p => p[0] === 176 && p[1] === 110);
   poly.splice(i + 1, 0, [x1, 110], [x1, SIGHT.top], [x0, SIGHT.top], [x0, 110]);
   return poly;
 }
@@ -4987,6 +4998,42 @@ function buildCover(){
   if (!laser) for (const s of [-1, 1]) rim = keep(rim.add(cylAxis(.5, 21, 40, 0, [0, s*(cy - .2), 4])));         // bourrelets d'encliquetage
   return laser ? {talon, rim, h} : {cover: keep(talon.add(rim))};
 }
+/* ================= Laser réglable : rotule + 2 vis de réglage + 2 ressorts =================
+   La tête du laser est tenue par un support imprimé : une boule (rotule) à l'avant, prise entre les 2 demi-coques
+   juste derrière la paroi du canon, et un tube à l'arrière. 2 vis M3 poussent l'arrière du tube (une par le dessus :
+   haut / bas, une par le côté gauche : gauche / droite) ; en face, 2 petits ressorts le repoussent. */
+const ADJ = {cx:FRONT - 8, r:7.5, seat:7.7, tube:6, x0:FRONT - 32, blk:FRONT - 17, sx:FRONT - 28, sz:89, spr:3.25};
+const adjOn = () => S.proc !== 'laser' && S.adjLaser;
+function adjShell(res, g){                                      // modifications de la coque
+  const d = num(S.holes.laser) || S.comp.laser, A = ADJ;
+  res = keep(res.add(box(A.blk, -g.CY - .5, 76, FRONT + .1, g.CY + .5, 104)));                                   // bloc qui porte la rotule
+  res = keep(res.subtract(keep(Manifold.sphere(A.seat, 72)).translate([A.cx, 0, 90])));                             // logement de la boule
+  res = keep(res.subtract(cylAxis(A.tube + .6, A.blk - 1, A.cx, 0, [0, 0, 90])));                                  // passage du tube (il peut pencher)
+  res = keep(res.subtract(cylAxis(d/2 + 1, A.cx, FRONT + 7, 0, [0, 0, 90])));                                      // trou du faisceau dans la paroi, avec du jeu
+  res = keep(res.subtract(cylAxis(1.3, 90 + A.tube - 1, 112, 2, [A.sx, 0, 0])));                                   // vis de réglage haut / bas (par le dessus)
+  res = keep(res.subtract(cylAxis(1.3, 1, g.W2 + 1, 1, [A.sx, 0, A.sz])));                                         // vis de réglage gauche / droite (par le côté gauche)
+  res = keep(res.subtract(cylAxis(A.spr, 74, 77, 2, [A.sx, 0, 0])));                                               // logement du ressort du bas
+  res = keep(res.subtract(cylAxis(A.spr, -g.CY - 3, -g.CY + 1, 1, [A.sx, 0, A.sz])));                              // logement du ressort de droite
+  return res;
+}
+function buildAdjHolder(){                                      // support du laser (pièce à imprimer debout)
+  const d = num(S.holes.laser) || S.comp.laser, A = ADJ;
+  let h = keep(keep(Manifold.sphere(A.r, 72)).translate([A.cx, 0, 90]));
+  h = keep(h.add(cylAxis(A.tube, A.x0, A.cx, 0, [0, 0, 90])));
+  h = keep(h.subtract(cylAxis(d/2, A.x0 - 1, A.cx + A.r + 1, 0, [0, 0, 90])));                                       // alésage de la tête du laser (diamètre du trou choisi)
+  h = keep(h.subtract(cylAxis(A.spr, 90 - A.tube - 1, 90 - A.tube + 2, 2, [A.sx, 0, 0])));                          // logement du ressort du bas
+  h = keep(h.subtract(cylAxis(A.spr, -A.tube - 1, -A.tube + 2, 1, [A.sx, 0, A.sz])));                               // logement du ressort de droite
+  return h;
+}
+function renderAdj(){
+  const laser = S.proc === 'laser';
+  $('optAdj').checked = !!S.adjLaser; $('optAdj').disabled = laser;
+  $('adjNote').textContent = laser
+    ? 'Disponible en impression 3D seulement. En découpe laser, le module se règle à la main puis se colle (colle chaude).'
+    : S.adjLaser
+      ? `La tête du laser se monte dans un support imprimé (support_laser.stl) : une boule de Ø ${2*ADJ.r} mm prise entre les 2 demi-coques derrière la paroi du canon, et un tube à l’arrière. Une vis M3 par le dessus règle le haut / bas, une vis M3 par le côté gauche règle la gauche / droite ; 2 petits ressorts (ou de la mousse) les repoussent. Règle-le une fois à 10 m : vise le centre de la cible, tire, puis tourne les vis jusqu’à ce que le point arrive au centre. Le trou du laser que tu choisis devient l’alésage du support.`
+      : 'Laser fixe : la tête traverse la paroi du canon. Sans réglage, le point laser peut tomber à plusieurs centimètres du point visé à 10 m.';
+}
 function visserie(){
   const g = G();
   if (S.proc === 'laser') {
@@ -4994,7 +5041,9 @@ function visserie(){
     return [[4, `vis M3 × ${len} mm`, 'assemblage des 2 parties (trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche)']];
   }
   return [[6, 'vis M3 × 20 mm', '4 plots de la coque + 1 plot à l’avant du canon + 1 en bas de la crosse (tête dans le lamage, côté droit)'],
-          [2, 'vis M3 × 30 mm', 'vis de jonction des parties avant et arrière : en bas et en haut du canon, devant la poignée']];
+          [2, 'vis M3 × 30 mm', 'vis de jonction des parties avant et arrière : en bas et en haut du canon, devant la poignée'],
+          ...(adjOn() ? [[1, 'vis M3 × 16 mm', 'réglage haut / bas du laser, par le dessus du canon'], [1, 'vis M3 × 12 mm', 'réglage gauche / droite du laser, par le côté gauche'],
+                         [2, 'petits ressorts (ressort de stylo coupé, Ø 4 à 6 mm) ou morceaux de mousse', 'en face des 2 vis : ils repoussent le support du laser']] : [])];
 }
 function renderExtra(){
   const g = G(), laser = S.proc === 'laser';
@@ -5007,11 +5056,12 @@ function renderExtra(){
 /* Piliers coniques sous la languette : pendant l'impression, la languette dépasse de 8 mm
    au-dessus du vide ; ces petits cônes la soutiennent, posés sur un petit radeau qui colle
    bien au plateau ; le tout se casse à la pince. */
-const PILLAR = {xs:[81.6, 86, 90.4], z0:73.5, z1:107, dz:3.4, rBase:1, rTip:.4, raft:.4};   // radeau : plaque de 0,4 mm (2 couches) sur le plateau
+const PILLAR = {xs:[81.6, 86, 90.4], zs:[72.6, 75, 104.3, 107.3], rBase:1, rTip:.4, raft:.4};   // radeau : plaque de 0,4 mm (2 couches) sur le plateau
 function tonguePillars(sgn, yc){
   const g = G(), yBed = sgn*g.W2, yFace = yc - sgn*1.2, h = Math.abs(yBed - yFace) + .05;
   let all = null;
-  for (const x of PILLAR.xs) for (let z = PILLAR.z0; z <= PILLAR.z1 + .01; z += PILLAR.dz) {
+  for (const x of PILLAR.xs) for (const z of PILLAR.zs) {
+    if (JOINTS.some(([jx, jz]) => Math.hypot(x - jx, z - jz) < 3.2)) continue;      // pas de pilier dans le trou d'une vis
     let c = keep(Manifold.cylinder(h, PILLAR.rBase, PILLAR.rTip, 24, false));
     c = keep(keep(c.rotate([sgn < 0 ? -90 : 90, 0, 0])).translate([x, yBed, z]));
     all = all ? keep(all.add(c)) : c;
@@ -5056,6 +5106,7 @@ function buildPrint(){
     for (const s of [-1, 1]) res = keep(res.add(box(BAT.stop, s < 0 ? -g.CY - .5 : WIRE.hw, 75.5, BAT.stop + 2.5, s < 0 ? -WIRE.hw : g.CY + .5, 80)));   // petit rebord (2 morceaux, passage des fils au milieu)
     res = keep(res.subtract(box(WIRE.x0, -WIRE.hw, WIRE.z0, POCKET.x0 + 1, WIRE.hw, 76.5)));                     // rigole sous la pile vers la poignée
     for (const c of cutters()) res = keep(res.subtract(cylSolid(c, .5)));
+    if (adjOn()) res = adjShell(res, g);                                                                          // laser réglable : rotule + 2 vis
     res = keep(res.subtract(decorCut(-1, DEC.d))); res = keep(res.subtract(decorCut(1, DEC.d)));             // décors en creux
     res = keep(res.add(sightSolids()));                 // hausse et guidon, intégrés aux coques
     for (const s of [-1, 1]) res = keep(res.subtract(box(19, s > 0 ? g.CY - .01 : -g.CY - .8, 3.4, 42, s > 0 ? g.CY + .8 : -g.CY + .01, 4.6)));   // rainures du couvercle
@@ -5067,21 +5118,23 @@ function buildPrint(){
     const out = {};
     for (const [nm, sgn] of [['r', -1], ['l', 1]]) {
       const y0 = sgn < 0 ? -30 : 0, y1 = sgn < 0 ? 0 : 30, yc = sgn*(g.W2 - 2.5);                 // yc : milieu de la paroi latérale
-      const half = keep(res.intersect(box(-10, y0, -10, 170, y1, 120)));
-      const tongue = box(SPLIT - .5, yc - 1.2, 71, SPLIT + TNL, yc + 1.2, 108.6);                    // tenon de l'arrière : 12 mm de long, du plancher jusque dans la paroi du dessus
-      const groove = box(SPLIT - 1, yc - 1.4, 70.8, SPLIT + TNL + .4, yc + 1.4, 108.8);              // rainure de l'avant, jeu 0,2 mm
+      const half = keep(res.intersect(box(-10, y0, -10, 200, y1, 130)));
+      // 2 tenons courts, seulement autour des 2 vis de jonction (la paroi des pièces avant reste pleine entre les deux)
+      const tongue = keep(box(SPLIT - .5, yc - 1.2, TENONS[0][0], SPLIT + TNL, yc + 1.2, TENONS[0][1]).add(box(SPLIT - .5, yc - 1.2, TENONS[1][0], SPLIT + TNL, yc + 1.2, TENONS[1][1])));
+      const groove = keep(box(SPLIT - 1, yc - 1.5, TENONS[0][0] - .3, SPLIT + TNL + .4, yc + 1.5, TENONS[0][1] + .3).add(box(SPLIT - 1, yc - 1.5, TENONS[1][0] - .3, SPLIT + TNL + .4, yc + 1.5, TENONS[1][1] + .3)));   // encoches de l'avant, jeu 0,3 mm
       let jHole = null;
       for (const [jx, jz] of JOINTS) {                                                               // 2 vis de jonction au milieu des languettes (4,3 mm de matière autour)
         const h = sgn < 0 ? cylAxis(1.7, y0 - 1, 0, 1, [jx, 0, jz])                                  // passage Ø3,4 à droite
                           : cylAxis(1.25, 0, y1 + 1, 1, [jx, 0, jz]);                                // avant-trou Ø2,5 à gauche, sur toute l'épaisseur
         jHole = jHole ? keep(jHole.add(h)) : h;
       }
-      let rear = keep(keep(half.intersect(box(-10, y0, -10, SPLIT, y1, 120))).add(tongue));
+      let rear = keep(keep(half.intersect(box(-10, y0, -10, SPLIT, y1, 130))).add(tongue));
       if (S.pillars) rear = keep(rear.add(tonguePillars(sgn, yc)));                                       // piliers sous la languette (à casser)
       out[nm + 'r'] = toGeometry(keep(rear.subtract(jHole)));
-      out[nm + 'f'] = toGeometry(keep(keep(keep(half.intersect(box(SPLIT, y0, -10, 170, y1, 120))).subtract(groove)).subtract(jHole)));
+      out[nm + 'f'] = toGeometry(keep(keep(keep(half.intersect(box(SPLIT, y0, -10, 200, y1, 130))).subtract(groove)).subtract(jHole)));
     }
     out.cover = toGeometry(buildCover().cover);
+    if (adjOn()) out.holder = toGeometry(buildAdjHolder());
     return out;
   } finally { flush(); }
 }
@@ -5146,7 +5199,7 @@ function resize(){
   renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
 }
 function setView(v){
-  const t = new THREE.Vector3(80, 0, 55), P = {iso:[250,-215,175], side:[80,-400,55], top:[80,-.5,400], front:[430,0,60]}[v];
+  const t = new THREE.Vector3(90, 0, 55), P = {iso:[260,-225,180], side:[90,-420,55], top:[90,-.5,420], front:[450,0,60]}[v];
   const k = Math.max(1, 1.35 / (camera.aspect || 1.35));
   controls.target.copy(t); camera.position.set(t.x + (P[0]-t.x)*k, t.y + (P[1]-t.y)*k, t.z + (P[2]-t.z)*k); controls.update();
 }
@@ -5164,9 +5217,10 @@ function buildComponents(){
     g.add(cyl(.25, -W2 + 8, -W2 + 20, 1, [x-1.27,0,LEDZ], grey)); g.add(cyl(.25, -W2 + 8, -W2 + 20, 1, [x+1.27,0,LEDZ], grey));
   }
   g.add(cyl(C.gach/2, 41, 55, 0, [0,0,52], grey)); g.add(cyl(C.gach*.38, 55, 60, 0, [0,0,52], m(0xe0304a)));
+  g.add(cyl(C.sw/2, W2 - 12, W2, 1, [SW[0],0,SW[1]], grey)); g.add(cyl(C.sw*.4, W2, W2 + 3, 1, [SW[0],0,SW[1]], m(0x20262b)));   // bouton marche/arrêt (face gauche)
   g.add(cyl(C.rech/2, -W2, -W2 + 11, 1, [RECH[0],0,RECH[1]], grey)); g.add(cyl(C.rech*.37, -W2 - 4, -W2, 1, [RECH[0],0,RECH[1]], blue));
-  g.add(cyl(C.laser/2, FRONT - 1, 163, 0, [0,0,90], brass));
-  const board = new THREE.Mesh(new THREE.BoxGeometry(18, 1.6, 15), pcb); board.position.set(FRONT - 9.5, 0, 90); g.add(board);   // carte KY-008 derrière la paroi du canon
+  if (adjOn()) g.add(cyl(C.laser/2, ADJ.x0 + 2, ADJ.cx + ADJ.r - .5, 0, [0,0,90], brass)); else g.add(cyl(C.laser/2, FRONT - 1, 183, 0, [0,0,90], brass));
+  const board = new THREE.Mesh(new THREE.BoxGeometry(18, 1.6, 15), pcb); board.position.set(adjOn() ? ADJ.x0 - 9.5 : FRONT - 9.5, 0, 90); g.add(board);   // carte KY-008 derrière la paroi du canon
 
   /* Carte Arduino Nano (18 × 43 mm) debout dans la crosse, prise USB vers le bas */
   const nano = new THREE.Group();
@@ -5213,7 +5267,7 @@ function rebuild(){
       mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(P4[k], 30), edgeMatPrint));
       mesh.userData.half = half; mesh.userData.seg = seg; modelGroup.add(mesh);
     });
-    [['cover', 'cover']].forEach(([k, part]) => {
+    [['cover', 'cover'], ...(P4.holder ? [['holder', 'holder']] : [])].forEach(([k, part]) => {
       const mesh = new THREE.Mesh(P4[k], matPrint);
       mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(P4[k], 30), edgeMatPrint));
       mesh.userData.part = part; modelGroup.add(mesh);
@@ -5227,7 +5281,7 @@ function rebuild(){
 function applyExplode(){
   const n = G().n;
   modelGroup.children.forEach(m => {
-    if (m.userData.part) { m.position.set(0, 0, S.explode ? (m.userData.part === 'cover' ? -18 : 14) : 0); return; }
+    if (m.userData.part) { m.position.set(0, 0, S.explode ? (m.userData.part === 'cover' ? -18 : m.userData.part === 'holder' ? 30 : 14) : 0); return; }
     if (m.userData.k !== undefined) m.position.y = S.explode ? (m.userData.k - (n-1)/2) * 5 : 0;
     else { m.position.y = S.explode ? (m.userData.half === 'left' ? 24 : -24) : 0; m.position.x = S.explode && m.userData.seg === 'front' ? 16 : 0; }
   });
@@ -5287,7 +5341,7 @@ function renderPly(){
 }
 function renderBatt(){
   const g = G(), w = 2*g.CY;
-  $('battNote').textContent = `Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute de la coque, entre un plot de vis (à gauche) et un petit rebord (à droite), bornes côté crosse. Dans les parties avant, le logement est agrandi de 5 mm en tout (largeur ${fmt(2*POCKET.hw)} mm, hauteur ${fmt(POCKET.z1 - POCKET.z0)} mm) et la pile a 54 mm de long avec son clip. Les fils vont vers la Nano. Les 3 fils du laser passent au milieu du rebord puis par la rigole creusée dans le plancher, sous la pile, jusqu’à la poignée. Paroi avant du canon : 6 mm, la carte du laser (18 mm) tient derrière, entre la paroi et le rebord. Cavité de ${fmt(w)} mm d'épaisseur : ` + (w >= 18 ? 'la pile y rentre.' : 'trop étroite pour la pile, choisis une plaque de 3 à 6 mm.');
+  $('battNote').textContent = `Pile 9 V (48,5 × 26,5 × 17,5 mm) couchée dans la partie haute de la coque, entre un plot de vis (à gauche) et un petit rebord (à droite), bornes côté crosse. Dans les parties avant, le logement est agrandi de 5 mm en tout (largeur ${fmt(2*POCKET.hw)} mm, hauteur ${fmt(POCKET.z1 - POCKET.z0)} mm) et la pile a 64 mm de long avec son clip. Les fils vont vers la Nano. Les 3 fils du laser passent au milieu du rebord puis par la rigole creusée dans le plancher, sous la pile, jusqu’à la poignée. Paroi avant du canon : 6 mm ; entre le rebord et la paroi il reste ${FRONT - BAT.stop - 2.5} mm pour la carte du laser (18 mm) et ses fils. Cavité de ${fmt(w)} mm d'épaisseur : ` + (w >= 18 ? 'la pile y rentre.' : 'trop étroite pour la pile, choisis une plaque de 3 à 6 mm.');
 }
 function renderJoin(){
   const g = G();
@@ -5297,7 +5351,7 @@ function renderJoin(){
     $('joinNote').textContent = `4 vis M3 de ${len} mm. Colle ensemble les couches C1 à C${m} (partie droite) et C${m+1} à C${g.n} (partie gauche), puis visse les 2 parties. Trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche ; les disques percés découpés dans les cadres sont les entretoises : empile-les au-dessus des trous.`;
   } else {
     $('pillarRow').hidden = false; $('optPillars').checked = !!S.pillars;
-    $('joinNote').textContent = (S.pillars ? 'Piliers activés : des petits cônes posés sur un radeau de 0,4 mm soutiennent les 2 languettes pendant l’impression ; casse le radeau et les cônes à la pince puis ponce légèrement. ' : 'Sans piliers, la languette (12 mm au-dessus du vide) peut s’affaisser à l’impression. ') + '6 vis M3 de 20 mm : 4 plots, 1 plot à l’avant du canon et 1 vis en bas de la crosse. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) : la languette de l’arrière entre dans la rainure de l’avant, colle-les (colle cyanoacrylate ou PLA), puis les 2 vis de jonction (M3 de 30 mm, en bas et en haut du canon, juste devant la poignée) traversent les 4 pièces et les serrent ensemble. Languettes de 12 mm : 4,3 mm de matière autour de chaque trou ; avant-trous Ø 2,5 mm sur toute l’épaisseur à gauche. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
+    $('joinNote').textContent = (S.pillars ? 'Piliers activés : des petits cônes posés sur un radeau de 0,4 mm soutiennent les tenons pendant l’impression ; casse le radeau et les cônes à la pince puis ponce légèrement. ' : 'Sans piliers, les tenons (12 mm au-dessus du vide) peuvent s’affaisser à l’impression. ') + '6 vis M3 de 20 mm : 4 plots, 1 plot à l’avant du canon et 1 vis en bas de la crosse. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) : les 2 tenons de l’arrière (autour des 2 vis) entrent dans 2 encoches de l’avant, colle-les (colle cyanoacrylate ou PLA), puis les 2 vis de jonction (M3 de 30 mm, en bas et en haut du canon, juste devant la poignée) traversent les 4 pièces et les serrent ensemble. Tenons de 12 mm de long, seulement au niveau des 2 vis (la paroi de l’avant reste pleine entre les deux) ; avant-trous Ø 2,5 mm sur toute l’épaisseur à gauche. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
   }
 }
 function refresh(){
@@ -5309,34 +5363,34 @@ function refresh(){
     $('ref-' + g.comp).textContent = COMPS[g.comp].ref(S.comp[g.comp]);
     markSizes(g.comp);
   }
-  renderPly(); renderJoin(); renderBatt(); renderExtra(); renderText();
+  renderPly(); renderJoin(); renderBatt(); renderExtra(); renderText(); renderAdj();
   const pill = $('barState');
-  pill.textContent = `${st.n} / 4 diamètres corrects`;
+  pill.textContent = `${st.n} / ${GROUPS.length} diamètres corrects`;
   pill.className = 'pill ' + (st.ready ? 'done' : 'wait');
   const btn = $('exportBtn'), g = G();
   btn.disabled = !st.ready;
   btn.textContent = S.proc === 'laser' ? 'Télécharger le plan de découpe (.svg)' : 'Télécharger les pièces à imprimer (.zip)';
   $('exportMsg').textContent = st.ready
     ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches.` : 'Tous les trous sont corrects. Le fichier contient les 4 pièces de la coque et le couvercle de la crosse (5 fichiers STL). Les viseurs font partie des coques.')
-    : `Le téléchargement se débloque quand les 4 diamètres sont corrects (${st.n} / 4).`;
+    : `Le téléchargement se débloque quand les ${GROUPS.length} diamètres sont corrects (${st.n} / ${GROUPS.length}).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Numéros bleus : gravure. C${g.n} est dessinée retournée (décors gravés) : pose-la face gravée vers l’extérieur. Colle les couches C1 à C${halfCount()} ensemble, C${halfCount()+1} à C${g.n} ensemble, puis visse les 2 parties (4 vis M3). Les disques percés et les rectangles découpés dans les cadres sont les entretoises et le rebord devant la pile : colle-les sur la plaque, à leur emplacement.`
-    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Colle l’arrière et l’avant de chaque coque (languette dans la rainure), assemble les 2 coques avec 6 vis M3 de 20 mm, puis serre les 4 pièces ensemble avec les 2 vis de jonction M3 de 30 mm (en bas et en haut du canon). Couvercle : talon sur le plateau. Les viseurs sont imprimés avec les coques, sans supports (profil en rampe).';
+    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Colle l’arrière et l’avant de chaque coque (tenons dans les encoches), assemble les 2 coques avec 6 vis M3 de 20 mm, puis serre les 4 pièces ensemble avec les 2 vis de jonction M3 de 30 mm (en bas et en haut du canon). Couvercle : talon sur le plateau. Les viseurs sont imprimés avec les coques, sans supports (profil en rampe).';
   const prev = $('exportPreview');
-  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 92 × 116 × 15 mm (viseur compris) et les 2 avants 80 × 40 × 15 mm. Plus le couvercle de la crosse (46 × 30 mm). Les viseurs sont intégrés aux coques. Il faut un plateau d’au moins 95 × 120 mm.</div>';
+  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 92 × 116 × 15 mm (viseur compris) et les 2 avants 100 × 46 × 15 mm (viseur compris). Plus le couvercle de la crosse (46 × 30 mm). Les viseurs sont intégrés aux coques. Il faut un plateau d’au moins 105 × 120 mm.</div>';
   else prev.innerHTML = '';
   return st;
 }
 
 /* ================= Exports ================= */
 function laserSVG(preview){
-  const g = G(), CW = 170, CH = 130, cols = 3, rows = Math.ceil(g.n/cols), coverY = 5 + rows*CH + 6;
+  const g = G(), CW = 190, CH = 130, cols = 3, rows = Math.ceil(g.n/cols), coverY = 5 + rows*CH + 6;
   const Wd = cols*CW + 5, Hd = coverY + 2*g.W2 + 10;
   const cut = 'fill="none" stroke="#FF0000" stroke-width="0.1"';
   let body = '';
   for (let k = 0; k < g.n; k++) {
     const L = layerPlan(k, 0), ox = 5 + (k % cols)*CW, oy = 5 + Math.floor(k/cols)*CH;
-    const MIR = k === g.n - 1, X = x => (ox + (MIR ? 162 - x : x)).toFixed(3), Y = z => (oy + 120 - z).toFixed(3);
+    const MIR = k === g.n - 1, X = x => (ox + (MIR ? 182 - x : x)).toFixed(3), Y = z => (oy + 120 - z).toFixed(3);
     const poly = layerPoly(L);
     body += `<g id="couche-${k+1}"><path ${cut} d="M${poly.map(([x,z]) => X(x)+' '+Y(z)).join(' L')} Z"/>`;
     for (const s of L.shapes) {
@@ -5345,7 +5399,7 @@ function laserSVG(preview){
       else body += `<rect ${cut} x="${X(s.x0)}" y="${Y(s.z1)}" width="${(s.x1-s.x0).toFixed(3)}" height="${(s.z1-s.z0).toFixed(3)}"/>`;
     }
     if (k === 0 || MIR) body += `<path fill="none" stroke="#0000FF" stroke-width="0.1" d="${decorLines(MIR ? 1 : -1).concat(textSegs(MIR ? 1 : -1)).map(([a, b]) => `M${X(a[0])} ${Y(a[1])} L${X(b[0])} ${Y(b[1])}`).join(' ')}"/>`;
-    body += `<text x="${X(MIR ? 136 : 128)}" y="${Y(71.6)}" font-family="Arial, sans-serif" font-size="4" fill="#0000FF">C${k+1}${MIR ? ' (retournée)' : ''}</text></g>`;
+    body += `<text x="${X(MIR ? 156 : 148)}" y="${Y(71.6)}" font-family="Arial, sans-serif" font-size="4" fill="#0000FF">C${k+1}${MIR ? ' (retournée)' : ''}</text></g>`;
   }
   { const f = v => v.toFixed(3), W = 2*g.W2, cy = g.CY, nb = Math.max(1, Math.round(6/g.t)), x0 = 5, y0 = coverY;
     body += `<g id="couvercle"><text x="${f(x0)}" y="${f(y0 - 1.5)}" font-family="Arial, sans-serif" font-size="3.5" fill="#0000FF">Couvercle de la crosse : talon + ${nb} cadre${nb > 1 ? 's' : ''} colle${nb > 1 ? 's' : ''} dessus</text>`;
@@ -5402,16 +5456,16 @@ function readme(){
 ======================================
 
 Fichiers :
-  coque_droite_arriere.stl : demi-coque droite, partie arriere avec la crosse (92 x 116 x 15 mm, languettes et viseur compris)
-  coque_droite_avant.stl   : demi-coque droite, partie avant (80 x 40 x 15 mm)
+  coque_droite_arriere.stl : demi-coque droite, partie arriere avec la crosse (92 x 116 x 15 mm, tenons et viseur compris)
+  coque_droite_avant.stl   : demi-coque droite, partie avant (100 x 46 x 15 mm, viseur compris)
   coque_gauche_arriere.stl : demi-coque gauche, partie arriere avec la crosse
   coque_gauche_avant.stl   : demi-coque gauche, partie avant
-  couvercle_crosse.stl : couvercle a emboiter sous la poignee (talon 46 x 30 x 2 mm + cadre encliquetable)
-Unites : millimetres. Plateau d'impression minimal : 95 x 120 mm.
+  couvercle_crosse.stl : couvercle a emboiter sous la poignee (talon 46 x 30 x 2 mm + cadre encliquetable)${adjOn() ? '\n  support_laser.stl : support reglable de la tete du laser (rotule + tube), a imprimer debout, tube sur le plateau' : ''}
+Unites : millimetres. Plateau d'impression minimal : 105 x 120 mm.
 Decors en bas-relief : glissiere, stries, fenetre d'ejection, bouche du canon et plaquette
 de crosse striee, creuses de 0,8 mm dans les faces exterieures.
-Chaque demi-coque est coupee en x = 80 mm : la languette de la piece arriere
-s'enfile dans la rainure de la piece avant (a coller). Deux vis de jonction M3 de 30 mm
+Chaque demi-coque est coupee en x = 80 mm : 2 tenons courts de la piece arriere (au niveau
+des 2 vis) s'enfilent dans 2 encoches de la piece avant (a coller). Deux vis de jonction M3 de 30 mm
 traversent le canon en bas et en haut (juste devant la poignee) et serrent les 4 pieces ensemble.
 Logement de la pile agrandi de 5 mm dans les pieces avant, petit rebord devant la pile.
 
@@ -5420,6 +5474,7 @@ Composants prevus :
   bouton gachette Ø ${fmt(C.gach)} mm (trou Ø ${fmt(num(S.holes.gach))} mm)
   bouton recharger Ø ${fmt(C.rech)} mm (trou Ø ${fmt(num(S.holes.rech))} mm)
   module laser Ø ${fmt(C.laser)} mm (trou Ø ${fmt(num(S.holes.laser))} mm)
+  bouton marche/arret Ø ${fmt(C.sw)} mm (trou Ø ${fmt(num(S.holes.sw))} mm, face gauche au-dessus de la crosse)
 
 Visserie :
 ${visserie().map(r => `  ${r[0]} x ${r[1].replace('×', 'x')} : ${r[2]}`).join('\n').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/’/g, "'")}
@@ -5433,18 +5488,19 @@ Impression conseillee :
 
 Montage :
   1. Place les ${NL} LED (face droite, en haut), le bouton gachette (avant de la poignee),
-     le bouton recharger (face droite) et le module laser (avant).
+     le bouton recharger (face droite), le bouton marche/arret (face gauche, au-dessus de la crosse)
+     et le module laser (avant). Le bouton marche/arret coupe le + de la pile 9 V avant la Nano (VIN).
   2. Loge la carte Arduino Nano dans la poignee ; le cable USB sort par le bas.
   3. Passe les 3 fils du laser au milieu du petit rebord, puis dans la rigole du plancher jusqu'a la
      poignee. Pose ensuite la pile 9 V couchee par-dessus, bornes cote crosse (entre le plot de vis et le rebord).
-  4. Colle chaque piece arriere et avant (languette dans la rainure), puis assemble les deux demi-coques avec 6 vis M3 de 20 mm (dont 1 en bas de la crosse) : tete de vis dans le lamage de la
+  4. Colle chaque piece arriere et avant (2 tenons dans les 2 encoches), puis assemble les deux demi-coques avec 6 vis M3 de 20 mm (dont 1 en bas de la crosse) : tete de vis dans le lamage de la
      demi-coque droite, la vis se visse dans l'avant-trou du plot de la demi-coque gauche.
   5. Visse les 2 vis de jonction M3 de 30 mm par la droite, en bas et en haut du canon juste devant
-     la poignee : elles traversent les 2 languettes et les 4 pieces, qui sont alors tenues ensemble.
+     la poignee : elles traversent les tenons et les 4 pieces, qui sont alors tenues ensemble.
 ${S.pillars ? '  Avant le montage : casse a la pince le radeau et les petits piliers coniques sous les 2 languettes, puis ponce.\n' : ''}  6. Les viseurs (hausse a l'arriere, guidon a l'avant) font partie des coques.
      La ligne de visee passe 2,6 cm au-dessus du laser : a 10 m, vise un peu au-dessus de la cible.
   7. Emboite le couvercle sous la poignee : le cadre entre dans l'ouverture et se clipse.
-     Pour l'ouvrir, glisse un tournevis plat dans l'encoche a l'arriere. Le cable USB passe par la fente.
+     Pour l'ouvrir, glisse un tournevis plat dans l'encoche a l'arriere. Le cable USB passe par la fente.${adjOn() ? `\n\nLaser reglable :\n  - Avant de fermer la coque : enfonce la tete du laser dans le support (par l'arriere), pose la boule\n    dans son logement derriere la paroi du canon, et un petit ressort dans chacun des 2 logements\n    (sous le tube et sur la paroi droite). La carte du laser reste derriere le support.\n  - Visse la vis M3 x 16 par le dessus et la vis M3 x 12 par le cote gauche jusqu'a toucher le tube.\n  - Reglage : pose le pistolet sur un appui stable a 10 m d'une cible, vise le centre avec le viseur,\n    tire, puis tourne les vis : celle du dessus monte / descend le point, celle du cote le deplace\n    a gauche / a droite. Recommence jusqu'a ce que le point laser arrive au centre.` : ''}
 
 Cablage : D6 gachette, D5 recharger, ${NL === 5 ? 'D2 D3 D4 D7 D8' : 'D2 D3 D4'} LED, D9 laser.
 Securite : ne jamais viser les yeux avec le laser.
@@ -5476,6 +5532,7 @@ async function doExport(){
       {name:'coque_gauche_arriere.stl', data: stlBinary(P.lr, (x,y,z) => [x, z, 15 - y])},
       {name:'coque_gauche_avant.stl', data: stlBinary(P.lf, (x,y,z) => [x - SPLIT, z - 70, 15 - y])},
       {name:'couvercle_crosse.stl', data: stlBinary(P.cover, (x,y,z) => [x - 4, y + G().W2, z + 2])},
+      ...(P.holder ? [{name:'support_laser.stl', data: stlBinary(P.holder, (x,y,z) => [y + ADJ.r, z - 90 + ADJ.r, x - ADJ.x0])}] : []),
       {name:'LISEZ-MOI.txt', data:readme()}]));
   }
   btn.disabled = false;
@@ -5506,6 +5563,7 @@ $('optComp').addEventListener('change', applyExplode);
 $('optXray').addEventListener('change', applyXray);
 $('optExplode').addEventListener('change', e => { S.explode = e.target.checked; save(); applyExplode(); });
 for (const [k, id] of [['textR', 'txtR'], ['textL', 'txtL']]) { $(id).value = S[k] || ''; $(id).addEventListener('input', e => { S[k] = e.target.value; save(); refresh(); later(); }); }
+$('optAdj').addEventListener('change', e => { S.adjLaser = e.target.checked; save(); refresh(); later(); });
 $('optPillars').addEventListener('change', e => { S.pillars = e.target.checked; save(); refresh(); later(); });
 $('exportBtn').addEventListener('click', doExport);
 
