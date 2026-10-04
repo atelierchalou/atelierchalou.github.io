@@ -4759,7 +4759,8 @@ const JOINTS = [[SPLIT + TNL/2, 73.2], [SPLIT + TNL/2, 106.5]];
    épaisseur : la chape de la demi-coque GAUCHE appartient à l'ARRIÈRE, celle de la demi-coque DROITE à l'AVANT ; la vis
    d'axe les traverse toutes les deux. En haut, la demi-coque gauche arrière avance de 10 mm (languette) sous la vis de
    fermeture, qui la relie à la demi-coque droite avant. Tout le reste de la coupe est droit (x = SPLIT). */
-const HINGE = {x:SPLIT, z:64.5, r:5, web:[SPLIT - 9, SPLIT + 9], gap:.25, lock:[SPLIT + 5, 106.5], tab:[SPLIT + 10, 100], open:60};
+const HINGE = {x:SPLIT, z:64.5, r:5, web:[SPLIT - 9, SPLIT + 9], gap:.25, lock:[SPLIT + 5, 106.5], tab:[SPLIT + 10, 100], open:60,
+  bolt:{L:25, head:5.5, headH:3, seat:-11.8, nutAF:5.5, nutH:4, nutIn:9.2, pocketAF:5.8}};   // boulon M3 × 25 (tête Ø5,5) + écrou frein M3 (5,5 sur plats, 4 mm)
   // 2 vis de jonction : en bas (plancher) et en haut (paroi du dessus)
 /* Passage des 3 fils du laser : encoche en bas de la butée de la pile + rigole dans le plancher, sous la pile, jusqu'à la poignée */
 const WIRE = {x0:40, hw:3.5, z0:74.8, notchTop:80};
@@ -5048,7 +5049,8 @@ function visserie(){
     return [[4, `vis M3 × ${len} mm`, 'assemblage des 2 parties (trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche)']];
   }
   return [[6, 'vis M3 × 20 mm', '4 plots de la coque + 1 plot à l’avant du canon + 1 en bas de la crosse (tête dans le lamage, côté droit)'],
-          [2, 'vis M3 × 30 mm', 'l’une sert d’axe à la charnière (sous le canon), l’autre ferme l’avant (en haut du canon) ; ne serre pas trop celle de la charnière'],
+          [1, 'boulon M3 × 25 mm (tête cylindrique) + écrou frein M3 (Nylstop)', 'axe de la charnière, sous le canon : tête à droite, écrou dans son logement hexagonal à gauche ; serre juste assez pour que l’avant tourne sans jeu'],
+          [1, 'vis M3 × 30 mm', 'fermeture de l’avant, en haut du canon'],
           ...(adjOn() ? [[1, 'vis M3 × 16 mm', 'réglage haut / bas du laser, par le dessus du canon'], [1, 'vis M3 × 12 mm', 'réglage gauche / droite du laser, par le côté gauche'],
                          [2, 'petits ressorts (ressort de stylo coupé, Ø 4 à 6 mm) ou morceaux de mousse', 'en face des 2 vis : ils repoussent le support du laser']] : [])];
 }
@@ -5132,10 +5134,16 @@ function buildPrint(){
       const rearZone = sgn > 0 ? keep(slab([[-10,-10],[SPLIT,-10],[SPLIT,H.tab[1]],[H.tab[0],H.tab[1]],[H.tab[0],130],[-10,130]], y0 - 1, y1 + 1)) : box(-10, y0 - 1, -10, SPLIT, y1 + 1, 130);
       const frontCut = sgn > 0 ? keep(slab([[-10,-10],[SPLIT + .2,-10],[SPLIT + .2,H.tab[1] - .2],[H.tab[0] + .2,H.tab[1] - .2],[H.tab[0] + .2,130],[-10,130]], y0 - 1, y1 + 1)) : box(-10, y0 - 1, -10, SPLIT + .2, y1 + 1, 130);
       let jHole = null;
-      for (const [jx, jz] of [[H.x, H.z], H.lock]) {                                                 // axe de la charnière + vis de fermeture
-        const h = sgn < 0 ? cylAxis(1.7, y0 - 1, 0, 1, [jx, 0, jz])                                  // passage Ø3,4 à droite (l'avant tourne autour de la vis)
-                          : cylAxis(1.25, 0, y1 + 1, 1, [jx, 0, jz]);                                // avant-trou Ø2,5 à gauche
-        jHole = jHole ? keep(jHole.add(h)) : h;
+      {                                                                                              // vis de fermeture (en haut)
+        const [jx, jz] = H.lock;
+        jHole = sgn < 0 ? cylAxis(1.7, y0 - 1, 0, 1, [jx, 0, jz]) : cylAxis(1.25, 0, y1 + 1, 1, [jx, 0, jz]);   // passage Ø3,4 à droite, avant-trou Ø2,5 à gauche
+      }
+      {                                                                                              // axe de la charnière : boulon + écrou frein
+        const B = H.bolt;
+        let h = cylAxis(1.7, sgn < 0 ? y0 - 1 : 0, sgn < 0 ? 0 : y1 + 1, 1, [H.x, 0, H.z]);          // passage Ø3,4 des 2 côtés (le boulon tourne librement)
+        if (sgn < 0) h = keep(h.add(cylAxis(B.head/2 + .45, -g.W2 - 1, B.seat, 1, [H.x, 0, H.z])));   // lamage Ø6,4 : tête du boulon (côté droit)
+        else h = keep(h.add(keep(keep(keep(Manifold.cylinder(g.W2 + 1 - B.nutIn, B.pocketAF/Math.sqrt(3), B.pocketAF/Math.sqrt(3), 6, false)).rotate([-90,0,0])).translate([H.x, B.nutIn, H.z]))));   // logement hexagonal de l'écrou (côté gauche) : il ne tourne pas
+        jHole = keep(jHole.add(h));
       }
       let rear = keep(half.intersect(rearZone)), front = keep(half.subtract(frontCut));
       if (sgn > 0) rear = keep(rear.add(lug(H.web[0], SPLIT)));                                        // chape gauche : sur l'arrière
@@ -5219,6 +5227,13 @@ function buildComponents(){
   const m = c => new THREE.MeshStandardMaterial({color:c, roughness:.4, metalness:.1});
   const cyl = (r, x0, x1, axis, at, mat) => { const gg = new THREE.CylinderGeometry(r, r, Math.abs(x1-x0), 32); if (axis===0) gg.rotateZ(-Math.PI/2); else if (axis===2) gg.rotateX(Math.PI/2); const p = at.slice(); p[axis] = (x0+x1)/2; gg.translate(...p); return new THREE.Mesh(gg, mat); };
   const red = m(0xff3048), grey = m(0x3a4148), blue = m(0x2f8fd0), brass = m(0xc9a44c), pcb = m(0x1f6b3a);
+  if (S.proc !== 'laser') {                                                                   // charnière : boulon M3 × 25 + écrou frein
+    const B = HINGE.bolt, steel = new THREE.MeshStandardMaterial({color:0xaeb6bd, roughness:.3, metalness:.7}), nylon = m(0x2d6fd6);
+    g.add(cyl(B.head/2, B.seat - B.headH, B.seat, 1, [HINGE.x, 0, HINGE.z], steel));            // tête
+    g.add(cyl(1.5, B.seat, B.seat + B.L, 1, [HINGE.x, 0, HINGE.z], steel));                    // tige
+    const nut = new THREE.Mesh(new THREE.CylinderGeometry(B.nutAF/Math.sqrt(3), B.nutAF/Math.sqrt(3), B.nutH*.7, 6), steel); nut.position.set(HINGE.x, B.nutIn + B.nutH*.35, HINGE.z); g.add(nut);
+    g.add(cyl(B.nutAF/2 - .3, B.nutIn + B.nutH*.7, B.nutIn + B.nutH, 1, [HINGE.x, 0, HINGE.z], nylon));   // bague nylon du frein
+  }
   const rl = C.led/2;
   for (const x of LEDXS) {
     g.add(cyl(rl, -W2 - rl*.4, -W2 + 7, 1, [x,0,LEDZ], red));                                   // LED couchée, tête qui sort de la face droite
@@ -5376,7 +5391,7 @@ function renderJoin(){
     $('joinNote').textContent = `4 vis M3 de ${len} mm. Colle ensemble les couches C1 à C${m} (partie droite) et C${m+1} à C${g.n} (partie gauche), puis visse les 2 parties. Trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche ; les disques percés découpés dans les cadres sont les entretoises : empile-les au-dessus des trous.`;
   } else {
     $('pillarRow').hidden = true;
-    $('joinNote').textContent = '6 vis M3 de 20 mm : 4 plots, 1 plot à l’avant du canon et 1 vis en bas de la crosse. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) et l’avant pivote vers le bas sur une charnière pour changer la pile. Sous le canon, juste devant la poignée : une chape sur l’arrière gauche et une chape sur l’avant droit, traversées par une vis M3 de 30 mm qui sert d’axe (ne la serre pas trop, l’avant doit tourner). En haut : une vis M3 de 30 mm de fermeture traverse la languette de l’arrière gauche et l’avant droit ; enlève-la pour ouvrir. Chaque chape fait toute l’épaisseur de sa demi-coque : impression à plat, sans support. Avant-trous Ø 2,5 mm à gauche. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
+    $('joinNote').textContent = '6 vis M3 de 20 mm : 4 plots, 1 plot à l’avant du canon et 1 vis en bas de la crosse. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) et l’avant pivote vers le bas sur une charnière pour changer la pile. Sous le canon, juste devant la poignée : une chape sur l’arrière gauche et une chape sur l’avant droit, traversées par un boulon M3 × 25 qui sert d’axe, tenu par un écrou frein (Nylstop) logé dans un creux hexagonal à gauche : il ne tourne pas et ne se desserre pas ; serre juste assez pour que l’avant tourne sans jeu. En haut : une vis M3 de 30 mm de fermeture traverse la languette de l’arrière gauche et l’avant droit ; enlève-la pour ouvrir. Chaque chape fait toute l’épaisseur de sa demi-coque : impression à plat, sans support. Avant-trou Ø 2,5 mm à gauche pour la vis du haut. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
   }
 }
 function refresh(){
@@ -5400,7 +5415,7 @@ function refresh(){
     : `Le téléchargement se débloque quand les ${GROUPS.length} diamètres sont corrects (${st.n} / ${GROUPS.length}).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Numéros bleus : gravure. C${g.n} est dessinée retournée (décors gravés) : pose-la face gravée vers l’extérieur. Colle les couches C1 à C${halfCount()} ensemble, C${halfCount()+1} à C${g.n} ensemble, puis visse les 2 parties (4 vis M3). Les disques percés et les rectangles découpés dans les cadres sont les entretoises et le rebord devant la pile : colle-les sur la plaque, à leur emplacement.`
-    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Assemble les 2 arrières avec les vis M3 de 20 mm, les 2 avants de même, puis relie-les par la vis d’axe de la charnière (M3 × 30, sous le canon) et la vis de fermeture (M3 × 30, en haut). Couvercle : talon sur le plateau. Les viseurs sont imprimés avec les coques, sans supports (profil en rampe).';
+    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Assemble les 2 arrières avec les vis M3 de 20 mm, les 2 avants de même, puis relie-les par le boulon de la charnière (M3 × 25 + écrou frein, sous le canon) et la vis de fermeture (M3 × 30, en haut). Couvercle : talon sur le plateau. Les viseurs sont imprimés avec les coques, sans supports (profil en rampe).';
   const prev = $('exportPreview');
   if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 95 × 116 × 15 mm au plus (viseur et chape compris) et les 2 avants 115 × 57 × 15 mm au plus (viseur et chape compris). Plus le couvercle de la crosse (46 × 30 mm). Les viseurs sont intégrés aux coques. Il faut un plateau d’au moins 120 × 120 mm (l’avant fait 115 mm de long : pose-le en diagonale si besoin).</div>';
   else prev.innerHTML = '';
@@ -5491,8 +5506,8 @@ Unites : millimetres. Plateau d'impression minimal : 120 x 120 mm.
 Decors en bas-relief : glissiere, stries, fenetre d'ejection, bouche du canon et plaquette
 de crosse striee, creuses de 0,8 mm dans les faces exterieures.
 Chaque demi-coque est coupee en x = 85 mm. L'avant pivote vers le bas sur une charniere placee sous
-le canon, juste devant la poignee (chape sur l'arriere gauche + chape sur l'avant droit, axe = vis
-M3 x 30). En haut, une vis M3 x 30 de fermeture relie la languette de l'arriere gauche a l'avant droit.
+le canon, juste devant la poignee (chape sur l'arriere gauche + chape sur l'avant droit, axe =
+boulon M3 x 25 + ecrou frein Nylstop M3 loge dans un creux hexagonal a gauche). En haut, une vis M3 x 30 de fermeture relie la languette de l'arriere gauche a l'avant droit.
 Les chapes font toute l'epaisseur de leur demi-coque : impression a plat sans support.
 Logement de la pile agrandi de 5 mm dans les pieces avant, petit rebord devant la pile.
 
@@ -5523,7 +5538,8 @@ Montage :
   4. Assemble les 2 arrieres ensemble, puis les 2 avants ensemble, avec les vis M3 de 20 mm (dont 1 en bas de la
      crosse) : tete de vis dans le lamage de la demi-coque droite, la vis se visse dans l'avant-trou de la gauche.
   5. Charniere : place l'avant contre l'arriere, chape droite (avant) contre chape gauche (arriere), et visse
-     la vis d'axe M3 x 30 par la droite sans trop serrer : l'avant doit pivoter vers le bas. Laisse assez de
+     le boulon M3 x 25 par la droite ; pose l'ecrou frein dans le creux hexagonal a gauche (bague nylon
+     vers l'exterieur) et serre juste assez : l'avant doit pivoter vers le bas sans jeu. Laisse assez de
      longueur aux fils du laser. Ferme, puis visse la vis M3 x 30 du haut (fermeture).
      Changer la pile : devisse la vis du haut, bascule l'avant vers le bas, remplace la pile, referme.
   6. Les viseurs (hausse a l'arriere, guidon a l'avant) font partie des coques.
