@@ -98,12 +98,30 @@
   .mut{color:var(--mut);font-size:.92rem}
   .tablewrap{overflow-x:auto}
   @media(max-width:600px){body{font-size:17px}.calc{gap:4px}.calc .w{font-size:.82rem}header input{width:130px}.codebig div,.wheel .d{width:52px;height:64px;font-size:2rem}}
+
+  /* ----- dossier d'enquête ----- */
+  .dosgate{display:none;background:#fff;border:3px solid #14213d;border-radius:16px;padding:22px 18px 18px;margin:10px 0 16px;position:relative}
+  body.nodos .dosgate{display:block}
+  body.nodos .dosgate ~ *{display:none!important}
+  .dosgate .dostab{position:absolute;top:-14px;left:16px;background:#14213d;color:#fff;font-weight:800;font-size:.8rem;letter-spacing:.1em;padding:3px 12px;border-radius:6px}
+  .dosgate h2{margin:4px 0 8px}
+  .dosgate .dosrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+  .dosgate input{font:inherit;font-size:1.2rem;padding:8px 12px;border-radius:10px;border:2px solid #b9c3dd;text-transform:uppercase;letter-spacing:.08em;width:230px;max-width:100%}
+  .dosgate .dosmsg{font-weight:700;min-height:1.2em;margin:4px 0}
+  .dosgate .dosmsg.ko{color:#c62828}
+  .dosgate .doswarn{display:none;background:#fff3cd;border:2px solid #f1d27a;border-radius:10px;padding:8px 12px;margin:8px 0}
+  body.dosswitch .dosgate .doswarn{display:block}
+  .dosgate .doskeep{display:none}
+  body.dosswitch .dosgate .doskeep{display:inline-block}
+  .doschip{font:inherit;font-size:.85rem;font-weight:800;border-radius:999px;padding:4px 12px;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+  .doschip[hidden]{display:none}
 </style>
 </head>
 <body>
 <script type="application/json" id="config">{"level": 1, "code": "472"}</script>
 <header>
   <h1>🔒 Le casier du Professeur Zéro</h1>
+  <button class="doschip" id="dosChip" hidden title="Changer de dossier"></button>
   <span class="lv" id="lvBadge"></span>
   <span class="stars" id="stars" title="Une étoile par défi réussi sans aide">⭐ 0</span>
   <input id="agent" placeholder="Ton prénom" maxlength="30" aria-label="Ton prénom">
@@ -113,6 +131,15 @@
 <main>
 <!-- ================= L'AFFAIRE ================= -->
 <section id="s-affaire" class="on">
+  <div class="dosgate" id="dosGate">
+    <span class="dostab">📁 DOSSIER D'ENQUÊTE</span>
+    <h2>As-tu un code de dossier ?</h2>
+    <p>Ton professeur t'a peut-être donné un <b>code</b>. Chaque code ouvre un dossier différent : le Professeur Zéro cache son code avec une autre astuce ! Sans code, tu reçois le dossier n° 1.</p>
+    <div class="dosrow"><input id="dosCode" placeholder="Code du dossier" autocomplete="off" aria-label="Code du dossier"><button class="primary" id="dosOpen">Ouvrir ce dossier</button></div>
+    <div class="dosmsg" id="dosMsg"></div>
+    <div class="doswarn">⚠️ Changer de dossier <b>recommence l'enquête à zéro</b> (les points sont perdus).</div>
+    <div class="dosrow"><button id="dosNone">Commencer sans code (dossier n° 1) →</button><button class="doskeep" id="dosKeep">Garder mon dossier</button></div>
+  </div>
   <div class="panel">
     <svg class="ill" viewBox="0 0 640 300" role="img" aria-label="Le Professeur Zéro, l'air méchant, devant un tableau où est écrit zéro sur cinq, à côté de son casier fermé par un cadenas où brillent des cartes 5/5.">
       <rect width="640" height="300" fill="#ece6d6"/>
@@ -201,7 +228,7 @@
         <p>Le concierge a retrouvé la carte dans la photocopieuse, et un <b>post-it</b> collé dessus. Saurez-vous déjouer le piège ?</p>
       </div>
     </div>
-    <div class="postit l2">Note pour moi-même :<br>mon code est écrit <b>À L'ENVERS</b>.<br>Personne ne le trouvera ! 😈<br><span style="float:right">— Pr Zéro</span></div>
+    <div class="postit" id="postAff" style="display:none"></div>
     <h3>Ta mission</h3>
     <ol class="mission">
       <li>Apprendre à lire les trous de la carte.</li>
@@ -248,10 +275,10 @@
     <h3>📖 Le tableau des caractères</h3>
     <div class="abc" id="abc"></div>
   </div>
-  <div class="defi" id="dD"><h3>Défi D · Quel caractère a le numéro <b>55</b> ? <span class="st"></span></h3>
+  <div class="defi" id="dD"><h3>Défi D · Quel caractère a le numéro <b></b> ? <span class="st"></span></h3>
     <div class="row"><label>Le caractère est : <input class="ans chr" maxlength="1" autocomplete="off"></label><button class="chk">Vérifier</button><button class="hbtn">💡 Aide</button></div>
     <div class="hintbox"></div><div class="fb"></div></div>
-  <div class="defi" id="dE"><h3>Défi E · Quel est le numéro du caractère <b>0</b> (zéro) ? <span class="st"></span></h3>
+  <div class="defi" id="dE"><h3>Défi E · Quel est le numéro du caractère <b></b> ? <span class="st"></span></h3>
     <div class="row"><label>Le numéro est : <input class="ans" type="number" inputmode="numeric" min="0" max="255"></label><button class="chk">Vérifier</button><button class="hbtn">💡 Aide</button></div>
     <div class="hintbox"></div><div class="fb"></div></div>
   <div class="next"><button class="primary" data-next disabled id="nextCar">Étape suivante →</button></div>
@@ -263,18 +290,18 @@
     <h2>La carte du Professeur Zéro</h2>
     <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
       <div>
-        <p class="l1">Voici la carte retrouvée par le concierge. Chaque ligne cache <b>un chiffre du code</b>. Additionne les valeurs des trous pour trouver chaque chiffre. Si tu bloques, clique sur 💡 Aide.</p>
+        <p class="l1" id="carteIntro1">Voici la carte retrouvée par le concierge. Chaque ligne cache <b>un chiffre du code</b>. Additionne les valeurs des trous pour trouver chaque chiffre. Si tu bloques, clique sur 💡 Aide.</p>
         <p class="l2">Voici la nouvelle carte. Pour chaque ligne : trouve le <b>nombre</b>, puis le <b>caractère</b> qui a ce numéro. Ensuite, sers-toi du post-it pour trouver le vrai code. Les aides coûtent ton étoile.</p>
       </div>
     </div>
     <details class="ref l2"><summary>📖 Ouvrir le tableau des caractères</summary><div class="abc" id="abc2"></div></details>
     <div class="lines" id="lines"></div>
-    <h3 style="margin-top:16px"><span class="l1">Le code du cadenas :</span><span class="l2">Ce que dit la carte :</span></h3>
+    <h3 style="margin-top:16px" id="msgTitle"></h3>
     <div class="msg" id="msg"></div>
-    <div class="l2" id="final2" style="display:none">
-      <div class="postit" style="margin:6px 0 12px">Mon code est écrit <b>À L'ENVERS</b>. 😈</div>
+    <div id="final2" style="display:none">
+      <div class="postit" style="margin:6px 0 12px" id="post2"></div>
       <h3>Quel est le vrai code du cadenas ?</h3>
-      <div class="row"><input class="ans" id="realCode" inputmode="numeric" maxlength="4" style="width:130px;letter-spacing:.2em" aria-label="Code du cadenas"><button class="chk" id="chkReal">Vérifier</button><button id="hintReal">💡 Aide</button></div>
+      <div class="row"><input class="ans" id="realCode" inputmode="numeric" maxlength="8" style="width:130px;letter-spacing:.2em" aria-label="Code du cadenas"><button class="chk" id="chkReal">Vérifier</button><button id="hintReal">💡 Aide</button></div>
       <div class="hintbox" id="hintRealBox"></div>
       <div class="fb" id="fbReal"></div>
     </div>
@@ -342,7 +369,7 @@
       </g>
     </svg>
     <p class="l1">Le cadenas cède, la porte s'ouvre… et des dizaines de <b>cartes 5/5</b> s'envolent dans la classe ! Le Professeur Zéro n'en revient pas : <i>« Mais… vous savez lire le binaire ?! »</i></p>
-    <p class="l2">Même caché en caractères et écrit à l'envers, le code du Professeur Zéro n'a pas résisté. Il bafouille : <i>« Impossible… personne ne devait savoir que le caractère 4, c'est 52 ! »</i></p>
+    <p id="epiTrick"></p>
     <p>Il doit bien l'admettre : vous avez mérité votre <b>carte cadeau 5/5</b>. <b>Montre cet écran à ton professeur pour la recevoir !</b></p>
     <p id="final" style="font-weight:800"></p>
   </div>
@@ -371,7 +398,8 @@
     <div class="panel">
       <h2>2 · Imprimer</h2>
       <h3>La carte perforée du Professeur Zéro (contient le code)</h3>
-      <div class="row"><button id="btnPrintCard">🖨️ Imprimer la carte à perforer</button><button id="btnLaserCard">⬇ Carte pour découpe laser (SVG)</button></div>
+      <p class="mut" style="margin-top:0">La carte dépend du <b>dossier</b> : chaque groupe doit recevoir la carte de son dossier. Toutes les cartes mènent au <b>même code</b>, celui de votre cadenas.</p>
+      <div class="row"><label>Dossier : <select id="tDos" style="font:inherit;padding:6px;border-radius:8px"></select></label><button id="btnPrintCard">🖨️ Imprimer la carte à perforer</button><button id="btnLaserCard">⬇ Carte pour découpe laser (SVG)</button></div>
       <p class="mut">Imprimez à 100 % sur bristol blanc mat, puis perforez les cercles marqués d'une croix (6 mm pour les données, 4 mm pour l'horloge). Une carte par groupe.</p>
       <h3 style="margin-top:14px">Les cartes cadeaux 5/5 (à mettre dans le casier)</h3>
       <div class="row"><button id="btnPrintGifts">🖨️ Imprimer sur papier (10 par page A4)</button><button id="btnLaserGifts">⬇ Planche laser contreplaqué 2 mm (12 cartes, SVG)</button></div>
@@ -381,6 +409,10 @@
       <h2>3 · Déroulé et solution</h2>
       <p class="l1" style="margin-top:0"><b>Niveau Apprenti</b> (élèves en difficulté, 30 à 40 min) : chaque ligne de la carte code un chiffre (0 à 9) avec les poids 8, 4, 2, 1. Aides en 3 niveaux, lecture à voix haute.</p>
       <p class="l2" style="margin-top:0"><b>Niveau Expert</b> (45 à 55 min) : la carte contient « CODE » puis les chiffres en <b>caractères ASCII</b> (« 4 » = 52), écrits <b>à l'envers</b> (voir le post-it). Les élèves décodent 7 ou 8 octets, distinguent nombre et caractère, puis remettent le code à l'endroit. Les aides sont plus courtes.</p>
+      <h3>Les dossiers et leurs codes</h3>
+      <p class="mut" style="margin-top:0">Donnez un code de dossier à chaque groupe (ou écrivez-le au tableau). Chaque dossier cache le code du cadenas avec une autre astuce ; un élève peut refaire l'enquête avec un autre code.</p>
+      <div class="tablewrap"><table id="dosTable"></table></div>
+      <h3 style="margin-top:14px">Solution du dossier <span id="solN"></span></h3>
       <div class="tablewrap"><table id="solTable"></table></div>
       <p class="mut">Code enseignant : <b>PROFZERO</b>. Les étoiles ne sont pas enregistrées : recharger la page remet tout à zéro. Le bouton ci-dessous débloque toutes les étapes, pour une démonstration.</p>
       <div class="row"><button id="btnAll">Débloquer toutes les étapes</button></div>
@@ -398,6 +430,101 @@ const CFG = JSON.parse($('config').textContent);
 const LV = CFG.level;
 let CODE = String(CFG.code);
 document.body.classList.add('lv' + LV);
+const DOSS_BY_LV = {
+  1: [
+    { code: null,      trick: 'direct', A: 5, B: 9, C: 6 },
+    { code: 'CRAIE',   trick: 'bas',    A: 3, B: 7, C: 5 },
+    { code: 'CAHIER',  trick: 'plus1',  A: 6, B: 9, C: 3 },
+    { code: 'STYLO',   trick: 'pieges', A: 7, B: 8, C: 4 },
+    { code: 'REGLE',   trick: 'double', A: 2, B: 6, C: 7 }
+  ],
+  2: [
+    { code: null,      trick: 'envers',  A: 52, B: 48, C: 67, D: 55, E: '0' },
+    { code: 'COMPAS',  trick: 'suivant', A: 50, B: 51, C: 79, D: 57, E: '3' },
+    { code: 'EQUERRE', trick: 'lettres', A: 55, B: 53, C: 68, D: 50, E: '8' },
+    { code: 'GOMME',   trick: 'leurres', A: 49, B: 56, C: 69, D: 52, E: '5' },
+    { code: 'TROUSSE', trick: 'neuf',    A: 57, B: 54, C: 90, D: 53, E: '1' }
+  ]
+};
+const DOSSIERS = DOSS_BY_LV[LV];
+const TRICKS = {
+  direct:  { label: 'Chaque ligne = un chiffre du code (poids 8, 4, 2, 1)' },
+  bas:     { label: 'La carte se lit de bas en haut', postit: 'Ma carte se lit de <b>BAS en HAUT</b> : la dernière ligne, c\'est mon 1er chiffre !', bafouille: '« Impossible… même à l\'envers ?! »' },
+  plus1:   { label: 'On a ajouté 1 à chaque chiffre', postit: 'Pour brouiller, j\'ai <b>AJOUTÉ 1</b> à chaque chiffre de mon code.', bafouille: '« Impossible… vous avez vu que j\'avais ajouté 1 ?! »' },
+  pieges:  { label: 'Lignes pièges (trou sous le 16)', postit: 'Les lignes avec un trou sous le <b>16</b> sont des <b>PIÈGES</b> : je ne les compte pas.', bafouille: '« Impossible… et mes lignes pièges, alors ?! »' },
+  double:  { label: 'Chaque chiffre est écrit en double', postit: 'J\'ai écrit le <b>DOUBLE</b> de chaque chiffre de mon code.', bafouille: '« Impossible… vous savez diviser par 2 en binaire ?! »' },
+  envers:  { label: '« CODE » + chiffres en caractères, à l\'envers', postit: 'Mon code est écrit <b>À L\'ENVERS</b>.', bafouille: '« Impossible… personne ne devait savoir que le caractère 4, c\'est 52 ! »' },
+  suivant: { label: '« CODE » + chiffre SUIVANT (9 devient 0)', postit: 'Chaque chiffre est remplacé par le <b>chiffre SUIVANT</b> (et 9 devient 0).', bafouille: '« Impossible… décaler mes chiffres, c\'était mon idée géniale ! »' },
+  lettres: { label: '« CODE » + chiffres déguisés en lettres (A = 0)', postit: 'Après le mot CODE, mes chiffres sont déguisés en <b>LETTRES</b> : A = 0, B = 1, C = 2…', bafouille: '« Impossible… mes chiffres étaient déguisés en lettres ! »' },
+  leurres: { label: '« CODE » + chiffres à l\'envers, avec des X leurres', postit: 'Mon code est <b>À L\'ENVERS</b>, et les <b>X</b> sont des leurres !', bafouille: '« Impossible… et mes X, alors ?! »' },
+  neuf:    { label: '« CODE » + (9 − chiffre)', postit: 'J\'ai remplacé chaque chiffre par <b>9 MOINS</b> ce chiffre.', bafouille: '« Impossible… 9 moins mon chiffre, c\'était pourtant malin ! »' }
+};
+function dosGoFirst() { go('affaire'); }
+
+/* ---------- dossier d'enquête (code donné par le professeur) ---------- */
+const normCode = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const DOSI = (() => {
+  const m = location.hash.match(/dossier=([A-Za-z0-9]+)/); if (!m) return -1;
+  const c = normCode(m[1]); if (c === 'SANS') return 0;
+  return DOSSIERS.findIndex((d, k) => k > 0 && d.code === c);
+})();
+const DOS = DOSSIERS[Math.max(DOSI, 0)];
+const DOS_LABEL = 'Dossier n° ' + (Math.max(DOSI, 0) + 1) + (DOSI > 0 ? ' (code ' + DOS.code + ')' : ' (sans code)');
+(() => {
+  const chip = document.getElementById('dosChip'), gate = document.getElementById('dosGate');
+  const open = code => { location.hash = 'dossier=' + code; location.reload(); };
+  if (DOSI < 0) document.body.classList.add('nodos');
+  else { chip.hidden = false; chip.textContent = '📁 Dossier ' + (DOSI + 1); }
+  document.getElementById('dosOpen').onclick = () => {
+    const c = normCode(document.getElementById('dosCode').value), msg = document.getElementById('dosMsg');
+    if (!c) { msg.className = 'dosmsg ko'; msg.textContent = 'Écris le code donné par ton professeur.'; return; }
+    const i = DOSSIERS.findIndex((d, k) => k > 0 && d.code === c);
+    if (i < 0) { msg.className = 'dosmsg ko'; msg.textContent = '❌ Ce code n\'existe pas. Vérifie l\'orthographe avec ton professeur.'; return; }
+    open(c);
+  };
+  document.getElementById('dosCode').onkeydown = e => { if (e.key === 'Enter') document.getElementById('dosOpen').click(); };
+  document.getElementById('dosNone').onclick = () => open('SANS');
+  document.getElementById('dosKeep').onclick = () => { document.body.classList.remove('nodos', 'dosswitch'); };
+  chip.onclick = () => { dosGoFirst(); document.body.classList.add('nodos', 'dosswitch'); gate.scrollIntoView({ block: 'center' }); };
+})();
+// tableau des dossiers pour l'espace enseignant
+const dosList = () => DOSSIERS.map((d, k) => ({ n: k + 1, code: d.code || '— (sans code)', d }));
+
+const TRICK = TRICKS[DOS.trick], HAS_POST = !!TRICK.postit;
+// lignes de la carte pour un dossier donné (le code du cadenas reste CODE)
+function rowsFor(D, code) {
+  const ds = [...code].map(Number), num = v => ({ v, ch: String(v) }), car = c => ({ v: c.charCodeAt(0), ch: c });
+  const decoys = [21, 18, 27, 23];
+  switch (D.trick) {
+    case 'direct': return ds.map(num);
+    case 'bas': return ds.slice().reverse().map(num);
+    case 'plus1': return ds.map(d => num(d + 1));
+    case 'pieges': return ds.flatMap((d, i) => i < ds.length - 1 ? [num(d), num(decoys[i])] : [num(d)]);
+    case 'double': return ds.map(d => num(2 * d));
+    case 'envers': return [...'CODE', ...ds.slice().reverse().map(String)].map(car);
+    case 'suivant': return [...'CODE', ...ds.map(d => String((d + 1) % 10))].map(car);
+    case 'lettres': return [...'CODE', ...ds.map(d => String.fromCharCode(65 + d))].map(car);
+    case 'leurres': { const nx = Math.min(ds.length - 1, 5 - ds.length); return [...'CODE', ...ds.slice().reverse().flatMap((d, i) => i < nx ? [String(d), 'X'] : [String(d)])].map(car); }  // la carte a 9 lignes au plus
+    case 'neuf': return [...'CODE', ...ds.map(d => String(9 - d))].map(car);
+  }
+}
+// ce que « dit » la carte, avant d'appliquer l'astuce du post-it
+const naiveOf = rows => LV === 1 ? rows.map(r => r.ch).join(' ') : rows.slice(4).map(r => r.ch).join('');
+function realHints(rows) {
+  const n = naiveOf(rows), digits = rows.slice(4).map(r => r.ch).filter(c => /[0-9]/.test(c)).join('');
+  return {
+    bas: ['La dernière ligne donne le 1er chiffre : lis les chiffres en commençant par le bas.', 'De bas en haut, les chiffres sont <b>' + [...rows].reverse().map(r => r.ch).join(' ') + '</b>.'],
+    plus1: ['Retire 1 à chaque nombre de la carte.', 'La carte dit ' + n + '. Retire 1 à chacun.'],
+    pieges: ['Barre les lignes qui ont un trou sous le 16 : leur nombre vaut 16 ou plus.', 'Il reste les nombres <b>' + rows.filter(r => r.v < 16).map(r => r.ch).join(' ') + '</b>.'],
+    double: ['Chaque nombre est le double d\'un chiffre : divise-le par 2.', 'La carte dit ' + n + '. Divise chacun par 2.'],
+    envers: ['Les lettres C, O, D, E ne font pas partie du code : garde seulement les chiffres <b>' + n + '</b>.', 'Écris ces chiffres en partant de la fin : le dernier devient le premier.'],
+    suivant: ['Garde seulement les chiffres après le mot CODE : <b>' + n + '</b>.', 'Remplace chaque chiffre par celui d\'AVANT (0 redevient 9).'],
+    lettres: ['Après le mot CODE, les lettres <b>' + n + '</b> cachent les chiffres.', 'A = 0, B = 1, C = 2, D = 3, E = 4, F = 5, G = 6, H = 7, I = 8, J = 9.'],
+    leurres: ['Enlève le mot CODE et les X : il reste <b>' + digits + '</b>.', 'Écris ces chiffres en partant de la fin.'],
+    neuf: ['Garde seulement les chiffres après le mot CODE : <b>' + n + '</b>.', 'Pour chaque chiffre, calcule 9 moins ce chiffre.']
+  }[DOS.trick];
+}
+
 $('lvBadge').textContent = LV === 1 ? 'Niveau Apprenti' : 'Niveau Expert';
 const W = [128, 64, 32, 16, 8, 4, 2, 1];
 const terms = v => W.filter(w => v & w);
@@ -500,26 +627,27 @@ function defi(id, cfg) {
 }
 const afterTrous = () => { if (done.dA && done.dB && done.dC) $('nextTrous').disabled = false; };
 const afterCar = () => { if (done.dD && done.dE) $('nextCar').disabled = false; };
+const sumHint = v => { const tt = terms(v); return ['Commence par la plus grande valeur qui ne dépasse pas ' + v + '.', tt[0] + ' ne dépasse pas ' + v + '. Il manque ' + v + ' − ' + tt[0] + ' = ' + (v - tt[0]) + '.', 'Perce les trous <b>' + tt.join('</b>, <b>') + '</b>.']; };
+const sumTxt = v => terms(v).join(' + ') + ' = ' + v;
 if (LV === 1) {
-  defi('dA', { title: 'Défi A · Perce les trous pour obtenir <b>5</b>', target: 5, after: afterTrous, bravo: '4 + 1 = 5. Parfait !',
-    hints: ['Regarde les 4 places de droite : 8, 4, 2 et 1.', 'Perce le trou <b>4</b> et le trou <b>1</b>.'] });
-  defi('dB', { title: 'Défi B · Perce les trous pour obtenir <b>9</b>', target: 9, after: afterTrous, bravo: '8 + 1 = 9. Bravo !',
-    hints: ['Commence par la plus grande valeur qui ne dépasse pas 9.', '8 ne dépasse pas 9. Il manque 9 − 8 = 1.', 'Perce le trou <b>8</b> et le trou <b>1</b>.'] });
-  defi('dC', { title: 'Défi C · Quel chiffre est caché dans cette ligne ?', show: 6, answer: 6, after: afterTrous, bravo: '4 + 2 = 6. Bien joué !',
-    hints: ['Additionne les nombres bleus au-dessus des trous noirs.', 'Il y a deux trous : sous le <b>4</b> et sous le <b>2</b>. Combien font 4 + 2 ?', 'Le chiffre est <b>6</b>.'] });
+  defi('dA', { title: 'Défi A · Perce les trous pour obtenir <b>' + DOS.A + '</b>', target: DOS.A, after: afterTrous, bravo: sumTxt(DOS.A) + '. Parfait !',
+    hints: ['Regarde les 4 places de droite : 8, 4, 2 et 1.', 'Perce les trous <b>' + terms(DOS.A).join('</b> et <b>') + '</b>.'] });
+  defi('dB', { title: 'Défi B · Perce les trous pour obtenir <b>' + DOS.B + '</b>', target: DOS.B, after: afterTrous, bravo: sumTxt(DOS.B) + '. Bravo !', hints: sumHint(DOS.B) });
+  defi('dC', { title: 'Défi C · Quel chiffre est caché dans cette ligne ?', show: DOS.C, answer: DOS.C, after: afterTrous, bravo: sumTxt(DOS.C) + '. Bien joué !',
+    hints: ['Additionne les nombres bleus au-dessus des trous noirs.', 'Le calcul : <b>' + terms(DOS.C).join(' + ') + '</b> = ?', 'Le chiffre est <b>' + DOS.C + '</b>.'] });
 } else {
-  defi('dA', { title: 'Défi A · Perce les trous pour obtenir <b>52</b>', target: 52, after: afterTrous, bravo: '32 + 16 + 4 = 52. Retiens ce nombre !',
-    hints: ['Prends la plus grande valeur qui ne dépasse pas 52, puis complète avec les autres.', '32 + 16 = 48. Il manque 52 − 48 = 4.'] });
-  defi('dB', { title: 'Défi B · Perce les trous pour obtenir <b>48</b>', target: 48, after: afterTrous, bravo: '32 + 16 = 48. Bravo !',
-    hints: ['Même méthode : commence par 32.', 'Perce les trous <b>32</b> et <b>16</b>.'] });
-  defi('dC', { title: 'Défi C · Quel nombre est caché dans cette ligne ?', show: 67, answer: 67, after: afterTrous, bravo: '64 + 2 + 1 = 67. Bien joué !',
-    hints: ['Additionne les valeurs des trous noirs.', 'Le calcul : 64 + 2 + 1 = ?'] });
-  defi('dD', { answer: '7', after: afterCar, bravo: '55, c\'est le caractère « 7 » : tu as évité le piège !',
-    trap: a => a === '5' ? '🤔 Attention au piège : on ne recopie pas le nombre. Cherche 55 dans le tableau.' : null,
-    hints: ['Cherche le numéro <b>55</b> dans le tableau des caractères (case violette).', 'Le caractère est <b>7</b>.'] });
-  defi('dE', { answer: 48, after: afterCar, bravo: 'Le caractère « 0 » a le numéro 48. Bravo !',
-    trap: a => a === '0' ? '🤔 C\'est le piège ! Le caractère « 0 » n\'a pas le numéro 0. Regarde le tableau.' : null,
-    hints: ['Cherche le caractère <b>0</b> dans le tableau : son numéro est écrit en bleu dessous.', 'Le numéro est <b>48</b>.'] });
+  defi('dA', { title: 'Défi A · Perce les trous pour obtenir <b>' + DOS.A + '</b>', target: DOS.A, after: afterTrous, bravo: sumTxt(DOS.A) + '. Retiens ce nombre !', hints: sumHint(DOS.A).slice(0, 2) });
+  defi('dB', { title: 'Défi B · Perce les trous pour obtenir <b>' + DOS.B + '</b>', target: DOS.B, after: afterTrous, bravo: sumTxt(DOS.B) + '. Bravo !', hints: sumHint(DOS.B).slice(0, 2) });
+  defi('dC', { title: 'Défi C · Quel nombre est caché dans cette ligne ?', show: DOS.C, answer: DOS.C, after: afterTrous, bravo: sumTxt(DOS.C) + '. Bien joué !',
+    hints: ['Additionne les valeurs des trous noirs.', 'Le calcul : ' + terms(DOS.C).join(' + ') + ' = ?'] });
+  const dCh = String.fromCharCode(DOS.D);
+  $('dD').querySelector('h3 b').textContent = DOS.D; $('dE').querySelector('h3 b').textContent = DOS.E;
+  defi('dD', { answer: dCh, after: afterCar, bravo: DOS.D + ', c\'est le caractère « ' + dCh + ' » : tu as évité le piège !',
+    trap: a => String(DOS.D).includes(a) ? '🤔 Attention au piège : on ne recopie pas le nombre. Cherche ' + DOS.D + ' dans le tableau.' : null,
+    hints: ['Cherche le numéro <b>' + DOS.D + '</b> dans le tableau des caractères (case violette).', 'Le caractère est <b>' + dCh + '</b>.'] });
+  defi('dE', { answer: DOS.E.charCodeAt(0), after: afterCar, bravo: 'Le caractère « ' + DOS.E + ' » a le numéro ' + DOS.E.charCodeAt(0) + '. Bravo !',
+    trap: a => a === DOS.E ? '🤔 C\'est le piège ! Le caractère « ' + DOS.E + ' » n\'a pas le numéro ' + DOS.E + '. Regarde le tableau.' : null,
+    hints: ['Cherche le caractère <b>' + DOS.E + '</b> dans le tableau : son numéro est écrit en bleu dessous.', 'Le numéro est <b>' + DOS.E.charCodeAt(0) + '</b>.'] });
 }
 
 /* ---------- table des caractères (niveau 2) ---------- */
@@ -533,11 +661,11 @@ abc($('abc')); abc($('abc2'));
 const hl = (n, on) => document.querySelectorAll('.abc div[data-c="' + n + '"]').forEach(d => d.classList.toggle('hl', on));
 
 /* ---------- la carte ---------- */
-function cardRows() {
-  // niveau 1 : un chiffre par ligne ; niveau 2 : « CODE » + chiffres en caractères, à l'envers
-  if (LV === 1) return [...CODE].map(d => ({ v: +d, ch: d }));
-  return [...'CODE', ...[...CODE].reverse()].map(c => ({ v: c.charCodeAt(0), ch: c }));
-}
+function cardRows() { return rowsFor(DOS, CODE); }
+if (HAS_POST) { $('postAff').style.display = ''; $('postAff').innerHTML = 'Note pour moi-même :<br>' + TRICK.postit + '<br>Personne ne trouvera mon code ! 😈<br><span style="float:right">— Pr Zéro</span>'; $('post2').innerHTML = TRICK.postit + ' 😈'; }
+$('msgTitle').textContent = HAS_POST ? 'Ce que dit la carte :' : 'Le code du cadenas :';
+if (LV === 1 && HAS_POST) $('carteIntro1').innerHTML = 'Voici la carte retrouvée par le concierge. Pour chaque ligne, additionne les valeurs des trous pour trouver le <b>nombre</b>. Ensuite, sers-toi du <b>post-it</b> pour trouver le vrai code.';
+$('epiTrick').innerHTML = HAS_POST ? 'Malgré son astuce, le code du Professeur Zéro n\'a pas résisté. Il bafouille : <i>' + TRICK.bafouille + '</i>' : '';
 function lineSVG(v) {
   let s = '<svg viewBox="0 0 360 64" role="img" aria-label="Ligne de la carte">';
   s += '<rect x="1" y="1" width="358" height="62" rx="8" fill="#fffdf6" stroke="#b9b29c" stroke-width="2"/>';
@@ -559,7 +687,7 @@ function buildCard() {
     const d = document.createElement('div');
     d.className = 'line';
     d.innerHTML = '<span class="n">Ligne ' + (k + 1) + '</span>' + lineSVG(r.v) +
-      '<div class="f"><label>' + (LV === 1 ? 'Chiffre' : 'Nombre') + ' : <input class="ans num" type="number" inputmode="numeric" min="0" max="255"></label>' +
+      '<div class="f"><label>' + (LV === 1 && !HAS_POST ? 'Chiffre' : 'Nombre') + ' : <input class="ans num" type="number" inputmode="numeric" min="0" max="255"></label>' +
       (LV === 2 ? '<label>Caractère : <input class="ans chr" maxlength="1" autocomplete="off" disabled></label>' : '') +
       '<button class="hbtn">💡 Aide</button><span class="fbl" style="font-weight:700"></span></div><div class="hintbox" style="grid-column:1/-1"></div>';
     L.appendChild(d);
@@ -586,7 +714,7 @@ function buildCard() {
         else { chr.disabled = false; fbl.style.color = 'var(--ok)'; fbl.textContent = '👍 Maintenant, le caractère !'; chr.focus(); }
       } else {
         num.classList.add('bad'); fbl.style.color = 'var(--bad)';
-        fbl.textContent = LV === 1 && +num.value > 9 ? '🤔 Un chiffre va de 0 à 9. Regarde seulement les trous noirs.' : '🤔 Pas encore. Additionne seulement les valeurs des trous noirs.';
+        fbl.textContent = LV === 1 && r.v <= 9 && !HAS_POST && +num.value > 9 ? '🤔 Un chiffre va de 0 à 9. Regarde seulement les trous noirs.' : '🤔 Pas encore. Additionne seulement les valeurs des trous noirs.';
       }
     };
     num.onchange = checkNum; num.onkeydown = e => { if (e.key === 'Enter') checkNum(); };
@@ -604,7 +732,7 @@ function buildCard() {
       help++; hb.classList.add('on');
       if (!nOk) {
         const H = LV === 1
-          ? ['Additionne les nombres bleus au-dessus des trous noirs.', 'Le calcul : <b>' + (terms(r.v).join(' + ') || 'aucun trou') + '</b> = ?', 'Le chiffre est <b>' + r.v + '</b>.']
+          ? ['Additionne les nombres bleus au-dessus des trous noirs.', 'Le calcul : <b>' + (terms(r.v).join(' + ') || 'aucun trou') + '</b> = ?', 'Le nombre est <b>' + r.v + '</b>.']
           : ['Additionne les valeurs des trous noirs, de gauche à droite.', 'Le nombre est <b>' + r.v + '</b>.'];
         hb.innerHTML = H.slice(0, Math.min(help, H.length)).map((h, i) => '<div>💡 <b>Aide ' + (i + 1) + ' :</b> ' + h + '</div>').join('');
       } else {
@@ -617,14 +745,14 @@ function buildCard() {
   });
 }
 function cardComplete() {
-  if (LV === 1) { cardDone = true; $('nextCarte').disabled = false; $('nextCarte').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+  if (!HAS_POST) { cardDone = true; $('nextCarte').disabled = false; $('nextCarte').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
   $('final2').style.display = '';
   $('final2').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 let realHelp = 0, realDone = false;
 $('chkReal').onclick = () => {
   if (realDone) return;
-  const a = $('realCode').value.trim(), rev = [...CODE].reverse().join('');
+  const a = $('realCode').value.trim().replace(/\s/g, ''), rev = naiveOf(cardRows()).replace(/\s/g, '');
   const fb = $('fbReal');
   if (a === CODE) {
     realDone = true; cardDone = true; $('realCode').classList.add('good'); $('realCode').disabled = true;
@@ -632,14 +760,13 @@ $('chkReal').onclick = () => {
     fb.className = 'fb ok'; fb.textContent = '✅ Oui ! Le vrai code est ' + CODE + '.' + (realHelp ? '' : ' Tu gagnes une étoile.');
     $('nextCarte').disabled = false;
   } else if (a === rev) { $('realCode').classList.add('bad'); fb.className = 'fb ko'; fb.textContent = '🤔 C\'est ce que dit la carte… mais relis le post-it du Professeur Zéro !'; }
-  else { $('realCode').classList.add('bad'); fb.className = 'fb ko'; fb.textContent = '🤔 Non. Garde seulement les chiffres de la carte, puis relis le post-it.'; }
+  else { $('realCode').classList.add('bad'); fb.className = 'fb ko'; fb.textContent = '🤔 Non. Relis le post-it du Professeur Zéro et applique son astuce.'; }
 };
 $('realCode').onkeydown = e => { if (e.key === 'Enter') $('chkReal').click(); };
 $('realCode').oninput = () => $('realCode').classList.remove('bad');
 $('hintReal').onclick = () => {
   realHelp++;
-  const rev = [...CODE].reverse().join('');
-  const H = ['Les lettres C, O, D, E ne font pas partie du code : garde seulement les chiffres <b>' + rev + '</b>.', 'Écris ces chiffres en partant de la fin : le dernier devient le premier.'];
+  const H = realHints(cardRows());
   $('hintRealBox').classList.add('on');
   $('hintRealBox').innerHTML = H.slice(0, Math.min(realHelp, 2)).map((h, i) => '<div>💡 <b>Aide ' + (i + 1) + ' :</b> ' + h + '</div>').join('');
 };
@@ -681,7 +808,7 @@ $('btnOpen').onclick = () => {
 function openLocker() {
   $('epi').classList.add('on');
   const name = $('agent').value.trim();
-  $('final').textContent = '⭐ ' + (name ? name + ', tu as' : 'Tu as') + ' gagné ' + stars + ' étoile' + (stars > 1 ? 's' : '') + ' sur ' + MAXSTARS() + ' !';
+  $('final').textContent = '⭐ ' + (name ? name + ', tu as' : 'Tu as') + ' gagné ' + stars + ' étoile' + (stars > 1 ? 's' : '') + ' sur ' + MAXSTARS() + ' ! · ' + DOS_LABEL;
   document.querySelectorAll('#nav button[data-k="casier"]').forEach(b => b.classList.add('done'));
   setTimeout(() => $('epi').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
@@ -689,7 +816,7 @@ $('btnReal').onclick = () => {
   if (!confirm('As-tu vraiment ouvert le cadenas du casier ?')) return;
   openLocker();
 };
-const MAXSTARS = () => 3 + (LV === 2 ? 2 + 1 : 0) + cardRows().length;
+const MAXSTARS = () => 3 + (LV === 2 ? 2 : 0) + (HAS_POST ? 1 : 0) + cardRows().length;
 
 /* ---------- espace enseignant ---------- */
 $('btnUnlock').onclick = () => {
@@ -701,10 +828,17 @@ $('btnAll').onclick = () => {
   unlock(STEPS.length - 1);
   ['nextTrous', 'nextCar', 'nextCarte'].forEach(id => { $(id).disabled = false; });
 };
+const TD = () => DOSSIERS[+$('tDos').value], TN = () => +$('tDos').value + 1;
+$('tDos').innerHTML = DOSSIERS.map((d, k) => '<option value="' + k + '"' + (d === DOS ? ' selected' : '') + '>n° ' + (k + 1) + ' · ' + (d.code || 'sans code') + '</option>').join('');
 function solTable() {
+  $('dosTable').innerHTML = '<tr><th>Dossier</th><th>Code à donner</th><th>Astuce du Pr Zéro</th><th>La carte dit</th></tr>' + DOSSIERS.map((d, k) => '<tr><td>n° ' + (k + 1) + '</td><td><b>' + (d.code || '— (sans code)') + '</b></td><td>' + TRICKS[d.trick].label + '</td><td>' + rowsFor(d, CODE).map(r => r.ch).join(LV === 1 ? ' ' : '') + '</td></tr>').join('');
+  $('solN').textContent = 'n° ' + TN();
   $('solTable').innerHTML = '<tr><th>Ligne</th><th>Binaire (S1 → S8)</th><th>Calcul</th><th>Nombre</th>' + (LV === 2 ? '<th>Caractère</th>' : '') + '</tr>' +
-    cardRows().map((r, k) => '<tr><td>' + (k + 1) + '</td><td style="font-family:monospace">' + r.v.toString(2).padStart(8, '0') + '</td><td>' + (terms(r.v).join(' + ') || '0') + '</td><td>' + r.v + '</td>' + (LV === 2 ? '<td><b>' + r.ch + '</b></td>' : '') + '</tr>').join('') +
-    '<tr><td colspan="' + (LV === 2 ? 5 : 4) + '"><b>Code du cadenas : ' + CODE + '</b>' + (LV === 2 ? ' (la carte dit « CODE' + [...CODE].reverse().join('') + ' », à remettre à l\'endroit)' : '') + '</td></tr>';
+    rowsFor(TD(), CODE).map((r, k) => '<tr><td>' + (k + 1) + '</td><td style="font-family:monospace">' + r.v.toString(2).padStart(8, '0') + '</td><td>' + (terms(r.v).join(' + ') || '0') + '</td><td>' + r.v + '</td>' + (LV === 2 ? '<td><b>' + r.ch + '</b></td>' : '') + '</tr>').join('') +
+    '<tr><td colspan="' + (LV === 2 ? 5 : 4) + '"><b>Code du cadenas : ' + CODE + '</b> · ' + TRICKS[TD().trick].label + '</td></tr>';
+}
+$('tDos').onchange = solTable;
+{
 }
 function setCode(c) {
   CODE = c; buildCard(); showCode(); solTable();
@@ -767,8 +901,8 @@ function cardSVG(rows, title, sub, laser) {
   return s + '</svg>';
 }
 const CARD_T = 'CARTE DU PR ZÉRO', CARD_S = LV === 1 ? 'Aide-mémoire (niveau Apprenti)' : 'Aide-mémoire (niveau Expert)';
-$('btnPrintCard').onclick = () => openPrint('Carte du Professeur Zéro', cardSVG(cardRows(), CARD_T, CARD_S, false), 'body{margin:10mm}');
-$('btnLaserCard').onclick = () => download('carte_professeur_zero_niveau' + LV + '_code' + CODE + '_laser.svg', cardSVG(cardRows(), CARD_T, CARD_S, true), 'image/svg+xml');
+$('btnPrintCard').onclick = () => openPrint('Carte du Professeur Zéro', cardSVG(rowsFor(TD(), CODE), CARD_T, CARD_S + ' · dossier n° ' + TN(), false), 'body{margin:10mm}');
+$('btnLaserCard').onclick = () => download('carte_professeur_zero_niveau' + LV + '_dossier' + TN() + '_code' + CODE + '_laser.svg', cardSVG(rowsFor(TD(), CODE), CARD_T, CARD_S + ' · dossier n° ' + TN(), true), 'image/svg+xml');
 
 function giftCardHTML() {
   return '<div class="gc"><div class="t">★ CARTE CADEAU ★</div><div class="b"><div class="star">5/5</div><div class="r"><div class="m">Libérée du casier<br>du Professeur Zéro</div><div class="n">Nom : ………………………</div></div></div><div class="f">Valable sur une évaluation, au choix du professeur</div></div>';

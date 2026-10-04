@@ -91,11 +91,29 @@
   th{font-size:.85rem;color:var(--mut)}
   .mut{color:var(--mut);font-size:.92rem}
   @media(max-width:600px){body{font-size:17px}.calc{gap:4px}.calc .w{font-size:.82rem}header input{width:130px}}
+
+  /* ----- dossier d'enquête ----- */
+  .dosgate{display:none;background:#fff;border:3px solid #14213d;border-radius:16px;padding:22px 18px 18px;margin:10px 0 16px;position:relative}
+  body.nodos .dosgate{display:block}
+  body.nodos .dosgate ~ *{display:none!important}
+  .dosgate .dostab{position:absolute;top:-14px;left:16px;background:#14213d;color:#fff;font-weight:800;font-size:.8rem;letter-spacing:.1em;padding:3px 12px;border-radius:6px}
+  .dosgate h2{margin:4px 0 8px}
+  .dosgate .dosrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+  .dosgate input{font:inherit;font-size:1.2rem;padding:8px 12px;border-radius:10px;border:2px solid #b9c3dd;text-transform:uppercase;letter-spacing:.08em;width:230px;max-width:100%}
+  .dosgate .dosmsg{font-weight:700;min-height:1.2em;margin:4px 0}
+  .dosgate .dosmsg.ko{color:#c62828}
+  .dosgate .doswarn{display:none;background:#fff3cd;border:2px solid #f1d27a;border-radius:10px;padding:8px 12px;margin:8px 0}
+  body.dosswitch .dosgate .doswarn{display:block}
+  .dosgate .doskeep{display:none}
+  body.dosswitch .dosgate .doskeep{display:inline-block}
+  .doschip{font:inherit;font-size:.85rem;font-weight:800;border-radius:999px;padding:4px 12px;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+  .doschip[hidden]{display:none}
 </style>
 </head>
 <body>
 <header>
   <h1>🐈‍⬛ L'affaire du Chat de Minuit</h1>
+  <button class="doschip" id="dosChip" hidden title="Changer de dossier"></button>
   <span class="stars" id="stars" title="Une étoile par défi réussi sans aide">⭐ 0</span>
   <input id="agent" placeholder="Ton prénom" maxlength="30" aria-label="Ton prénom">
 </header>
@@ -112,6 +130,15 @@
 <main>
 <!-- ================= 1 · L'AFFAIRE ================= -->
 <section id="s1" class="on">
+  <div class="dosgate" id="dosGate">
+    <span class="dostab">📁 DOSSIER D'ENQUÊTE</span>
+    <h2>As-tu un code de dossier ?</h2>
+    <p>Ton professeur t'a peut-être donné un <b>code</b>. Chaque code ouvre un dossier différent : le Chat ne vise pas le même endroit ! Sans code, tu reçois le dossier n° 1.</p>
+    <div class="dosrow"><input id="dosCode" placeholder="Code du dossier" autocomplete="off" aria-label="Code du dossier"><button class="primary" id="dosOpen">Ouvrir ce dossier</button></div>
+    <div class="dosmsg" id="dosMsg"></div>
+    <div class="doswarn">⚠️ Changer de dossier <b>recommence l'enquête à zéro</b> (les points sont perdus).</div>
+    <div class="dosrow"><button id="dosNone">Commencer sans code (dossier n° 1) →</button><button class="doskeep" id="dosKeep">Garder mon dossier</button></div>
+  </div>
   <div class="panel">
     <svg class="ill" viewBox="0 0 640 300" role="img" aria-label="Au musée, un cadre vide. À la place du tableau, une carte perforée signée d'un chat noir.">
       <rect width="640" height="300" fill="#7a2e3b"/>
@@ -175,9 +202,9 @@
     <div id="play"></div>
   </div>
 
-  <div class="defi" id="dA"><h3>Défi A · Perce les trous pour obtenir <b>3</b> <span class="st"></span></h3><div class="bld"></div>
+  <div class="defi" id="dA"><h3>Défi A · Perce les trous pour obtenir <b id="tA"></b> <span class="st"></span></h3><div class="bld"></div>
     <div class="row"><button class="hbtn">💡 Aide</button></div><div class="hintbox"></div><div class="fb"></div></div>
-  <div class="defi" id="dB"><h3>Défi B · Perce les trous pour obtenir <b>65</b> <span class="st"></span></h3><div class="bld"></div>
+  <div class="defi" id="dB"><h3>Défi B · Perce les trous pour obtenir <b id="tB"></b> <span class="st"></span></h3><div class="bld"></div>
     <div class="row"><button class="hbtn">💡 Aide</button></div><div class="hintbox"></div><div class="fb"></div></div>
   <div class="defi" id="dC"><h3>Défi C · Quel nombre est caché dans cette ligne ? <span class="st"></span></h3><div class="bld"></div>
     <div class="row"><label>Le nombre est : <input class="ans" type="number" inputmode="numeric" min="0" max="255"></label><button class="chk">Vérifier</button><button class="hbtn">💡 Aide</button></div>
@@ -198,10 +225,10 @@
     <h3>📖 Le tableau des lettres</h3>
     <div class="abc" id="abc"></div>
   </div>
-  <div class="defi" id="dD"><h3>Défi D · Quelle lettre a le numéro <b>72</b> ? <span class="st"></span></h3>
+  <div class="defi" id="dD"><h3>Défi D · Quelle lettre a le numéro <b id="tD"></b> ? <span class="st"></span></h3>
     <div class="row"><label>La lettre est : <input class="ans letter" maxlength="1" autocomplete="off"></label><button class="chk">Vérifier</button><button class="hbtn">💡 Aide</button></div>
     <div class="hintbox"></div><div class="fb"></div></div>
-  <div class="defi" id="dE"><h3>Défi E · Quel est le numéro de la lettre <b>E</b> ? <span class="st"></span></h3>
+  <div class="defi" id="dE"><h3>Défi E · Quel est le numéro de la lettre <b id="tE"></b> ? <span class="st"></span></h3>
     <div class="row"><label>Le numéro est : <input class="ans" type="number" inputmode="numeric" min="0" max="255"></label><button class="chk">Vérifier</button><button class="hbtn">💡 Aide</button></div>
     <div class="hintbox"></div><div class="fb"></div></div>
   <div class="next"><button class="primary" id="go4" disabled>Décoder la carte du Chat →</button></div>
@@ -213,7 +240,7 @@
     <h2>La carte du Chat de Minuit</h2>
     <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
       <div>
-        <p>Voici les <b>5 lignes</b> de la carte. Pour chaque ligne : <b>1.</b> trouve le <b>nombre</b> en additionnant, <b>2.</b> trouve la <b>lettre</b> dans le tableau.</p>
+        <p>Voici les <b><span id="n1"></span> lignes</b> de la carte. Pour chaque ligne : <b>1.</b> trouve le <b>nombre</b> en additionnant, <b>2.</b> trouve la <b>lettre</b> dans le tableau.</p>
         <p>Les lettres apparaissent dans le message en bas. Si tu bloques, clique sur 💡 Aide.</p>
       </div>
     </div>
@@ -228,24 +255,18 @@
     </div>
     <div class="epi" id="epi1">
       <p><span class="stamp">BRAVO, DÉTECTIVE !</span></p>
-      <svg class="ill" viewBox="0 0 640 260" role="img" aria-label="La nuit, un phare éclaire la mer. Des voitures de police attendent le Chat, qui est pris dans un filet.">
+      <svg class="ill" viewBox="0 0 640 260" role="img" id="epiSvg" aria-label="">
         <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1430"/><stop offset="1" stop-color="#2a3a6e"/></linearGradient></defs>
         <rect width="640" height="260" fill="url(#sky)"/>
         <g fill="#fff"><circle cx="60" cy="30" r="1.5"/><circle cx="140" cy="60" r="1.2"/><circle cx="520" cy="40" r="1.5"/><circle cx="600" cy="80" r="1.2"/><circle cx="420" cy="22" r="1.2"/></g>
         <circle cx="90" cy="54" r="22" fill="#f6f1d0"/><circle cx="82" cy="48" r="22" fill="#0d1430"/>
-        <polygon points="300,58 640,8 640,120" fill="#fff3b0" opacity=".22"/>
-        <rect y="200" width="640" height="60" fill="#1d3b6b"/>
-        <path d="M110 214 L120 198 L590 198 L600 214 Z" fill="#4a4f5c"/><rect x="110" y="212" width="490" height="6" fill="#3a3e48"/>
-        <path d="M0 232 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#6fa0d8" stroke-width="3"/>
-        <path d="M240 200 L270 70 L330 70 L360 200 Z" fill="#f2f2f2"/>
-        <path d="M262 106 L338 106 L344 132 L256 132 Z" fill="#d23b3b"/><path d="M250 158 L350 158 L356 184 L244 184 Z" fill="#d23b3b"/>
-        <rect x="266" y="44" width="68" height="28" rx="4" fill="#ffd54a"/><path d="M260 44 L300 20 L340 44 Z" fill="#d23b3b"/>
+        <g id="epiScene"></g>
         <g transform="translate(410 150)"><rect x="0" y="10" width="110" height="30" rx="8" fill="#e8eef8"/><rect x="18" y="-6" width="70" height="20" rx="6" fill="#e8eef8"/><rect x="0" y="22" width="110" height="7" fill="#2f6fed"/><circle cx="24" cy="42" r="9" fill="#222"/><circle cx="88" cy="42" r="9" fill="#222"/><rect x="40" y="-14" width="12" height="8" rx="2" fill="#2f6fed"/><rect x="54" y="-14" width="12" height="8" rx="2" fill="#e53935"/><text x="55" y="34" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="sans-serif">POLICE</text></g>
         <g transform="translate(150 148)"><path d="M0 50 Q30 -10 60 50 Z" fill="none" stroke="#c9a46a" stroke-width="2"/><path d="M5 40 L55 40 M10 28 L50 28 M18 16 L42 16 M30 0 L30 50 M15 50 L22 6 M45 50 L38 6" stroke="#c9a46a" stroke-width="1.5"/>
           <path d="M18 46 q2 -16 12 -18 l3 -8 l4 8 q8 2 10 18 z" fill="#111"/><circle cx="27" cy="32" r="1.8" fill="#ffd54a"/><circle cx="35" cy="32" r="1.8" fill="#ffd54a"/></g>
         <text x="180" y="246" text-anchor="middle" font-size="14" font-weight="800" fill="#ffd54a" font-family="sans-serif">Pris au piège !</text>
       </svg>
-      <p>Grâce à toi, la police attendait le Chat de Minuit <b>au phare</b>. Il est tombé droit dans le filet, avec le tableau volé sous le bras !</p>
+      <p>Grâce à toi, la police attendait le Chat de Minuit <b id="epiWhere"></b>. Il est tombé droit dans le filet, avec le tableau volé sous le bras !</p>
       <p><b>Tu as décodé un message en binaire, comme un vrai ordinateur.</b> Passe à l'étape 5 pour vérifier avec le vrai lecteur et relever le défi bonus.</p>
       <div class="next"><button class="primary" id="go5">Étape 5 →</button></div>
     </div>
@@ -277,7 +298,7 @@
     <h3 style="margin-top:16px">Le message de la carte 2 :</h3>
     <div class="msg" id="msg2"></div>
     <div class="epi" id="epi2"><p><span class="stamp">AFFAIRE CLASSÉE</span></p>
-      <p>Le Chat de Minuit voulait frapper au <b>PHARE</b> à <b>MINUIT</b>… évidemment ! Tu as décodé les deux cartes : tu es un·e vrai·e expert·e du binaire.</p>
+      <p id="epi2txt"></p><p> Tu as décodé les deux cartes : tu es un·e vrai·e expert·e du binaire.</p>
       <p id="final" style="font-weight:800"></p></div>
   </div>
 </section>
@@ -313,16 +334,21 @@
     <div class="panel">
       <h2>Préparation</h2>
       <ul>
-        <li>Imprimez et perforez les <b>2 cartes</b> (carte 1 : PHARE, carte 2 : MINUIT), sur le même gabarit que les autres cartes.</li>
+        <li>Imprimez et perforez les <b>2 cartes</b> du dossier choisi ci-dessous, sur le même gabarit que les autres cartes. Chaque groupe doit recevoir les cartes de <b>son</b> dossier.</li>
         <li>Pour l'étape 5, la Nano du lecteur doit contenir le <b>programme normal du lecteur</b>. Remettez-le si vous venez de faire l'affaire NéoPulse : page principale, onglet « Fabriquer le lecteur ».</li>
       </ul>
-      <div class="row"><button id="btnPrint">🖨️ Imprimer les 2 cartes à perforer</button><button id="btnLaser">⬇ Cartes pour découpe laser (SVG)</button><button id="btnAll">Débloquer toutes les étapes</button></div>
+      <div class="row"><label>Dossier : <select id="tDos" style="font:inherit;padding:6px;border-radius:8px"></select></label><button id="btnPrint">🖨️ Imprimer les 2 cartes à perforer</button><button id="btnLaser">⬇ Cartes pour découpe laser (SVG)</button><button id="btnAll">Débloquer toutes les étapes</button></div>
       <p class="mut">Imprimez à 100 % sur bristol blanc mat. Perforez les cercles marqués d'une croix : 6 mm pour les données, 4 mm pour l'horloge.</p>
     </div>
     <div class="panel">
-      <h2>Solutions</h2>
+      <h2>Les dossiers et leurs codes</h2>
+      <p>Écrivez un code au tableau ou donnez-le à un groupe : chaque dossier change le lieu, l'heure et les défis. Un élève peut ainsi refaire l'enquête avec un autre code.</p>
+      <div class="tablewrap"><table id="dosTable"></table></div>
+    </div>
+    <div class="panel">
+      <h2>Solutions du dossier <span id="solN"></span></h2>
       <table id="solTable"></table>
-      <p>Défis : A = 2 + 1 · B = 64 + 1 · C = 72 · D = H · E = 69. Réponse : <b>le phare</b>. Code enseignant : <b>CHAT2026</b>.</p>
+      <p id="solDefis"></p><p class="mut">Code enseignant : <b>CHAT2026</b>.</p>
       <p class="mut">Erreurs fréquentes : lire de droite à gauche (le poids 128 est à gauche), oublier un trou, confondre le numéro d'une lettre avec sa place dans l'alphabet (A = 65 et non 1). Prolongement : l'affaire NéoPulse, où les élèves programment eux-mêmes le lecteur.</p>
     </div>
   </div>
@@ -332,7 +358,48 @@
 <script>
 const $ = id => document.getElementById(id);
 const W = [128, 64, 32, 16, 8, 4, 2, 1];
-const CARD1 = 'PHARE', CARD2 = 'MINUIT';
+const DOSSIERS = [
+  { code: null,        place: 'PHARE',   time: 'MINUIT', A: 3, B: 65, C: 72, D: 'H', E: 'E' },
+  { code: 'MIAOU',     place: 'PORT',    time: 'AUBE',   A: 6, B: 67, C: 68, D: 'J', E: 'S' },
+  { code: 'GRIFFE',    place: 'GARE',    time: 'SOIR',   A: 5, B: 72, C: 80, D: 'M', E: 'G' },
+  { code: 'MOUSTACHE', place: 'STADE',   time: 'MINUIT', A: 7, B: 66, C: 96, D: 'P', E: 'T' },
+  { code: 'RONRON',    place: 'CHATEAU', time: 'AUBE',   A: 4, B: 68, C: 76, D: 'F', E: 'V' }
+];
+const PLACE_FR = { PHARE: 'au phare', PORT: 'au port', GARE: 'à la gare', STADE: 'au stade', CHATEAU: 'au château' };
+const TIME_FR = { MINUIT: 'à minuit', AUBE: 'à l\'aube', SOIR: 'le soir' };
+function dosGoFirst() { go(1); }
+
+/* ---------- dossier d'enquête (code donné par le professeur) ---------- */
+const normCode = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const DOSI = (() => {
+  const m = location.hash.match(/dossier=([A-Za-z0-9]+)/); if (!m) return -1;
+  const c = normCode(m[1]); if (c === 'SANS') return 0;
+  return DOSSIERS.findIndex((d, k) => k > 0 && d.code === c);
+})();
+const DOS = DOSSIERS[Math.max(DOSI, 0)];
+const DOS_LABEL = 'Dossier n° ' + (Math.max(DOSI, 0) + 1) + (DOSI > 0 ? ' (code ' + DOS.code + ')' : ' (sans code)');
+(() => {
+  const chip = document.getElementById('dosChip'), gate = document.getElementById('dosGate');
+  const open = code => { location.hash = 'dossier=' + code; location.reload(); };
+  if (DOSI < 0) document.body.classList.add('nodos');
+  else { chip.hidden = false; chip.textContent = '📁 Dossier ' + (DOSI + 1); }
+  document.getElementById('dosOpen').onclick = () => {
+    const c = normCode(document.getElementById('dosCode').value), msg = document.getElementById('dosMsg');
+    if (!c) { msg.className = 'dosmsg ko'; msg.textContent = 'Écris le code donné par ton professeur.'; return; }
+    const i = DOSSIERS.findIndex((d, k) => k > 0 && d.code === c);
+    if (i < 0) { msg.className = 'dosmsg ko'; msg.textContent = '❌ Ce code n\'existe pas. Vérifie l\'orthographe avec ton professeur.'; return; }
+    open(c);
+  };
+  document.getElementById('dosCode').onkeydown = e => { if (e.key === 'Enter') document.getElementById('dosOpen').click(); };
+  document.getElementById('dosNone').onclick = () => open('SANS');
+  document.getElementById('dosKeep').onclick = () => { document.body.classList.remove('nodos', 'dosswitch'); };
+  chip.onclick = () => { dosGoFirst(); document.body.classList.add('nodos', 'dosswitch'); gate.scrollIntoView({ block: 'center' }); };
+})();
+// tableau des dossiers pour l'espace enseignant
+const dosList = () => DOSSIERS.map((d, k) => ({ n: k + 1, code: d.code || '— (sans code)', d }));
+
+const CARD1 = DOS.place, CARD2 = DOS.time;
+const NSTARS = 5 + CARD1.length + CARD2.length;
 let stars = 0;
 const bits = v => W.map(w => (v & w) ? 1 : 0);
 const terms = v => W.filter(w => v & w);
@@ -438,9 +505,11 @@ function defi(id, cfg) {
 }
 const s2 = () => { if (done.dA && done.dB && done.dC) $('go3').disabled = false; };
 const s3 = () => { if (done.dD && done.dE) $('go4').disabled = false; };
-defi('dA', { build: true, target: 3, after: s2, bravo: '2 + 1 = 3, parfait !', hints: ['Les valeurs à droite sont les plus petites : 2 et 1.', 'Perce le trou <b>2</b> et le trou <b>1</b> (les deux à droite).'] });
-defi('dB', { build: true, target: 65, after: s2, bravo: '64 + 1 = 65. Retiens bien ce nombre : il servira à l\'étape 3 !', hints: ['Commence par la plus grande valeur qui ne dépasse pas 65.', '64 ne dépasse pas 65. Il manque 65 − 64 = 1.', 'Perce le trou <b>64</b> et le trou <b>1</b>.'] });
-defi('dC', { show: 72, answer: 72, after: s2, bravo: '64 + 8 = 72. Bien joué !', hints: ['Regarde les nombres bleus au-dessus des trous noirs, puis additionne-les.', 'Il y a deux trous : sous le <b>64</b> et sous le <b>8</b>. Combien font 64 + 8 ?', 'Le nombre est <b>72</b>.'] });
+const sumHint = v => { const tt = terms(v); return ['Commence par la plus grande valeur qui ne dépasse pas ' + v + '.', tt[0] + ' ne dépasse pas ' + v + '. Il manque ' + v + ' − ' + tt[0] + ' = ' + (v - tt[0]) + '.', 'Perce les trous <b>' + tt.join('</b>, <b>') + '</b>.']; };
+$('tA').textContent = DOS.A; $('tB').textContent = DOS.B; $('tD').textContent = DOS.D.charCodeAt(0); $('tE').textContent = DOS.E; $('n1').textContent = CARD1.length;
+defi('dA', { build: true, target: DOS.A, after: s2, bravo: terms(DOS.A).join(' + ') + ' = ' + DOS.A + ', parfait !', hints: ['Les valeurs à droite sont les plus petites : 4, 2 et 1.', 'Perce les trous <b>' + terms(DOS.A).join('</b> et <b>') + '</b>.'] });
+defi('dB', { build: true, target: DOS.B, after: s2, bravo: terms(DOS.B).join(' + ') + ' = ' + DOS.B + '. Retiens bien ce nombre : il servira à l\'étape 3 !', hints: sumHint(DOS.B) });
+defi('dC', { show: DOS.C, answer: DOS.C, after: s2, bravo: terms(DOS.C).join(' + ') + ' = ' + DOS.C + '. Bien joué !', hints: ['Regarde les nombres bleus au-dessus des trous noirs, puis additionne-les.', 'Il y a ' + terms(DOS.C).length + ' trous : sous le <b>' + terms(DOS.C).join('</b>, le <b>') + '</b>. Combien font ' + terms(DOS.C).join(' + ') + ' ?', 'Le nombre est <b>' + DOS.C + '</b>.'] });
 
 /* ---------- table des lettres ---------- */
 function abc(target) {
@@ -450,8 +519,8 @@ function abc(target) {
 }
 abc($('abc')); abc($('abc2'));
 const hl = (n, on) => document.querySelectorAll('.abc div[data-c="' + n + '"]').forEach(d => d.classList.toggle('hl', on));
-defi('dD', { answer: 'H', after: s3, bravo: '72 = H. Tu sais lire le code ASCII !', hints: ['Cherche le nombre <b>72</b> dans le tableau des lettres, juste au-dessus.', 'La lettre est <b>H</b>.'] });
-defi('dE', { answer: 69, after: s3, bravo: 'E = 69. Bravo !', hints: ['Cherche la lettre <b>E</b> dans le tableau : son numéro est écrit en bleu dessous.', 'Le numéro est <b>69</b>.'] });
+defi('dD', { answer: DOS.D, after: s3, bravo: DOS.D.charCodeAt(0) + ' = ' + DOS.D + '. Tu sais lire le code ASCII !', hints: ['Cherche le nombre <b>' + DOS.D.charCodeAt(0) + '</b> dans le tableau des lettres, juste au-dessus.', 'La lettre est <b>' + DOS.D + '</b>.'] });
+defi('dE', { answer: DOS.E.charCodeAt(0), after: s3, bravo: DOS.E + ' = ' + DOS.E.charCodeAt(0) + '. Bravo !', hints: ['Cherche la lettre <b>' + DOS.E + '</b> dans le tableau : son numéro est écrit en bleu dessous.', 'Le numéro est <b>' + DOS.E.charCodeAt(0) + '</b>.'] });
 
 /* ---------- décodage d'une carte ---------- */
 function lineSVG(v) {
@@ -482,6 +551,7 @@ function card(word, linesId, msgId, onDone) {
     const num = d.querySelector('.num'), let_ = d.querySelector('.letter'), fbl = d.querySelector('.fbl'), hb = d.querySelector('.hintbox');
     let help = 0, nOk = false;
     const finish = () => {
+      if (d.classList.contains('ok')) return;
       d.classList.add('ok'); let_.classList.add('good'); let_.disabled = true; d.querySelector('.hbtn').disabled = true;
       const clean = help === 0;
       if (clean) addStar();
@@ -493,7 +563,7 @@ function card(word, linesId, msgId, onDone) {
       else { const nx = L.querySelectorAll('.num:not(:disabled)')[0]; if (nx) nx.focus(); }
     };
     const checkNum = () => {
-      if (num.value === '') return;
+      if (nOk || num.value === '') return;
       if (+num.value === v) {
         nOk = true; num.classList.add('good'); num.disabled = true; let_.disabled = false;
         fbl.style.color = 'var(--ok)'; fbl.textContent = '👍 Maintenant, la lettre !'; hb.classList.remove('on'); let_.focus();
@@ -535,14 +605,14 @@ card(CARD1, 'lines1', 'msg1', () => {
   $('where').style.display = '';
   $('where').scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
-const PLACES = [['La gare', 0], ['Le phare', 1], ['Le port', 0], ['Le musée', 0]];
+const PLACES = [['La gare', 'GARE'], ['Le phare', 'PHARE'], ['Le port', 'PORT'], ['Le stade', 'STADE'], ['Le château', 'CHATEAU']].map(p => [p[0], p[1] === CARD1 ? 1 : 0]);
 $('whereChoices').innerHTML = PLACES.map((p, i) => '<label><input type="radio" name="where" value="' + i + '"> ' + p[0] + '</label>').join('');
 document.querySelectorAll('input[name=where]').forEach(r => r.onchange = () => {
   const lab = r.closest('label');
   if (PLACES[+r.value][1]) {
     lab.classList.add('good');
     document.querySelectorAll('input[name=where]').forEach(x => { x.disabled = true; });
-    $('whereFb').className = 'fb ok'; $('whereFb').textContent = '✅ Oui : PHARE, c\'est le phare !';
+    $('whereFb').className = 'fb ok'; $('whereFb').textContent = '✅ Oui : ' + CARD1 + ', c\'est ' + PLACES.find(p => p[1])[0].toLowerCase() + ' !';
     $('epi1').classList.add('on'); unlock(5);
     setTimeout(() => $('epi1').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   } else {
@@ -552,9 +622,30 @@ document.querySelectorAll('input[name=where]').forEach(r => r.onchange = () => {
 });
 card(CARD2, 'lines2', 'msg2', () => {
   $('epi2').classList.add('on');
-  $('final').textContent = '⭐ Tu as gagné ' + stars + ' étoile' + (stars > 1 ? 's' : '') + ' sur 16' + ($('agent').value ? ', ' + $('agent').value : '') + ' !';
+  $('final').textContent = '⭐ Tu as gagné ' + stars + ' étoile' + (stars > 1 ? 's' : '') + ' sur ' + NSTARS + ($('agent').value ? ', ' + $('agent').value : '') + ' ! · ' + DOS_LABEL;
   document.querySelector('#nav button[data-s="5"]').classList.add('done');
 });
+
+/* ---------- décor de l'épilogue selon le lieu ---------- */
+const SCENES = {
+  PHARE: ['La nuit, un phare éclaire la mer.', '<polygon points="300,58 640,8 640,120" fill="#fff3b0" opacity=".22"/><rect y="200" width="640" height="60" fill="#1d3b6b"/><path d="M110 214 L120 198 L590 198 L600 214 Z" fill="#4a4f5c"/><rect x="110" y="212" width="490" height="6" fill="#3a3e48"/><path d="M0 232 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#6fa0d8" stroke-width="3"/><path d="M240 200 L270 70 L330 70 L360 200 Z" fill="#f2f2f2"/><path d="M262 106 L338 106 L344 132 L256 132 Z" fill="#d23b3b"/><path d="M250 158 L350 158 L356 184 L244 184 Z" fill="#d23b3b"/><rect x="266" y="44" width="68" height="28" rx="4" fill="#ffd54a"/><path d="M260 44 L300 20 L340 44 Z" fill="#d23b3b"/>'],
+  PORT: ['La nuit, sur le quai du port, entre les bateaux.', '<rect y="200" width="640" height="60" fill="#1d3b6b"/><path d="M110 214 L120 198 L590 198 L600 214 Z" fill="#4a4f5c"/><path d="M0 238 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#6fa0d8" stroke-width="3"/>' +
+    '<g transform="translate(18 150)"><path d="M0 46 L84 46 L72 62 L12 62 Z" fill="#b5523b"/><line x1="40" y1="46" x2="40" y2="-30" stroke="#ddd" stroke-width="3"/><path d="M43 -26 L43 40 L78 40 Z" fill="#f2f2f2"/></g>' +
+    '<g transform="translate(260 96)"><rect x="0" y="40" width="140" height="62" fill="#2b5d8a"/><rect x="18" y="0" width="70" height="42" fill="#e8eef8"/><g fill="#ffd54a"><rect x="28" y="12" width="14" height="12"/><rect x="58" y="12" width="14" height="12"/></g><text x="70" y="82" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="sans-serif">PORT</text></g>' +
+    '<g transform="translate(560 150)"><path d="M0 46 L72 46 L62 62 L10 62 Z" fill="#3b7a57"/><line x1="34" y1="46" x2="34" y2="-20" stroke="#ddd" stroke-width="3"/><path d="M31 -16 L31 40 L4 40 Z" fill="#f2f2f2"/></g>'],
+  GARE: ['La nuit, devant la gare et ses quais.', '<rect y="200" width="640" height="60" fill="#3a3e48"/><g stroke="#9aa0ad" stroke-width="4"><line x1="0" y1="232" x2="640" y2="232"/><line x1="0" y1="250" x2="640" y2="250"/></g><g fill="#6d4627">' + Array.from({ length: 21 }, (_, k) => '<rect x="' + (k * 32) + '" y="228" width="8" height="26"/>').join('') + '</g>' +
+    '<rect x="220" y="96" width="220" height="104" fill="#c98a5f"/><path d="M206 98 L330 52 L454 98 Z" fill="#7a3b2a"/><circle cx="330" cy="80" r="15" fill="#fff" stroke="#333" stroke-width="3"/><path d="M330 80 L330 70 M330 80 L338 80" stroke="#333" stroke-width="2.5"/>' +
+    '<g fill="#ffd54a"><rect x="240" y="124" width="34" height="46" rx="12"/><rect x="313" y="124" width="34" height="76" rx="12"/><rect x="386" y="124" width="34" height="46" rx="12"/></g><text x="330" y="114" text-anchor="middle" font-size="14" font-weight="900" fill="#fff" font-family="sans-serif">GARE</text>'],
+  STADE: ['La nuit, devant le stade éclairé.', '<rect y="200" width="640" height="60" fill="#2f5d34"/><path d="M200 200 L230 100 L590 100 L620 200 Z" fill="#8a929f"/><path d="M230 100 L590 100 L585 116 L235 116 Z" fill="#b8bec8"/><g fill="#5b6270">' + Array.from({ length: 7 }, (_, k) => '<rect x="' + (250 + k * 48) + '" y="126" width="30" height="70"/>').join('') + '</g>' +
+    '<g><rect x="222" y="34" width="6" height="70" fill="#666"/><rect x="206" y="22" width="38" height="16" fill="#fff8c4"/><rect x="592" y="34" width="6" height="70" fill="#666"/><rect x="576" y="22" width="38" height="16" fill="#fff8c4"/><polygon points="206,38 244,38 300,120 150,120" fill="#fff8c4" opacity=".18"/><polygon points="576,38 614,38 660,120 520,120" fill="#fff8c4" opacity=".18"/></g><text x="410" y="96" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="sans-serif">STADE</text>'],
+  CHATEAU: ['La nuit, au pied du château.', '<rect y="200" width="640" height="60" fill="#22402a"/><rect x="250" y="110" width="200" height="90" fill="#8d8f99"/><g fill="#8d8f99">' + Array.from({ length: 9 }, (_, k) => '<rect x="' + (252 + k * 22) + '" y="98" width="13" height="14"/>').join('') + '</g>' +
+    '<rect x="224" y="76" width="50" height="124" fill="#7c7e88"/><path d="M218 78 L249 36 L280 78 Z" fill="#5b3a8a"/><rect x="426" y="76" width="50" height="124" fill="#7c7e88"/><path d="M420 78 L451 36 L482 78 Z" fill="#5b3a8a"/>' +
+    '<path d="M330 200 L330 160 Q350 136 370 160 L370 200 Z" fill="#3e2a1e"/><line x1="249" y1="36" x2="249" y2="14" stroke="#ddd" stroke-width="2"/><path d="M249 14 L268 20 L249 26 Z" fill="#d23b3b"/><g fill="#ffd54a"><rect x="242" y="110" width="12" height="18" rx="6"/><rect x="444" y="110" width="12" height="18" rx="6"/></g>']
+};
+$('epiScene').innerHTML = SCENES[CARD1][1];
+$('epiSvg').setAttribute('aria-label', SCENES[CARD1][0] + ' Une voiture de police attend le Chat, qui est pris dans un filet.');
+$('epiWhere').textContent = PLACE_FR[CARD1];
+$('epi2txt').innerHTML = 'Le Chat de Minuit voulait frapper <b>' + PLACE_FR[CARD1] + '</b> (' + CARD1 + '), <b>' + TIME_FR[CARD2] + '</b> (' + CARD2 + ')' + (CARD2 === 'MINUIT' ? '… évidemment !' : '. Même pas à minuit : il voulait surprendre tout le monde !');
 
 /* ---------- lecteur (programme normal : lignes « R:01010000 » et « END ») ---------- */
 const mon = $('mon');
@@ -610,9 +701,18 @@ $('btnUnlock').onclick = () => {
 };
 $('tcode').onkeydown = e => { if (e.key === 'Enter') $('btnUnlock').click(); };
 $('btnAll').onclick = () => { unlock(5); $('go3').disabled = false; $('go4').disabled = false; };
-$('solTable').innerHTML = '<tr><th>Carte</th><th>Ligne</th><th>Binaire</th><th>Calcul</th><th>Nombre</th><th>Lettre</th></tr>' +
-  [[1, CARD1], [2, CARD2]].map(([n, w]) => [...w].map((ch, k) => { const v = ch.charCodeAt(0);
+$('tDos').innerHTML = DOSSIERS.map((d, k) => '<option value="' + k + '"' + (d === DOS ? ' selected' : '') + '>n° ' + (k + 1) + ' · ' + (d.code || 'sans code') + '</option>').join('');
+$('dosTable').innerHTML = '<tr><th>Dossier</th><th>Code à donner</th><th>Carte 1 (lieu)</th><th>Carte 2 (heure)</th></tr>' + DOSSIERS.map((d, k) => '<tr><td>n° ' + (k + 1) + '</td><td><b>' + (d.code || '— (sans code)') + '</b></td><td>' + d.place + '</td><td>' + d.time + '</td></tr>').join('');
+const TD = () => DOSSIERS[+$('tDos').value];
+function solDraw() {
+  const D = TD(), c1 = D.place, c2 = D.time;
+  $('solN').textContent = 'n° ' + (+$('tDos').value + 1);
+  $('solTable').innerHTML = '<tr><th>Carte</th><th>Ligne</th><th>Binaire</th><th>Calcul</th><th>Nombre</th><th>Lettre</th></tr>' +
+  [[1, c1], [2, c2]].map(([n, w]) => [...w].map((ch, k) => { const v = ch.charCodeAt(0);
     return '<tr><td>' + (k ? '' : 'Carte ' + n) + '</td><td>' + (k + 1) + '</td><td style="font-family:monospace">' + v.toString(2).padStart(8, '0') + '</td><td>' + terms(v).join(' + ') + '</td><td>' + v + '</td><td><b>' + ch + '</b></td></tr>'; }).join('')).join('');
+  $('solDefis').innerHTML = 'Défis : A = ' + terms(D.A).join(' + ') + ' · B = ' + terms(D.B).join(' + ') + ' · C = ' + D.C + ' · D = ' + D.D + ' · E = ' + D.E.charCodeAt(0) + '. Réponse : <b>' + PLACE_FR[c1] + '</b>, ' + TIME_FR[c2] + '.';
+}
+$('tDos').onchange = solDraw; solDraw();
 
 function cardSVG(word, title, sub, laser) {
   const Wd = 120, Hd = 132, mx = 6, top = 22, p = 12;
@@ -641,8 +741,9 @@ function cardSVG(word, title, sub, laser) {
   if (!laser) s += '<text x="8" y="' + (Hd - 10) + '" font-size="3" fill="#555">Perforer les cercles marqués d\'une croix :</text><text x="8" y="' + (Hd - 6) + '" font-size="3" fill="#555">données 6 mm, horloge 4 mm.</text>';
   return s + '</svg>';
 }
-const CARDS = [[CARD1, 'CARTE 1', 'Laissée au musée par le Chat'], [CARD2, 'CARTE 2', 'Trouvée dans la poche du Chat']];
+const CARDS_OF = () => { const k = +$('tDos').value, D = DOSSIERS[k]; return [[D.place, 'CARTE 1', 'Laissée au musée · dossier n° ' + (k + 1)], [D.time, 'CARTE 2', 'Poche du Chat · dossier n° ' + (k + 1)]]; };
 $('btnPrint').onclick = () => {
+  const CARDS = CARDS_OF();
   const w = window.open('', '_blank');
   if (!w) { alert('Autorisez les fenêtres pop-up pour imprimer.'); return; }
   w.document.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Cartes du Chat de Minuit</title></head><body style="margin:10mm">' +
@@ -651,13 +752,14 @@ $('btnPrint').onclick = () => {
   w.document.close();
 };
 $('btnLaser').onclick = () => {
+  const CARDS = CARDS_OF();
   const inner = t => t.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="250mm" height="132mm" viewBox="0 0 250 132" font-family="sans-serif">' +
     '<!-- Rouge = découpe, noir = gravure légère -->' +
     '<g>' + inner(cardSVG(CARDS[0][0], CARDS[0][1], CARDS[0][2], true)) + '</g><g transform="translate(130 0)">' + inner(cardSVG(CARDS[1][0], CARDS[1][1], CARDS[1][2], true)) + '</g></svg>';
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-  a.download = 'cartes_chat_de_minuit_laser.svg'; document.body.appendChild(a); a.click(); a.remove();
+  a.download = 'cartes_chat_de_minuit_dossier' + (+$('tDos').value + 1) + '_laser.svg'; document.body.appendChild(a); a.click(); a.remove();
 };
 </script>
 </body>

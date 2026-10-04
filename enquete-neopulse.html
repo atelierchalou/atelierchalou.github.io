@@ -170,12 +170,31 @@
   #teacherLock{max-width:420px}
   #teacherLock input{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line)}
   .sol td.bin{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em}
+
+  /* ----- dossier d'enquête ----- */
+  .dosgate{display:none;background:#fff;border:3px solid #14213d;border-radius:16px;padding:22px 18px 18px;margin:10px 0 16px;position:relative}
+  body.nodos .dosgate{display:block}
+  body.nodos .dosgate ~ *{display:none!important}
+  .dosgate .dostab{position:absolute;top:-14px;left:16px;background:#14213d;color:#fff;font-weight:800;font-size:.8rem;letter-spacing:.1em;padding:3px 12px;border-radius:6px}
+  .dosgate h2{margin:4px 0 8px}
+  .dosgate .dosrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+  .dosgate input{font:inherit;font-size:1.2rem;padding:8px 12px;border-radius:10px;border:2px solid #b9c3dd;text-transform:uppercase;letter-spacing:.08em;width:230px;max-width:100%}
+  .dosgate .dosmsg{font-weight:700;min-height:1.2em;margin:4px 0}
+  .dosgate .dosmsg.ko{color:#c62828}
+  .dosgate .doswarn{display:none;background:#fff3cd;border:2px solid #f1d27a;border-radius:10px;padding:8px 12px;margin:8px 0}
+  body.dosswitch .dosgate .doswarn{display:block}
+  .dosgate .doskeep{display:none}
+  body.dosswitch .dosgate .doskeep{display:inline-block}
+  .doschip{font:inherit;font-size:.85rem;font-weight:800;border-radius:999px;padding:4px 12px;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+  .doschip[hidden]{display:none}
+
+  header.case .doschip{margin-left:6px}
 </style>
 </head>
 <body>
 <header class="case">
   <div>
-    <h1>🔎 AFFAIRE NÉOPULSE</h1>
+    <h1>🔎 AFFAIRE NÉOPULSE <button class="doschip" id="dosChip" hidden title="Changer de dossier"></button></h1>
     <div class="sub">Police scientifique · Cellule cybercriminalité · Dossier n° 2026-117</div>
   </div>
   <button class="score" id="scoreBadge" title="Voir le détail des points">⭐ <span id="scoreVal">0</span> pt</button>
@@ -195,6 +214,15 @@
 <main>
 <!-- ============ 1 · L'AFFAIRE ============ -->
 <section id="s-affaire" class="on">
+  <div class="dosgate" id="dosGate">
+    <span class="dostab">📁 DOSSIER D'ENQUÊTE</span>
+    <h2>Avez-vous un code de dossier ?</h2>
+    <p>Votre professeur vous a peut-être donné un <b>code</b>. Chaque code ouvre un dossier différent : un autre badge retrouvé, un autre coupable ! Sans code, vous recevez le dossier n° 1.</p>
+    <div class="dosrow"><input id="dosCode" placeholder="Code du dossier" autocomplete="off" aria-label="Code du dossier"><button class="primary" id="dosOpen">Ouvrir ce dossier</button></div>
+    <div class="dosmsg" id="dosMsg"></div>
+    <div class="doswarn">⚠️ Changer de dossier <b>recommence l'enquête à zéro</b> (les points sont perdus).</div>
+    <div class="dosrow"><button id="dosNone">Commencer sans code (dossier n° 1) →</button><button class="doskeep" id="dosKeep">Garder mon dossier</button></div>
+  </div>
   <div class="grid2">
     <div>
       <svg class="cctv" viewBox="0 0 640 400" role="img" aria-label="Image de vidéosurveillance : une personne cagoulée, de dos, enjambe une fenêtre ouverte ; un badge tombe de son sac">
@@ -511,7 +539,7 @@
     <div class="doc">
       <span class="ref">DOC. D</span>
       <h3>Registre des badges (version papier)</h3>
-      <div class="tablewrap"><table>
+      <div class="tablewrap"><table id="registre">
         <tr><th>N° badge</th><th>Titulaire</th><th>Fonction</th><th>Droits officiels</th><th>Remarque</th></tr>
         <tr><td>4</td><td><span class="av" style="background:hsl(234,45%,45%)">BA</span>Bernard Aubry</td><td>Directeur général</td><td>99</td><td></td></tr>
         <tr><td>12</td><td><span class="av" style="background:hsl(38,45%,45%)">HL</span>Hugo Lefèvre</td><td>Responsable de la sécurité</td><td>255</td><td>Badge témoin remis à la police</td></tr>
@@ -715,43 +743,17 @@
       <rect x="96" y="121" width="70" height="22" rx="3" fill="#ffd60a"/>
       <text x="131" y="137" text-anchor="middle" font-size="12" font-weight="800" fill="#1d1d1f">PULSAR-7</text>
     </g>
-    <text x="140" y="188" text-anchor="middle" font-size="11" fill="#4a5a70">clé USB · domicile de Y. Morel</text>
+    <text x="140" y="188" text-anchor="middle" font-size="11" fill="#4a5a70" id="epiUsb"></text>
   </g>
   <g transform="rotate(4 340 120)">
     <rect x="270" y="40" width="140" height="150" rx="6" fill="#fbf7ea" stroke="#b9b29c" stroke-width="2"/>
     <text x="340" y="56" text-anchor="middle" font-size="10" font-weight="700" fill="#777">SCELLÉ N° 1</text>
-    <circle cx="284" cy="78" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="298" cy="78" r="5" fill="#1d1d1f"/>
-    <circle cx="312" cy="78" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="326" cy="78" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="340" cy="78" r="5" fill="#1d1d1f"/>
-    <circle cx="354" cy="78" r="5" fill="#1d1d1f"/>
-    <circle cx="368" cy="78" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="382" cy="78" r="5" fill="#1d1d1f"/>
-    <circle cx="400" cy="78" r="3.5" fill="#1d1d1f"/>
-    <circle cx="284" cy="106" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="298" cy="106" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="312" cy="106" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="326" cy="106" r="5" fill="#1d1d1f"/>
-    <circle cx="340" cy="106" r="5" fill="#1d1d1f"/>
-    <circle cx="354" cy="106" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="368" cy="106" r="5" fill="#1d1d1f"/>
-    <circle cx="382" cy="106" r="5" fill="#1d1d1f"/>
-    <circle cx="400" cy="106" r="3.5" fill="#1d1d1f"/>
-    <circle cx="284" cy="140" r="5" fill="#1d1d1f"/>
-    <circle cx="298" cy="140" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="312" cy="140" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="326" cy="140" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="340" cy="140" r="5" fill="#1d1d1f"/>
-    <circle cx="354" cy="140" r="5" fill="#1d1d1f"/>
-    <circle cx="368" cy="140" r="5" fill="#1d1d1f"/>
-    <circle cx="382" cy="140" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>
-    <circle cx="400" cy="140" r="3.5" fill="#1d1d1f"/>
+    <g id="epiHoles"></g>
   </g>
   <g>
     <circle cx="372" cy="150" r="34" fill="#dff3ff" fill-opacity=".35" stroke="#3d4b6b" stroke-width="6"/>
     <line x1="396" y1="175" x2="430" y2="208" stroke="#3d4b6b" stroke-width="11" stroke-linecap="round"/>
-    <text x="372" y="200" text-anchor="middle" font-size="13" font-weight="800" fill="#c62828" dx="-48" dy="0">142 !</text>
+    <text x="372" y="200" text-anchor="middle" font-size="13" font-weight="800" fill="#c62828" dx="-48" dy="0" id="epiOp"></text>
   </g>
   <g transform="rotate(-12 515 110)">
     <rect x="450" y="74" width="132" height="70" rx="6" fill="none" stroke="#1e8e3e" stroke-width="4"/>
@@ -760,9 +762,8 @@
     <text x="516" y="126" text-anchor="middle" font-size="16" font-weight="900" fill="#1e8e3e" letter-spacing="1">CLASSÉE</text>
   </g>
 </svg>
-      <p>Perquisition au domicile de <b>Yanis Morel</b> : les enquêteurs retrouvent une clé USB contenant les plans du PULSAR-7.</p>
-      <p>Technicien de maintenance des lecteurs, il avait accès au poste d'encodage. Il avait ramassé le badge perdu de Camille Roux et l'avait réencodé en s'ajoutant le <b>laboratoire R&amp;D</b> (8) et la <b>salle des serveurs</b> (16). Après le vol, il a lancé le virus pour effacer le journal des accès… sans penser que <b>son code d'opérateur (142) restait écrit sur la ligne 3 du badge</b>.</p>
-      <p>Camille Roux est mise hors de cause. Bravo, lieutenant : sans programme fiable, cette preuve n'aurait jamais parlé.</p>
+      <div id="epiTxt"></div>
+
       <p id="finalScore" style="font-weight:800;font-size:1.05rem;margin-bottom:0"></p>
     </div>
     <div id="bilanWrap">
@@ -836,18 +837,20 @@
       <h3>Organigramme</h3>
       <ol id="solBoxes"></ol>
       <div class="row"><button id="btnFillSol">Remplir l'organigramme avec la solution (démonstration)</button><button id="btnClearFc">Vider l'organigramme</button></div>
+      <h3>Les dossiers et leurs codes</h3>
+      <p class="mut" style="margin-top:0">Donnez un code à chaque groupe (ou écrivez-le au tableau) : chaque dossier change la pièce à conviction, donc le titulaire du badge et le coupable. Le programme et le câblage ne changent pas. Un élève peut refaire l'enquête avec un autre code.</p>
+      <div class="tablewrap"><table id="dosTable"></table></div>
+      <div class="row" style="margin:8px 0"><label>Dossier affiché ci-dessous et imprimé : <select id="tDos" style="font:inherit;padding:6px;border-radius:8px"></select></label></div>
       <h3>Contenu des badges</h3>
       <table>
         <tr><th>Badge</th><th>Ligne</th><th>Binaire (S1 → S8)</th><th>Décimal</th><th>Signification</th></tr>
         <tr><td rowspan="3">Témoin</td><td>1</td><td class="bin">00001100</td><td>12</td><td>Badge d'Hugo Lefèvre</td></tr>
         <tr><td>2</td><td class="bin">11111111</td><td>255</td><td>Toutes les portes</td></tr>
         <tr><td>3</td><td class="bin">00010111</td><td>23</td><td>Encodé par Hugo Lefèvre</td></tr>
-        <tr><td rowspan="3">Pièce à conviction</td><td>1</td><td class="bin">01001101</td><td>77</td><td>Badge de Camille Roux (déclaré perdu)</td></tr>
-        <tr><td>2</td><td class="bin">00011011</td><td>27</td><td>16 + 8 + 2 + 1 : serveurs, laboratoire, bureaux, hall. Officiellement 3 : <b>+ 8 et + 16 ajoutés</b></td></tr>
-        <tr><td>3</td><td class="bin">10001110</td><td>142</td><td>Encodé par <b>Yanis Morel</b></td></tr>
+        <tbody id="preuveRows"></tbody>
       </table>
       <h3>Rapport</h3>
-      <p>77 · Camille Roux · 27 · laboratoire R&amp;D et salle des serveurs · 142 · Yanis Morel · Yanis Morel · étalonnage. Code enseignant : <b>PULSAR7</b>.</p>
+      <p id="solRapport"></p><p class="mut">Code enseignant : <b>PULSAR7</b>.</p>
       <h3>Les pièges prévus</h3>
       <p class="mut" style="margin-top:0">Chaque mauvais choix produit un symptôme observable : c'est l'occasion de faire raisonner les élèves.</p>
       <div class="tablewrap"><table>
@@ -1415,6 +1418,46 @@ function askHint(container, cost, onYes) {
   container.appendChild(d);
 }
 
+const DOSSIERS = [{"code": null, "rows": [77, 27, 142], "owner": "Camille Roux", "culprit": "Yanis Morel", "ans": {"q1": "77", "q2": "Camille Roux", "q3": "27", "q4": "8,16", "q5": "142", "q6": "Yanis Morel", "q7": "Yanis Morel", "q8": "1"}, "rem": {"12": "Badge témoin remis à la police", "160": "A démissionné : rejoint une entreprise concurrente. Dernier jour : vendredi", "233": "En service la nuit du vol", "77": "⚠️ Badge déclaré <b>perdu</b> lundi"}, "warn": [77], "epi": ["Perquisition au domicile de <b>Yanis Morel</b> : les enquêteurs retrouvent une clé USB contenant les plans du PULSAR-7.", "Technicien de maintenance des lecteurs, il avait accès au poste d'encodage. Il avait ramassé le badge perdu de Camille Roux et l'avait réencodé en s'ajoutant le <b>laboratoire R&amp;D</b> (8) et le <b>salle des serveurs</b> (16). Après le vol, le virus a effacé le journal des accès… mais <b>le code d'opérateur (142) restait écrit sur la ligne 3 du badge</b>.", "Camille Roux est mise hors de cause. Bravo, lieutenant : sans programme fiable, cette preuve n'aurait jamais parlé."], "extra": [8, 16], "official": 3}, {"code": "PIXEL", "rows": [233, 31, 205], "owner": "Julie Perrin", "culprit": "Inès Garnier", "ans": {"q1": "233", "q2": "Julie Perrin", "q3": "31", "q4": "8,16", "q5": "205", "q6": "Inès Garnier", "q7": "Inès Garnier", "q8": "1"}, "rem": {"12": "Badge témoin remis à la police", "160": "A démissionné : rejoint une entreprise concurrente. Dernier jour : vendredi", "233": "⚠️ Badge déclaré <b>volé</b> dans son vestiaire mardi", "120": "Sa candidature au laboratoire R&amp;D a été refusée le mois dernier"}, "warn": [233], "epi": ["Perquisition au domicile d'<b>Inès Garnier</b> : les enquêteurs retrouvent une clé USB contenant les plans du PULSAR-7.", "Hôtesse d'accueil et opératrice d'encodage, elle avait accès au poste d'encodage. Furieuse que sa candidature au laboratoire ait été refusée, elle voulait vendre les plans. Elle avait volé le badge de Julie Perrin et l'avait réencodé en s'ajoutant le <b>laboratoire R&amp;D</b> (8) et le <b>salle des serveurs</b> (16). Après le vol, le virus a effacé le journal des accès… mais <b>le code d'opérateur (205) restait écrit sur la ligne 3 du badge</b>.", "Julie Perrin est mise hors de cause. Bravo, lieutenant : sans programme fiable, cette preuve n'aurait jamais parlé."], "extra": [8, 16], "official": 7}, {"code": "OCTET", "rows": [45, 29, 23], "owner": "Thomas Girard", "culprit": "Hugo Lefèvre", "ans": {"q1": "45", "q2": "Thomas Girard", "q3": "29", "q4": "8,16", "q5": "23", "q6": "Hugo Lefèvre", "q7": "Hugo Lefèvre", "q8": "1"}, "rem": {"12": "Badge témoin remis à la police", "160": "A démissionné : rejoint une entreprise concurrente. Dernier jour : vendredi", "233": "En service la nuit du vol", "45": "⚠️ Badge <b>oublié</b> à l'atelier vendredi soir"}, "warn": [45], "epi": ["Perquisition au domicile de <b>Hugo Lefèvre</b> : les enquêteurs retrouvent une clé USB contenant les plans du PULSAR-7.", "Coup de théâtre : c'est le <b>responsable de la sécurité</b> lui-même ! Il avait accès au poste d'encodage, et il comptait vendre les plans… en accusant un innocent. Il avait récupéré le badge oublié de Thomas Girard et l'avait réencodé en s'ajoutant le <b>laboratoire R&amp;D</b> (8) et le <b>salle des serveurs</b> (16). Après le vol, le virus a effacé le journal des accès… mais <b>le code d'opérateur (23) restait écrit sur la ligne 3 du badge</b>.", "Thomas Girard est mis hors de cause. Bravo, lieutenant : sans programme fiable, cette preuve n'aurait jamais parlé."], "extra": [8, 16], "official": 5}, {"code": "SERVEUR", "rows": [98, 59, 142], "owner": "Paul Mercier", "culprit": "Yanis Morel", "ans": {"q1": "98", "q2": "Paul Mercier", "q3": "59", "q4": "8,16", "q5": "142", "q6": "Yanis Morel", "q7": "Yanis Morel", "q8": "1"}, "rem": {"12": "Badge témoin remis à la police", "160": "A démissionné : rejoint une entreprise concurrente. Dernier jour : vendredi", "233": "En service la nuit du vol", "98": "⚠️ Badge déclaré <b>perdu</b> mercredi"}, "warn": [98], "epi": ["Perquisition au domicile de <b>Yanis Morel</b> : les enquêteurs retrouvent une clé USB contenant les plans du PULSAR-7.", "Technicien de maintenance des lecteurs, il avait accès au poste d'encodage. Il avait ramassé le badge perdu de Paul Mercier et l'avait réencodé en s'ajoutant le <b>laboratoire R&amp;D</b> (8) et le <b>salle des serveurs</b> (16). Après le vol, le virus a effacé le journal des accès… mais <b>le code d'opérateur (142) restait écrit sur la ligne 3 du badge</b>.", "Paul Mercier est mis hors de cause. Bravo, lieutenant : sans programme fiable, cette preuve n'aurait jamais parlé."], "extra": [8, 16], "official": 35}, {"code": "CIRCUIT", "rows": [31, 155, 205], "owner": "Nadia Benali", "culprit": "Inès Garnier", "ans": {"q1": "31", "q2": "Nadia Benali", "q3": "155", "q4": "8", "q5": "205", "q6": "Inès Garnier", "q7": "Inès Garnier", "q8": "1"}, "rem": {"12": "Badge témoin remis à la police", "160": "A démissionné : rejoint une entreprise concurrente. Dernier jour : vendredi", "233": "En service la nuit du vol", "31": "⚠️ Badge prêté à un stagiaire, <b>jamais rendu</b>", "120": "Sa candidature au laboratoire R&amp;D a été refusée le mois dernier"}, "warn": [31], "epi": ["Perquisition au domicile d'<b>Inès Garnier</b> : les enquêteurs retrouvent une clé USB contenant les plans du PULSAR-7.", "Hôtesse d'accueil et opératrice d'encodage, elle avait accès au poste d'encodage. Furieuse que sa candidature au laboratoire ait été refusée, elle voulait vendre les plans. Elle avait récupéré le badge prêté (et jamais rendu) de Nadia Benali et l'avait réencodé en s'ajoutant le <b>laboratoire R&amp;D</b> (8). Après le vol, le virus a effacé le journal des accès… mais <b>le code d'opérateur (205) restait écrit sur la ligne 3 du badge</b>.", "Nadia Benali est mise hors de cause. Bravo, lieutenant : sans programme fiable, cette preuve n'aurait jamais parlé."], "extra": [8], "official": 147}];
+function dosGoFirst() { go('affaire'); }
+
+/* ---------- dossier d'enquête (code donné par le professeur) ---------- */
+const normCode = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const DOSI = (() => {
+  const m = location.hash.match(/dossier=([A-Za-z0-9]+)/); if (!m) return -1;
+  const c = normCode(m[1]); if (c === 'SANS') return 0;
+  return DOSSIERS.findIndex((d, k) => k > 0 && d.code === c);
+})();
+const DOS = DOSSIERS[Math.max(DOSI, 0)];
+const DOS_LABEL = 'Dossier n° ' + (Math.max(DOSI, 0) + 1) + (DOSI > 0 ? ' (code ' + DOS.code + ')' : ' (sans code)');
+(() => {
+  const chip = document.getElementById('dosChip'), gate = document.getElementById('dosGate');
+  const open = code => { location.hash = 'dossier=' + code; location.reload(); };
+  if (DOSI < 0) document.body.classList.add('nodos');
+  else { chip.hidden = false; chip.textContent = '📁 Dossier ' + (DOSI + 1); }
+  document.getElementById('dosOpen').onclick = () => {
+    const c = normCode(document.getElementById('dosCode').value), msg = document.getElementById('dosMsg');
+    if (!c) { msg.className = 'dosmsg ko'; msg.textContent = 'Écrivez le code donné par votre professeur.'; return; }
+    const i = DOSSIERS.findIndex((d, k) => k > 0 && d.code === c);
+    if (i < 0) { msg.className = 'dosmsg ko'; msg.textContent = '❌ Ce code n\'existe pas. Vérifiez l\'orthographe avec votre professeur.'; return; }
+    open(c);
+  };
+  document.getElementById('dosCode').onkeydown = e => { if (e.key === 'Enter') document.getElementById('dosOpen').click(); };
+  document.getElementById('dosNone').onclick = () => open('SANS');
+  document.getElementById('dosKeep').onclick = () => { document.body.classList.remove('nodos', 'dosswitch'); };
+  chip.onclick = () => { dosGoFirst(); document.body.classList.add('nodos', 'dosswitch'); gate.scrollIntoView({ block: 'center' }); };
+})();
+// tableau des dossiers pour l'espace enseignant
+const dosList = () => DOSSIERS.map((d, k) => ({ n: k + 1, code: d.code || '— (sans code)', d }));
+
+CARDS.preuve.rows = DOS.rows;
+// registre : remarques du dossier
+document.querySelectorAll('#registre tr').forEach(tr => {
+  const td = tr.querySelectorAll('td'); if (!td.length) return;
+  const n = td[0].textContent.trim();
+  td[4].innerHTML = DOS.rem[n] || ''; tr.classList.toggle('warnrow', DOS.warn.includes(+n));
+});
+
 /* ---------- Navigation ---------- */
 let unlocked = false;
 const GATED = ['prog', 'cablage', 'lire', 'rapport'];
@@ -1424,6 +1467,7 @@ function unlockAll() {
   $('btnToProg').disabled = false;
 }
 function go(s) {
+  if (document.body.classList.contains('nodos') && s !== 'prof') s = 'affaire';
   if (!unlocked && GATED.includes(s)) {
     s = 'dossier';
     setTimeout(() => {
@@ -2097,7 +2141,7 @@ const QUESTIONS = [
     'Parce que la pièce à conviction est trop fragile',
     'Pour effacer le virus du réseau'] }
 ];
-const ANS = JSON.parse(atob('eyJxMSI6Ijc3IiwicTIiOiJDYW1pbGxlIFJvdXgiLCJxMyI6IjI3IiwicTQiOiI4LDE2IiwicTUiOiIxNDIiLCJxNiI6IllhbmlzIE1vcmVsIiwicTciOiJZYW5pcyBNb3JlbCIsInE4IjoiMSJ9'));
+const ANS = DOS.ans;
 function buildQuestions() {
   $('questions').innerHTML = QUESTIONS.map((q, n) => {
     let f = '';
@@ -2168,7 +2212,7 @@ $('btnReport').onclick = () => {
   renderScore(gained > 0);
   if (good === n) {
     $('epilogue').classList.add('on');
-    $('finalScore').textContent = '⭐ Score final de l\'enquête : ' + fmt(totalPts()) + ' / ' + MAXPTS + ' points.';
+    $('finalScore').textContent = '⭐ Score final de l\'enquête : ' + fmt(totalPts()) + ' / ' + MAXPTS + ' points · ' + DOS_LABEL + '.';
   }
 };
 
@@ -2226,16 +2270,37 @@ function badgeSVG(rows, title, sub, laser) {
     '<text x="8" y="' + (H - 6) + '" font-size="3" fill="#555">données 6 mm, horloge 4 mm.</text>';
   return s + '</svg>';
 }
-const BADGE_INFO = [[CARDS.temoin.rows, 'BADGE TÉMOIN', 'Remis par H. Lefèvre, responsable sécurité'], [CARDS.preuve.rows, 'SCELLÉ N° 1', 'Pièce à conviction · caméra 4 · 01 h 47']];
-$('btnPrintBadges').onclick = () => openPrint('Badges à perforer',
-  BADGE_INFO.map((b, i) => '<div style="page-break-after:' + (i ? 'auto' : 'always') + '">' + badgeSVG(b[0], b[1], b[2], false) + '</div>').join(''), 'body{margin:10mm}');
+const TD = () => DOSSIERS[+$('tDos').value], TN = () => +$('tDos').value + 1;
+const BADGE_INFO_OF = () => [[CARDS.temoin.rows, 'BADGE TÉMOIN', 'Remis par H. Lefèvre, responsable sécurité'], [TD().rows, 'SCELLÉ N° 1', 'Pièce à conviction · dossier n° ' + TN()]];
+// épilogue du dossier de l'élève
+$('epiTxt').innerHTML = DOS.epi.map(p => '<p>' + p + '</p>').join('');
+$('epiUsb').textContent = 'clé USB · domicile de ' + DOS.culprit.split(' ')[0][0] + '. ' + DOS.culprit.split(' ').slice(1).join(' ');
+$('epiOp').textContent = DOS.rows[2] + ' !';
+$('epiHoles').innerHTML = DOS.rows.map((v, r) => { const y = [78, 106, 140][r]; let s = ''; for (let c = 0; c < 8; c++) { const x = 284 + 14 * c; s += (v >> (7 - c)) & 1 ? '<circle cx="' + x + '" cy="' + y + '" r="5" fill="#1d1d1f"/>' : '<circle cx="' + x + '" cy="' + y + '" r="5" fill="none" stroke="#d2cab2" stroke-dasharray="2 2"/>'; } return s + '<circle cx="400" cy="' + y + '" r="3.5" fill="#1d1d1f"/>'; }).join('');
+// enseignant : dossiers et solutions
+const bin8 = v => v.toString(2).padStart(8, '0');
+$('tDos').innerHTML = DOSSIERS.map((d, k) => '<option value="' + k + '"' + (d === DOS ? ' selected' : '') + '>n° ' + (k + 1) + ' · ' + (d.code || 'sans code') + '</option>').join('');
+$('dosTable').innerHTML = '<tr><th>Dossier</th><th>Code à donner</th><th>Pièce à conviction</th><th>Titulaire du badge</th><th>Coupable</th></tr>' +
+  DOSSIERS.map((d, k) => '<tr><td>n° ' + (k + 1) + '</td><td><b>' + (d.code || '— (sans code)') + '</b></td><td>' + d.rows.join(' / ') + '</td><td>' + d.owner + '</td><td><b>' + d.culprit + '</b></td></tr>').join('');
+function solDraw() {
+  const D = TD(), [n, r, op] = D.rows;
+  $('preuveRows').innerHTML = '<tr><td rowspan="3">Pièce à conviction (dossier n° ' + TN() + ')</td><td>1</td><td class="bin">' + bin8(n) + '</td><td>' + n + '</td><td>Badge de ' + D.owner + '</td></tr>' +
+    '<tr><td>2</td><td class="bin">' + bin8(r) + '</td><td>' + r + '</td><td>' + W8.filter(w => r & w).join(' + ') + '. Officiellement ' + D.official + ' : <b>' + D.extra.map(x => '+ ' + x).join(' et ') + ' ajouté' + (D.extra.length > 1 ? 's' : '') + '</b></td></tr>' +
+    '<tr><td>3</td><td class="bin">' + bin8(op) + '</td><td>' + op + '</td><td>Encodé par <b>' + D.culprit + '</b></td></tr>';
+  $('solRapport').innerHTML = 'Réponses du rapport (dossier n° ' + TN() + ') : ' + [n, D.owner, r, D.extra.join(' et '), op, D.culprit, D.culprit, 'étalonnage'].join(' · ') + '.';
+}
+const W8 = [128, 64, 32, 16, 8, 4, 2, 1];
+$('tDos').onchange = solDraw; solDraw();
+$('btnPrintBadges').onclick = () => { const BADGE_INFO = BADGE_INFO_OF(); openPrint('Badges à perforer',
+  BADGE_INFO.map((b, i) => '<div style="page-break-after:' + (i ? 'auto' : 'always') + '">' + badgeSVG(b[0], b[1], b[2], false) + '</div>').join(''), 'body{margin:10mm}'); };
 $('btnLaserBadges').onclick = () => {
+  const BADGE_INFO = BADGE_INFO_OF();
   const a = badgeSVG(BADGE_INFO[0][0], BADGE_INFO[0][1], BADGE_INFO[0][2], true), b = badgeSVG(BADGE_INFO[1][0], BADGE_INFO[1][1], BADGE_INFO[1][2], true);
   const inner = t => t.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="250mm" height="132mm" viewBox="0 0 250 132" font-family="sans-serif">' +
     '<!-- Rouge = découpe (bristol 250-300 g), noir = gravure légère. Convertir le texte en tracés si votre logiciel le demande. -->' +
     '<g>' + inner(a) + '</g><g transform="translate(130 0)">' + inner(b) + '</g></svg>';
-  download('badges_enquete_decoupe_laser.svg', svg, 'image/svg+xml');
+  download('badges_enquete_dossier' + TN() + '_decoupe_laser.svg', svg, 'image/svg+xml');
 };
 
 /* ---------- Enseignant ---------- */

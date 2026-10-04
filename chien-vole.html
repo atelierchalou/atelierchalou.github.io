@@ -94,11 +94,29 @@
   .mut{color:var(--mut);font-size:.9rem}
   .tablewrap{overflow-x:auto}
   @media(max-width:600px){body{font-size:16.5px}.calc{gap:3px}.calc .w{font-size:.75rem}header input{width:130px}.bits{font-size:1.1rem;letter-spacing:.1em}}
+
+  /* ----- dossier d'enquête ----- */
+  .dosgate{display:none;background:#fff;border:3px solid #14213d;border-radius:16px;padding:22px 18px 18px;margin:10px 0 16px;position:relative}
+  body.nodos .dosgate{display:block}
+  body.nodos .dosgate ~ *{display:none!important}
+  .dosgate .dostab{position:absolute;top:-14px;left:16px;background:#14213d;color:#fff;font-weight:800;font-size:.8rem;letter-spacing:.1em;padding:3px 12px;border-radius:6px}
+  .dosgate h2{margin:4px 0 8px}
+  .dosgate .dosrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+  .dosgate input{font:inherit;font-size:1.2rem;padding:8px 12px;border-radius:10px;border:2px solid #b9c3dd;text-transform:uppercase;letter-spacing:.08em;width:230px;max-width:100%}
+  .dosgate .dosmsg{font-weight:700;min-height:1.2em;margin:4px 0}
+  .dosgate .dosmsg.ko{color:#c62828}
+  .dosgate .doswarn{display:none;background:#fff3cd;border:2px solid #f1d27a;border-radius:10px;padding:8px 12px;margin:8px 0}
+  body.dosswitch .dosgate .doswarn{display:block}
+  .dosgate .doskeep{display:none}
+  body.dosswitch .dosgate .doskeep{display:inline-block}
+  .doschip{font:inherit;font-size:.85rem;font-weight:800;border-radius:999px;padding:4px 12px;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+  .doschip[hidden]{display:none}
 </style>
 </head>
 <body>
 <header>
   <h1>🐕 Le chien volé du gardien</h1>
+  <button class="doschip" id="dosChip" hidden title="Changer de dossier"></button>
   <span class="score" id="score" title="2 points du premier coup, 1 au deuxième essai ; une aide coûte 1 point">⭐ 0 / 50</span>
   <input id="agent" placeholder="Ton prénom" maxlength="30" aria-label="Ton prénom">
 </header>
@@ -107,6 +125,15 @@
 <main>
 <!-- ============ L'AFFAIRE ============ -->
 <section id="s-affaire" class="on">
+  <div class="dosgate" id="dosGate">
+    <span class="dostab">📁 DOSSIER D'ENQUÊTE</span>
+    <h2>As-tu un code de dossier ?</h2>
+    <p>Ton professeur t'a peut-être donné un <b>code</b>. Chaque code ouvre un dossier différent : le Masque ne demande pas la même chose, et Rex n'est pas caché au même endroit ! Sans code, tu reçois le dossier n° 1.</p>
+    <div class="dosrow"><input id="dosCode" placeholder="Code du dossier" autocomplete="off" aria-label="Code du dossier"><button class="primary" id="dosOpen">Ouvrir ce dossier</button></div>
+    <div class="dosmsg" id="dosMsg"></div>
+    <div class="doswarn">⚠️ Changer de dossier <b>recommence l'enquête à zéro</b> (les points sont perdus).</div>
+    <div class="dosrow"><button id="dosNone">Commencer sans code (dossier n° 1) →</button><button class="doskeep" id="dosKeep">Garder mon dossier</button></div>
+  </div>
   <div class="panel">
     <svg class="ill" viewBox="0 0 640 290" role="img" aria-label="La loge du gardien : le panier du chien est vide, sa laisse pend au mur, une carte perforée a été glissée sous la porte.">
       <rect width="640" height="290" fill="#efe3c8"/>
@@ -143,14 +170,14 @@
     </div>
     <div class="note">
       Gardien,<br>Ton chien Rex est avec moi. Il va très bien.<br>Ce que je veux est écrit sur ma carte perforée.<br>
-      Si tu acceptes, glisse dans ta boîte aux lettres une carte perforée qui dit <b>OUI</b>.<br>
+      Si tu acceptes, glisse dans ta boîte aux lettres une carte perforée qui dit <b class="rep"></b>.<br>
       ⚠️ Pour que je sois sûr qu'elle vient de toi, ajoute une <b>4e ligne : la SOMME des numéros des 3 lettres</b>. Sinon, je jette la carte !<br>
       <span style="float:right">— Le Masque 🎭</span><br>
     </div>
     <h3>Tes missions</h3>
     <ol class="mission">
       <li><b>Lire</b> la carte du Masque : que demande-t-il ?</li>
-      <li><b>Écrire</b> la réponse « OUI » en binaire, avec la ligne de contrôle.</li>
+      <li><b>Écrire</b> la réponse « <span class="rep"></span> » en binaire, avec la ligne de contrôle.</li>
       <li><b>Fabriquer</b> la vraie carte et la faire vérifier par le lecteur.</li>
       <li><b>Démasquer</b> la fausse carte-réponse et retrouver Rex.</li>
     </ol>
@@ -164,7 +191,7 @@
   <div class="panel">
     <h2>Mission 1 · Lire la carte du Masque</h2>
     <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
-      <div><p>Voici les 7 lignes de la carte. Pour chaque ligne, trouve le <b>numéro</b> (additionne les valeurs des trous), puis la <b>lettre</b> qui correspond dans le code ASCII.</p></div>
+      <div><p>Voici les <span id="nDem"></span> lignes de la carte. Pour chaque ligne, trouve le <b>numéro</b> (additionne les valeurs des trous), puis la <b>lettre</b> qui correspond dans le code ASCII.</p></div>
     </div>
     <details class="ref"><summary>📖 Tableau des lettres (code ASCII)</summary><div class="abc abcT"></div></details>
     <div id="m1"></div>
@@ -177,10 +204,10 @@
 <!-- ============ MISSION 2 ============ -->
 <section id="s-m2">
   <div class="panel">
-    <h2>Mission 2 · Écrire la réponse « OUI »</h2>
+    <h2>Mission 2 · Écrire la réponse « <span class="rep"></span> »</h2>
     <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
       <div>
-        <p>Des bonbons ? Monsieur Moreau est d'accord ! Il faut maintenant <b>écrire</b> la carte-réponse. C'est l'inverse de la mission 1 : <b>lettre → numéro → trous</b>.</p>
+        <p><span id="demQ"></span> ? Monsieur Moreau est d'accord ! Il faut maintenant <b>écrire</b> la carte-réponse. C'est l'inverse de la mission 1 : <b>lettre → numéro → trous</b>.</p>
         <p>Pour chaque lettre : trouve son numéro, puis perce les bons trous. Méthode : prends la <b>plus grande valeur</b> qui ne dépasse pas le nombre, perce ce trou, calcule ce qu'il reste, et recommence.</p>
       </div>
     </div>
@@ -208,7 +235,7 @@
   <div class="panel">
     <h2>Mission 3 · Fabriquer et vérifier la vraie carte</h2>
     <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
-      <div><p>Imprime le gabarit de ta carte, perce les trous marqués d'une croix, puis glisse-la dans le lecteur. Le lecteur vérifie que ta carte dit bien <b>O, U, I</b> et que la ligne de contrôle vaut la somme.</p></div>
+      <div><p>Imprime le gabarit de ta carte, perce les trous marqués d'une croix, puis glisse-la dans le lecteur. Le lecteur vérifie que ta carte dit bien <b class="repc"></b> et que la ligne de contrôle vaut la somme.</p></div>
     </div>
     <div class="row"><button id="printMine">🖨️ Imprimer le gabarit de ma carte</button></div>
     <div class="tip">✂️ Perce les croix : 6 mm pour les données, 4 mm pour la colonne d'horloge. N'écris rien dans la colonne d'horloge (à droite).</div>
@@ -242,17 +269,14 @@
         <div class="choice"><label><input type="radio" name="auth" value="A"> La carte A</label><label><input type="radio" name="auth" value="B"> La carte B</label></div>
         <div class="row"><button id="authChk">Vérifier</button><span class="fb" id="authFb"></span></div><div class="hint" id="h-auth"></div></div>
       <div class="item" id="q-where" style="display:none"><div class="head"><b>Où se trouve Rex ?</b><button class="hb" data-h="where" title="Aide">💡</button></div>
-        <div class="choice"><label><input type="radio" name="where" value="gym"> Au gymnase</label><label><input type="radio" name="where" value="cdi"> Au CDI</label><label><input type="radio" name="where" value="cantine"> À la cantine</label><label><input type="radio" name="where" value="preau"> Sous le préau</label></div>
+        <div class="choice" id="whereOpts"></div>
         <div class="row"><button id="whereChk">Vérifier</button><span class="fb" id="whereFb"></span></div><div class="hint" id="h-where"></div></div>
     </div>
     <div class="epi" id="epi">
       <p><span class="stamp">REX EST RETROUVÉ !</span></p>
-      <svg class="ill" viewBox="0 0 640 260" role="img" aria-label="Au CDI, Rex dort sur un pouf au milieu des livres, à côté d'un sachet de bonbons et d'un masque abandonné.">
+      <svg class="ill" viewBox="0 0 640 260" role="img" id="epiSvg" aria-label="">
         <rect width="640" height="260" fill="#f4ead8"/><rect y="214" width="640" height="46" fill="#b98e62"/>
-        <g><rect x="20" y="30" width="200" height="180" fill="#8a5a34"/><rect x="28" y="38" width="184" height="50" fill="#f3e6cf"/><rect x="28" y="96" width="184" height="50" fill="#f3e6cf"/><rect x="28" y="154" width="184" height="50" fill="#f3e6cf"/>
-          <g><rect x="30" y="47" width="8" height="41" fill="#2f6fed"/><rect x="39" y="44" width="12" height="44" fill="#34495e"/><rect x="52" y="54" width="8" height="34" fill="#2f6fed"/><rect x="61" y="44" width="7" height="44" fill="#8e44ad"/><rect x="69" y="55" width="13" height="33" fill="#f39c12"/><rect x="83" y="45" width="11" height="43" fill="#8e44ad"/><rect x="95" y="51" width="13" height="37" fill="#2f6fed"/><rect x="109" y="50" width="9" height="38" fill="#c0392b"/><rect x="119" y="48" width="13" height="40" fill="#8e44ad"/><rect x="133" y="51" width="8" height="37" fill="#8e44ad"/><rect x="142" y="45" width="9" height="43" fill="#2f6fed"/><rect x="152" y="46" width="13" height="42" fill="#d35400"/><rect x="166" y="49" width="11" height="39" fill="#27ae60"/><rect x="178" y="41" width="8" height="47" fill="#8e44ad"/><rect x="187" y="47" width="7" height="41" fill="#c0392b"/><rect x="195" y="47" width="9" height="41" fill="#f39c12"/><rect x="30" y="101" width="10" height="45" fill="#8e44ad"/><rect x="41" y="100" width="10" height="46" fill="#27ae60"/><rect x="52" y="105" width="8" height="41" fill="#8e44ad"/><rect x="61" y="113" width="13" height="33" fill="#2f6fed"/><rect x="75" y="100" width="7" height="46" fill="#8e44ad"/><rect x="83" y="99" width="11" height="47" fill="#16a085"/><rect x="95" y="108" width="8" height="38" fill="#2f6fed"/><rect x="104" y="108" width="10" height="38" fill="#34495e"/><rect x="115" y="109" width="9" height="37" fill="#16a085"/><rect x="125" y="104" width="10" height="42" fill="#f39c12"/><rect x="136" y="111" width="9" height="35" fill="#c0392b"/><rect x="146" y="107" width="12" height="39" fill="#8e44ad"/><rect x="159" y="107" width="13" height="39" fill="#2f6fed"/><rect x="173" y="109" width="9" height="37" fill="#8e44ad"/><rect x="183" y="114" width="10" height="32" fill="#c0392b"/><rect x="194" y="112" width="9" height="34" fill="#8e44ad"/><rect x="30" y="162" width="7" height="42" fill="#8e44ad"/><rect x="38" y="168" width="9" height="36" fill="#d35400"/><rect x="48" y="170" width="13" height="34" fill="#8e44ad"/><rect x="62" y="166" width="11" height="38" fill="#34495e"/><rect x="74" y="168" width="9" height="36" fill="#8e44ad"/><rect x="84" y="167" width="10" height="37" fill="#16a085"/><rect x="95" y="172" width="11" height="32" fill="#16a085"/><rect x="107" y="158" width="7" height="46" fill="#27ae60"/><rect x="115" y="161" width="9" height="43" fill="#8e44ad"/><rect x="125" y="169" width="11" height="35" fill="#34495e"/><rect x="137" y="159" width="8" height="45" fill="#f39c12"/><rect x="146" y="171" width="7" height="33" fill="#c0392b"/><rect x="154" y="167" width="7" height="37" fill="#27ae60"/><rect x="162" y="171" width="11" height="33" fill="#34495e"/><rect x="174" y="165" width="11" height="39" fill="#16a085"/><rect x="186" y="169" width="7" height="35" fill="#8e44ad"/><rect x="194" y="159" width="13" height="45" fill="#f39c12"/></g></g>
-        <g id="books"></g>
-        <text x="120" y="24" text-anchor="middle" font-size="16" font-weight="900" fill="#14524f" font-family="sans-serif">CDI</text>
+        <g id="epiScene"></g><text id="epiLab" x="120" y="24" text-anchor="middle" font-size="16" font-weight="900" fill="#14524f" font-family="sans-serif"></text>
         <ellipse cx="380" cy="206" rx="110" ry="30" fill="#2f6fed"/><ellipse cx="380" cy="194" rx="96" ry="24" fill="#5b8cf0"/>
         <g transform="translate(330 150)">
           <path d="M-30 50 q-20 -6 -26 -24" fill="none" stroke="#d9a441" stroke-width="12" stroke-linecap="round"/>
@@ -263,12 +287,12 @@
           <path d="M96 30 q5 4 10 0" stroke="#222" stroke-width="2.5" fill="none"/>
           <text x="130" y="6" font-size="18" font-weight="900" fill="#14524f" font-family="sans-serif">z z z</text>
         </g>
-        <g transform="translate(520 180)"><path d="M0 0 L40 0 L48 30 L-8 30 Z" fill="#e53935"/><path d="M0 0 q20 -14 40 0" fill="#ff8a80"/><text x="20" y="22" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="sans-serif">BONBONS</text></g>
+        <g transform="translate(520 180)"><path d="M0 0 L40 0 L48 30 L-8 30 Z" fill="#e53935"/><path d="M0 0 q20 -14 40 0" fill="#ff8a80"/><text x="20" y="22" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="sans-serif" id="epiBag"></text></g>
         <g fill="#ffd60a"><rect x="500" y="222" width="12" height="6" rx="2" transform="rotate(20 506 225)"/><rect x="580" y="226" width="12" height="6" rx="2" transform="rotate(-15 586 229)"/><rect x="470" y="230" width="12" height="6" rx="2"/></g>
         <g transform="translate(250 226)"><path d="M0 0 q20 -16 40 0 q20 -16 40 0 q-4 18 -20 14 q-10 -4 -20 -2 q-10 -2 -20 2 q-16 4 -20 -14z" fill="#3a2a5e"/><ellipse cx="18" cy="2" rx="7" ry="4" fill="#b98e62"/><ellipse cx="62" cy="2" rx="7" ry="4" fill="#b98e62"/></g>
       </svg>
-      <p>Monsieur Moreau court au CDI… et trouve Rex qui fait la sieste sur un pouf, entouré de papiers de bonbons ! À côté, un masque abandonné.</p>
-      <p>Le Masque, c'était <b>Léo</b>, élève de 3e. Il voulait que Rex soit la mascotte de la grande fête de la lecture du CDI, et n'avait pas osé demander. Il s'excuse auprès du gardien… qui lui pardonne, à condition de partager les bonbons avec toute l'équipe d'enquêteurs.</p>
+      <p id="epiT1"></p>
+      <p id="epiT2"></p>
       <p><b>Grâce à la ligne de contrôle, tu as su repérer la fausse carte : c'est exactement ce que font les ordinateurs pour vérifier que les données ne sont pas abîmées ou trafiquées.</b></p>
       <p id="final" style="font-weight:800"></p>
       <div class="row"><button id="printBilan">🖨️ Imprimer mon bilan</button></div>
@@ -298,13 +322,18 @@
     <div class="panel">
       <h2>Préparation</h2>
       <ul>
-        <li>Facultatif : imprimez et perforez les cartes du Masque pour l'ambiance (les élèves les ont aussi à l'écran).</li>
-        <li>Mission 3 : chaque groupe imprime le gabarit de <b>sa</b> carte « OUI » et le perfore. La Nano du lecteur doit contenir le <b>programme normal du lecteur</b>. Sans lecteur, la simulation valide la mission.</li>
+        <li>Facultatif : choisissez le dossier ci-dessous, puis imprimez et perforez les cartes du Masque pour l'ambiance (les élèves les ont aussi à l'écran).</li>
+        <li>Mission 3 : chaque groupe imprime le gabarit de <b>sa</b> carte-réponse et la perfore. La Nano du lecteur doit contenir le <b>programme normal du lecteur</b>. Sans lecteur, la simulation valide la mission.</li>
       </ul>
-      <div class="row"><button id="pMasque">🖨️ Carte du Masque (BONBONS)</button><button id="pAB">🖨️ Cartes A et B</button><button id="pOui">🖨️ Carte-réponse corrigée (OUI)</button><button id="all">Débloquer toutes les missions</button></div>
+      <div class="row"><label>Dossier : <select id="tDos" style="font:inherit;padding:6px;border-radius:8px"></select></label><button id="pMasque">🖨️ Carte du Masque</button><button id="pAB">🖨️ Cartes A et B</button><button id="pOui">🖨️ Carte-réponse corrigée</button><button id="all">Débloquer toutes les missions</button></div>
     </div>
     <div class="panel">
-      <h2>Solutions</h2>
+      <h2>Les dossiers et leurs codes</h2>
+      <p>Donnez un code à chaque groupe (ou écrivez-le au tableau) : chaque dossier change la demande du Masque, la réponse à écrire, les deux cartes et la cachette de Rex. Un élève peut refaire l'enquête avec un autre code.</p>
+      <div class="tablewrap" id="dosTable"></div>
+    </div>
+    <div class="panel">
+      <h2>Solutions du dossier <span id="solN"></span></h2>
       <div class="tablewrap" id="sol"></div>
       <p class="mut">Code enseignant : <b>REX2026</b>. Le score n'est pas enregistré : recharger la page remet tout à zéro. Faites imprimer le bilan à la fin.</p>
     </div>
@@ -318,10 +347,46 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const W = [128, 64, 32, 16, 8, 4, 2, 1];
 const terms = v => W.filter(w => v & w);
 const bin = v => v.toString(2).padStart(8, '0');
-const DEMANDE = 'BONBONS', REPONSE = 'OUI';
+const PLACES = {"CDI": {"opt": "Au CDI", "lab": "CDI", "fr": "au CDI", "scene": "<g><rect x=\"20\" y=\"30\" width=\"200\" height=\"180\" fill=\"#8a5a34\"/><rect x=\"28\" y=\"38\" width=\"184\" height=\"50\" fill=\"#f3e6cf\"/><rect x=\"28\" y=\"96\" width=\"184\" height=\"50\" fill=\"#f3e6cf\"/><rect x=\"28\" y=\"154\" width=\"184\" height=\"50\" fill=\"#f3e6cf\"/>\n          <g><rect x=\"30\" y=\"47\" width=\"8\" height=\"41\" fill=\"#2f6fed\"/><rect x=\"39\" y=\"44\" width=\"12\" height=\"44\" fill=\"#34495e\"/><rect x=\"52\" y=\"54\" width=\"8\" height=\"34\" fill=\"#2f6fed\"/><rect x=\"61\" y=\"44\" width=\"7\" height=\"44\" fill=\"#8e44ad\"/><rect x=\"69\" y=\"55\" width=\"13\" height=\"33\" fill=\"#f39c12\"/><rect x=\"83\" y=\"45\" width=\"11\" height=\"43\" fill=\"#8e44ad\"/><rect x=\"95\" y=\"51\" width=\"13\" height=\"37\" fill=\"#2f6fed\"/><rect x=\"109\" y=\"50\" width=\"9\" height=\"38\" fill=\"#c0392b\"/><rect x=\"119\" y=\"48\" width=\"13\" height=\"40\" fill=\"#8e44ad\"/><rect x=\"133\" y=\"51\" width=\"8\" height=\"37\" fill=\"#8e44ad\"/><rect x=\"142\" y=\"45\" width=\"9\" height=\"43\" fill=\"#2f6fed\"/><rect x=\"152\" y=\"46\" width=\"13\" height=\"42\" fill=\"#d35400\"/><rect x=\"166\" y=\"49\" width=\"11\" height=\"39\" fill=\"#27ae60\"/><rect x=\"178\" y=\"41\" width=\"8\" height=\"47\" fill=\"#8e44ad\"/><rect x=\"187\" y=\"47\" width=\"7\" height=\"41\" fill=\"#c0392b\"/><rect x=\"195\" y=\"47\" width=\"9\" height=\"41\" fill=\"#f39c12\"/><rect x=\"30\" y=\"101\" width=\"10\" height=\"45\" fill=\"#8e44ad\"/><rect x=\"41\" y=\"100\" width=\"10\" height=\"46\" fill=\"#27ae60\"/><rect x=\"52\" y=\"105\" width=\"8\" height=\"41\" fill=\"#8e44ad\"/><rect x=\"61\" y=\"113\" width=\"13\" height=\"33\" fill=\"#2f6fed\"/><rect x=\"75\" y=\"100\" width=\"7\" height=\"46\" fill=\"#8e44ad\"/><rect x=\"83\" y=\"99\" width=\"11\" height=\"47\" fill=\"#16a085\"/><rect x=\"95\" y=\"108\" width=\"8\" height=\"38\" fill=\"#2f6fed\"/><rect x=\"104\" y=\"108\" width=\"10\" height=\"38\" fill=\"#34495e\"/><rect x=\"115\" y=\"109\" width=\"9\" height=\"37\" fill=\"#16a085\"/><rect x=\"125\" y=\"104\" width=\"10\" height=\"42\" fill=\"#f39c12\"/><rect x=\"136\" y=\"111\" width=\"9\" height=\"35\" fill=\"#c0392b\"/><rect x=\"146\" y=\"107\" width=\"12\" height=\"39\" fill=\"#8e44ad\"/><rect x=\"159\" y=\"107\" width=\"13\" height=\"39\" fill=\"#2f6fed\"/><rect x=\"173\" y=\"109\" width=\"9\" height=\"37\" fill=\"#8e44ad\"/><rect x=\"183\" y=\"114\" width=\"10\" height=\"32\" fill=\"#c0392b\"/><rect x=\"194\" y=\"112\" width=\"9\" height=\"34\" fill=\"#8e44ad\"/><rect x=\"30\" y=\"162\" width=\"7\" height=\"42\" fill=\"#8e44ad\"/><rect x=\"38\" y=\"168\" width=\"9\" height=\"36\" fill=\"#d35400\"/><rect x=\"48\" y=\"170\" width=\"13\" height=\"34\" fill=\"#8e44ad\"/><rect x=\"62\" y=\"166\" width=\"11\" height=\"38\" fill=\"#34495e\"/><rect x=\"74\" y=\"168\" width=\"9\" height=\"36\" fill=\"#8e44ad\"/><rect x=\"84\" y=\"167\" width=\"10\" height=\"37\" fill=\"#16a085\"/><rect x=\"95\" y=\"172\" width=\"11\" height=\"32\" fill=\"#16a085\"/><rect x=\"107\" y=\"158\" width=\"7\" height=\"46\" fill=\"#27ae60\"/><rect x=\"115\" y=\"161\" width=\"9\" height=\"43\" fill=\"#8e44ad\"/><rect x=\"125\" y=\"169\" width=\"11\" height=\"35\" fill=\"#34495e\"/><rect x=\"137\" y=\"159\" width=\"8\" height=\"45\" fill=\"#f39c12\"/><rect x=\"146\" y=\"171\" width=\"7\" height=\"33\" fill=\"#c0392b\"/><rect x=\"154\" y=\"167\" width=\"7\" height=\"37\" fill=\"#27ae60\"/><rect x=\"162\" y=\"171\" width=\"11\" height=\"33\" fill=\"#34495e\"/><rect x=\"174\" y=\"165\" width=\"11\" height=\"39\" fill=\"#16a085\"/><rect x=\"186\" y=\"169\" width=\"7\" height=\"35\" fill=\"#8e44ad\"/><rect x=\"194\" y=\"159\" width=\"13\" height=\"45\" fill=\"#f39c12\"/></g></g>\n        <g id=\"books\"></g>"}, "GYM": {"opt": "Au gymnase", "lab": "GYMNASE", "fr": "au gymnase", "scene": "<g><rect x=\"24\" y=\"30\" width=\"10\" height=\"184\" fill=\"#a0703f\"/><rect x=\"150\" y=\"30\" width=\"10\" height=\"184\" fill=\"#a0703f\"/><rect x=\"34\" y=\"44\" width=\"116\" height=\"6\" fill=\"#c8945a\"/><rect x=\"34\" y=\"64\" width=\"116\" height=\"6\" fill=\"#c8945a\"/><rect x=\"34\" y=\"84\" width=\"116\" height=\"6\" fill=\"#c8945a\"/><rect x=\"34\" y=\"104\" width=\"116\" height=\"6\" fill=\"#c8945a\"/><rect x=\"34\" y=\"124\" width=\"116\" height=\"6\" fill=\"#c8945a\"/><rect x=\"34\" y=\"144\" width=\"116\" height=\"6\" fill=\"#c8945a\"/><rect x=\"34\" y=\"164\" width=\"116\" height=\"6\" fill=\"#c8945a\"/><rect x=\"34\" y=\"184\" width=\"116\" height=\"6\" fill=\"#c8945a\"/><rect x=\"34\" y=\"204\" width=\"116\" height=\"6\" fill=\"#c8945a\"/></g><g><rect x=\"190\" y=\"34\" width=\"6\" height=\"90\" fill=\"#777\"/><rect x=\"176\" y=\"40\" width=\"52\" height=\"34\" fill=\"#fff\" stroke=\"#333\" stroke-width=\"3\"/><ellipse cx=\"214\" cy=\"80\" rx=\"16\" ry=\"4\" fill=\"none\" stroke=\"#e65100\" stroke-width=\"3\"/><path d=\"M200 82 L206 104 L222 104 L228 82\" fill=\"none\" stroke=\"#ddd\" stroke-width=\"2\"/></g><circle cx=\"200\" cy=\"198\" r=\"16\" fill=\"#e67e22\"/><path d=\"M184 198 H216 M200 182 V214\" stroke=\"#7a3b00\" stroke-width=\"2\"/>"}, "SVT": {"opt": "En salle de SVT", "lab": "SALLE DE SVT", "fr": "en salle de SVT", "scene": "<rect x=\"20\" y=\"130\" width=\"210\" height=\"16\" fill=\"#3e4a5c\"/><rect x=\"30\" y=\"146\" width=\"12\" height=\"68\" fill=\"#3e4a5c\"/><rect x=\"208\" y=\"146\" width=\"12\" height=\"68\" fill=\"#3e4a5c\"/><g transform=\"translate(46 64)\"><rect x=\"0\" y=\"20\" width=\"40\" height=\"46\" rx=\"6\" fill=\"#bfe6ff\" opacity=\".8\" stroke=\"#6aa8d6\" stroke-width=\"2\"/><rect x=\"0\" y=\"40\" width=\"40\" height=\"26\" fill=\"#7fd1a5\" opacity=\".7\"/><path d=\"M14 54 q6 -18 12 -4\" stroke=\"#2e7d32\" stroke-width=\"3\" fill=\"none\"/></g><g transform=\"translate(110 56)\"><rect x=\"18\" y=\"62\" width=\"40\" height=\"12\" fill=\"#555\"/><rect x=\"30\" y=\"20\" width=\"12\" height=\"44\" fill=\"#777\" transform=\"rotate(-20 36 42)\"/><circle cx=\"26\" cy=\"20\" r=\"8\" fill=\"#555\"/></g><g transform=\"translate(170 76)\"><path d=\"M10 54 L30 54 L26 30 L14 30 Z\" fill=\"#a0522d\"/><path d=\"M20 30 q-14 -20 -4 -30 M20 30 q12 -18 8 -28 M20 30 q0 -22 0 -30\" stroke=\"#2e7d32\" stroke-width=\"4\" fill=\"none\"/></g>"}, "ART": {"opt": "En salle d'arts plastiques", "lab": "ARTS PLASTIQUES", "fr": "en salle d'arts plastiques", "scene": "<g><path d=\"M60 214 L100 50 L140 214\" fill=\"none\" stroke=\"#8a5a34\" stroke-width=\"7\"/><line x1=\"100\" y1=\"50\" x2=\"100\" y2=\"214\" stroke=\"#8a5a34\" stroke-width=\"6\"/><rect x=\"50\" y=\"62\" width=\"100\" height=\"80\" fill=\"#fff\" stroke=\"#8a5a34\" stroke-width=\"5\"/><circle cx=\"80\" cy=\"96\" r=\"16\" fill=\"#ffd60a\"/><path d=\"M56 136 L90 104 L112 124 L130 108 L146 136 Z\" fill=\"#27ae60\"/><rect x=\"48\" y=\"140\" width=\"104\" height=\"8\" fill=\"#8a5a34\"/></g><g><rect x=\"170\" y=\"190\" width=\"18\" height=\"24\" fill=\"#c0392b\"/><rect x=\"192\" y=\"194\" width=\"18\" height=\"20\" fill=\"#2f6fed\"/><rect x=\"180\" y=\"170\" width=\"18\" height=\"20\" fill=\"#f39c12\"/><path d=\"M28 210 q8 -10 20 -2\" stroke=\"#8e44ad\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/></g>"}};
+const DOSSIERS = [{"code": null, "dem": "BONBONS", "demFr": "Des bonbons", "rep": "OUI", "A": {"word": "GYM", "ctl": 240}, "B": {"word": "CDI", "ctl": 208}, "vrai": "B", "who": "Léo", "cl": "3e", "why": "Il voulait que Rex soit la mascotte de la grande fête de la lecture du CDI, et n'avait pas osé demander."}, {"code": "NICHE", "dem": "GATEAUX", "demFr": "Des gâteaux", "rep": "DAC", "A": {"word": "SVT", "ctl": 253}, "B": {"word": "GYM", "ctl": 230}, "vrai": "A", "who": "Inès", "cl": "4e", "why": "Elle préparait un exposé sur le chien et voulait que Rex « pose » pour ses dessins d'observation."}, {"code": "COLLIER", "dem": "BISCUIT", "demFr": "Un biscuit", "rep": "BON", "A": {"word": "ART", "ctl": 213}, "B": {"word": "GYM", "ctl": 237}, "vrai": "B", "who": "Hugo", "cl": "5e", "why": "Il voulait que Rex soit la mascotte du cross du collège, et n'avait pas osé demander."}, {"code": "PATTE", "dem": "CARAMEL", "demFr": "Du caramel", "rep": "OUI", "A": {"word": "CDI", "ctl": 218}, "B": {"word": "ART", "ctl": 231}, "vrai": "B", "who": "Maëlle", "cl": "6e", "why": "Elle voulait peindre Rex pour le concours d'affiches du collège."}, {"code": "CROQUETTE", "dem": "BEIGNET", "demFr": "Un beignet", "rep": "DAC", "A": {"word": "GYM", "ctl": 237}, "B": {"word": "SVT", "ctl": 251}, "vrai": "A", "who": "Nolan", "cl": "4e", "why": "Il voulait que Rex soit l'arbitre (et la mascotte) du tournoi de handball."}];
+function dosGoFirst() { go('affaire'); }
+
+/* ---------- dossier d'enquête (code donné par le professeur) ---------- */
+const normCode = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const DOSI = (() => {
+  const m = location.hash.match(/dossier=([A-Za-z0-9]+)/); if (!m) return -1;
+  const c = normCode(m[1]); if (c === 'SANS') return 0;
+  return DOSSIERS.findIndex((d, k) => k > 0 && d.code === c);
+})();
+const DOS = DOSSIERS[Math.max(DOSI, 0)];
+const DOS_LABEL = 'Dossier n° ' + (Math.max(DOSI, 0) + 1) + (DOSI > 0 ? ' (code ' + DOS.code + ')' : ' (sans code)');
+(() => {
+  const chip = document.getElementById('dosChip'), gate = document.getElementById('dosGate');
+  const open = code => { location.hash = 'dossier=' + code; location.reload(); };
+  if (DOSI < 0) document.body.classList.add('nodos');
+  else { chip.hidden = false; chip.textContent = '📁 Dossier ' + (DOSI + 1); }
+  document.getElementById('dosOpen').onclick = () => {
+    const c = normCode(document.getElementById('dosCode').value), msg = document.getElementById('dosMsg');
+    if (!c) { msg.className = 'dosmsg ko'; msg.textContent = 'Écris le code donné par ton professeur.'; return; }
+    const i = DOSSIERS.findIndex((d, k) => k > 0 && d.code === c);
+    if (i < 0) { msg.className = 'dosmsg ko'; msg.textContent = '❌ Ce code n\'existe pas. Vérifie l\'orthographe avec ton professeur.'; return; }
+    open(c);
+  };
+  document.getElementById('dosCode').onkeydown = e => { if (e.key === 'Enter') document.getElementById('dosOpen').click(); };
+  document.getElementById('dosNone').onclick = () => open('SANS');
+  document.getElementById('dosKeep').onclick = () => { document.body.classList.remove('nodos', 'dosswitch'); };
+  chip.onclick = () => { dosGoFirst(); document.body.classList.add('nodos', 'dosswitch'); gate.scrollIntoView({ block: 'center' }); };
+})();
+// tableau des dossiers pour l'espace enseignant
+const dosList = () => DOSSIERS.map((d, k) => ({ n: k + 1, code: d.code || '— (sans code)', d }));
+
+const DEMANDE = DOS.dem, REPONSE = DOS.rep;
 const SUM = [...REPONSE].reduce((a, c) => a + c.charCodeAt(0), 0);         // 237
-const CARD_A = { word: 'GYM', ctl: 240 };                                     // fausse : 71 + 89 + 77 = 237 ≠ 240
-const CARD_B = { word: 'CDI', ctl: 208 };                                     // vraie : 67 + 68 + 73 = 208
+const CARD_A = DOS.A, CARD_B = DOS.B;
+const TRUE_CARD = DOS[DOS.vrai], PLACE = PLACES[TRUE_CARD.word];
+document.querySelectorAll('.rep').forEach(e => { e.textContent = REPONSE; });
+document.querySelectorAll('.repc').forEach(e => { e.textContent = [...REPONSE].join(', '); });
+$('nDem').textContent = DEMANDE.length; $('demQ').textContent = DOS.demFr;
 
 /* ---------- points ---------- */
 const MAX = 50;
@@ -469,7 +534,7 @@ function preview() {
   let s = '<svg viewBox="0 0 380 290" style="width:100%;max-width:380px;display:block" role="img" aria-label="Aperçu de la carte-réponse">';
   s += '<rect x="2" y="2" width="376" height="286" rx="10" fill="#fffdf6" stroke="#b9b29c" stroke-width="2"/>';
   W.forEach((w, i) => { s += '<text x="' + (36 + 38 * i) + '" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#2f6fed" font-family="sans-serif">' + w + '</text>'; });
-  ['O', 'U', 'I', 'Σ'].forEach((lab, r) => {
+  [...REPONSE, 'Σ'].forEach((lab, r) => {
     const cy = 60 + 50 * r, v = built[r];
     s += '<text x="368" y="' + (cy + 5) + '" text-anchor="end" font-size="13" font-weight="800" fill="#5f5f66" font-family="sans-serif">' + lab + '</text>';
     W.forEach((w, i) => {
@@ -609,12 +674,12 @@ function buildM4(cardId, msgId, card, tag) {
   [...card.word].forEach((ch, k) => decodeItem(host, 'm4' + tag + k, 'Ligne ' + (k + 1), ch.charCodeAt(0), ch, 'bits', () => { M.children[k].textContent = ch; M.children[k].classList.add('on'); m4Prog(); }));
   decodeItem(host, 'm4' + tag + 'c', 'Contrôle', card.ctl, null, 'bits', () => { const c = M.children[card.word.length]; c.textContent = 'Σ = ' + card.ctl; c.classList.add('on'); m4Prog(); });
 }
-function m4Prog() { if (++m4n === 8) { $('m4q').style.display = ''; $('m4q').scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+function m4Prog() { if (++m4n === CARD_A.word.length + CARD_B.word.length + 2) { $('m4q').style.display = ''; $('m4q').scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
 buildM4('cA', 'msgA', CARD_A, 'A');
 buildM4('cB', 'msgB', CARD_B, 'B');
 const sumW = w => [...w].reduce((a, c) => a + c.charCodeAt(0), 0);
 HINTS.auth = () => ['Pour chaque carte, additionne les numéros des 3 lettres et compare avec la ligne de contrôle.', 'Carte A : ' + [...CARD_A.word].map(c => c.charCodeAt(0)).join(' + ') + ' = ' + sumW(CARD_A.word) + ', mais le contrôle dit ' + CARD_A.ctl + '. Carte B : ' + [...CARD_B.word].map(c => c.charCodeAt(0)).join(' + ') + ' = ' + sumW(CARD_B.word) + '.'];
-HINTS.where = () => ['Relis le message de la carte qui vient vraiment du Masque.', 'La vraie carte dit <b>' + CARD_B.word + '</b>.'];
+HINTS.where = () => ['Relis le message de la carte qui vient vraiment du Masque.', 'La vraie carte dit <b>' + TRUE_CARD.word + '</b>.'];
 function radioQ(name, key, good, okTxt, koTxt, after) {
   return () => {
     if (item(key).done) return;
@@ -627,14 +692,21 @@ function radioQ(name, key, good, okTxt, koTxt, after) {
     } else { attempt(key, false); lab.classList.add('bad'); c.disabled = true; c.checked = false; fb.className = 'fb ko'; fb.textContent = '❌ ' + koTxt; }
   };
 }
-$('authChk').onclick = radioQ('auth', 'auth', 'B', 'Oui ! Pour la carte B, 67 + 68 + 73 = 208 : le contrôle est juste. La carte A est fausse (71 + 89 + 77 = 237, pas 240).',
+const sumTxt = c => [...c.word].map(x => x.charCodeAt(0)).join(' + ') + ' = ' + sumW(c.word);
+const FAKE = DOS.vrai === 'A' ? CARD_B : CARD_A, FAKE_L = DOS.vrai === 'A' ? 'B' : 'A';
+$('whereOpts').innerHTML = Object.keys(PLACES).map(k => '<label><input type="radio" name="where" value="' + k + '"> ' + PLACES[k].opt + '</label>').join('') + '<label><input type="radio" name="where" value="cantine"> À la cantine</label>';
+$('authChk').onclick = radioQ('auth', 'auth', DOS.vrai, 'Oui ! Pour la carte ' + DOS.vrai + ', ' + sumTxt(TRUE_CARD) + ' : le contrôle est juste. La carte ' + FAKE_L + ' est fausse (' + sumTxt(FAKE) + ', pas ' + FAKE.ctl + ').',
   'Non. Additionne les numéros des lettres de cette carte : est-ce égal à sa ligne de contrôle ?', () => { $('q-where').style.display = ''; });
-$('whereChk').onclick = radioQ('where', 'where', 'cdi', 'Bien sûr : CDI ! Fonce le chercher !', 'Non. Relis le message de la vraie carte.', finish);
+$('whereChk').onclick = radioQ('where', 'where', TRUE_CARD.word, 'Bien sûr : ' + TRUE_CARD.word + ' ! Fonce le chercher ' + PLACE.fr + ' !', 'Non. Relis le message de la vraie carte.', finish);
+$('epiScene').innerHTML = PLACE.scene; $('epiLab').textContent = PLACE.lab; $('epiBag').textContent = DEMANDE;
+$('epiSvg').setAttribute('aria-label', 'Rex dort sur un pouf, ' + PLACE.fr + ', à côté d\'un sachet de ' + DEMANDE.toLowerCase() + ' et d\'un masque abandonné.');
+$('epiT1').innerHTML = 'Monsieur Moreau court ' + PLACE.fr + '… et trouve Rex qui fait la sieste sur un pouf, au milieu des miettes ! À côté, un masque abandonné.';
+$('epiT2').innerHTML = 'Le Masque, c\'était <b>' + DOS.who + '</b>, élève de ' + DOS.cl + '. ' + DOS.why + ' Le gardien pardonne… à condition de partager ' + DOS.demFr.toLowerCase() + ' avec toute l\'équipe d\'enquêteurs.';
 function finish() {
   unlock(5);
   $('epi').classList.add('on');
   const t = total(), name = $('agent').value.trim();
-  $('final').textContent = '⭐ ' + (name ? name + ', ton' : 'Ton') + ' score : ' + t + ' / ' + MAX + ' points.';
+  $('final').textContent = '⭐ ' + (name ? name + ', ton' : 'Ton') + ' score : ' + t + ' / ' + MAX + ' points · ' + DOS_LABEL + '.';
   document.querySelector('#nav button[data-k="m4"]').classList.add('done');
   setTimeout(() => $('epi').scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
 }
@@ -678,7 +750,7 @@ $('printBilan').onclick = () => {
     return '<tr><td>' + r[0] + '</td><td>' + pts + ' pts</td><td>' + aides + ' aide' + (aides > 1 ? 's' : '') + '</td></tr>';
   }).join('');
   w.document.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Bilan · Le chien volé</title><style>body{font-family:system-ui,sans-serif;margin:15mm}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:6px 8px;text-align:left}</style></head><body>' +
-    '<h2>🐕 Le chien volé du gardien · Bilan</h2><p>Enquêteur·rice : <b>' + esc($('agent').value || '…') + '</b> · ' + new Date().toLocaleDateString('fr-FR') + '</p>' +
+    '<h2>🐕 Le chien volé du gardien · Bilan</h2><p>Enquêteur·rice : <b>' + esc($('agent').value || '…') + '</b> · ' + new Date().toLocaleDateString('fr-FR') + ' · <b>' + DOS_LABEL + '</b></p>' +
     '<table><tr><th>Partie</th><th>Points</th><th>Aides utilisées</th></tr>' + rowsH + '<tr><td><b>Total</b></td><td><b>' + total() + ' / ' + MAX + '</b></td><td></td></tr></table>' +
     '<p>Mission 3 (carte fabriquée et vérifiée par le lecteur) : ' + ($('n3').disabled ? 'non terminée' : 'réussie ✅') + '</p>' +
     '<script>setTimeout(function(){print()},300)<\/script></body></html>');
@@ -692,16 +764,25 @@ $('unl').onclick = () => {
 };
 $('tcode').onkeydown = e => { if (e.key === 'Enter') $('unl').click(); };
 $('all').onclick = () => { unlock(4); ['n1', 'n2', 'n3'].forEach(id => { $(id).disabled = false; }); };
-$('pMasque').onclick = () => printCards([[codes(DEMANDE), 'CARTE DU MASQUE', 'Glissée sous la porte de la loge']]);
-$('pAB').onclick = () => printCards([[codes(CARD_A.word).concat([CARD_A.ctl]), 'CARTE A', 'Trouvée dans la boîte aux lettres'], [codes(CARD_B.word).concat([CARD_B.ctl]), 'CARTE B', 'Trouvée dans la boîte aux lettres']]);
-$('pOui').onclick = () => printCards([[EXPECT, 'RÉPONSE AU MASQUE (corrigé)', 'O, U, I et somme de contrôle']]);
+$('tDos').innerHTML = DOSSIERS.map((d, k) => '<option value="' + k + '"' + (d === DOS ? ' selected' : '') + '>n° ' + (k + 1) + ' · ' + (d.code || 'sans code') + '</option>').join('');
+$('dosTable').innerHTML = '<table><tr><th>Dossier</th><th>Code à donner</th><th>Demande</th><th>Réponse</th><th>Vraie carte</th><th>Cachette de Rex</th></tr>' +
+  DOSSIERS.map((d, k) => '<tr><td>n° ' + (k + 1) + '</td><td><b>' + (d.code || '— (sans code)') + '</b></td><td>' + d.dem + '</td><td>' + d.rep + '</td><td>' + d.vrai + ' (' + d[d.vrai].word + ')</td><td>' + PLACES[d[d.vrai].word].opt + '</td></tr>').join('') + '</table>';
+const TD = () => DOSSIERS[+$('tDos').value], TN = () => +$('tDos').value + 1;
+const sumOf = w => [...w].reduce((a, c) => a + c.charCodeAt(0), 0);
+$('pMasque').onclick = () => printCards([[codes(TD().dem), 'CARTE DU MASQUE', 'Glissée sous la porte · dossier n° ' + TN()]]);
+$('pAB').onclick = () => { const D = TD(); printCards([[codes(D.A.word).concat([D.A.ctl]), 'CARTE A', 'Boîte aux lettres · dossier n° ' + TN()], [codes(D.B.word).concat([D.B.ctl]), 'CARTE B', 'Boîte aux lettres · dossier n° ' + TN()]]); };
+$('pOui').onclick = () => { const D = TD(); printCards([[codes(D.rep).concat([sumOf(D.rep)]), 'RÉPONSE AU MASQUE (corrigé)', D.rep + ' et somme de contrôle · dossier n° ' + TN()]]); };
 const solRow = (lab, v, ch) => '<tr><td>' + lab + '</td><td style="font-family:monospace">' + bin(v) + '</td><td>' + terms(v).join(' + ') + '</td><td>' + v + '</td><td><b>' + (ch || '—') + '</b></td></tr>';
-$('sol').innerHTML = '<table><tr><th>Ligne</th><th>Binaire</th><th>Calcul</th><th>Numéro</th><th>Lettre</th></tr>' +
-  '<tr><td colspan="5"><b>Mission 1 · carte du Masque</b></td></tr>' + [...DEMANDE].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') +
-  '<tr><td colspan="5"><b>Mission 2 · réponse</b></td></tr>' + [...REPONSE].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') + solRow('Σ', SUM, null) +
-  '<tr><td colspan="5"><b>Mission 4 · carte A (fausse : 71 + 89 + 77 = 237 ≠ 240)</b></td></tr>' + [...CARD_A.word].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') + solRow('Σ', CARD_A.ctl, null) +
-  '<tr><td colspan="5"><b>Mission 4 · carte B (vraie : 67 + 68 + 73 = 208)</b></td></tr>' + [...CARD_B.word].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') + solRow('Σ', CARD_B.ctl, null) +
-  '</table><p>Réponses : la demande est <b>BONBONS</b> ; la vraie carte est la <b>B</b> ; Rex est au <b>CDI</b>.</p>';
+function solDraw() {
+  const D = TD(), cardTxt = (c, L) => '<tr><td colspan="5"><b>Mission 4 · carte ' + L + ' (' + (D.vrai === L ? 'vraie' : 'fausse') + ' : ' + [...c.word].map(x => x.charCodeAt(0)).join(' + ') + ' = ' + sumOf(c.word) + (sumOf(c.word) === c.ctl ? '' : ' ≠ ' + c.ctl) + ')</b></td></tr>' + [...c.word].map((x, k) => solRow(k + 1, x.charCodeAt(0), x)).join('') + solRow('Σ', c.ctl, null);
+  $('solN').textContent = 'n° ' + TN();
+  $('sol').innerHTML = '<table><tr><th>Ligne</th><th>Binaire</th><th>Calcul</th><th>Numéro</th><th>Lettre</th></tr>' +
+    '<tr><td colspan="5"><b>Mission 1 · carte du Masque</b></td></tr>' + [...D.dem].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') +
+    '<tr><td colspan="5"><b>Mission 2 · réponse</b></td></tr>' + [...D.rep].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') + solRow('Σ', sumOf(D.rep), null) +
+    cardTxt(D.A, 'A') + cardTxt(D.B, 'B') +
+    '</table><p>Réponses : la demande est <b>' + D.dem + '</b> ; la vraie carte est la <b>' + D.vrai + '</b> ; Rex est caché <b>' + PLACES[D[D.vrai].word].fr + '</b>. Le Masque : ' + D.who + ' (' + D.cl + ').</p>';
+}
+$('tDos').onchange = solDraw; solDraw();
 </script>
 </body>
 </html>
