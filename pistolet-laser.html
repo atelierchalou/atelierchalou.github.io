@@ -5584,16 +5584,22 @@ function shade(){
 const FL_D = 34, FL_R = 14, FL_ANG = [1, 3, 5, 7].map(i => i*Math.PI/4);   // collerette des tubes : Ø extérieur, rayon des 4 trous
 const circS = (x, z, d) => ({type:'circ', x, z, r:d/2});
 const CORNERS = [[4,4],[BW-4,4],[4,BH-4],[BW-4,BH-4]];     // vis M3 du fond, dans les parois de 8 mm
-function capScrews(){ const w = G().W2 - 8; return [[25, -w], [BW-25, -w], [25, w], [BW-25, w]]; }   // vis M3 de la casquette (x, y), dans la paroi du dessus
+function capScrews(){ const w = G().W2 - 8; return PRINT() ? SPL.capX.flatMap(x => [[x, -w], [x, w]]) : [[25, -w], [BW-25, -w], [25, w], [BW-25, w]]; }   // vis M3 de la casquette (x, y), dans la paroi du dessus
 function tubeHoles(){ const out = []; for (const [x, z] of SENS) for (const a of FL_ANG) out.push(circS(x + FL_R*Math.cos(a), z + FL_R*Math.sin(a), 2.2)); return out; }
 function frontFix(){ return tubeHoles(); }                  // façade : vis du tube
-function backFix(){ return CORNERS.map(([x, z]) => circS(x, z, 3.2)); }   // fond : 4 vis M3
+function backFix(){ return CORNERS.concat(fondScrews()).map(([x, z]) => circS(x, z, 3.2)); }   // fond : 4 vis M3
 /* Servos SG90 vissés sous la casquette : un volet se rabat devant la bouche de chaque tube */
 const SV_DX = 14, SV_GAP = 5, SV_YOFF = 5.5, SV_HZ = 108, SV_ZBOT = 56;   // décalage du servo, jeu devant le tube, décalage du corps, hauteur du palonnier, bas du volet
-const SVNOTE = ` Servos : ${NC} SG90 vissés sous la casquette (découpe 12,8 × 23,2 mm, 2 vis M2 et un trou Ø 8 mm pour les fils par servo). Chaque servo rabat un volet de 30 mm devant la bouche de son tube (rotation de 90°) : coche « Volets fermés » pour voir les deux positions.`;
+const SVNOTE = ` Servos : ${NC} SG90 vissés sous la casquette (découpe 12,8 × 23,2 mm, 2 vis M2 et un trou Ø 8 mm pour les fils par servo). Chaque servo rabat un volet devant la bouche de son tube (rotation de 90°) : coche « Volets fermés » pour voir les deux positions.`;
+const svDX = () => PRINT() ? (NC === 5 ? 22 : 27) : SV_DX;   // servo écarté de la bouche du cône (le volet ouvert ne la touche pas)
+function flapPlate(){                    // plaque du volet, repérée par rapport à l'axe du servo
+  if (!PRINT()) return {x0:-30, x1:0, zb:SV_ZBOT};
+  const r = mouthR(), m = Math.min(2, ((NC === 5 ? 44 : 65) - 2*r)/2 - 1), dx = svDX();
+  return {x0: -(dx + r + m), x1: Math.max(0, r + m - dx), zb: Math.min(SV_ZBOT, TZ - r - m)};
+}
 function servoSpots(){
   const g = G(), s = shade();
-  return SENS.map(([x]) => { const y = -g.W2 - s.L - SV_GAP; return {x: x + SV_DX, y, ys: y + SV_YOFF}; });
+  return SENS.map(([x]) => { const y = -g.W2 - s.L - SV_GAP; return {x: x + svDX(), y, ys: y + SV_YOFF, wx: PRINT() ? x + 10 : x + SV_DX}; });
 }
 function shapeSolid(s, y0, y1){ return s.type === 'rect' ? box(s.x0, y0, s.z0, s.x1, y1, s.z1) : cylAxis(s.r, y0, y1, 1, [s.x, 0, s.z]); }
 function HOLES(){
@@ -5605,7 +5611,7 @@ function HOLES(){
   out.push({id:'raz', comp:'raz', p:[18, y, 14], dir:'+Y', depth:d});
   out.push({id:'sw',   comp:'sw',   p:[BW, 0, 85], dir:'-X', depth:10});
   out.push({id:'jack', comp:'jack', p:[BW, 0, 40], dir:'-X', depth:10});
-  servoSpots().forEach((sp, k) => out.push({id:'cab'+k, comp:'cab', d:8, p:[sp.x, 0, BH], dir:'-Z', depth:10}));   // passage des fils des servos
+  servoSpots().forEach((sp, k) => out.push({id:'cab'+k, comp:'cab', d:8, p:[sp.wx, 0, BH], dir:'-Z', depth:10}));   // passage des fils des servos
   return out;
 }
 
@@ -5691,14 +5697,73 @@ function frame(y0, y1){
   const sh = [ccw(PROFILE), ccw(CAVITY).slice().reverse()];
   return keep(keep(keep(Manifold.extrude(sh, y1 - y0)).rotate([90,0,0])).translate([0, y1, 0]));
 }
+/* ================= Impression 3D : tube en cône et pièces emboîtées =================
+   Les grandes pièces plates se décollent du plateau sur les côtés : à l'impression, le boîtier, le fond
+   et la casquette sont coupés en pièces qui s'emboîtent par des queues d'aronde (à coller).
+   Les coupes de la casquette sont décalées par rapport à celles du boîtier : chaque morceau de
+   casquette, vissé sur le dessus, tient la jonction de 2 morceaux du boîtier. */
+const SPL = NC === 5 ? {mouth:40, box:[54,98,142,186], row:0, rowKnobs:[], cap:[70,114,158,202], capX:[35,92,136,180,221]}
+          : {mouth:50, box:[72.5,137.5], row:50, rowKnobs:[4,40,105,170,206], cap:[90,155], capX:[45,122.5,182.5]};
+const JOIN = {d:5, w0:3.2, w1:5.4, gap:.15};          // queue d'aronde : longueur, largeur à la base et au bout, jeu
+const PRINT = () => S.proc !== 'laser';
+const mouthR = () => PRINT() ? SPL.mouth/2 : TO/2;      // rayon extérieur de la bouche du tube
+const colCenters = cuts => { const e = [0, ...cuts, BW]; return e.slice(0, -1).map((a, i) => (a + e[i + 1])/2); };
+function fondScrews(){ return PRINT() ? colCenters(SPL.box).flatMap(x => [[x, 4], [x, BH - 4]]) : []; }
+function knob(c, v, grow, vert){
+  const g = grow ? JOIN.gap : 0, a = JOIN.w0/2 + g, b = JOIN.w1/2 + g, d = JOIN.d + g;
+  return vert ? [[v + a, c], [v + b, c + d], [v - b, c + d], [v - a, c]] : [[c, v - a], [c + d, v - b], [c + d, v + b], [c, v + a]];
+}
+function regLeft(c, vs, grow){ const p = [[-500,-500],[c,-500]]; [...vs].sort((a, b) => a - b).forEach(v => p.push(...knob(c, v, grow, false))); p.push([c,500],[-500,500]); return p; }
+function regBelow(c, vs, grow){ const p = [[-500,-500],[500,-500],[500,c]]; [...vs].sort((a, b) => b - a).forEach(v => p.push(...knob(c, v, grow, true))); p.push([-500,c]); return p; }
+const extY = p => slab(p, -200, 200);
+const extZ = p => keep(keep(Manifold.extrude([ccw(p)], 500)).translate([0, 0, -100]));
+function cutCols(m, cuts, vs, ext){
+  const out = []; let rest = m;
+  for (const c of cuts) { out.push(keep(rest.intersect(ext(regLeft(c, vs, false))))); rest = keep(rest.subtract(ext(regLeft(c, vs, true)))); }
+  out.push(rest); return out;
+}
+function cutRow(m, c, vs){ return [keep(m.intersect(extY(regBelow(c, vs, false)))), keep(m.subtract(extY(regBelow(c, vs, true))))]; }
+function coneY(rLow, rHigh, lo, hi, x, z){ return keep(keep(keep(Manifold.cylinder(hi - lo, rLow, rHigh, 72, false)).rotate([-90, 0, 0])).translate([x, lo, z])); }
+function tubeShape(x, z){
+  const g = G(), s = shade(), yb = -g.W2, ym = -g.W2 - s.L, R = mouthR();
+  let tb = keep(cylAxis(FL_D/2, yb - s.fl, yb, 1, [x, 0, z]));                                   // collerette
+  if (R <= TO/2 + .01) {
+    tb = keep(keep(tb.add(cylAxis(TO/2, ym, yb, 1, [x, 0, z]))).subtract(cylAxis(TI/2, ym - 1, yb + 1, 1, [x, 0, z])));
+  } else {
+    const ys = yb - s.fl - 3, Lc = ys - ym, ri = R - 2.4, k = (ri - TI/2)/Lc;                      // départ droit de 3 mm, puis cône
+    tb = keep(keep(tb.add(cylAxis(TO/2, ys - .01, yb, 1, [x, 0, z]))).add(coneY(R, TO/2, ym, ys + .01, x, z)));
+    tb = keep(tb.subtract(cylAxis(TI/2, ys - .02, yb + 1, 1, [x, 0, z])));
+    tb = keep(tb.subtract(coneY(ri + k, TI/2, ym - 1, ys, x, z)));
+  }
+  for (const a of FL_ANG) tb = keep(tb.subtract(cylAxis(1.1, yb - s.fl - 1, yb + 1, 1, [x + FL_R*Math.cos(a), 0, z + FL_R*Math.sin(a)])));
+  return tb;
+}
+function pieceCount(){ return {box: (SPL.box.length + 1)*(SPL.row ? 2 : 1), fond: SPL.box.length + 1, cap: SPL.cap.length + 1}; }
+function splitText(ascii){
+  const n = pieceCount(), t = `Boîtier en ${n.box} pièces, fond en ${n.fond} pièces et casquette en ${n.cap} pièces, assemblées par des queues d’aronde : glisse chaque pièce dans sa voisine par l’arrière (dans le sens de la profondeur), avec un point de colle (PLA ou cyanoacrylate). Les coupes de la casquette sont décalées par rapport à celles du boîtier : une fois vissée sur le dessus, elle tient les jonctions du boîtier. Chaque morceau du fond se visse sur sa partie du boîtier (2 vis au milieu en plus des coins). Tube${NT > 1 ? 's' : ''} en cône : bouche de Ø ${fmt(2*mouthR() - 4.8)} mm à l’intérieur au lieu de ${TI} mm.`;
+  return ascii ? t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’]/g, "'") : t;
+}
+function filesText(){
+  const n = pieceCount(), s = shade();
+  return [`  boitier_1 a ${n.box}.stl : boitier avec sa facade, coupe en ${n.box} pieces (queues d'aronde)`,
+          `  fond_1 a ${n.fond}.stl    : plaque de fond en ${n.fond} pieces, a visser (coins + 2 vis au milieu de chaque piece)`,
+          `  tube_1 a ${NT}.stl : tubes en cone avec collerette O ${FL_D} mm (O ${TI} mm au fond, O ${fmt(2*mouthR() - 4.8)} mm a la bouche, longueur ${fmt(s.L)} mm), a imprimer debout, collerette sur le plateau`,
+          `  casquette_1 a ${n.cap}.stl : visiere en ${n.cap} pieces, ${capScrews().length} trous O 3,4 mm pour les vis M3`,
+          `  volets.stl  : ${NC} volets en T (plaque + tablette), tablette sur le plateau`].join('\n');
+}
+function stlAt(geo, map){
+  const p = geo.attributes.position, mn = [1e9, 1e9, 1e9];
+  for (let i = 0; i < p.count; i++) { const q = map(p.getX(i), p.getY(i), p.getZ(i)); for (let k = 0; k < 3; k++) mn[k] = Math.min(mn[k], q[k]); }
+  return stlBinary(geo, (x, y, z) => { const q = map(x, y, z); return [q[0] - mn[0], q[1] - mn[1], q[2] - mn[2]]; });
+}
+function spreadOf(geo, k){ geo.computeBoundingBox(); const c = new THREE.Vector3(); geo.boundingBox.getCenter(c); return new THREE.Vector3((c.x - BW/2)*k, 0, (c.z - BH/2)*k); }
 function buildShade(){
   const g = G(), s = shade();
   try {
-    let tubes = null;
+    let tubes = null; const tubesArr = [];
     for (const [x, z] of SENS) {
-      let tb = keep(cylAxis(TO/2, -g.W2 - s.L, -g.W2, 1, [x, 0, z]).add(cylAxis(FL_D/2, -g.W2 - s.fl, -g.W2, 1, [x, 0, z])));   // tube + collerette
-      tb = keep(tb.subtract(cylAxis(TI/2, -g.W2 - s.L - 1, -g.W2 + 1, 1, [x, 0, z])));
-      for (const a of FL_ANG) tb = keep(tb.subtract(cylAxis(1.1, -g.W2 - s.fl - 1, -g.W2 + 1, 1, [x + FL_R*Math.cos(a), 0, z + FL_R*Math.sin(a)])));
+      const tb = tubeShape(x, z);                                                                  // tube (en cône à l'impression) + collerette
+      tubesArr.push(toGeometry(tb));
       tubes = tubes ? keep(tubes.add(tb)) : tb;
     }
     let cap = box(0, -g.W2 - s.P, BH, BW, g.W2, BH + s.vt);
@@ -5706,13 +5771,14 @@ function buildShade(){
     for (const sp of servoSpots()) {
       cap = keep(cap.subtract(box(sp.x - 6.4, sp.ys - 11.6, BH - 1, sp.x + 6.4, sp.ys + 11.6, BH + s.vt + 1)));            // passage du corps du servo
       for (const dy of [-13.95, 13.95]) cap = keep(cap.subtract(cylAxis(1.1, BH - 1, BH + s.vt + 1, 2, [sp.x, sp.ys + dy, 0])));   // vis M2 des oreilles
-      cap = keep(cap.subtract(cylAxis(4, BH - 1, BH + s.vt + 1, 2, [sp.x, 0, 0])));                                            // passage des fils
+      cap = keep(cap.subtract(cylAxis(4, BH - 1, BH + s.vt + 1, 2, [sp.wx, 0, 0])));                                            // passage des fils
     }
     const ft = S.proc === 'laser' ? g.t : 2.4, zt = SV_HZ - ft;          // tablette sous le palonnier
     let fl = keep(box(-30, -5, zt, 0, 5, zt + ft));
-    fl = keep(fl.add(box(-30, -ft/2, SV_ZBOT, 0, ft/2, zt + .01)));        // volet (plaque)
+    const FP = flapPlate(); fl = keep(fl.add(box(FP.x0, -ft/2, FP.zb, FP.x1, ft/2, zt + .01)));        // volet (plaque), assez grand pour masquer la bouche
     for (const hx of [-5, -11]) fl = keep(fl.subtract(cylAxis(.8, zt - 3, zt + ft + 1, 2, [hx, 0, 0])));   // vis du palonnier
-    return {tubes: toGeometry(tubes), cap: toGeometry(cap), flap: toGeometry(fl)};
+    const caps = PRINT() ? cutCols(cap, SPL.cap, [0, -g.W2 - s.P/2], extZ).map(toGeometry) : null;
+    return {tubes: toGeometry(tubes), tubesArr, cap: toGeometry(cap), caps, flap: toGeometry(fl)};
   } finally { flush(); }
 }
 function buildPrint(){
@@ -5723,9 +5789,14 @@ function buildPrint(){
     for (const s of frontFix()) res = keep(res.subtract(shapeSolid(s, -g.W2 - 1, -g.W2 + g.front + 1)));
     for (const [x, z] of CORNERS) res = keep(res.subtract(cylAxis(1.25, g.W2 - 12, g.W2 + .5, 1, [x, 0, z])));   // avant-trous des vis du fond
     for (const [x, y] of capScrews()) res = keep(res.subtract(cylAxis(1.25, BH - 6, BH + .5, 2, [x, y, 0])));   // avant-trous des vis de la casquette
+    for (const [x, z] of fondScrews()) res = keep(res.subtract(cylAxis(1.25, g.W2 - 12, g.W2 + .5, 1, [x, 0, z])));   // avant-trous des vis du milieu du fond
     let back = keep(slab(PROFILE, g.W2, g.W2 + 3));
     for (const s of backFix()) back = keep(back.subtract(shapeSolid(s, g.W2 - 1, g.W2 + 4)));
-    return {box: toGeometry(res), back: toGeometry(back)};
+    const KZ = [4, BH/2, BH - 4];                                                                   // queues d'aronde : paroi du bas, façade, paroi du haut
+    let boxes = cutCols(res, SPL.box, KZ, extY);
+    if (SPL.row) boxes = boxes.flatMap(m => cutRow(m, SPL.row, SPL.rowKnobs));
+    const backs = cutCols(back, SPL.box, KZ, extY);
+    return {boxes: boxes.map(toGeometry), backs: backs.map(toGeometry)};
   } finally { flush(); }
 }
 function buildLayers(){
@@ -5830,20 +5901,20 @@ function rebuild(){
     lastParts = {layers: geos};
   } else {
     const parts = buildPrint();
-    [['box', parts.box], ['back', parts.back]].forEach(([nm, geo]) => {
+    [...parts.boxes.map(geo => ['box', geo]), ...parts.backs.map(geo => ['back', geo])].forEach(([nm, geo]) => {
       const mesh = new THREE.Mesh(geo, matPrint);
       mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMatPrint));
-      mesh.userData.part = nm; modelGroup.add(mesh);
+      mesh.userData.part = nm; mesh.userData.spread = spreadOf(geo, .12); modelGroup.add(mesh);
     });
     lastParts = parts;
   }
   const sh = buildShade(), lay = S.proc === 'laser';
-  [['tubes', sh.tubes], ['cap', sh.cap]].forEach(([nm, geo]) => {
+  [['tubes', sh.tubes], ...(sh.caps ? sh.caps.map(geo => ['cap', geo]) : [['cap', sh.cap]])].forEach(([nm, geo]) => {
     const mesh = new THREE.Mesh(geo, lay ? (nm === 'cap' ? matWoodB : matWoodA) : matPrint);
     mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), lay ? edgeMatWood : edgeMatPrint));
-    mesh.userData.part = nm; modelGroup.add(mesh);
+    mesh.userData.part = nm; if (sh.caps && nm === 'cap') mesh.userData.spread = spreadOf(geo, .12); modelGroup.add(mesh);
   });
-  lastParts = Object.assign(lastParts, {tubes: sh.tubes, cap: sh.cap, flap: sh.flap});
+  lastParts = Object.assign(lastParts, {tubes: sh.tubes, tubesArr: sh.tubesArr, caps: sh.caps, cap: sh.cap, flap: sh.flap});
   for (const sp of servoSpots()) {
     const pv = new THREE.Group(), mesh = new THREE.Mesh(sh.flap, lay ? matWoodB : matPrint);
     mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(sh.flap, 30), lay ? edgeMatWood : edgeMatPrint));
@@ -5859,6 +5930,7 @@ function applyExplode(){
     const u = m.userData; if (u.base) m.position.copy(u.base); else m.position.set(0, 0, 0);
     if (u.part === 'flap') m.rotation.z = S.flapOpen ? -Math.PI/2 : 0;
     if (!ex) return;
+    if (u.spread) m.position.add(u.spread);
     if (u.k !== undefined) m.position.y = (u.k - (n-1)/2) * 8;
     else if (u.part === 'back') m.position.y = 60;
     else if (u.part === 'tubes') m.position.y = laser ? -(n-1)/2*8 - 22 : -30;
@@ -5926,7 +5998,7 @@ function renderShade(){
   const g = G(), vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((g.t + 8)/5)*5 : 12;
   $('shadeNote').textContent = (laser
     ? `${tw} de ${fmt(s.L)} mm : 1 collerette Ø ${FL_D} mm + ${s.n - 1} anneaux collés dessus, Ø ${TI} mm à l'intérieur. La collerette se visse sur la façade (4 vis M2 de ${vM2} mm + écrous). Casquette : plaque de ${BW} × ${fmt(s.D)} mm, vissée sur le dessus avec 4 vis à bois M3 de ${vM3} mm dans la tranche des couches ; elle dépasse de ${fmt(s.P)} mm devant la façade.`
-    : `${tw} de ${fmt(s.L)} mm (Ø ${TI} mm à l'intérieur, Ø ${TO} mm à l'extérieur) avec une collerette Ø ${FL_D} mm : 4 vis M2 de ${vM2} mm + écrous dans la façade. Casquette : elle dépasse de ${fmt(s.P)} mm devant la façade et se visse sur le dessus avec 4 vis M3 de ${vM3} mm (avant-trous dans le boîtier).`) + (typeof SVNOTE === 'string' ? SVNOTE : '');
+    : `${tw} de ${fmt(s.L)} mm ${PRINT() ? `en cône (Ø ${TI} mm au fond, Ø ${fmt(2*mouthR() - 4.8)} mm à la bouche)` : `(Ø ${TI} mm à l'intérieur, Ø ${TO} mm à l'extérieur)`} avec une collerette Ø ${FL_D} mm : 4 vis M2 de ${vM2} mm + écrous dans la façade. Casquette : elle dépasse de ${fmt(s.P)} mm devant la façade et se visse sur le dessus avec ${capScrews().length} vis M3 de ${vM3} mm (avant-trous dans le boîtier). ${splitText(false)}`) + (typeof SVNOTE === 'string' ? SVNOTE : '');
 }
 function visserie(){
   const g = G(), laser = S.proc === 'laser', s = shade();
@@ -5936,8 +6008,8 @@ function visserie(){
     [4*NT, `vis M2 × ${vM2} mm + ${4*NT} écrous M2`, NT > 1 ? `collerettes des ${NT} tubes sur la façade (4 par tube)` : 'collerette du tube sur la façade'],
     ...(true ? [[2*NT, `vis M2 × ${vSv} mm + ${2*NT} écrous M2`, `oreilles des ${NT} servos, sous la casquette`],
                    [2*NT, 'petites vis de palonnier (fournies avec les servos)', 'palonnier sur la tablette de chaque volet']] : []),
-    [4, `vis ${wood}M3 × ${vM3} mm`, 'casquette, dans la paroi du dessus'],
-    [4, `vis ${wood}M3 × ${vF} mm`, laser ? 'fond, dans les coins des cadres' : 'fond, dans les avant-trous des coins']
+    [capScrews().length, `vis ${wood}M3 × ${vM3} mm`, laser ? 'casquette, dans la paroi du dessus' : `casquette en ${pieceCount().cap} pièces (2 vis par pièce), dans la paroi du dessus`],
+    [backFix().length, `vis ${wood}M3 × ${vF} mm`, laser ? 'fond, dans les coins des cadres' : `fond en ${pieceCount().fond} pièces : 4 coins + 2 vis au milieu de chaque pièce`]
   ];
 }
 function renderVis(){
@@ -5961,13 +6033,13 @@ function refresh(){
   btn.disabled = !st.ready;
   btn.textContent = S.proc === 'laser' ? 'Télécharger le plan de découpe (.svg)' : 'Télécharger les pièces à imprimer (.zip)';
   $('exportMsg').textContent = st.ready
-    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches, des anneaux des tubes et de la casquette, avec les trous de fixation.` : `Tous les trous sont corrects. Le fichier contient le boîtier, son fond, les ${NC} tubes et la casquette au format STL.`)
+    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches, des anneaux des tubes et de la casquette, avec les trous de fixation.` : `Tous les trous sont corrects. Le fichier contient le boîtier, le fond et la casquette coupés en pièces qui s’emboîtent, les ${NC} tubes en cône et les volets (STL).`)
     : `Le téléchargement se débloque quand les ${N} diamètres sont corrects (${st.n} / ${N}).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Bleu : gravure (numéros et cercles des cibles). Colle les couches C1 à C${g.n - 1} ; le fond C${g.n} se visse (4 vis M3 dans les coins) pour garder l'accès à l'électronique. Colle les anneaux sur chaque collerette et visse les collerettes sur la façade (4 vis M2) ; visse la casquette sur le dessus (4 vis M3). Volets : colle chaque languette dans la fente de sa tablette, puis fixe le palonnier sur la tablette.`
     : 'Imprime le boîtier façade sur le plateau, sans supports, les tubes debout et la casquette à plat. Couche 0,2 mm, remplissage 20 %. Fond : 4 vis M3 dans les coins ; tube : 4 vis M2 ; casquette : 4 vis M3.';
   const prev = $('exportPreview');
-  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : `<div class="stlinfo">boitier.stl (${BW} × ${BH} × 46 mm), fond.stl (${BW} × ${BH} × 3 mm), tubes.stl (${NC} × Ø ${TO} × ${fmt(shade().L)} mm), casquette.stl (${BW} × ${fmt(shade().D)} × 3 mm) et volets.stl (3 volets) · PLA</div>`;
+  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : `<div class="stlinfo">boitier.stl (${BW} × ${BH} × 46 mm), fond.stl (${BW} × ${BH} × 3 mm), ${pieceCount().box} pièces de boîtier (${SPL.row ? 'environ 70 × 60' : 'au plus ' + Math.round(Math.max(...colCenters(SPL.box).map((c, i, a) => [0, ...SPL.box, BW][i + 1] - [0, ...SPL.box, BW][i]))) + ' × ' + BH} mm), ${pieceCount().fond} pièces de fond, ${pieceCount().cap} pièces de casquette, ${NC} tubes en cône (bouche Ø ${2*mouthR()} mm) et ${NC} volets · PLA</div>`;
   else prev.innerHTML = '';
   return st;
 }
@@ -6076,11 +6148,7 @@ function readme(){
 =====================================
 
 Fichiers :
-  boitier.stl : boitier avec sa facade (${BW} x ${BH} x 46 mm)
-  fond.stl    : plaque de fond (${BW} x ${BH} x 3 mm), a visser (4 vis M3 dans les coins) 
-  tubes.stl   : ${NC} tubes pare-soleil avec collerette Ø ${FL_D} mm (diametre ext. ${TO} mm, int. ${TI} mm, longueur ${fmt(shade().L)} mm)
-  casquette.stl : visiere (${BW} x ${fmt(shade().D)} x 3 mm), 4 trous Ø 3,4 mm pour les vis M3, ${NC} decoupes pour les servos et ${NC} trous pour les fils
-  volets.stl  : ${NC} volets en T (plaque + tablette), a imprimer tablette sur le plateau
+${filesText()}
 Unites : millimetres.
 
 Visserie :
@@ -6098,6 +6166,9 @@ Impression conseillee :
   - Matiere : PLA, couche 0,2 mm, remplissage 20 %
   - Le boitier est pose sur sa facade : pas de supports.
   - Les tubes s'impriment debout, la casquette a plat.
+
+Assemblage des pieces :
+  ${splitText(true)}
 
 Montage :
   1. Prepare les ${NC} volets (volets.stl) : chacun se fixe sur le palonnier d'un servo.
@@ -6134,13 +6205,17 @@ async function doExport(){
   let r;
   if (S.proc === 'laser') r = await saveFile(`cibles_decoupe_laser_${String(S.ply).replace('.', ',')}mm.svg`, laserSVG(false));
   else {
-    const parts = lastParts && lastParts.box && lastParts.tubes ? lastParts : Object.assign(buildPrint(), buildShade()), W2 = G().W2, sh = shade();
-    const box = stlBinary(parts.box, (x,y,z) => [x, BH - z, y + W2]);
-    const back = stlBinary(parts.back, (x,y,z) => [x, BH - z, y - W2]);
-    const tubes = stlBinary(parts.tubes, (x,y,z) => [BW - x, BH - z, -(y + W2)]);
-    const cap = stlBinary(parts.cap, (x,y,z) => [x, y + W2 + sh.P, z - BH]);    const stlMerge = list => { const bodies = list.map(a => a.subarray(84)), nt = bodies.reduce((n, b) => n + b.length/50, 0), out = new Uint8Array(84 + nt*50); out.set(list[0].subarray(0, 80), 0); new DataView(out.buffer).setUint32(80, nt, true); let o = 84; for (const b of bodies) { out.set(b, o); o += b.length; } return out; };
-    const volets = stlMerge([...Array(NC).keys()].map(i => stlBinary(parts.flap, (x,y,z) => [x + 30 + (i % 3)*40, 5 - y + Math.floor(i / 3)*20, 108 - z])));
-    r = await saveFile('cibles_impression_3d.zip', zip([{name:'boitier.stl', data:box}, {name:'fond.stl', data:back}, {name:'tubes.stl', data:tubes}, {name:'casquette.stl', data:cap}, {name:'volets.stl', data:volets}, {name:'LISEZ-MOI.txt', data:readme()}]));
+    const parts = lastParts && lastParts.boxes && lastParts.tubesArr && lastParts.caps ? lastParts : Object.assign(buildPrint(), buildShade()), W2 = G().W2, sh = shade();
+    const stlMerge = list => { const bodies = list.map(a => a.subarray(84)), nt = bodies.reduce((n, b) => n + b.length/50, 0), out = new Uint8Array(84 + nt*50); out.set(list[0].subarray(0, 80), 0); new DataView(out.buffer).setUint32(80, nt, true); let o = 84; for (const b of bodies) { out.set(b, o); o += b.length; } return out; };
+    const FP = flapPlate(), fw = FP.x1 - FP.x0;
+    const volets = stlMerge([...Array(NC).keys()].map(i => stlBinary(parts.flap, (x,y,z) => [x - FP.x0 + (i % 2)*(fw + 6), 5 - y + Math.floor(i / 2)*16, 108 - z])));
+    const files = [
+      ...parts.boxes.map((g, i) => ({name:`boitier_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, BH - z, y + W2])})),
+      ...parts.backs.map((g, i) => ({name:`fond_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, BH - z, y - W2])})),
+      ...parts.tubesArr.map((g, i) => ({name:`tube_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, z, -(y + W2)])})),
+      ...parts.caps.map((g, i) => ({name:`casquette_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, y, z - BH])})),
+      {name:'volets.stl', data:volets}, {name:'LISEZ-MOI.txt', data:readme()}];
+    r = await saveFile('cibles_impression_3d.zip', zip(files));
   }
   btn.disabled = false;
   $('exportMsg').textContent = r.ok ? 'Fichier prêt. Vérifie ton dossier Téléchargements.' : r.msg;
@@ -6245,10 +6320,10 @@ function shade(){
 const FL_D = 34, FL_R = 14, FL_ANG = [1, 3, 5, 7].map(i => i*Math.PI/4);   // collerette des tubes : Ø extérieur, rayon des 4 trous
 const circS = (x, z, d) => ({type:'circ', x, z, r:d/2});
 const CORNERS = [[4,4],[BW-4,4],[4,BH-4],[BW-4,BH-4]];     // vis M3 du fond, dans les parois de 8 mm
-function capScrews(){ const w = G().W2 - 8; return [[25, -w], [BW-25, -w], [25, w], [BW-25, w]]; }   // vis M3 de la casquette (x, y), dans la paroi du dessus
+function capScrews(){ const w = G().W2 - 8; return PRINT() ? SPL.capX.flatMap(x => [[x, -w], [x, w]]) : [[25, -w], [BW-25, -w], [25, w], [BW-25, w]]; }   // vis M3 de la casquette (x, y), dans la paroi du dessus
 function tubeHoles(){ const out = []; for (const [x, z] of SENS) for (const a of FL_ANG) out.push(circS(x + FL_R*Math.cos(a), z + FL_R*Math.sin(a), 2.2)); return out; }
 function frontFix(){ return tubeHoles(); }                  // façade : vis du tube
-function backFix(){ return CORNERS.map(([x, z]) => circS(x, z, 3.2)); }   // fond : 4 vis M3
+function backFix(){ return CORNERS.concat(fondScrews()).map(([x, z]) => circS(x, z, 3.2)); }   // fond : 4 vis M3
 
 function shapeSolid(s, y0, y1){ return s.type === 'rect' ? box(s.x0, y0, s.z0, s.x1, y1, s.z1) : cylAxis(s.r, y0, y1, 1, [s.x, 0, s.z]); }
 function HOLES(){
@@ -6342,21 +6417,79 @@ function frame(y0, y1){
   const sh = [ccw(PROFILE), ccw(CAVITY).slice().reverse()];
   return keep(keep(keep(Manifold.extrude(sh, y1 - y0)).rotate([90,0,0])).translate([0, y1, 0]));
 }
+/* ================= Impression 3D : tube en cône et pièces emboîtées =================
+   Les grandes pièces plates se décollent du plateau sur les côtés : à l'impression, le boîtier, le fond
+   et la casquette sont coupés en pièces qui s'emboîtent par des queues d'aronde (à coller).
+   Les coupes de la casquette sont décalées par rapport à celles du boîtier : chaque morceau de
+   casquette, vissé sur le dessus, tient la jonction de 2 morceaux du boîtier. */
+const SPL = {mouth:60, box:[29,101], row:0, rowKnobs:[], cap:[45,85], capX:[18,65,112]};
+const JOIN = {d:5, w0:3.2, w1:5.4, gap:.15};          // queue d'aronde : longueur, largeur à la base et au bout, jeu
+const PRINT = () => S.proc !== 'laser';
+const mouthR = () => PRINT() ? SPL.mouth/2 : TO/2;      // rayon extérieur de la bouche du tube
+const colCenters = cuts => { const e = [0, ...cuts, BW]; return e.slice(0, -1).map((a, i) => (a + e[i + 1])/2); };
+function fondScrews(){ return PRINT() ? colCenters(SPL.box).flatMap(x => [[x, 4], [x, BH - 4]]) : []; }
+function knob(c, v, grow, vert){
+  const g = grow ? JOIN.gap : 0, a = JOIN.w0/2 + g, b = JOIN.w1/2 + g, d = JOIN.d + g;
+  return vert ? [[v + a, c], [v + b, c + d], [v - b, c + d], [v - a, c]] : [[c, v - a], [c + d, v - b], [c + d, v + b], [c, v + a]];
+}
+function regLeft(c, vs, grow){ const p = [[-500,-500],[c,-500]]; [...vs].sort((a, b) => a - b).forEach(v => p.push(...knob(c, v, grow, false))); p.push([c,500],[-500,500]); return p; }
+function regBelow(c, vs, grow){ const p = [[-500,-500],[500,-500],[500,c]]; [...vs].sort((a, b) => b - a).forEach(v => p.push(...knob(c, v, grow, true))); p.push([-500,c]); return p; }
+const extY = p => slab(p, -200, 200);
+const extZ = p => keep(keep(Manifold.extrude([ccw(p)], 500)).translate([0, 0, -100]));
+function cutCols(m, cuts, vs, ext){
+  const out = []; let rest = m;
+  for (const c of cuts) { out.push(keep(rest.intersect(ext(regLeft(c, vs, false))))); rest = keep(rest.subtract(ext(regLeft(c, vs, true)))); }
+  out.push(rest); return out;
+}
+function cutRow(m, c, vs){ return [keep(m.intersect(extY(regBelow(c, vs, false)))), keep(m.subtract(extY(regBelow(c, vs, true))))]; }
+function coneY(rLow, rHigh, lo, hi, x, z){ return keep(keep(keep(Manifold.cylinder(hi - lo, rLow, rHigh, 72, false)).rotate([-90, 0, 0])).translate([x, lo, z])); }
+function tubeShape(x, z){
+  const g = G(), s = shade(), yb = -g.W2, ym = -g.W2 - s.L, R = mouthR();
+  let tb = keep(cylAxis(FL_D/2, yb - s.fl, yb, 1, [x, 0, z]));                                   // collerette
+  if (R <= TO/2 + .01) {
+    tb = keep(keep(tb.add(cylAxis(TO/2, ym, yb, 1, [x, 0, z]))).subtract(cylAxis(TI/2, ym - 1, yb + 1, 1, [x, 0, z])));
+  } else {
+    const ys = yb - s.fl - 3, Lc = ys - ym, ri = R - 2.4, k = (ri - TI/2)/Lc;                      // départ droit de 3 mm, puis cône
+    tb = keep(keep(tb.add(cylAxis(TO/2, ys - .01, yb, 1, [x, 0, z]))).add(coneY(R, TO/2, ym, ys + .01, x, z)));
+    tb = keep(tb.subtract(cylAxis(TI/2, ys - .02, yb + 1, 1, [x, 0, z])));
+    tb = keep(tb.subtract(coneY(ri + k, TI/2, ym - 1, ys, x, z)));
+  }
+  for (const a of FL_ANG) tb = keep(tb.subtract(cylAxis(1.1, yb - s.fl - 1, yb + 1, 1, [x + FL_R*Math.cos(a), 0, z + FL_R*Math.sin(a)])));
+  return tb;
+}
+function pieceCount(){ return {box: (SPL.box.length + 1)*(SPL.row ? 2 : 1), fond: SPL.box.length + 1, cap: SPL.cap.length + 1}; }
+function splitText(ascii){
+  const n = pieceCount(), t = `Boîtier en ${n.box} pièces, fond en ${n.fond} pièces et casquette en ${n.cap} pièces, assemblées par des queues d’aronde : glisse chaque pièce dans sa voisine par l’arrière (dans le sens de la profondeur), avec un point de colle (PLA ou cyanoacrylate). Les coupes de la casquette sont décalées par rapport à celles du boîtier : une fois vissée sur le dessus, elle tient les jonctions du boîtier. Chaque morceau du fond se visse sur sa partie du boîtier (2 vis au milieu en plus des coins). Tube${NT > 1 ? 's' : ''} en cône : bouche de Ø ${fmt(2*mouthR() - 4.8)} mm à l’intérieur au lieu de ${TI} mm.`;
+  return ascii ? t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’]/g, "'") : t;
+}
+function filesText(){
+  const n = pieceCount(), s = shade();
+  return [`  boitier_1 a ${n.box}.stl : boitier avec sa facade, coupe en ${n.box} pieces (queues d'aronde)`,
+          `  fond_1 a ${n.fond}.stl    : plaque de fond en ${n.fond} pieces, a visser (coins + 2 vis au milieu de chaque piece)`,
+          `  tube.stl          : tube en cone avec collerette O ${FL_D} mm (O ${TI} mm au fond, O ${fmt(2*mouthR() - 4.8)} mm a la bouche, longueur ${fmt(s.L)} mm), a imprimer debout, collerette sur le plateau`,
+          `  casquette_1 a ${n.cap}.stl : visiere en ${n.cap} pieces, ${capScrews().length} trous O 3,4 mm pour les vis M3`].join('\n');
+}
+function stlAt(geo, map){
+  const p = geo.attributes.position, mn = [1e9, 1e9, 1e9];
+  for (let i = 0; i < p.count; i++) { const q = map(p.getX(i), p.getY(i), p.getZ(i)); for (let k = 0; k < 3; k++) mn[k] = Math.min(mn[k], q[k]); }
+  return stlBinary(geo, (x, y, z) => { const q = map(x, y, z); return [q[0] - mn[0], q[1] - mn[1], q[2] - mn[2]]; });
+}
+function spreadOf(geo, k){ geo.computeBoundingBox(); const c = new THREE.Vector3(); geo.boundingBox.getCenter(c); return new THREE.Vector3((c.x - BW/2)*k, 0, (c.z - BH/2)*k); }
 function buildShade(){
   const g = G(), s = shade();
   try {
-    let tubes = null;
+    let tubes = null; const tubesArr = [];
     for (const [x, z] of SENS) {
-      let tb = keep(cylAxis(TO/2, -g.W2 - s.L, -g.W2, 1, [x, 0, z]).add(cylAxis(FL_D/2, -g.W2 - s.fl, -g.W2, 1, [x, 0, z])));   // tube + collerette
-      tb = keep(tb.subtract(cylAxis(TI/2, -g.W2 - s.L - 1, -g.W2 + 1, 1, [x, 0, z])));
-      for (const a of FL_ANG) tb = keep(tb.subtract(cylAxis(1.1, -g.W2 - s.fl - 1, -g.W2 + 1, 1, [x + FL_R*Math.cos(a), 0, z + FL_R*Math.sin(a)])));
+      const tb = tubeShape(x, z);                                                                  // tube (en cône à l'impression) + collerette
+      tubesArr.push(toGeometry(tb));
       tubes = tubes ? keep(tubes.add(tb)) : tb;
     }
     let cap = box(0, -g.W2 - s.P, BH, BW, g.W2, BH + s.vt);
     for (const [x, y] of capScrews()) cap = keep(cap.subtract(cylAxis(1.7, BH - 1, BH + s.vt + 1, 2, [x, y, 0])));   // trous Ø3,4 des vis M3
 
 
-    return {tubes: toGeometry(tubes), cap: toGeometry(cap)};
+    const caps = PRINT() ? cutCols(cap, SPL.cap, [0, -g.W2 - s.P/2], extZ).map(toGeometry) : null;
+    return {tubes: toGeometry(tubes), tubesArr, cap: toGeometry(cap), caps};
   } finally { flush(); }
 }
 function buildPrint(){
@@ -6367,9 +6500,14 @@ function buildPrint(){
     for (const s of frontFix()) res = keep(res.subtract(shapeSolid(s, -g.W2 - 1, -g.W2 + g.front + 1)));
     for (const [x, z] of CORNERS) res = keep(res.subtract(cylAxis(1.25, g.W2 - 12, g.W2 + .5, 1, [x, 0, z])));   // avant-trous des vis du fond
     for (const [x, y] of capScrews()) res = keep(res.subtract(cylAxis(1.25, BH - 6, BH + .5, 2, [x, y, 0])));   // avant-trous des vis de la casquette
+    for (const [x, z] of fondScrews()) res = keep(res.subtract(cylAxis(1.25, g.W2 - 12, g.W2 + .5, 1, [x, 0, z])));   // avant-trous des vis du milieu du fond
     let back = keep(slab(PROFILE, g.W2, g.W2 + 3));
     for (const s of backFix()) back = keep(back.subtract(shapeSolid(s, g.W2 - 1, g.W2 + 4)));
-    return {box: toGeometry(res), back: toGeometry(back)};
+    const KZ = [4, BH/2, BH - 4];                                                                   // queues d'aronde : paroi du bas, façade, paroi du haut
+    let boxes = cutCols(res, SPL.box, KZ, extY);
+    if (SPL.row) boxes = boxes.flatMap(m => cutRow(m, SPL.row, SPL.rowKnobs));
+    const backs = cutCols(back, SPL.box, KZ, extY);
+    return {boxes: boxes.map(toGeometry), backs: backs.map(toGeometry)};
   } finally { flush(); }
 }
 function buildLayers(){
@@ -6472,20 +6610,20 @@ function rebuild(){
     lastParts = {layers: geos};
   } else {
     const parts = buildPrint();
-    [['box', parts.box], ['back', parts.back]].forEach(([nm, geo]) => {
+    [...parts.boxes.map(geo => ['box', geo]), ...parts.backs.map(geo => ['back', geo])].forEach(([nm, geo]) => {
       const mesh = new THREE.Mesh(geo, matPrint);
       mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMatPrint));
-      mesh.userData.part = nm; modelGroup.add(mesh);
+      mesh.userData.part = nm; mesh.userData.spread = spreadOf(geo, .12); modelGroup.add(mesh);
     });
     lastParts = parts;
   }
   const sh = buildShade(), lay = S.proc === 'laser';
-  [['tubes', sh.tubes], ['cap', sh.cap]].forEach(([nm, geo]) => {
+  [['tubes', sh.tubes], ...(sh.caps ? sh.caps.map(geo => ['cap', geo]) : [['cap', sh.cap]])].forEach(([nm, geo]) => {
     const mesh = new THREE.Mesh(geo, lay ? (nm === 'cap' ? matWoodB : matWoodA) : matPrint);
     mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), lay ? edgeMatWood : edgeMatPrint));
-    mesh.userData.part = nm; modelGroup.add(mesh);
+    mesh.userData.part = nm; if (sh.caps && nm === 'cap') mesh.userData.spread = spreadOf(geo, .12); modelGroup.add(mesh);
   });
-  lastParts = Object.assign(lastParts, {tubes: sh.tubes, cap: sh.cap, flap: sh.flap});
+  lastParts = Object.assign(lastParts, {tubes: sh.tubes, tubesArr: sh.tubesArr, caps: sh.caps, cap: sh.cap, flap: sh.flap});
 
   buildComponents();
   applyExplode(); applyXray();
@@ -6497,6 +6635,7 @@ function applyExplode(){
     const u = m.userData; if (u.base) m.position.copy(u.base); else m.position.set(0, 0, 0);
     if (u.part === 'flap') m.rotation.z = S.flapOpen ? -Math.PI/2 : 0;
     if (!ex) return;
+    if (u.spread) m.position.add(u.spread);
     if (u.k !== undefined) m.position.y = (u.k - (n-1)/2) * 8;
     else if (u.part === 'back') m.position.y = 60;
     else if (u.part === 'tubes') m.position.y = laser ? -(n-1)/2*8 - 22 : -30;
@@ -6564,7 +6703,7 @@ function renderShade(){
   const g = G(), vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((g.t + 8)/5)*5 : 12;
   $('shadeNote').textContent = (laser
     ? `${tw} de ${fmt(s.L)} mm : 1 collerette Ø ${FL_D} mm + ${s.n - 1} anneaux collés dessus, Ø ${TI} mm à l'intérieur. La collerette se visse sur la façade (4 vis M2 de ${vM2} mm + écrous). Casquette : plaque de ${BW} × ${fmt(s.D)} mm, vissée sur le dessus avec 4 vis à bois M3 de ${vM3} mm dans la tranche des couches ; elle dépasse de ${fmt(s.P)} mm devant la façade.`
-    : `${tw} de ${fmt(s.L)} mm (Ø ${TI} mm à l'intérieur, Ø ${TO} mm à l'extérieur) avec une collerette Ø ${FL_D} mm : 4 vis M2 de ${vM2} mm + écrous dans la façade. Casquette : elle dépasse de ${fmt(s.P)} mm devant la façade et se visse sur le dessus avec 4 vis M3 de ${vM3} mm (avant-trous dans le boîtier).`) + (typeof SVNOTE === 'string' ? SVNOTE : '');
+    : `${tw} de ${fmt(s.L)} mm ${PRINT() ? `en cône (Ø ${TI} mm au fond, Ø ${fmt(2*mouthR() - 4.8)} mm à la bouche)` : `(Ø ${TI} mm à l'intérieur, Ø ${TO} mm à l'extérieur)`} avec une collerette Ø ${FL_D} mm : 4 vis M2 de ${vM2} mm + écrous dans la façade. Casquette : elle dépasse de ${fmt(s.P)} mm devant la façade et se visse sur le dessus avec ${capScrews().length} vis M3 de ${vM3} mm (avant-trous dans le boîtier). ${splitText(false)}`) + (typeof SVNOTE === 'string' ? SVNOTE : '');
 }
 function visserie(){
   const g = G(), laser = S.proc === 'laser', s = shade();
@@ -6574,8 +6713,8 @@ function visserie(){
     [4*NT, `vis M2 × ${vM2} mm + ${4*NT} écrous M2`, NT > 1 ? `collerettes des ${NT} tubes sur la façade (4 par tube)` : 'collerette du tube sur la façade'],
     ...(false ? [[2*NT, `vis M2 × ${vSv} mm + ${2*NT} écrous M2`, `oreilles des ${NT} servos, sous la casquette`],
                    [2*NT, 'petites vis de palonnier (fournies avec les servos)', 'palonnier sur la tablette de chaque volet']] : []),
-    [4, `vis ${wood}M3 × ${vM3} mm`, 'casquette, dans la paroi du dessus'],
-    [4, `vis ${wood}M3 × ${vF} mm`, laser ? 'fond, dans les coins des cadres' : 'fond, dans les avant-trous des coins']
+    [capScrews().length, `vis ${wood}M3 × ${vM3} mm`, laser ? 'casquette, dans la paroi du dessus' : `casquette en ${pieceCount().cap} pièces (2 vis par pièce), dans la paroi du dessus`],
+    [backFix().length, `vis ${wood}M3 × ${vF} mm`, laser ? 'fond, dans les coins des cadres' : `fond en ${pieceCount().fond} pièces : 4 coins + 2 vis au milieu de chaque pièce`]
   ];
 }
 function renderVis(){
@@ -6599,13 +6738,13 @@ function refresh(){
   btn.disabled = !st.ready;
   btn.textContent = S.proc === 'laser' ? 'Télécharger le plan de découpe (.svg)' : 'Télécharger les pièces à imprimer (.zip)';
   $('exportMsg').textContent = st.ready
-    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches, des anneaux du tube et de la casquette, avec les trous de fixation.` : 'Tous les trous sont corrects. Le fichier contient le boîtier, son fond, le tube et la casquette au format STL.')
+    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches, des anneaux du tube et de la casquette, avec les trous de fixation.` : 'Tous les trous sont corrects. Le fichier contient le boîtier, le fond et la casquette coupés en 3 pièces qui s’emboîtent, et le tube en cône (STL).')
     : `Le téléchargement se débloque quand les ${N} diamètres sont corrects (${st.n} / ${N}).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Bleu : gravure (numéros et cercles de la cible). Colle les couches C1 à C${g.n - 1} ; le fond C${g.n} se visse (4 vis M3 dans les coins) pour pouvoir changer la pile. Colle les anneaux sur la collerette et visse-la sur la façade (4 vis M2) ; visse la casquette sur le dessus (4 vis M3).`
     : 'Imprime le boîtier façade sur le plateau, sans supports, le tube debout et la casquette à plat. Couche 0,2 mm, remplissage 20 %. Fond : 4 vis M3 dans les coins ; tube : 4 vis M2 ; casquette : 4 vis M3.';
   const prev = $('exportPreview');
-  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : `<div class="stlinfo">boitier.stl (${BW} × ${BH} × 46 mm), fond.stl (${BW} × ${BH} × 3 mm), tubes.stl (Ø ${TO} × ${fmt(shade().L)} mm) et casquette.stl (${BW} × ${fmt(shade().D)} × 3 mm) · PLA</div>`;
+  if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : `<div class="stlinfo">boitier.stl (${BW} × ${BH} × 46 mm), fond.stl (${BW} × ${BH} × 3 mm), ${pieceCount().box} pièces de boîtier (au plus 74 × ${BH} mm), ${pieceCount().fond} pièces de fond, ${pieceCount().cap} pièces de casquette et le tube en cône (bouche Ø ${2*mouthR()} mm) · PLA</div>`;
   else prev.innerHTML = '';
   return st;
 }
@@ -6700,10 +6839,7 @@ function readme(){
 =========================================
 
 Fichiers :
-  boitier.stl : boitier avec sa facade (${BW} x ${BH} x 46 mm)
-  fond.stl    : plaque de fond (${BW} x ${BH} x 3 mm), a visser (4 vis M3 dans les coins) pour changer la pile 
-  tubes.stl   : tube pare-soleil avec collerette Ø ${FL_D} mm (diametre ext. ${TO} mm, int. ${TI} mm, longueur ${fmt(shade().L)} mm)
-  casquette.stl : visiere (${BW} x ${fmt(shade().D)} x 3 mm), 4 trous Ø 3,4 mm pour les vis M3
+${filesText()}
 Unites : millimetres.
 
 Visserie :
@@ -6719,6 +6855,9 @@ Impression conseillee :
   - Matiere : PLA, couche 0,2 mm, remplissage 20 %
   - Le boitier est pose sur sa facade : pas de supports.
   - Le tube s'imprime debout, la casquette a plat.
+
+Assemblage des pieces :
+  ${splitText(true)}
 
 Montage :
   1. Colle le capteur KY-018 derriere le trou central, la photoresistance vers l'avant.
@@ -6751,12 +6890,14 @@ async function doExport(){
   let r;
   if (S.proc === 'laser') r = await saveFile(`cible_${NU}_led_decoupe_laser_${String(S.ply).replace('.', ',')}mm.svg`, laserSVG(false));
   else {
-    const parts = lastParts && lastParts.box && lastParts.tubes ? lastParts : Object.assign(buildPrint(), buildShade()), W2 = G().W2, sh = shade();
-    const bx = stlBinary(parts.box, (x,y,z) => [x, BH - z, y + W2]);
-    const back = stlBinary(parts.back, (x,y,z) => [x, BH - z, y - W2]);
-    const tubes = stlBinary(parts.tubes, (x,y,z) => [BW - x, BH - z, -(y + W2)]);
-    const cap = stlBinary(parts.cap, (x,y,z) => [x, y + W2 + sh.P, z - BH]);
-    r = await saveFile(`cible_${NU}_led_impression_3d.zip`, zip([{name:'boitier.stl', data:bx}, {name:'fond.stl', data:back}, {name:'tubes.stl', data:tubes}, {name:'casquette.stl', data:cap}, {name:'LISEZ-MOI.txt', data:readme()}]));
+    const parts = lastParts && lastParts.boxes && lastParts.tubesArr && lastParts.caps ? lastParts : Object.assign(buildPrint(), buildShade()), W2 = G().W2;
+    const files = [
+      ...parts.boxes.map((g, i) => ({name:`boitier_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, BH - z, y + W2])})),
+      ...parts.backs.map((g, i) => ({name:`fond_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, BH - z, y - W2])})),
+      ...parts.tubesArr.map((g, i) => ({name:'tube.stl', data: stlAt(g, (x,y,z) => [x, z, -(y + W2)])})),
+      ...parts.caps.map((g, i) => ({name:`casquette_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, y, z - BH])})),
+      {name:'LISEZ-MOI.txt', data:readme()}];
+    r = await saveFile(`cible_${NU}_led_impression_3d.zip`, zip(files));
   }
   btn.disabled = false;
   $('exportMsg').textContent = r.ok ? 'Fichier prêt. Vérifie ton dossier Téléchargements.' : r.msg;
