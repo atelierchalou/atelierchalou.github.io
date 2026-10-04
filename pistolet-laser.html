@@ -5702,10 +5702,10 @@ function frame(y0, y1){
    et la casquette sont coupés en pièces qui s'emboîtent par des queues d'aronde (à coller).
    Les coupes de la casquette sont décalées par rapport à celles du boîtier : chaque morceau de
    casquette, vissé sur le dessus, tient la jonction de 2 morceaux du boîtier. */
-const SPL = NC === 5 ? {mouth:25, box:[54,98,142,186], row:0, rowKnobs:[], cap:[70,114,158,202], capX:[35,92,136,180,221], fond:[70,114,158,202], fondX:[35,92,136,180,221]}
-          : {mouth:25, box:[72.5,137.5], row:50, rowKnobs:[4,40,105,170,206], cap:[90,155], capX:[45,122.5,182.5], fond:[90,155], fondX:[45,122.5,182.5]};
+const SPL = NC === 5 ? {mouth:30, box:[54,98,142,186], row:0, rowKnobs:[], cap:[70,114,158,202], capX:[35,90,134,178,221], fond:[70,114,158,202], fondX:[35,90,134,178,221]}
+          : {mouth:34, box:[72.5,137.5], row:50, rowKnobs:[40,105,170], cap:[90,155], capX:[45,122.5,182.5], fond:[90,155], fondX:[45,122.5,182.5]};
 const JOIN = {d:5, w0:3.2, w1:5.4, gap:.15};          // queue d'aronde : longueur, largeur à la base et au bout, jeu
-const LAP = {L:10, T:2.5};                            // languette de recouvrement : dépasse de 10 mm, 2,5 mm d'épaisseur
+const LAP = 8;                                        // mi-épaisseur : chaque pièce dépasse de 4 mm sur une moitié de l'épaisseur, l'autre moitié est enlevée en face
 const PRINT = () => S.proc !== 'laser';
 const mouthR = () => PRINT() ? SPL.mouth/2 : TO/2;      // rayon extérieur de la bouche du tube
 const colCenters = cuts => { const e = [0, ...cuts, BW]; return e.slice(0, -1).map((a, i) => (a + e[i + 1])/2); };
@@ -5718,34 +5718,22 @@ function regLeft(c, vs, grow){ const p = [[-500,-500],[c,-500]]; [...vs].sort((a
 function regBelow(c, vs, grow){ const p = [[-500,-500],[500,-500],[500,c]]; [...vs].sort((a, b) => b - a).forEach(v => p.push(...knob(c, v, grow, true))); p.push([-500,c]); return p; }
 const extY = p => slab(p, -200, 200);
 const extZ = p => keep(keep(Manifold.extrude([ccw(p)], 500)).translate([0, 0, -100]));
-function cutCols(m, cuts, vs, ext, tabs){
+/* Coupe à mi-épaisseur (sans surépaisseur) : la pièce de gauche dépasse sur une moitié de l'épaisseur (H ou N),
+   la pièce de droite dépasse sur l'autre moitié ; les 2 dépassements se recouvrent sur LAP mm.
+   lines(k) donne, pour la coupe k, la position de la ligne dans la moitié H et dans la moitié N, et les queues d'aronde. */
+function lapCols(m, cuts, H, ext, lines, reg){
+  reg = reg || regLeft;
   const out = []; let rest = m;
-  for (const c of cuts) {
-    let a = keep(rest.intersect(ext(regLeft(c, vs, false))));
-    rest = keep(rest.subtract(ext(regLeft(c, vs, true))));
-    for (const [t, tg] of (tabs ? tabs(c) : [])) { a = keep(a.add(t)); rest = keep(rest.subtract(tg)); }   // languettes : la pièce de gauche recouvre celle de droite
-    out.push(a);
-  }
+  cuts.forEach((c, k) => {
+    const L = lines(c, k), mH = keep(rest.intersect(H)), mN = keep(rest.subtract(H));
+    out.push(keep(keep(mH.intersect(ext(reg(L.h, L.kh || [], false)))).add(keep(mN.intersect(ext(reg(L.n, L.kn || [], false)))))));
+    rest = keep(keep(mH.subtract(ext(reg(L.h, L.kh || [], true)))).add(keep(mN.subtract(ext(reg(L.n, L.kn || [], true))))));
+  });
   out.push(rest); return out;
 }
-function cutRow(m, c, vs, tabs){
-  let a = keep(m.intersect(extY(regBelow(c, vs, false)))), b = keep(m.subtract(extY(regBelow(c, vs, true))));
-  for (const [t, tg] of (tabs || [])) { a = keep(a.add(t)); b = keep(b.subtract(tg)); }
-  return [a, b];
-}
-/* Languettes de recouvrement du boîtier : plaques de 2,5 mm collées contre l'intérieur des parois de la pièce voisine
-   (debout à l'impression, posées sur le plateau : pas de support). La façade de la voisine a une encoche à leur place. */
-function lapX(c){                         // coupe verticale x = c : languettes sur les parois du bas et du haut
-  const W2 = G().W2, gp = JOIN.gap;
-  return [[8, 8 + LAP.T], [BH - 8 - LAP.T, BH - 8]].map(([z0, z1]) => [box(c - 1, -W2, z0, c + LAP.L, W2, z1),
-    box(c - gp, -W2 - 1, z0 - gp, c + LAP.L + gp, W2 + 1, z1 + gp)]);
-}
-function lapZ(c, first, last){            // coupe horizontale z = c : languettes sur les parois de côté (colonnes du bord)
-  const W2 = G().W2, gp = JOIN.gap, out = [];
-  if (first) out.push([box(8, -W2, c - 1, 8 + LAP.T, W2, c + LAP.L), box(8 - gp, -W2 - 1, c - gp, 8 + LAP.T + gp, W2 + 1, c + LAP.L + gp)]);
-  if (last) out.push([box(BW - 8 - LAP.T, -W2, c - 1, BW - 8, W2, c + LAP.L), box(BW - 8 - LAP.T - gp, -W2 - 1, c - gp, BW - 8 + gp, W2 + 1, c + LAP.L + gp)]);
-  return out;
-}
+const HALF = LAP/2;
+const boxH = () => keep(box(-500, -500, -500, 500, 500, 4).add(box(-500, -500, BH - 4, 500, 500, 500)));        // moitié extérieure des parois du bas et du haut
+const sideH = () => keep(box(-500, -500, -500, 4, 500, 500).add(box(BW - 4, -500, -500, 500, 500, 500)));        // moitié extérieure des parois de côté
 function coneY(rLow, rHigh, lo, hi, x, z){ return keep(keep(keep(Manifold.cylinder(hi - lo, rLow, rHigh, 72, false)).rotate([-90, 0, 0])).translate([x, lo, z])); }
 function tubeShape(x, z){
   const g = G(), s = shade(), yb = -g.W2, ym = -g.W2 - s.L, R = mouthR();
@@ -5763,13 +5751,13 @@ function tubeShape(x, z){
 }
 function pieceCount(){ return {box: (SPL.box.length + 1)*(SPL.row ? 2 : 1), fond: SPL.fond.length + 1, cap: SPL.cap.length + 1}; }
 function splitText(ascii){
-  const n = pieceCount(), t = `Boîtier en ${n.box} pièces, fond en ${n.fond} pièces et casquette en ${n.cap} pièces, assemblées par des queues d’aronde. Chaque pièce du boîtier a des languettes de recouvrement de 10 mm qui dépassent et se plaquent contre l’intérieur des parois de sa voisine : glisse la voisine par l’arrière (dans le sens de la profondeur), avec un point de colle (PLA ou cyanoacrylate). Le fond et la casquette sont coupés ailleurs que le boîtier : chacune de leurs pièces chevauche une jonction du boîtier et la tient une fois vissée (2 vis par pièce en plus des coins du fond). Tube${NT > 1 ? 's' : ''} en cône : bouche de Ø ${fmt(2*mouthR())} mm à l’extérieur (Ø ${fmt(2*mouthR() - 4.8)} mm à l’intérieur), fond de Ø ${TI} mm.`;
+  const n = pieceCount(), t = `Boîtier en ${n.box} pièces, fond en ${n.fond} pièces et casquette en ${n.cap} pièces, assemblées à mi-épaisseur, sans surépaisseur : à chaque jonction, une pièce dépasse de ${LAP} mm sur une moitié de l’épaisseur et sa voisine a la même encoche en face ; les 2 se recouvrent. Boîtier : la façade et la moitié intérieure des parois dépassent d’un côté, la moitié extérieure de l’autre, avec 2 queues d’aronde dans la façade : glisse la voisine par l’arrière. Casquette : mi-épaisseur + queues d’aronde, à poser de haut en bas. Fond : mi-épaisseur seule. Un point de colle (PLA ou cyanoacrylate) sur les parties qui se recouvrent. Le fond et la casquette sont coupés ailleurs que le boîtier : chacune de leurs pièces chevauche une jonction du boîtier et la tient une fois vissée. Les pièces paires du fond et de la casquette s’impriment retournées (déjà orientées dans les fichiers), pour que les parties qui dépassent soient toujours sur le plateau. Tube${NT > 1 ? 's' : ''} en cône : bouche de Ø ${fmt(2*mouthR())} mm à l’extérieur (Ø ${fmt(2*mouthR() - 4.8)} mm à l’intérieur), fond de Ø ${TI} mm.`;
   return ascii ? t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’]/g, "'") : t;
 }
 function filesText(){
   const n = pieceCount(), s = shade();
-  return [`  boitier_1 a ${n.box}.stl : boitier avec sa facade, coupe en ${n.box} pieces (queues d'aronde + languettes de recouvrement)`,
-          `  fond_1 a ${n.fond}.stl    : plaque de fond en ${n.fond} pieces (decalees par rapport au boitier), a visser (coins + 2 vis par piece)`,
+  return [`  boitier_1 a ${n.box}.stl : boitier avec sa facade, coupe en ${n.box} pieces (assemblage a mi-epaisseur + queues d'aronde)`,
+          `  fond_1 a ${n.fond}.stl    : plaque de fond en ${n.fond} pieces a mi-epaisseur (decalees par rapport au boitier), a visser (coins + 2 vis par piece)`,
           `  tube_1 a ${NT}.stl : tubes en cone avec collerette O ${FL_D} mm (O ${TI} mm au fond, O ${fmt(2*mouthR() - 4.8)} mm a la bouche, longueur ${fmt(s.L)} mm), a imprimer debout, collerette sur le plateau`,
           `  casquette_1 a ${n.cap}.stl : visiere en ${n.cap} pieces, ${capScrews().length} trous O 3,4 mm pour les vis M3`,
           `  volets.stl  : ${NC} volets en T (plaque + tablette), tablette sur le plateau`].join('\n');
@@ -5800,7 +5788,7 @@ function buildShade(){
     let fl = keep(box(-30, -5, zt, 0, 5, zt + ft));
     const FP = flapPlate(); fl = keep(fl.add(box(FP.x0, -ft/2, FP.zb, FP.x1, ft/2, zt + .01)));        // volet (plaque), assez grand pour masquer la bouche
     for (const hx of [-5, -11]) fl = keep(fl.subtract(cylAxis(.8, zt - 3, zt + ft + 1, 2, [hx, 0, 0])));   // vis du palonnier
-    const caps = PRINT() ? cutCols(cap, SPL.cap, [0, -g.W2 - s.P/2], extZ).map(toGeometry) : null;
+    const caps = PRINT() ? lapCols(cap, SPL.cap, box(-500, -500, BH + s.vt/2, 500, 500, 500), extZ, (c, k) => ({n: k % 2 ? c - HALF : c + HALF, kn: [0, -g.W2 - s.P/2], h: k % 2 ? c + HALF : c - HALF})).map(toGeometry) : null;
     return {tubes: toGeometry(tubes), tubesArr, cap: toGeometry(cap), caps, flap: toGeometry(fl)};
   } finally { flush(); }
 }
@@ -5815,10 +5803,12 @@ function buildPrint(){
     for (const [x, z] of fondScrews()) res = keep(res.subtract(cylAxis(1.25, g.W2 - 12, g.W2 + .5, 1, [x, 0, z])));   // avant-trous des vis du milieu du fond
     let back = keep(slab(PROFILE, g.W2, g.W2 + 3));
     for (const s of backFix()) back = keep(back.subtract(shapeSolid(s, g.W2 - 1, g.W2 + 4)));
-    const KZ = [4, BH/2, BH - 4];                                                                   // queues d'aronde : paroi du bas, façade, paroi du haut
-    let boxes = cutCols(res, SPL.box, KZ, extY, lapX);
-    if (SPL.row) boxes = boxes.flatMap((m, i, all) => cutRow(m, SPL.row, SPL.rowKnobs, lapZ(SPL.row, i === 0, i === all.length - 1)));
-    const backs = cutCols(back, SPL.fond, KZ, extY);                                                // fond coupé ailleurs : chaque pièce chevauche une jonction du boîtier
+    const KF = [BH/3, 2*BH/3];                                                                      // queues d'aronde dans la façade
+    // boîtier : façade et moitié intérieure des parois dépassent à droite, moitié extérieure dépasse à gauche
+    let boxes = lapCols(res, SPL.box, boxH(), extY, c => ({n: c + HALF, kn: KF, h: c - HALF}));
+    if (SPL.row) boxes = boxes.flatMap(m => lapCols(m, [SPL.row], sideH(), extY, c => ({n: c - HALF, kn: SPL.rowKnobs, h: c + HALF}), regBelow));
+    // fond : mi-épaisseur sans queue d'aronde ; pièces paires : la moitié côté boîtier dépasse, pièces impaires : l'autre moitié (imprimées retournées)
+    const backs = lapCols(back, SPL.fond, box(-500, g.W2 + 1.5, -500, 500, 500, 500), extY, (c, k) => k % 2 ? {n: c - HALF, h: c + HALF} : {n: c + HALF, h: c - HALF});
     return {boxes: boxes.map(toGeometry), backs: backs.map(toGeometry)};
   } finally { flush(); }
 }
@@ -6234,9 +6224,9 @@ async function doExport(){
     const volets = stlMerge([...Array(NC).keys()].map(i => stlBinary(parts.flap, (x,y,z) => [x - fx0 + (i % 2)*(fw + 6), 5 - y + Math.floor(i / 2)*16, 108 - z])));
     const files = [
       ...parts.boxes.map((g, i) => ({name:`boitier_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, BH - z, y + W2])})),
-      ...parts.backs.map((g, i) => ({name:`fond_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, BH - z, y - W2])})),
+      ...parts.backs.map((g, i) => ({name:`fond_${i + 1}.stl`, data: stlAt(g, i % 2 ? (x,y,z) => [x, z, -y] : (x,y,z) => [x, BH - z, y - W2])})),
       ...parts.tubesArr.map((g, i) => ({name:`tube_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, z, -(y + W2)])})),
-      ...parts.caps.map((g, i) => ({name:`casquette_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, y, z - BH])})),
+      ...parts.caps.map((g, i) => ({name:`casquette_${i + 1}.stl`, data: stlAt(g, i % 2 ? (x,y,z) => [x, -y, -z] : (x,y,z) => [x, y, z - BH])})),
       {name:'volets.stl', data:volets}, {name:'LISEZ-MOI.txt', data:readme()}];
     r = await saveFile('cibles_impression_3d.zip', zip(files));
   }
@@ -6353,7 +6343,7 @@ function HOLES(){
   const g = G(), y = -g.W2, d = g.front + 2, out = [];
   out.push({id:'ldr', comp:'ldr', p:[TCX, y, TCZ], dir:'+Y', depth:d});
   LEDX.forEach((x, k) => out.push({id:'led'+k, comp:'led', p:[x, y, LEDZ], dir:'+Y', depth:d}));
-  out.push({id:'raz', comp:'raz', p:[18, y, 16], dir:'+Y', depth:d});
+  out.push({id:'raz', comp:'raz', p:[15, y, 15], dir:'+Y', depth:d});   // RAZ un peu plus dans le coin : la jonction des pièces passe entre le RAZ et les LED
   out.push({id:'sw',  comp:'sw',  p:[BW, 0, 85], dir:'-X', depth:10});
   return out;
 }
@@ -6445,9 +6435,9 @@ function frame(y0, y1){
    et la casquette sont coupés en pièces qui s'emboîtent par des queues d'aronde (à coller).
    Les coupes de la casquette sont décalées par rapport à celles du boîtier : chaque morceau de
    casquette, vissé sur le dessus, tient la jonction de 2 morceaux du boîtier. */
-const SPL = {mouth:30, box:[29,101], row:0, rowKnobs:[], cap:[45,85], capX:[18,65,112], fond:[45,85], fondX:[20,65,110]};
+const SPL = {mouth:38, box:[22,98], row:0, rowKnobs:[], cap:[45,85], capX:[12,65,112], fond:[45,85], fondX:[12,65,112]};
 const JOIN = {d:5, w0:3.2, w1:5.4, gap:.15};          // queue d'aronde : longueur, largeur à la base et au bout, jeu
-const LAP = {L:10, T:2.5};                            // languette de recouvrement : dépasse de 10 mm, 2,5 mm d'épaisseur
+const LAP = 8;                                        // mi-épaisseur : chaque pièce dépasse de 4 mm sur une moitié de l'épaisseur, l'autre moitié est enlevée en face
 const PRINT = () => S.proc !== 'laser';
 const mouthR = () => PRINT() ? SPL.mouth/2 : TO/2;      // rayon extérieur de la bouche du tube
 const colCenters = cuts => { const e = [0, ...cuts, BW]; return e.slice(0, -1).map((a, i) => (a + e[i + 1])/2); };
@@ -6460,34 +6450,22 @@ function regLeft(c, vs, grow){ const p = [[-500,-500],[c,-500]]; [...vs].sort((a
 function regBelow(c, vs, grow){ const p = [[-500,-500],[500,-500],[500,c]]; [...vs].sort((a, b) => b - a).forEach(v => p.push(...knob(c, v, grow, true))); p.push([-500,c]); return p; }
 const extY = p => slab(p, -200, 200);
 const extZ = p => keep(keep(Manifold.extrude([ccw(p)], 500)).translate([0, 0, -100]));
-function cutCols(m, cuts, vs, ext, tabs){
+/* Coupe à mi-épaisseur (sans surépaisseur) : la pièce de gauche dépasse sur une moitié de l'épaisseur (H ou N),
+   la pièce de droite dépasse sur l'autre moitié ; les 2 dépassements se recouvrent sur LAP mm.
+   lines(k) donne, pour la coupe k, la position de la ligne dans la moitié H et dans la moitié N, et les queues d'aronde. */
+function lapCols(m, cuts, H, ext, lines, reg){
+  reg = reg || regLeft;
   const out = []; let rest = m;
-  for (const c of cuts) {
-    let a = keep(rest.intersect(ext(regLeft(c, vs, false))));
-    rest = keep(rest.subtract(ext(regLeft(c, vs, true))));
-    for (const [t, tg] of (tabs ? tabs(c) : [])) { a = keep(a.add(t)); rest = keep(rest.subtract(tg)); }   // languettes : la pièce de gauche recouvre celle de droite
-    out.push(a);
-  }
+  cuts.forEach((c, k) => {
+    const L = lines(c, k), mH = keep(rest.intersect(H)), mN = keep(rest.subtract(H));
+    out.push(keep(keep(mH.intersect(ext(reg(L.h, L.kh || [], false)))).add(keep(mN.intersect(ext(reg(L.n, L.kn || [], false)))))));
+    rest = keep(keep(mH.subtract(ext(reg(L.h, L.kh || [], true)))).add(keep(mN.subtract(ext(reg(L.n, L.kn || [], true))))));
+  });
   out.push(rest); return out;
 }
-function cutRow(m, c, vs, tabs){
-  let a = keep(m.intersect(extY(regBelow(c, vs, false)))), b = keep(m.subtract(extY(regBelow(c, vs, true))));
-  for (const [t, tg] of (tabs || [])) { a = keep(a.add(t)); b = keep(b.subtract(tg)); }
-  return [a, b];
-}
-/* Languettes de recouvrement du boîtier : plaques de 2,5 mm collées contre l'intérieur des parois de la pièce voisine
-   (debout à l'impression, posées sur le plateau : pas de support). La façade de la voisine a une encoche à leur place. */
-function lapX(c){                         // coupe verticale x = c : languettes sur les parois du bas et du haut
-  const W2 = G().W2, gp = JOIN.gap;
-  return [[8, 8 + LAP.T], [BH - 8 - LAP.T, BH - 8]].map(([z0, z1]) => [box(c - 1, -W2, z0, c + LAP.L, W2, z1),
-    box(c - gp, -W2 - 1, z0 - gp, c + LAP.L + gp, W2 + 1, z1 + gp)]);
-}
-function lapZ(c, first, last){            // coupe horizontale z = c : languettes sur les parois de côté (colonnes du bord)
-  const W2 = G().W2, gp = JOIN.gap, out = [];
-  if (first) out.push([box(8, -W2, c - 1, 8 + LAP.T, W2, c + LAP.L), box(8 - gp, -W2 - 1, c - gp, 8 + LAP.T + gp, W2 + 1, c + LAP.L + gp)]);
-  if (last) out.push([box(BW - 8 - LAP.T, -W2, c - 1, BW - 8, W2, c + LAP.L), box(BW - 8 - LAP.T - gp, -W2 - 1, c - gp, BW - 8 + gp, W2 + 1, c + LAP.L + gp)]);
-  return out;
-}
+const HALF = LAP/2;
+const boxH = () => keep(box(-500, -500, -500, 500, 500, 4).add(box(-500, -500, BH - 4, 500, 500, 500)));        // moitié extérieure des parois du bas et du haut
+const sideH = () => keep(box(-500, -500, -500, 4, 500, 500).add(box(BW - 4, -500, -500, 500, 500, 500)));        // moitié extérieure des parois de côté
 function coneY(rLow, rHigh, lo, hi, x, z){ return keep(keep(keep(Manifold.cylinder(hi - lo, rLow, rHigh, 72, false)).rotate([-90, 0, 0])).translate([x, lo, z])); }
 function tubeShape(x, z){
   const g = G(), s = shade(), yb = -g.W2, ym = -g.W2 - s.L, R = mouthR();
@@ -6505,13 +6483,13 @@ function tubeShape(x, z){
 }
 function pieceCount(){ return {box: (SPL.box.length + 1)*(SPL.row ? 2 : 1), fond: SPL.fond.length + 1, cap: SPL.cap.length + 1}; }
 function splitText(ascii){
-  const n = pieceCount(), t = `Boîtier en ${n.box} pièces, fond en ${n.fond} pièces et casquette en ${n.cap} pièces, assemblées par des queues d’aronde. Chaque pièce du boîtier a des languettes de recouvrement de 10 mm qui dépassent et se plaquent contre l’intérieur des parois de sa voisine : glisse la voisine par l’arrière (dans le sens de la profondeur), avec un point de colle (PLA ou cyanoacrylate). Le fond et la casquette sont coupés ailleurs que le boîtier : chacune de leurs pièces chevauche une jonction du boîtier et la tient une fois vissée (2 vis par pièce en plus des coins du fond). Tube${NT > 1 ? 's' : ''} en cône : bouche de Ø ${fmt(2*mouthR())} mm à l’extérieur (Ø ${fmt(2*mouthR() - 4.8)} mm à l’intérieur), fond de Ø ${TI} mm.`;
+  const n = pieceCount(), t = `Boîtier en ${n.box} pièces, fond en ${n.fond} pièces et casquette en ${n.cap} pièces, assemblées à mi-épaisseur, sans surépaisseur : à chaque jonction, une pièce dépasse de ${LAP} mm sur une moitié de l’épaisseur et sa voisine a la même encoche en face ; les 2 se recouvrent. Boîtier : la façade et la moitié intérieure des parois dépassent d’un côté, la moitié extérieure de l’autre, avec 2 queues d’aronde dans la façade : glisse la voisine par l’arrière. Casquette : mi-épaisseur + queues d’aronde, à poser de haut en bas. Fond : mi-épaisseur seule. Un point de colle (PLA ou cyanoacrylate) sur les parties qui se recouvrent. Le fond et la casquette sont coupés ailleurs que le boîtier : chacune de leurs pièces chevauche une jonction du boîtier et la tient une fois vissée. Les pièces paires du fond et de la casquette s’impriment retournées (déjà orientées dans les fichiers), pour que les parties qui dépassent soient toujours sur le plateau. Tube${NT > 1 ? 's' : ''} en cône : bouche de Ø ${fmt(2*mouthR())} mm à l’extérieur (Ø ${fmt(2*mouthR() - 4.8)} mm à l’intérieur), fond de Ø ${TI} mm.`;
   return ascii ? t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’]/g, "'") : t;
 }
 function filesText(){
   const n = pieceCount(), s = shade();
-  return [`  boitier_1 a ${n.box}.stl : boitier avec sa facade, coupe en ${n.box} pieces (queues d'aronde + languettes de recouvrement)`,
-          `  fond_1 a ${n.fond}.stl    : plaque de fond en ${n.fond} pieces (decalees par rapport au boitier), a visser (coins + 2 vis par piece)`,
+  return [`  boitier_1 a ${n.box}.stl : boitier avec sa facade, coupe en ${n.box} pieces (assemblage a mi-epaisseur + queues d'aronde)`,
+          `  fond_1 a ${n.fond}.stl    : plaque de fond en ${n.fond} pieces a mi-epaisseur (decalees par rapport au boitier), a visser (coins + 2 vis par piece)`,
           `  tube.stl          : tube en cone avec collerette O ${FL_D} mm (O ${TI} mm au fond, O ${fmt(2*mouthR() - 4.8)} mm a la bouche, longueur ${fmt(s.L)} mm), a imprimer debout, collerette sur le plateau`,
           `  casquette_1 a ${n.cap}.stl : visiere en ${n.cap} pieces, ${capScrews().length} trous O 3,4 mm pour les vis M3`].join('\n');
 }
@@ -6534,7 +6512,7 @@ function buildShade(){
     for (const [x, y] of capScrews()) cap = keep(cap.subtract(cylAxis(1.7, BH - 1, BH + s.vt + 1, 2, [x, y, 0])));   // trous Ø3,4 des vis M3
 
 
-    const caps = PRINT() ? cutCols(cap, SPL.cap, [0, -g.W2 - s.P/2], extZ).map(toGeometry) : null;
+    const caps = PRINT() ? lapCols(cap, SPL.cap, box(-500, -500, BH + s.vt/2, 500, 500, 500), extZ, (c, k) => ({n: k % 2 ? c - HALF : c + HALF, kn: [0, -g.W2 - s.P/2], h: k % 2 ? c + HALF : c - HALF})).map(toGeometry) : null;
     return {tubes: toGeometry(tubes), tubesArr, cap: toGeometry(cap), caps};
   } finally { flush(); }
 }
@@ -6549,10 +6527,12 @@ function buildPrint(){
     for (const [x, z] of fondScrews()) res = keep(res.subtract(cylAxis(1.25, g.W2 - 12, g.W2 + .5, 1, [x, 0, z])));   // avant-trous des vis du milieu du fond
     let back = keep(slab(PROFILE, g.W2, g.W2 + 3));
     for (const s of backFix()) back = keep(back.subtract(shapeSolid(s, g.W2 - 1, g.W2 + 4)));
-    const KZ = [4, BH/2, BH - 4];                                                                   // queues d'aronde : paroi du bas, façade, paroi du haut
-    let boxes = cutCols(res, SPL.box, KZ, extY, lapX);
-    if (SPL.row) boxes = boxes.flatMap((m, i, all) => cutRow(m, SPL.row, SPL.rowKnobs, lapZ(SPL.row, i === 0, i === all.length - 1)));
-    const backs = cutCols(back, SPL.fond, KZ, extY);                                                // fond coupé ailleurs : chaque pièce chevauche une jonction du boîtier
+    const KF = [BH/3, 2*BH/3];                                                                      // queues d'aronde dans la façade
+    // boîtier : façade et moitié intérieure des parois dépassent à droite, moitié extérieure dépasse à gauche
+    let boxes = lapCols(res, SPL.box, boxH(), extY, c => ({n: c + HALF, kn: KF, h: c - HALF}));
+    if (SPL.row) boxes = boxes.flatMap(m => lapCols(m, [SPL.row], sideH(), extY, c => ({n: c - HALF, kn: SPL.rowKnobs, h: c + HALF}), regBelow));
+    // fond : mi-épaisseur sans queue d'aronde ; pièces paires : la moitié côté boîtier dépasse, pièces impaires : l'autre moitié (imprimées retournées)
+    const backs = lapCols(back, SPL.fond, box(-500, g.W2 + 1.5, -500, 500, 500, 500), extY, (c, k) => k % 2 ? {n: c - HALF, h: c + HALF} : {n: c + HALF, h: c - HALF});
     return {boxes: boxes.map(toGeometry), backs: backs.map(toGeometry)};
   } finally { flush(); }
 }
@@ -6629,7 +6609,7 @@ function buildComponents(){
   });
   g.add(cyl(C.ldr/2, yf + 2, -W2 + .3, 1, [TCX, 0, TCZ], ldr));                       // photorésistance
   bx(18, 1.6, 32, TCX, yf + 3.5, TCZ - 8, kyb);                                       // carte du KY-018
-  g.add(cyl(C.raz/2, yf - .2, -W2 - 4, 1, [18, 0, 16], yel)); g.add(cyl(C.raz/2 + 1.5, yf, yf + 10, 1, [18, 0, 16], grey));
+  g.add(cyl(C.raz/2, yf - .2, -W2 - 4, 1, [15, 0, 15], yel)); g.add(cyl(C.raz/2 + 1.5, yf, yf + 10, 1, [15, 0, 15], grey));
   g.add(cyl(C.sw/2, BW + 8, BW - 8, 0, [0, 0, 85], metal)); g.add(cyl(1.2, BW + 8, BW + 18, 0, [0, 0, 85], white));
   bx(43, 1.6, 18, 65, yb - .8, 52, nano);                                                  // carte Nano couchée au fond
   bx(48.5, 17.5, 26.5, 65, yb - 8.75, 24, batt); bx(6, 17.6, 26.6, 87, yb - 8.75, 24, gold);         // pile 9 V
@@ -6939,9 +6919,9 @@ async function doExport(){
     const parts = lastParts && lastParts.boxes && lastParts.tubesArr && lastParts.caps ? lastParts : Object.assign(buildPrint(), buildShade()), W2 = G().W2;
     const files = [
       ...parts.boxes.map((g, i) => ({name:`boitier_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, BH - z, y + W2])})),
-      ...parts.backs.map((g, i) => ({name:`fond_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, BH - z, y - W2])})),
+      ...parts.backs.map((g, i) => ({name:`fond_${i + 1}.stl`, data: stlAt(g, i % 2 ? (x,y,z) => [x, z, -y] : (x,y,z) => [x, BH - z, y - W2])})),
       ...parts.tubesArr.map((g, i) => ({name:'tube.stl', data: stlAt(g, (x,y,z) => [x, z, -(y + W2)])})),
-      ...parts.caps.map((g, i) => ({name:`casquette_${i + 1}.stl`, data: stlAt(g, (x,y,z) => [x, y, z - BH])})),
+      ...parts.caps.map((g, i) => ({name:`casquette_${i + 1}.stl`, data: stlAt(g, i % 2 ? (x,y,z) => [x, -y, -z] : (x,y,z) => [x, y, z - BH])})),
       {name:'LISEZ-MOI.txt', data:readme()}];
     r = await saveFile(`cible_${NU}_led_impression_3d.zip`, zip(files));
   }
