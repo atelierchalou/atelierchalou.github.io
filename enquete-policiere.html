@@ -197,9 +197,11 @@
       <button class="tab" role="tab" id="t-couverture" data-p="couverture" style="--c:#c9a24f">Couverture</button>
       <button class="tab" role="tab" id="t-sommaire"   data-p="sommaire"   style="--c:#d8c49a">Sommaire</button>
       <button class="tab" role="tab" id="t-formation"  data-p="formation"  style="--c:#e8c468"><small>0</small>Formation</button>
-      <button class="tab" role="tab" id="t-chat"       data-p="chat"       style="--c:#b7a3d9"><small>I</small>Le Chat de Minuit</button>
-      <button class="tab" role="tab" id="t-zero"       data-p="zero"       style="--c:#9cc3df"><small>II</small>Professeur Zéro</button>
-      <button class="tab" role="tab" id="t-neopulse"   data-p="neopulse"   style="--c:#e39a8c"><small>III</small>NéoPulse</button>
+      <button class="tab" role="tab" id="t-chat"       data-p="chat"       style="--c:#b7a3d9"><small>I</small>Chat de Minuit</button>
+      <button class="tab" role="tab" id="t-zero"       data-p="zero"       style="--c:#9cc3df"><small>II</small>Pr Zéro</button>
+      <button class="tab" role="tab" id="t-chien"      data-p="chien"      style="--c:#b8d89a"><small>III</small>Chien volé</button>
+      <button class="tab" role="tab" id="t-drone"      data-p="drone"      style="--c:#e8bd73"><small>IV</small>Boîte noire</button>
+      <button class="tab" role="tab" id="t-neopulse"   data-p="neopulse"   style="--c:#e39a8c"><small>V</small>NéoPulse</button>
     </div>
 
     <div class="volume is-closed" id="volume">
@@ -242,13 +244,15 @@
           <span class="clip" aria-hidden="true"></span>
           <p class="kicker">Avant-propos</p>
           <h2>Sommaire</h2>
-          <p>Un tableau volé. Un casier sous cadenas. Les plans secrets d'un stimulateur cardiaque dérobés en pleine nuit. Trois affaires, et un seul indice commun : des cartes percées de trous.</p>
+          <p>Un tableau volé. Un casier sous cadenas. Un chien enlevé. Un drone disparu. Les plans secrets d'un stimulateur cardiaque dérobés en pleine nuit. Cinq affaires, et un seul indice commun : des cartes percées de trous.</p>
           <p class="hook">Pour les résoudre, il faudra parler la langue des machines.</p>
           <ol class="toc">
             <li><button data-go="formation">0 · Formation de l'enquêteur</button><span class="dots"></span><span class="pg-n">p. 3</span></li>
             <li><button data-go="chat">I · L'affaire du Chat de Minuit</button><span class="dots"></span><span class="pg-n">p. 5</span></li>
             <li><button data-go="zero">II · Le casier du Professeur Zéro</button><span class="dots"></span><span class="pg-n">p. 7</span></li>
-            <li><button data-go="neopulse">III · L'affaire NéoPulse</button><span class="dots"></span><span class="pg-n">p. 9</span></li>
+            <li><button data-go="chien">III · Le chien volé du gardien</button><span class="dots"></span><span class="pg-n">p. 9</span></li>
+            <li><button data-go="drone">IV · La boîte noire du drone</button><span class="dots"></span><span class="pg-n">p. 11</span></li>
+            <li><button data-go="neopulse">V · L'affaire NéoPulse</button><span class="dots"></span><span class="pg-n">p. 13</span></li>
           </ol>
           <button class="corner next" data-step="1" aria-label="Page suivante" title="Page suivante"></button>
           <div class="folio">2</div>
@@ -344,9 +348,62 @@
       </section>
 
       <!-- ===== CHAPITRE III ===== -->
-      <section class="leaf" id="p-neopulse" role="tabpanel" aria-labelledby="t-neopulse">
+      <section class="leaf" id="p-chien" role="tabpanel" aria-labelledby="t-chien">
         <div class="pg left">
           <p class="kicker">Chapitre III</p>
+          <h2>Le chien volé du gardien 🐕</h2>
+          <span class="stamp">DISPARITION · MESSAGE ANONYME</span>
+          <p>Lundi, 7 h 15. Monsieur Moreau, le gardien du collège, ouvre sa loge… et s'arrête net. Le panier de <strong>Rex</strong>, son golden retriever, la mascotte de tout le collège, est <strong>vide</strong>.</p>
+          <p>Sous la porte, quelqu'un a glissé une <strong>carte perforée</strong> et un petit mot, signé d'un seul nom : <strong>« le Masque »</strong>.</p>
+          <p><em>« Ton chien Rex est avec moi. Il va très bien. Ce que je veux est écrit sur ma carte perforée. »</em></p>
+          <p>Pour répondre, il faudra écrire soi-même en binaire… sans la moindre erreur, car le Masque vérifie tout.</p>
+          <button class="corner prev" data-step="-1" aria-label="Page précédente" title="Page précédente"></button>
+          <div class="folio">9</div>
+        </div>
+        <div class="pg right">
+          <figure class="evidence"><div class="bag"><div class="seal">PIÈCE À CONVICTION · N° 3</div><svg viewBox="0 0 230 150" aria-hidden="true"><rect x="18" y="30" width="194" height="108" rx="6" fill="#fffaf0" stroke="#b9a982" stroke-width="2" transform="rotate(-3 115 84)"/><g transform="rotate(-3 115 84)"><circle cx="40" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="52" r="5" fill="#2a2420"/><circle cx="140" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="52" r="5" fill="#2a2420"/><circle cx="180" cy="52" r="5" fill="#2a2420"/><circle cx="40" cy="70" r="5" fill="#2a2420"/><circle cx="60" cy="70" r="5" fill="#2a2420"/><circle cx="80" cy="70" r="5" fill="#2a2420"/><circle cx="100" cy="70" r="5" fill="#2a2420"/><circle cx="120" cy="70" r="5" fill="#2a2420"/><circle cx="140" cy="70" r="5" fill="#2a2420"/><circle cx="160" cy="70" r="5" fill="#2a2420"/><circle cx="180" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="88" r="5" fill="#2a2420"/><circle cx="60" cy="88" r="5" fill="#2a2420"/><circle cx="80" cy="88" r="5" fill="#2a2420"/><circle cx="100" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="88" r="5" fill="#2a2420"/><circle cx="140" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="88" r="5" fill="#2a2420"/><circle cx="40" cy="106" r="5" fill="#2a2420"/><circle cx="60" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="106" r="5" fill="#2a2420"/><circle cx="120" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="106" r="5" fill="#2a2420"/><circle cx="160" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="124" r="5" fill="#2a2420"/><circle cx="100" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="124" r="5" fill="#2a2420"/><circle cx="180" cy="124" r="5" fill="#2a2420"/><circle cx="196" cy="52" r="3.5" fill="#2a2420"/><circle cx="196" cy="70" r="3.5" fill="#2a2420"/><circle cx="196" cy="88" r="3.5" fill="#2a2420"/><circle cx="196" cy="106" r="3.5" fill="#2a2420"/><circle cx="196" cy="124" r="3.5" fill="#2a2420"/></g><text x="200" y="26" font-size="22" text-anchor="middle">🎭</text></svg></div><figcaption>Glissée sous la porte de la loge du gardien.</figcaption></figure>
+          <dl class="facts">
+            <dt>Niveau</dt><dd>intermédiaire · 50 à 60 min</dd>
+            <dt>Au programme</dt><dd>lire et écrire en binaire, fabriquer une carte-réponse, déjouer une fausse carte</dd>
+          </dl>
+          <p class="hook">Que réclame le Masque ? Et qui se cache derrière ? Rex compte sur toi.</p>
+          <a class="open" href="chien-vole.html" target="_blank" rel="noopener">📂 Ouvrir le dossier</a>
+          <div class="pagefoot"><button data-step="-1">← Chapitre II</button><button data-step="1">Chapitre IV →</button></div>
+          <button class="corner next" data-step="1" aria-label="Page suivante" title="Page suivante"></button>
+          <div class="folio">10</div>
+        </div>
+      </section>
+
+      <!-- ===== CHAPITRE IV ===== -->
+      <section class="leaf" id="p-drone" role="tabpanel" aria-labelledby="t-drone">
+        <div class="pg left">
+          <p class="kicker">Chapitre IV</p>
+          <h2>La boîte noire du drone 🚁</h2>
+          <span class="stamp">DOSSIER À ROUVRIR · VOL INTERDIT ?</span>
+          <p>Vendredi, 16 h 40. <strong>Le Faucon</strong>, le drone du club du collège, fait son vol photo au-dessus de la cour… quand il disparaît derrière les bâtiments.</p>
+          <p>Sur l'écran de la station au sol, son trajet passe <strong>au-dessus de la route</strong> : c'est strictement interdit. Malik, le pilote, est accusé d'avoir désobéi et <strong>exclu du club</strong>. Il jure pourtant qu'il n'a jamais franchi la grille.</p>
+          <p>Le gardien a fouillé le toit de la cantine, là où le trajet s'arrête : <strong>rien</strong>. Il ne reste qu'une preuve : la <strong>carte de vol</strong>, perforée ligne par ligne par la boîte noire.</p>
+          <button class="corner prev" data-step="-1" aria-label="Page précédente" title="Page précédente"></button>
+          <div class="folio">11</div>
+        </div>
+        <div class="pg right">
+          <figure class="evidence"><div class="bag"><div class="seal">PIÈCE À CONVICTION · N° 4</div><svg viewBox="0 0 230 150" aria-hidden="true"><rect x="18" y="30" width="194" height="108" rx="6" fill="#fffaf0" stroke="#b9a982" stroke-width="2" transform="rotate(-3 115 84)"/><g transform="rotate(-3 115 84)"><circle cx="40" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="52" r="5" fill="#2a2420"/><circle cx="120" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="52" r="5" fill="#2a2420"/><circle cx="160" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="52" r="5" fill="#2a2420"/><circle cx="40" cy="70" r="5" fill="#2a2420"/><circle cx="60" cy="70" r="5" fill="#2a2420"/><circle cx="80" cy="70" r="5" fill="#2a2420"/><circle cx="100" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="70" r="5" fill="#2a2420"/><circle cx="140" cy="70" r="5" fill="#2a2420"/><circle cx="160" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="70" r="5" fill="#2a2420"/><circle cx="40" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="88" r="5" fill="#2a2420"/><circle cx="100" cy="88" r="5" fill="#2a2420"/><circle cx="120" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="106" r="5" fill="#2a2420"/><circle cx="80" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="106" r="5" fill="#2a2420"/><circle cx="120" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="106" r="5" fill="#2a2420"/><circle cx="180" cy="106" r="5" fill="#2a2420"/><circle cx="40" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="124" r="5" fill="#2a2420"/><circle cx="120" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="124" r="5" fill="#2a2420"/><circle cx="160" cy="124" r="5" fill="#2a2420"/><circle cx="180" cy="124" r="5" fill="#2a2420"/><circle cx="196" cy="52" r="3.5" fill="#2a2420"/><circle cx="196" cy="70" r="3.5" fill="#2a2420"/><circle cx="196" cy="88" r="3.5" fill="#2a2420"/><circle cx="196" cy="106" r="3.5" fill="#2a2420"/><circle cx="196" cy="124" r="3.5" fill="#2a2420"/></g><text x="200" y="26" font-size="22" text-anchor="middle">🚁</text></svg></div><figcaption>Carte de vol perforée par la station au sol.</figcaption></figure>
+          <dl class="facts">
+            <dt>Niveau</dt><dd>confirmé, sans programmation · 1 h à 1 h 15</dd>
+            <dt>Au programme</dt><dd>décoder la boîte noire, contrôler chaque ligne avec le bit de parité, reconstituer le vol</dd>
+          </dl>
+          <p class="hook">Malik est-il vraiment coupable ? Refais le calcul toi-même… et retrouve le Faucon.</p>
+          <a class="open" href="boite-noire-drone.html" target="_blank" rel="noopener">📂 Ouvrir le dossier</a>
+          <div class="pagefoot"><button data-step="-1">← Chapitre III</button><button data-step="1">Chapitre V →</button></div>
+          <button class="corner next" data-step="1" aria-label="Page suivante" title="Page suivante"></button>
+          <div class="folio">12</div>
+        </div>
+      </section>
+
+      <!-- ===== CHAPITRE V ===== -->
+      <section class="leaf" id="p-neopulse" role="tabpanel" aria-labelledby="t-neopulse">
+        <div class="pg left">
+          <p class="kicker">Chapitre V</p>
           <h2>L'affaire NéoPulse</h2>
           <span class="stamp">DOSSIER N° 2026-117 · CONFIDENTIEL</span>
           <p>Vendredi, 7 h 30. Le téléphone sonne. Chez <strong>NéoPulse Médical</strong>, qui fabrique des stimulateurs cardiaques connectés, les plans du prototype secret <strong>PULSAR-7</strong> ont disparu dans la nuit.</p>
@@ -355,18 +412,18 @@
              <strong>01 h 52</strong> : un virus efface toutes les traces et paralyse les lecteurs de badges.</p>
           <p>Mais dans sa fuite, le voleur a laissé tomber un badge. Il est désormais sous scellé, et plus aucun lecteur de l'entreprise ne peut le déchiffrer.</p>
           <button class="corner prev" data-step="-1" aria-label="Page précédente" title="Page précédente"></button>
-          <div class="folio">9</div>
+          <div class="folio">13</div>
         </div>
         <div class="pg right">
-          <figure class="evidence"><div class="bag"><div class="seal">PIÈCE À CONVICTION · N° 3</div><svg viewBox="0 0 230 150" aria-hidden="true"><rect x="18" y="30" width="194" height="108" rx="6" fill="#fffaf0" stroke="#b9a982" stroke-width="2" transform="rotate(-3 115 84)"/><g transform="rotate(-3 115 84)"><circle cx="40" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="52" r="5" fill="#2a2420"/><circle cx="180" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="70" r="5" fill="#2a2420"/><circle cx="100" cy="70" r="5" fill="#2a2420"/><circle cx="120" cy="70" r="5" fill="#2a2420"/><circle cx="140" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="70" r="5" fill="#2a2420"/><circle cx="40" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="88" r="5" fill="#2a2420"/><circle cx="140" cy="88" r="5" fill="#2a2420"/><circle cx="160" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="88" r="5" fill="#2a2420"/><circle cx="40" cy="106" r="5" fill="#2a2420"/><circle cx="60" cy="106" r="5" fill="#2a2420"/><circle cx="80" cy="106" r="5" fill="#2a2420"/><circle cx="100" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="106" r="5" fill="#2a2420"/><circle cx="140" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="124" r="5" fill="#2a2420"/><circle cx="120" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="196" cy="52" r="3.5" fill="#2a2420"/><circle cx="196" cy="70" r="3.5" fill="#2a2420"/><circle cx="196" cy="88" r="3.5" fill="#2a2420"/><circle cx="196" cy="106" r="3.5" fill="#2a2420"/><circle cx="196" cy="124" r="3.5" fill="#2a2420"/></g><text x="200" y="26" font-size="22" text-anchor="middle">🪪</text></svg></div><figcaption>Badge perdu dans la fuite, placé sous scellé.</figcaption></figure>
+          <figure class="evidence"><div class="bag"><div class="seal">PIÈCE À CONVICTION · N° 5</div><svg viewBox="0 0 230 150" aria-hidden="true"><rect x="18" y="30" width="194" height="108" rx="6" fill="#fffaf0" stroke="#b9a982" stroke-width="2" transform="rotate(-3 115 84)"/><g transform="rotate(-3 115 84)"><circle cx="40" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="52" r="5" fill="#2a2420"/><circle cx="180" cy="52" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="70" r="5" fill="#2a2420"/><circle cx="100" cy="70" r="5" fill="#2a2420"/><circle cx="120" cy="70" r="5" fill="#2a2420"/><circle cx="140" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="70" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="70" r="5" fill="#2a2420"/><circle cx="40" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="88" r="5" fill="#2a2420"/><circle cx="140" cy="88" r="5" fill="#2a2420"/><circle cx="160" cy="88" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="88" r="5" fill="#2a2420"/><circle cx="40" cy="106" r="5" fill="#2a2420"/><circle cx="60" cy="106" r="5" fill="#2a2420"/><circle cx="80" cy="106" r="5" fill="#2a2420"/><circle cx="100" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="120" cy="106" r="5" fill="#2a2420"/><circle cx="140" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="106" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="40" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="60" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="80" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="100" cy="124" r="5" fill="#2a2420"/><circle cx="120" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="140" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="160" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="180" cy="124" r="5" fill="none" stroke="#c9bb98" stroke-dasharray="2 2"/><circle cx="196" cy="52" r="3.5" fill="#2a2420"/><circle cx="196" cy="70" r="3.5" fill="#2a2420"/><circle cx="196" cy="88" r="3.5" fill="#2a2420"/><circle cx="196" cy="106" r="3.5" fill="#2a2420"/><circle cx="196" cy="124" r="3.5" fill="#2a2420"/></g><text x="200" y="26" font-size="22" text-anchor="middle">🪪</text></svg></div><figcaption>Badge perdu dans la fuite, placé sous scellé.</figcaption></figure>
           <dl class="facts">
             <dt>Grade conseillé</dt><dd>🥇 Lieutenant</dd>
             <dt>Au programme</dt><dd>programmer une carte Arduino, câbler le lecteur, lire les badges</dd>
           </dl>
           <p class="hook">Qui se cache sous la cagoule ? À toi de le découvrir, enquêteur·rice.</p>
           <a class="open" href="enquete-neopulse.html" target="_blank" rel="noopener">📂 Ouvrir le dossier</a>
-          <div class="pagefoot"><button data-step="-1">← Chapitre II</button><span></span></div>
-          <div class="folio">10</div>
+          <div class="pagefoot"><button data-step="-1">← Chapitre IV</button><span></span></div>
+          <div class="folio">14</div>
         </div>
       </section>
 
@@ -377,7 +434,7 @@
 /* Le livre : il démarre fermé sur la couverture. Onglets, sommaire, coins de page, flèches du clavier
    ou glisser du doigt : les pages se tournent comme dans un vrai livre. */
 (function(){
-  var ORDER = ['couverture', 'sommaire', 'formation', 'chat', 'zero', 'neopulse'];
+  var ORDER = ['couverture', 'sommaire', 'formation', 'chat', 'zero', 'chien', 'drone', 'neopulse'];
   var vol = document.getElementById('volume'), cover = document.querySelector('#p-couverture .pg.cover');
   var cur = 0, busy = false, queued = null;
   var simpleMQ = window.matchMedia('(max-width:820px)'), reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');

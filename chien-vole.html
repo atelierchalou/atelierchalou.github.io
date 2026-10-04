@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le chien volé du gardien</title>
+<style>
+  :root{--bg:#f2efe7;--ink:#1d1d1f;--mut:#5f5f66;--line:#ddd6c6;--teal:#14524f;--gold:#ffc83d;--acc:#2f6fed;--ok:#1e8e3e;--bad:#c62828;--paper:#fffdf6;--hole:#1d1d1f}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:17.5px;line-height:1.55}
+  header{background:var(--teal);color:#fff;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+  header h1{margin:0;font-size:1.3rem}
+  header .score{margin-left:auto;background:var(--gold);color:var(--ink);font-weight:800;border-radius:999px;padding:4px 14px}
+  header .score.bump{animation:bump .6s}
+  @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
+  header input{font:inherit;font-size:.95rem;padding:5px 10px;border-radius:8px;border:0;width:170px;max-width:45vw}
+  nav{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;background:#dfe9e6;border-bottom:1px solid var(--line)}
+  nav button{font:inherit;font-size:.88rem;padding:7px 12px;border-radius:999px;border:2px solid var(--line);background:#fff;cursor:pointer}
+  nav button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+  nav button.done::after{content:" ✓";color:var(--ok);font-weight:800}
+  nav button.on.done::after{color:#9ff0b4}
+  nav button:disabled{opacity:.45;cursor:not-allowed}
+  nav .sp{flex:1}
+  main{max-width:960px;margin:0 auto;padding:16px}
+  section{display:none}
+  section.on{display:block}
+  h2{font-size:1.4rem;margin:4px 0 12px}
+  h3{font-size:1.1rem;margin:0 0 8px}
+  .panel{background:#fff;border:2px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+  .say{display:flex;gap:10px;align-items:flex-start}
+  .say p{margin:0 0 8px}
+  .speak{flex:none;border:0;background:#e6f2ef;border-radius:50%;width:40px;height:40px;font-size:1.2rem;cursor:pointer;padding:0}
+  button{font:inherit;padding:9px 16px;border-radius:12px;border:2px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
+  button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .next{display:flex;justify-content:flex-end;margin-top:12px}
+  .note{background:#fffdf2;border:1px solid #d8cfb5;padding:18px 20px;transform:rotate(-1deg);box-shadow:3px 4px 0 rgba(0,0,0,.08);font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",cursive;font-size:1.08rem;margin:14px 4px;max-width:640px}
+  .note b{color:#b3261e}
+  .tip{background:#fff6d6;border:2px solid #f1d27a;border-radius:12px;padding:10px 14px;margin:10px 0}
+  .mission{counter-reset:m;list-style:none;padding:0;margin:8px 0}
+  .mission li{counter-increment:m;padding:6px 0 6px 46px;position:relative}
+  .mission li::before{content:counter(m);position:absolute;left:0;top:4px;width:32px;height:32px;border-radius:50%;background:var(--gold);font-weight:800;display:flex;align-items:center;justify-content:center}
+  .ill{width:100%;height:auto;display:block;border-radius:14px}
+  .abc{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:5px;margin:8px 0}
+  .abc div{border:2px solid var(--line);border-radius:8px;text-align:center;padding:2px 0;background:#fff}
+  .abc b{display:block;font-size:1.15rem}
+  .abc span{color:var(--acc);font-weight:700;font-size:.9rem}
+  details.ref{margin:10px 0}
+  details.ref summary{cursor:pointer;font-weight:700}
+  .item{border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0;background:#fff}
+  .item.ok{border-color:var(--ok);background:#f1fbf4}
+  .item .head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+  .item .n{font-weight:800;color:var(--mut);min-width:66px}
+  .item svg.line{width:100%;max-width:340px;height:auto;display:block}
+  .bits{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.35rem;letter-spacing:.18em;background:#1d1d1f;color:#9be29b;border-radius:8px;padding:4px 10px}
+  input.ans{font:inherit;font-size:1.2rem;width:90px;padding:5px 8px;border-radius:10px;border:2px solid #b9c3dd;text-align:center}
+  input.ans.chr{width:60px;text-transform:uppercase}
+  input.ans.good{border-color:var(--ok);background:#eaf8ee}
+  input.ans.bad{border-color:var(--bad);background:#fdecea}
+  .fb{font-weight:700}
+  .fb.ok{color:var(--ok)}
+  .fb.ko{color:var(--bad)}
+  .pts{display:inline-block;background:#ffd60a;color:#1d1d1f;font-weight:800;border-radius:999px;padding:0 8px;font-size:.8rem;margin-left:4px}
+  .hb{border:0;background:none;font-size:1.1rem;padding:2px 6px}
+  .hint{display:none;background:#eef2ff;border-radius:10px;padding:7px 11px;margin-top:8px;font-size:.95rem}
+  .hint.on{display:block}
+  .confirm{background:#fff8e1;border:1px solid #e0b100;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:.92rem}
+  .confirm .row{margin-top:6px}
+  .confirm button{padding:5px 10px;font-size:.88rem}
+  .calc{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;max-width:440px;margin:8px 0}
+  .calc .w{text-align:center;font-weight:800;color:var(--acc);font-size:.85rem}
+  .calc .h{aspect-ratio:1;border-radius:50%;border:3px dashed #b9b29c;background:var(--paper);cursor:pointer;padding:0;min-width:0}
+  .calc .h.on{background:var(--hole);border-style:solid;border-color:var(--hole)}
+  .calc .h:disabled{cursor:default;opacity:1}
+  .msg{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+  .msg div{width:52px;height:60px;border-radius:10px;border:3px dashed #b9b29c;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;background:#fff}
+  .msg div.on{border-style:solid;border-color:var(--ok);background:#eaf8ee}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .grid2>*{min-width:0}
+  .cardbox{border:2px solid var(--line);border-radius:14px;padding:12px;background:#fcfbf7}
+  .cardbox h3 .tag{font-size:.8rem;background:#eee;border-radius:999px;padding:2px 10px;margin-left:6px}
+  .choice label{display:flex;gap:10px;align-items:center;border:2px solid var(--line);border-radius:12px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}
+  .choice label.good{border-color:var(--ok);background:#eaf8ee}
+  .choice label.bad{border-color:var(--bad);background:#fdecea}
+  pre.mon{background:#0f1512;color:#9be29b;padding:10px;border-radius:12px;min-height:90px;max-height:240px;overflow:auto;font-size:.95rem;margin:8px 0;white-space:pre-wrap}
+  table{border-collapse:collapse;width:100%}
+  th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{font-size:.82rem;color:var(--mut)}
+  .epi{display:none;border:3px solid var(--ok);border-radius:16px;padding:16px;background:var(--paper);margin-top:14px}
+  .epi.on{display:block}
+  .stamp{display:inline-block;border:3px solid var(--ok);color:var(--ok);padding:2px 12px;font-weight:900;letter-spacing:.1em;transform:rotate(-4deg)}
+  .mut{color:var(--mut);font-size:.9rem}
+  .tablewrap{overflow-x:auto}
+  @media(max-width:600px){body{font-size:16.5px}.calc{gap:3px}.calc .w{font-size:.75rem}header input{width:130px}.bits{font-size:1.1rem;letter-spacing:.1em}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🐕 Le chien volé du gardien</h1>
+  <span class="score" id="score" title="2 points du premier coup, 1 au deuxième essai ; une aide coûte 1 point">⭐ 0 / 50</span>
+  <input id="agent" placeholder="Ton prénom" maxlength="30" aria-label="Ton prénom">
+</header>
+<nav id="nav"></nav>
+
+<main>
+<!-- ============ L'AFFAIRE ============ -->
+<section id="s-affaire" class="on">
+  <div class="panel">
+    <svg class="ill" viewBox="0 0 640 290" role="img" aria-label="La loge du gardien : le panier du chien est vide, sa laisse pend au mur, une carte perforée a été glissée sous la porte.">
+      <rect width="640" height="290" fill="#efe3c8"/>
+      <rect y="232" width="640" height="58" fill="#9b7653"/>
+      <g opacity=".18" stroke="#8a6a3c"><line x1="0" y1="250" x2="640" y2="250"/><line x1="0" y1="270" x2="640" y2="270"/></g>
+      <rect x="40" y="30" width="170" height="40" rx="6" fill="#14524f"/><text x="125" y="56" text-anchor="middle" font-size="16" font-weight="800" fill="#fff" font-family="sans-serif">LOGE DU GARDIEN</text>
+      <rect x="60" y="86" width="120" height="146" rx="4" fill="#8a5a34" stroke="#5e3b20" stroke-width="4"/>
+      <rect x="74" y="100" width="92" height="56" rx="3" fill="#b6d4e8" opacity=".7"/><circle cx="160" cy="166" r="5" fill="#d9b48a"/>
+      <g transform="translate(128 236) rotate(-8)"><rect x="0" y="-8" width="40" height="22" rx="2" fill="#fffdf6" stroke="#b9b29c"/><g fill="#1d1d1f"><circle cx="8" cy="-1" r="2"/><circle cx="16" cy="-1" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="24" cy="6" r="2"/><circle cx="32" cy="-1" r="2"/></g></g>
+      <circle cx="146" cy="244" r="20" fill="none" stroke="#ffd60a" stroke-width="3"/>
+      <g transform="translate(250 50)">
+        <rect x="0" y="0" width="96" height="78" rx="4" fill="#c99a2e"/><rect x="8" y="8" width="80" height="62" fill="#a7d3f0"/>
+        <ellipse cx="48" cy="56" rx="26" ry="12" fill="#d9a441"/><circle cx="48" cy="36" r="16" fill="#e2b04f"/><ellipse cx="34" cy="38" rx="6" ry="11" fill="#c08a2c"/><ellipse cx="62" cy="38" rx="6" ry="11" fill="#c08a2c"/>
+        <circle cx="42" cy="33" r="2.2" fill="#222"/><circle cx="54" cy="33" r="2.2" fill="#222"/><ellipse cx="48" cy="41" rx="4" ry="3" fill="#222"/><path d="M44 46 q4 4 8 0" stroke="#7a2e2e" stroke-width="2" fill="none"/>
+        <text x="48" y="96" text-anchor="middle" font-size="13" font-weight="800" fill="#5e3b20" font-family="sans-serif">REX</text>
+      </g>
+      <g transform="translate(420 40)">
+        <path d="M10 0 q-8 50 4 110" fill="none" stroke="#c62828" stroke-width="6" stroke-linecap="round"/><circle cx="10" cy="0" r="7" fill="none" stroke="#777" stroke-width="3"/>
+        <rect x="6" y="104" width="16" height="12" rx="3" fill="#777"/>
+      </g>
+      <g transform="translate(470 180)">
+        <ellipse cx="70" cy="44" rx="78" ry="20" fill="#7a3e2a"/><ellipse cx="70" cy="36" rx="64" ry="14" fill="#c86b4a"/><ellipse cx="70" cy="34" rx="50" ry="9" fill="#e9a07f"/>
+        <g transform="translate(46 22) rotate(-12)"><rect x="0" y="0" width="34" height="9" rx="4" fill="#f5f0e6"/><circle cx="0" cy="0" r="6" fill="#f5f0e6"/><circle cx="0" cy="9" r="6" fill="#f5f0e6"/><circle cx="34" cy="0" r="6" fill="#f5f0e6"/><circle cx="34" cy="9" r="6" fill="#f5f0e6"/></g>
+        <text x="70" y="-8" text-anchor="middle" font-size="22" font-weight="900" fill="#c62828" font-family="sans-serif">?!</text>
+      </g>
+    </svg>
+  </div>
+  <div class="panel">
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div>
+        <p><b>Lundi, 7 h 15.</b> Monsieur Moreau, le gardien du collège, ouvre sa loge. Le panier de <b>Rex</b>, son golden retriever, est <b>vide</b> ! Rex est la mascotte de tout le collège.</p>
+        <p>Sous la porte, quelqu'un a glissé une <b>carte perforée</b> et un petit mot, signé « <b>le Masque</b> ». Monsieur Moreau compte sur ton équipe d'enquêteurs pour retrouver Rex.</p>
+      </div>
+    </div>
+    <div class="note">
+      Gardien,<br>Ton chien Rex est avec moi. Il va très bien.<br>Ce que je veux est écrit sur ma carte perforée.<br>
+      Si tu acceptes, glisse dans ta boîte aux lettres une carte perforée qui dit <b>OUI</b>.<br>
+      ⚠️ Pour que je sois sûr qu'elle vient de toi, ajoute une <b>4e ligne : la SOMME des numéros des 3 lettres</b>. Sinon, je jette la carte !<br>
+      <span style="float:right">— Le Masque 🎭</span><br>
+    </div>
+    <h3>Tes missions</h3>
+    <ol class="mission">
+      <li><b>Lire</b> la carte du Masque : que demande-t-il ?</li>
+      <li><b>Écrire</b> la réponse « OUI » en binaire, avec la ligne de contrôle.</li>
+      <li><b>Fabriquer</b> la vraie carte et la faire vérifier par le lecteur.</li>
+      <li><b>Démasquer</b> la fausse carte-réponse et retrouver Rex.</li>
+    </ol>
+    <div class="tip">⭐ Chaque réponse juste rapporte <b>2 points</b> du premier coup, <b>1 point</b> au deuxième essai. L'aide 💡 coûte <b>1 point</b> (tu es prévenu·e et tu peux annuler).</div>
+    <div class="next"><button class="primary" data-next>Commencer l'enquête →</button></div>
+  </div>
+</section>
+
+<!-- ============ MISSION 1 ============ -->
+<section id="s-m1">
+  <div class="panel">
+    <h2>Mission 1 · Lire la carte du Masque</h2>
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div><p>Voici les 7 lignes de la carte. Pour chaque ligne, trouve le <b>numéro</b> (additionne les valeurs des trous), puis la <b>lettre</b> qui correspond dans le code ASCII.</p></div>
+    </div>
+    <details class="ref"><summary>📖 Tableau des lettres (code ASCII)</summary><div class="abc abcT"></div></details>
+    <div id="m1"></div>
+    <h3>Le Masque demande :</h3>
+    <div class="msg" id="msg1"></div>
+    <div class="next"><button class="primary" data-next disabled id="n1">Mission 2 →</button></div>
+  </div>
+</section>
+
+<!-- ============ MISSION 2 ============ -->
+<section id="s-m2">
+  <div class="panel">
+    <h2>Mission 2 · Écrire la réponse « OUI »</h2>
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div>
+        <p>Des bonbons ? Monsieur Moreau est d'accord ! Il faut maintenant <b>écrire</b> la carte-réponse. C'est l'inverse de la mission 1 : <b>lettre → numéro → trous</b>.</p>
+        <p>Pour chaque lettre : trouve son numéro, puis perce les bons trous. Méthode : prends la <b>plus grande valeur</b> qui ne dépasse pas le nombre, perce ce trou, calcule ce qu'il reste, et recommence.</p>
+      </div>
+    </div>
+    <details class="ref"><summary>📖 Tableau des lettres (code ASCII)</summary><div class="abc abcT"></div></details>
+    <div id="m2"></div>
+    <div class="item" id="ctl">
+      <div class="head"><span class="n">Ligne 4</span><b>Ligne de contrôle : la somme des 3 numéros</b><button class="hb" data-h="ctlv" title="Aide">💡</button></div>
+      <div class="row" style="margin-top:6px"><label>Somme : <input class="ans" type="number" inputmode="numeric" id="ctlv" min="0" max="255"></label><button id="ctlvChk">Vérifier</button><span class="fb" id="ctlvFb"></span></div>
+      <div class="hint" id="h-ctlv"></div>
+      <div id="ctlb" style="display:none;margin-top:10px">
+        <div class="row"><b>Perce les trous de la somme</b><button class="hb" data-h="ctlb" title="Aide">💡</button></div>
+        <div class="calc" id="calc-ctl"></div>
+        <div class="row"><button id="ctlbChk">Vérifier les trous</button><span class="fb" id="ctlbFb"></span></div>
+        <div class="hint" id="h-ctlb"></div>
+      </div>
+    </div>
+    <h3 style="margin-top:14px">Ta carte-réponse</h3>
+    <div id="preview"></div>
+    <div class="next"><button class="primary" data-next disabled id="n2">Mission 3 →</button></div>
+  </div>
+</section>
+
+<!-- ============ MISSION 3 ============ -->
+<section id="s-m3">
+  <div class="panel">
+    <h2>Mission 3 · Fabriquer et vérifier la vraie carte</h2>
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div><p>Imprime le gabarit de ta carte, perce les trous marqués d'une croix, puis glisse-la dans le lecteur. Le lecteur vérifie que ta carte dit bien <b>O, U, I</b> et que la ligne de contrôle vaut la somme.</p></div>
+    </div>
+    <div class="row"><button id="printMine">🖨️ Imprimer le gabarit de ma carte</button></div>
+    <div class="tip">✂️ Perce les croix : 6 mm pour les données, 4 mm pour la colonne d'horloge. N'écris rien dans la colonne d'horloge (à droite).</div>
+    <div class="row">
+      <button class="primary" id="conn">🔌 Brancher le lecteur</button>
+      <button id="sim">▶ Pas de lecteur : simuler la lecture</button>
+      <span class="mut" id="connSt">Lecteur non branché</span>
+    </div>
+    <pre class="mon" id="mon"></pre>
+    <div id="verdict"></div>
+    <p class="mut">Il faut Chrome ou Edge sur ordinateur, et le programme normal du lecteur dans la Nano. Glisse la carte face imprimée vers le haut, bord ↑ en premier.</p>
+    <div class="next"><button class="primary" data-next disabled id="n3">Mission 4 →</button></div>
+  </div>
+</section>
+
+<!-- ============ MISSION 4 ============ -->
+<section id="s-m4">
+  <div class="panel">
+    <h2>Mission 4 · Deux cartes dans la boîte aux lettres !</h2>
+    <div class="say"><button class="speak" aria-label="Écouter">🔊</button>
+      <div><p>Le lendemain matin, <b>deux cartes</b> attendent dans la boîte aux lettres. L'une vient du Masque. L'autre vient d'un plaisantin qui veut brouiller les pistes ! Le Masque utilise toujours une <b>ligne de contrôle</b> : sers-t'en pour trouver la vraie carte.</p>
+        <p>Cette fois, Monsieur Moreau a recopié les cartes en <b>binaire</b> : 1 = trou, 0 = pas de trou.</p></div>
+    </div>
+    <details class="ref"><summary>📖 Tableau des lettres (code ASCII)</summary><div class="abc abcT"></div></details>
+    <div class="grid2">
+      <div class="cardbox"><h3>Carte A</h3><div id="cA"></div><div class="msg" id="msgA"></div></div>
+      <div class="cardbox"><h3>Carte B</h3><div id="cB"></div><div class="msg" id="msgB"></div></div>
+    </div>
+    <div id="m4q" style="display:none">
+      <div class="item" id="q-auth"><div class="head"><b>Quelle carte vient vraiment du Masque ?</b><button class="hb" data-h="auth" title="Aide">💡</button></div>
+        <div class="choice"><label><input type="radio" name="auth" value="A"> La carte A</label><label><input type="radio" name="auth" value="B"> La carte B</label></div>
+        <div class="row"><button id="authChk">Vérifier</button><span class="fb" id="authFb"></span></div><div class="hint" id="h-auth"></div></div>
+      <div class="item" id="q-where" style="display:none"><div class="head"><b>Où se trouve Rex ?</b><button class="hb" data-h="where" title="Aide">💡</button></div>
+        <div class="choice"><label><input type="radio" name="where" value="gym"> Au gymnase</label><label><input type="radio" name="where" value="cdi"> Au CDI</label><label><input type="radio" name="where" value="cantine"> À la cantine</label><label><input type="radio" name="where" value="preau"> Sous le préau</label></div>
+        <div class="row"><button id="whereChk">Vérifier</button><span class="fb" id="whereFb"></span></div><div class="hint" id="h-where"></div></div>
+    </div>
+    <div class="epi" id="epi">
+      <p><span class="stamp">REX EST RETROUVÉ !</span></p>
+      <svg class="ill" viewBox="0 0 640 260" role="img" aria-label="Au CDI, Rex dort sur un pouf au milieu des livres, à côté d'un sachet de bonbons et d'un masque abandonné.">
+        <rect width="640" height="260" fill="#f4ead8"/><rect y="214" width="640" height="46" fill="#b98e62"/>
+        <g><rect x="20" y="30" width="200" height="180" fill="#8a5a34"/><rect x="28" y="38" width="184" height="50" fill="#f3e6cf"/><rect x="28" y="96" width="184" height="50" fill="#f3e6cf"/><rect x="28" y="154" width="184" height="50" fill="#f3e6cf"/>
+          <g><rect x="30" y="47" width="8" height="41" fill="#2f6fed"/><rect x="39" y="44" width="12" height="44" fill="#34495e"/><rect x="52" y="54" width="8" height="34" fill="#2f6fed"/><rect x="61" y="44" width="7" height="44" fill="#8e44ad"/><rect x="69" y="55" width="13" height="33" fill="#f39c12"/><rect x="83" y="45" width="11" height="43" fill="#8e44ad"/><rect x="95" y="51" width="13" height="37" fill="#2f6fed"/><rect x="109" y="50" width="9" height="38" fill="#c0392b"/><rect x="119" y="48" width="13" height="40" fill="#8e44ad"/><rect x="133" y="51" width="8" height="37" fill="#8e44ad"/><rect x="142" y="45" width="9" height="43" fill="#2f6fed"/><rect x="152" y="46" width="13" height="42" fill="#d35400"/><rect x="166" y="49" width="11" height="39" fill="#27ae60"/><rect x="178" y="41" width="8" height="47" fill="#8e44ad"/><rect x="187" y="47" width="7" height="41" fill="#c0392b"/><rect x="195" y="47" width="9" height="41" fill="#f39c12"/><rect x="30" y="101" width="10" height="45" fill="#8e44ad"/><rect x="41" y="100" width="10" height="46" fill="#27ae60"/><rect x="52" y="105" width="8" height="41" fill="#8e44ad"/><rect x="61" y="113" width="13" height="33" fill="#2f6fed"/><rect x="75" y="100" width="7" height="46" fill="#8e44ad"/><rect x="83" y="99" width="11" height="47" fill="#16a085"/><rect x="95" y="108" width="8" height="38" fill="#2f6fed"/><rect x="104" y="108" width="10" height="38" fill="#34495e"/><rect x="115" y="109" width="9" height="37" fill="#16a085"/><rect x="125" y="104" width="10" height="42" fill="#f39c12"/><rect x="136" y="111" width="9" height="35" fill="#c0392b"/><rect x="146" y="107" width="12" height="39" fill="#8e44ad"/><rect x="159" y="107" width="13" height="39" fill="#2f6fed"/><rect x="173" y="109" width="9" height="37" fill="#8e44ad"/><rect x="183" y="114" width="10" height="32" fill="#c0392b"/><rect x="194" y="112" width="9" height="34" fill="#8e44ad"/><rect x="30" y="162" width="7" height="42" fill="#8e44ad"/><rect x="38" y="168" width="9" height="36" fill="#d35400"/><rect x="48" y="170" width="13" height="34" fill="#8e44ad"/><rect x="62" y="166" width="11" height="38" fill="#34495e"/><rect x="74" y="168" width="9" height="36" fill="#8e44ad"/><rect x="84" y="167" width="10" height="37" fill="#16a085"/><rect x="95" y="172" width="11" height="32" fill="#16a085"/><rect x="107" y="158" width="7" height="46" fill="#27ae60"/><rect x="115" y="161" width="9" height="43" fill="#8e44ad"/><rect x="125" y="169" width="11" height="35" fill="#34495e"/><rect x="137" y="159" width="8" height="45" fill="#f39c12"/><rect x="146" y="171" width="7" height="33" fill="#c0392b"/><rect x="154" y="167" width="7" height="37" fill="#27ae60"/><rect x="162" y="171" width="11" height="33" fill="#34495e"/><rect x="174" y="165" width="11" height="39" fill="#16a085"/><rect x="186" y="169" width="7" height="35" fill="#8e44ad"/><rect x="194" y="159" width="13" height="45" fill="#f39c12"/></g></g>
+        <g id="books"></g>
+        <text x="120" y="24" text-anchor="middle" font-size="16" font-weight="900" fill="#14524f" font-family="sans-serif">CDI</text>
+        <ellipse cx="380" cy="206" rx="110" ry="30" fill="#2f6fed"/><ellipse cx="380" cy="194" rx="96" ry="24" fill="#5b8cf0"/>
+        <g transform="translate(330 150)">
+          <path d="M-30 50 q-20 -6 -26 -24" fill="none" stroke="#d9a441" stroke-width="12" stroke-linecap="round"/>
+          <ellipse cx="40" cy="44" rx="70" ry="24" fill="#e2b04f"/>
+          <ellipse cx="94" cy="36" rx="28" ry="22" fill="#e2b04f"/>
+          <ellipse cx="82" cy="40" rx="10" ry="18" fill="#c08a2c" transform="rotate(20 82 40)"/>
+          <ellipse cx="118" cy="44" rx="10" ry="7" fill="#e9c27a"/><ellipse cx="126" cy="42" rx="4" ry="3" fill="#222"/>
+          <path d="M96 30 q5 4 10 0" stroke="#222" stroke-width="2.5" fill="none"/>
+          <text x="130" y="6" font-size="18" font-weight="900" fill="#14524f" font-family="sans-serif">z z z</text>
+        </g>
+        <g transform="translate(520 180)"><path d="M0 0 L40 0 L48 30 L-8 30 Z" fill="#e53935"/><path d="M0 0 q20 -14 40 0" fill="#ff8a80"/><text x="20" y="22" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="sans-serif">BONBONS</text></g>
+        <g fill="#ffd60a"><rect x="500" y="222" width="12" height="6" rx="2" transform="rotate(20 506 225)"/><rect x="580" y="226" width="12" height="6" rx="2" transform="rotate(-15 586 229)"/><rect x="470" y="230" width="12" height="6" rx="2"/></g>
+        <g transform="translate(250 226)"><path d="M0 0 q20 -16 40 0 q20 -16 40 0 q-4 18 -20 14 q-10 -4 -20 -2 q-10 -2 -20 2 q-16 4 -20 -14z" fill="#3a2a5e"/><ellipse cx="18" cy="2" rx="7" ry="4" fill="#b98e62"/><ellipse cx="62" cy="2" rx="7" ry="4" fill="#b98e62"/></g>
+      </svg>
+      <p>Monsieur Moreau court au CDI… et trouve Rex qui fait la sieste sur un pouf, entouré de papiers de bonbons ! À côté, un masque abandonné.</p>
+      <p>Le Masque, c'était <b>Léo</b>, élève de 3e. Il voulait que Rex soit la mascotte de la grande fête de la lecture du CDI, et n'avait pas osé demander. Il s'excuse auprès du gardien… qui lui pardonne, à condition de partager les bonbons avec toute l'équipe d'enquêteurs.</p>
+      <p><b>Grâce à la ligne de contrôle, tu as su repérer la fausse carte : c'est exactement ce que font les ordinateurs pour vérifier que les données ne sont pas abîmées ou trafiquées.</b></p>
+      <p id="final" style="font-weight:800"></p>
+      <div class="row"><button id="printBilan">🖨️ Imprimer mon bilan</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROF ============ -->
+<section id="s-prof">
+  <div class="panel" id="lock">
+    <h2>Espace enseignant</h2>
+    <div class="row"><input id="tcode" type="password" placeholder="Code" style="font:inherit;padding:8px;border-radius:10px;border:2px solid var(--line)"><button id="unl">Ouvrir</button></div>
+    <p class="mut" id="tmsg"></p>
+  </div>
+  <div id="teacher" style="display:none">
+    <div class="panel">
+      <h2>L'activité en bref</h2>
+      <p>Niveau intermédiaire, entre le Chat de Minuit (très guidé) et l'affaire NéoPulse (programmation). Durée : <b>50 à 60 min</b>. Notions travaillées :</p>
+      <ul>
+        <li><b>Lire</b> le binaire (mission 1, avec les trous ; mission 4, avec des 0 et des 1).</li>
+        <li><b>Écrire</b> en binaire : lettre → code ASCII → décomposition en puissances de 2 (mission 2).</li>
+        <li><b>Somme de contrôle</b> : détecter une donnée fausse ou trafiquée (missions 2 et 4), comme les ordinateurs le font avec leurs données.</li>
+        <li>Vérification d'un objet fabriqué avec une machine (mission 3 : le lecteur relit la carte perforée par l'élève).</li>
+      </ul>
+      <p>Barème : 25 réponses notées 2 points du premier coup, 1 point au deuxième essai, 0 ensuite. L'aide 💡 coûte 1 point, avec un avertissement que l'élève peut annuler. Total : 50 points. La mission 3 n'est pas notée.</p>
+    </div>
+    <div class="panel">
+      <h2>Préparation</h2>
+      <ul>
+        <li>Facultatif : imprimez et perforez les cartes du Masque pour l'ambiance (les élèves les ont aussi à l'écran).</li>
+        <li>Mission 3 : chaque groupe imprime le gabarit de <b>sa</b> carte « OUI » et le perfore. La Nano du lecteur doit contenir le <b>programme normal du lecteur</b>. Sans lecteur, la simulation valide la mission.</li>
+      </ul>
+      <div class="row"><button id="pMasque">🖨️ Carte du Masque (BONBONS)</button><button id="pAB">🖨️ Cartes A et B</button><button id="pOui">🖨️ Carte-réponse corrigée (OUI)</button><button id="all">Débloquer toutes les missions</button></div>
+    </div>
+    <div class="panel">
+      <h2>Solutions</h2>
+      <div class="tablewrap" id="sol"></div>
+      <p class="mut">Code enseignant : <b>REX2026</b>. Le score n'est pas enregistré : recharger la page remet tout à zéro. Faites imprimer le bilan à la fin.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const W = [128, 64, 32, 16, 8, 4, 2, 1];
+const terms = v => W.filter(w => v & w);
+const bin = v => v.toString(2).padStart(8, '0');
+const DEMANDE = 'BONBONS', REPONSE = 'OUI';
+const SUM = [...REPONSE].reduce((a, c) => a + c.charCodeAt(0), 0);         // 237
+const CARD_A = { word: 'GYM', ctl: 240 };                                     // fausse : 71 + 89 + 77 = 237 ≠ 240
+const CARD_B = { word: 'CDI', ctl: 208 };                                     // vraie : 67 + 68 + 73 = 208
+
+/* ---------- points ---------- */
+const MAX = 50;
+const items = {};
+const item = k => items[k] || (items[k] = { tries: 0, done: false, pts: 0, hint: false });
+const award = it => Math.max(0, (it.tries === 1 ? 2 : it.tries === 2 ? 1 : 0) - (it.hint ? 1 : 0));
+const total = () => Object.values(items).reduce((a, it) => a + (it.done ? it.pts : 0), 0);
+function scoreUpd(bump) {
+  $('score').textContent = '⭐ ' + total() + ' / ' + MAX;
+  if (bump) { const s = $('score'); s.classList.remove('bump'); void s.offsetWidth; s.classList.add('bump'); }
+}
+// tente une réponse : renvoie les points gagnés (ou -1 si faux)
+function attempt(k, ok) {
+  const it = item(k);
+  if (it.done) return it.pts;
+  it.tries++;
+  if (!ok) return -1;
+  it.done = true; it.pts = award(it); scoreUpd(it.pts > 0);
+  return it.pts;
+}
+const ptsTag = p => '<span class="pts">+' + p + ' pt' + (p > 1 ? 's' : '') + '</span>';
+
+/* ---------- aides avec avertissement ---------- */
+const HINTS = {};
+function showHint(k) {
+  const box = $('h-' + k), it = item(k), list = HINTS[k]();
+  const lv = Math.min((box.dataset.lv ? +box.dataset.lv : 0) + 1, list.length);
+  box.dataset.lv = lv; box.classList.add('on');
+  box.innerHTML = list.slice(0, lv).map((h, i) => '<div>💡 <b>Aide ' + (i + 1) + ' :</b> ' + h + '</div>').join('');
+}
+function askHint(k, anchor) {
+  const it = item(k);
+  if (it.done || it.hint) { showHint(k); return; }
+  if (anchor.querySelector('.confirm')) return;
+  const d = document.createElement('div');
+  d.className = 'confirm';
+  d.innerHTML = '⚠️ L\'aide te fera perdre <b>1 point</b> sur cette question. Tu la veux quand même ?<div class="row"><button class="primary">Voir l\'aide (−1 pt)</button><button>Annuler</button></div>';
+  const [y, n] = d.querySelectorAll('button');
+  y.onclick = () => { d.remove(); it.hint = true; showHint(k); };
+  n.onclick = () => d.remove();
+  anchor.appendChild(d);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.hb'); if (!b) return;
+  askHint(b.dataset.h, b.closest('.item') || b.parentElement);
+});
+
+/* ---------- navigation ---------- */
+const STEPS = [['affaire', 'L\'affaire'], ['m1', 'Mission 1 · Lire'], ['m2', 'Mission 2 · Écrire'], ['m3', 'Mission 3 · Vérifier'], ['m4', 'Mission 4 · Démasquer']];
+let reached = 0;
+$('nav').innerHTML = STEPS.map((s, i) => '<button data-k="' + s[0] + '" data-i="' + i + '"' + (i ? ' disabled' : ' class="on"') + '>' + s[1] + '</button>').join('') +
+  '<span class="sp"></span><button data-k="prof">🔒 Prof</button>';
+function go(k) {
+  document.querySelectorAll('main > section').forEach(s => s.classList.toggle('on', s.id === 's-' + k));
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  window.scrollTo(0, 0);
+}
+function unlock(i) {
+  reached = Math.max(reached, i);
+  document.querySelectorAll('#nav button[data-i]').forEach(b => { const j = +b.dataset.i; b.disabled = j > reached; b.classList.toggle('done', j < reached); });
+}
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => go(b.dataset.k));
+document.querySelectorAll('[data-next]').forEach(b => b.onclick = () => {
+  const i = STEPS.findIndex(s => s[0] === b.closest('section').id.slice(2));
+  unlock(i + 1); go(STEPS[i + 1][0]);
+});
+document.querySelectorAll('.speak').forEach(b => b.onclick = () => {
+  if (!('speechSynthesis' in window)) return alert('La lecture à voix haute n\'est pas disponible sur ce navigateur.');
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(b.nextElementSibling.innerText.replace(/→/g, ''));
+  u.lang = 'fr-FR'; u.rate = 0.95; speechSynthesis.speak(u);
+});
+
+/* ---------- outils ---------- */
+document.querySelectorAll('.abcT').forEach(t => { let h = ''; for (let c = 65; c <= 90; c++) h += '<div><b>' + String.fromCharCode(c) + '</b><span>' + c + '</span></div>'; t.innerHTML = h; });
+function lineSVG(v, weights) {
+  let s = '<svg class="line" viewBox="0 0 360 64" role="img" aria-label="Ligne de carte perforée">';
+  s += '<rect x="1" y="1" width="358" height="62" rx="8" fill="#fffdf6" stroke="#b9b29c" stroke-width="2"/>';
+  W.forEach((w, i) => {
+    const cx = 26 + 38 * i;
+    if (weights !== false) s += '<text x="' + cx + '" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#2f6fed" font-family="sans-serif">' + w + '</text>';
+    s += (v & w) ? '<circle cx="' + cx + '" cy="41" r="12" fill="#1d1d1f"/>' : '<circle cx="' + cx + '" cy="41" r="12" fill="none" stroke="#c9c2ad" stroke-width="2" stroke-dasharray="3 3"/>';
+  });
+  s += '<circle cx="335" cy="41" r="7" fill="#1d1d1f"/>';
+  return s + '</svg>';
+}
+function calc(el) {
+  el.innerHTML = W.map(w => '<div class="w">' + w + '</div>').join('') + W.map((w, i) => '<button class="h" data-i="' + i + '" aria-label="place ' + w + '"></button>').join('');
+  el.querySelectorAll('.h').forEach(b => b.onclick = () => b.classList.toggle('on'));
+  return { get: () => [...el.querySelectorAll('.h')].reduce((a, b, i) => a + (b.classList.contains('on') ? W[i] : 0), 0), lock: () => el.querySelectorAll('.h').forEach(b => { b.disabled = true; }) };
+}
+// une ligne à décoder : nombre puis lettre (ou nombre seul pour une ligne de contrôle)
+function decodeItem(host, key, label, v, ch, mode, onDone) {
+  const d = document.createElement('div');
+  d.className = 'item';
+  d.innerHTML = '<div class="head"><span class="n">' + label + '</span>' + (mode === 'bits' ? '<span class="bits">' + bin(v) + '</span>' : lineSVG(v)) + '<button class="hb" data-h="' + key + '" title="Aide">💡</button></div>' +
+    '<div class="row" style="margin-top:6px"><label>Numéro : <input class="ans" type="number" inputmode="numeric" min="0" max="255"></label>' +
+    (ch ? '<label>Lettre : <input class="ans chr" maxlength="1" autocomplete="off" disabled></label>' : '') +
+    '<button class="chk">Vérifier</button><span class="fb"></span></div><div class="hint" id="h-' + key + '"></div>';
+  host.appendChild(d);
+  const num = d.querySelector('input[type=number]'), let_ = d.querySelector('.chr'), fb = d.querySelector('.fb');
+  let nOk = false;
+  HINTS[key] = () => nOk
+    ? ['Cherche <b>' + v + '</b> dans le tableau des lettres.', 'La lettre est <b>' + ch + '</b>.']
+    : [mode === 'bits' ? 'Chaque 1 vaut, de gauche à droite : 128, 64, 32, 16, 8, 4, 2, 1. Additionne les valeurs des 1.' : 'Additionne les valeurs (en bleu) des trous noirs.', 'Le calcul : <b>' + terms(v).join(' + ') + '</b> = ?', 'Le numéro est <b>' + v + '</b>.'];
+  const check = () => {
+    const it = item(key);
+    if (it.done) return;
+    if (!nOk) {
+      if (num.value === '') return;
+      if (+num.value === v) {
+        nOk = true; num.classList.add('good'); num.disabled = true;
+        $('h-' + key).classList.remove('on'); $('h-' + key).dataset.lv = 0;
+        if (!ch) { const p = attempt(key, true); fb.className = 'fb ok'; fb.innerHTML = '✅ ' + ptsTag(p); d.classList.add('ok'); d.querySelector('.chk').disabled = true; onDone(); return; }
+        let_.disabled = false; let_.focus(); fb.className = 'fb ok'; fb.textContent = '👍 Et la lettre ?';
+      } else { attempt(key, false); num.classList.add('bad'); fb.className = 'fb ko'; fb.textContent = '❌ Non. Recalcule ' + (item(key).tries === 1 ? '(1 point encore possible).' : '.'); }
+      return;
+    }
+    const a = let_.value.trim().toUpperCase(); if (!a) return;
+    if (a === ch) {
+      const p = attempt(key, true); let_.classList.add('good'); let_.disabled = true; d.classList.add('ok'); d.querySelector('.chk').disabled = true;
+      fb.className = 'fb ok'; fb.innerHTML = '✅ ' + ptsTag(p); onDone();
+    } else { attempt(key, false); let_.classList.add('bad'); fb.className = 'fb ko'; fb.textContent = '❌ Ce n\'est pas ' + a + '. Regarde le tableau.'; }
+  };
+  d.querySelector('.chk').onclick = check;
+  num.onkeydown = e => { if (e.key === 'Enter') check(); };
+  num.oninput = () => num.classList.remove('bad');
+  if (let_) { let_.oninput = () => let_.classList.remove('bad'); let_.onkeydown = e => { if (e.key === 'Enter') check(); }; }
+}
+
+/* ---------- mission 1 ---------- */
+(() => {
+  const host = $('m1'), M = $('msg1');
+  M.innerHTML = [...DEMANDE].map(() => '<div></div>').join('');
+  let n = 0;
+  [...DEMANDE].forEach((ch, k) => decodeItem(host, 'm1_' + k, 'Ligne ' + (k + 1), ch.charCodeAt(0), ch, 'holes', () => {
+    M.children[k].textContent = ch; M.children[k].classList.add('on');
+    if (++n === DEMANDE.length) { $('n1').disabled = false; $('n1').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  }));
+})();
+
+/* ---------- mission 2 ---------- */
+const built = [null, null, null, null];
+function preview() {
+  let s = '<svg viewBox="0 0 380 290" style="width:100%;max-width:380px;display:block" role="img" aria-label="Aperçu de la carte-réponse">';
+  s += '<rect x="2" y="2" width="376" height="286" rx="10" fill="#fffdf6" stroke="#b9b29c" stroke-width="2"/>';
+  W.forEach((w, i) => { s += '<text x="' + (36 + 38 * i) + '" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#2f6fed" font-family="sans-serif">' + w + '</text>'; });
+  ['O', 'U', 'I', 'Σ'].forEach((lab, r) => {
+    const cy = 60 + 50 * r, v = built[r];
+    s += '<text x="368" y="' + (cy + 5) + '" text-anchor="end" font-size="13" font-weight="800" fill="#5f5f66" font-family="sans-serif">' + lab + '</text>';
+    W.forEach((w, i) => {
+      const cx = 36 + 38 * i;
+      s += v !== null && (v & w) ? '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="#1d1d1f"/>' : '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="none" stroke="#d6cfba" stroke-width="2" stroke-dasharray="3 3"/>';
+    });
+    s += '<circle cx="342" cy="' + cy + '" r="6" fill="' + (v !== null ? '#1d1d1f' : '#ddd') + '"/>';
+  });
+  s += '<text x="190" y="276" text-anchor="middle" font-size="12" fill="#5f5f66" font-family="sans-serif">' + (built.every(x => x !== null) ? 'Carte complète !' : 'Les lignes se remplissent quand elles sont justes') + '</text>';
+  $('preview').innerHTML = s + '</svg>';
+}
+function m2Check() {
+  if (built.every(x => x !== null)) { $('n2').disabled = false; $('n2').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+}
+(() => {
+  const host = $('m2');
+  [...REPONSE].forEach((ch, k) => {
+    const v = ch.charCodeAt(0), kc = 'm2c_' + k, kb = 'm2b_' + k;
+    const d = document.createElement('div');
+    d.className = 'item';
+    d.innerHTML = '<div class="head"><span class="n">Ligne ' + (k + 1) + '</span><b style="font-size:1.5rem">' + ch + '</b><button class="hb" data-h="' + kc + '" title="Aide">💡</button></div>' +
+      '<div class="row" style="margin-top:6px"><label>Numéro de « ' + ch + ' » : <input class="ans" type="number" inputmode="numeric" min="0" max="255"></label><button class="c1">Vérifier</button><span class="fb f1"></span></div>' +
+      '<div class="hint" id="h-' + kc + '"></div>' +
+      '<div class="bx" style="display:none;margin-top:10px"><div class="row"><b>Perce les trous de ' + v + '</b><button class="hb" data-h="' + kb + '" title="Aide">💡</button></div><div class="calc"></div>' +
+      '<div class="row"><button class="c2">Vérifier les trous</button><span class="fb f2"></span></div><div class="hint" id="h-' + kb + '"></div></div>';
+    host.appendChild(d);
+    const inp = d.querySelector('input'), f1 = d.querySelector('.f1'), f2 = d.querySelector('.f2'), C = calc(d.querySelector('.calc'));
+    HINTS[kc] = () => ['Cherche la lettre <b>' + ch + '</b> dans le tableau : son numéro est écrit en bleu dessous.', 'Le numéro de ' + ch + ' est <b>' + v + '</b>.'];
+    HINTS[kb] = () => { const t = terms(v); return ['Plus grande valeur qui ne dépasse pas ' + v + ' : <b>' + t[0] + '</b>. Il reste ' + (v - t[0]) + '. Continue avec ce reste.', v + ' = <b>' + t.join(' + ') + '</b>. Perce ces trous.']; };
+    const c1 = () => {
+      if (item(kc).done || inp.value === '') return;
+      if (+inp.value === v) { const p = attempt(kc, true); inp.classList.add('good'); inp.disabled = true; d.querySelector('.c1').disabled = true; f1.className = 'fb f1 ok'; f1.innerHTML = '✅ ' + ptsTag(p); d.querySelector('.bx').style.display = ''; }
+      else { attempt(kc, false); inp.classList.add('bad'); f1.className = 'fb f1 ko'; f1.textContent = '❌ Non. Vérifie dans le tableau.'; }
+    };
+    d.querySelector('.c1').onclick = c1;
+    inp.onkeydown = e => { if (e.key === 'Enter') c1(); };
+    inp.oninput = () => inp.classList.remove('bad');
+    d.querySelector('.c2').onclick = () => {
+      if (item(kb).done) return;
+      const g = C.get();
+      if (g === v) {
+        const p = attempt(kb, true); C.lock(); d.querySelector('.c2').disabled = true; d.classList.add('ok');
+        f2.className = 'fb f2 ok'; f2.innerHTML = '✅ ' + terms(v).join(' + ') + ' = ' + v + ' ' + ptsTag(p);
+        built[k] = v; preview(); m2Check();
+      } else {
+        attempt(kb, false); f2.className = 'fb f2 ko';
+        f2.textContent = '❌ Tes trous valent ' + g + (g > v ? ' : c\'est trop.' : ' : il manque ' + (v - g) + '.');
+      }
+    };
+  });
+  // ligne de contrôle
+  const C = calc($('calc-ctl'));
+  HINTS.ctlv = () => ['Additionne les numéros des trois lettres : ' + [...REPONSE].map(c => c.charCodeAt(0)).join(' + ') + '.', 'La somme est <b>' + SUM + '</b>.'];
+  HINTS.ctlb = () => { const t = terms(SUM); return ['Commence par 128 : il reste ' + (SUM - 128) + '. Puis cherche la plus grande valeur qui ne dépasse pas ce reste.', SUM + ' = <b>' + t.join(' + ') + '</b>.']; };
+  const cv = () => {
+    if (item('ctlv').done || $('ctlv').value === '') return;
+    if (+$('ctlv').value === SUM) { const p = attempt('ctlv', true); $('ctlv').classList.add('good'); $('ctlv').disabled = true; $('ctlvChk').disabled = true; $('ctlvFb').className = 'fb ok'; $('ctlvFb').innerHTML = '✅ ' + ptsTag(p); $('ctlb').style.display = ''; }
+    else { attempt('ctlv', false); $('ctlv').classList.add('bad'); $('ctlvFb').className = 'fb ko'; $('ctlvFb').textContent = '❌ Non. Refais l\'addition.'; }
+  };
+  $('ctlvChk').onclick = cv;
+  $('ctlv').onkeydown = e => { if (e.key === 'Enter') cv(); };
+  $('ctlv').oninput = () => $('ctlv').classList.remove('bad');
+  $('ctlbChk').onclick = () => {
+    if (item('ctlb').done) return;
+    const g = C.get();
+    if (g === SUM) { const p = attempt('ctlb', true); C.lock(); $('ctlbChk').disabled = true; $('ctl').classList.add('ok'); $('ctlbFb').className = 'fb ok'; $('ctlbFb').innerHTML = '✅ ' + terms(SUM).join(' + ') + ' = ' + SUM + ' ' + ptsTag(p); built[3] = SUM; preview(); m2Check(); }
+    else { attempt('ctlb', false); $('ctlbFb').className = 'fb ko'; $('ctlbFb').textContent = '❌ Tes trous valent ' + g + (g > SUM ? ' : c\'est trop.' : ' : il manque ' + (SUM - g) + '.'); }
+  };
+  preview();
+})();
+
+/* ---------- mission 3 : vérification par le lecteur ---------- */
+const EXPECT = [...REPONSE].map(c => c.charCodeAt(0)).concat([SUM]);
+let rows = [];
+const mon = $('mon');
+function onRow(b) {
+  const v = parseInt(b, 2); rows.push(v);
+  mon.textContent += 'Ligne ' + rows.length + ' : ' + b + ' → ' + String(v).padStart(3) + (rows.length <= 3 ? ' → ' + (v >= 32 && v < 127 ? String.fromCharCode(v) : '?') : ' (contrôle)') + '\n';
+  mon.scrollTop = mon.scrollHeight;
+}
+function onEnd() {
+  if (!rows.length) return;
+  const r = rows; rows = [];
+  let h;
+  if (r.length === EXPECT.length && r.every((v, i) => v === EXPECT[i])) {
+    h = '<div class="tip" style="border-color:var(--ok);background:#eaf8ee">✅ <b>Le lecteur confirme :</b> ta carte dit <b>' + REPONSE + '</b> et la ligne de contrôle vaut bien ' + SUM + '. Monsieur Moreau la glisse dans la boîte aux lettres !</div>';
+    $('n3').disabled = false;
+  } else {
+    const pb = [];
+    if (r.length !== EXPECT.length) pb.push('Le lecteur a lu <b>' + r.length + ' ligne' + (r.length > 1 ? 's' : '') + '</b> au lieu de 4 : vérifie les trous de la colonne d\'horloge et glisse la carte d\'un geste régulier.');
+    EXPECT.forEach((e, i) => {
+      if (r[i] === undefined || r[i] === e) return;
+      const diff = W.filter(w => (r[i] & w) !== (e & w));
+      pb.push('Ligne ' + (i + 1) + ' : lu <b>' + r[i] + '</b> au lieu de <b>' + e + '</b>. Regarde le' + (diff.length > 1 ? 's trous' : ' trou') + ' sous ' + diff.join(', ') + '.');
+    });
+    h = '<div class="tip" style="border-color:var(--bad);background:#fdecea">❌ <b>La carte n\'est pas encore bonne.</b><ul>' + pb.map(x => '<li>' + x + '</li>').join('') + '</ul>Corrige ta carte (ou perce-en une nouvelle) et repasse-la dans le lecteur.</div>';
+  }
+  $('verdict').innerHTML = h;
+  mon.textContent += '──────\n';
+}
+let port = null;
+$('conn').onclick = async () => {
+  if (port) return;
+  if (!('serial' in navigator)) return alert('Il faut Chrome ou Edge sur ordinateur pour brancher le lecteur.');
+  try { port = await navigator.serial.requestPort(); await port.open({ baudRate: 115200 }); } catch (e) { port = null; return; }
+  $('connSt').textContent = 'Lecteur branché : glisse ta carte !'; $('conn').disabled = true;
+  const dec = new TextDecoderStream(); port.readable.pipeTo(dec.writable).catch(() => {});
+  const rd = dec.readable.getReader(); let buf = '';
+  try {
+    for (;;) {
+      const { value, done } = await rd.read(); if (done) break;
+      buf += value; let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+        if (/^R:[01]{8}$/.test(l)) onRow(l.slice(2)); else if (l === 'END') onEnd();
+      }
+    }
+  } catch (e) {}
+  port = null; $('conn').disabled = false; $('connSt').textContent = 'Lecteur débranché';
+};
+$('sim').onclick = () => {
+  if (built.some(x => x === null)) { $('verdict').innerHTML = '<div class="tip">Termine d\'abord la mission 2.</div>'; return; }
+  mon.textContent += '(simulation) La carte passe dans le lecteur…\n';
+  built.forEach((v, k) => setTimeout(() => onRow(bin(v)), 450 * (k + 1)));
+  setTimeout(onEnd, 450 * 5 + 200);
+};
+$('printMine').onclick = () => {
+  if (built.some(x => x === null)) { $('verdict').innerHTML = '<div class="tip">Termine d\'abord la mission 2 : le gabarit reprend tes lignes.</div>'; return; }
+  printCards([[built, 'RÉPONSE AU MASQUE', 'Carte de ' + ($('agent').value.trim() || '…')]]);
+};
+
+/* ---------- mission 4 ---------- */
+let m4n = 0;
+function buildM4(cardId, msgId, card, tag) {
+  const host = $(cardId), M = $(msgId);
+  M.innerHTML = [...card.word].map(() => '<div></div>').join('') + '<div style="width:auto;padding:0 10px;font-size:1.2rem">Σ ?</div>';
+  [...card.word].forEach((ch, k) => decodeItem(host, 'm4' + tag + k, 'Ligne ' + (k + 1), ch.charCodeAt(0), ch, 'bits', () => { M.children[k].textContent = ch; M.children[k].classList.add('on'); m4Prog(); }));
+  decodeItem(host, 'm4' + tag + 'c', 'Contrôle', card.ctl, null, 'bits', () => { const c = M.children[card.word.length]; c.textContent = 'Σ = ' + card.ctl; c.classList.add('on'); m4Prog(); });
+}
+function m4Prog() { if (++m4n === 8) { $('m4q').style.display = ''; $('m4q').scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+buildM4('cA', 'msgA', CARD_A, 'A');
+buildM4('cB', 'msgB', CARD_B, 'B');
+const sumW = w => [...w].reduce((a, c) => a + c.charCodeAt(0), 0);
+HINTS.auth = () => ['Pour chaque carte, additionne les numéros des 3 lettres et compare avec la ligne de contrôle.', 'Carte A : ' + [...CARD_A.word].map(c => c.charCodeAt(0)).join(' + ') + ' = ' + sumW(CARD_A.word) + ', mais le contrôle dit ' + CARD_A.ctl + '. Carte B : ' + [...CARD_B.word].map(c => c.charCodeAt(0)).join(' + ') + ' = ' + sumW(CARD_B.word) + '.'];
+HINTS.where = () => ['Relis le message de la carte qui vient vraiment du Masque.', 'La vraie carte dit <b>' + CARD_B.word + '</b>.'];
+function radioQ(name, key, good, okTxt, koTxt, after) {
+  return () => {
+    if (item(key).done) return;
+    const c = document.querySelector('input[name="' + name + '"]:checked'); if (!c) return;
+    const lab = c.closest('label'), fb = $(name + 'Fb');
+    if (c.value === good) {
+      const p = attempt(key, true); lab.classList.add('good');
+      document.querySelectorAll('input[name="' + name + '"]').forEach(x => { x.disabled = true; });
+      fb.className = 'fb ok'; fb.innerHTML = '✅ ' + okTxt + ' ' + ptsTag(p); after();
+    } else { attempt(key, false); lab.classList.add('bad'); c.disabled = true; c.checked = false; fb.className = 'fb ko'; fb.textContent = '❌ ' + koTxt; }
+  };
+}
+$('authChk').onclick = radioQ('auth', 'auth', 'B', 'Oui ! Pour la carte B, 67 + 68 + 73 = 208 : le contrôle est juste. La carte A est fausse (71 + 89 + 77 = 237, pas 240).',
+  'Non. Additionne les numéros des lettres de cette carte : est-ce égal à sa ligne de contrôle ?', () => { $('q-where').style.display = ''; });
+$('whereChk').onclick = radioQ('where', 'where', 'cdi', 'Bien sûr : CDI ! Fonce le chercher !', 'Non. Relis le message de la vraie carte.', finish);
+function finish() {
+  unlock(5);
+  $('epi').classList.add('on');
+  const t = total(), name = $('agent').value.trim();
+  $('final').textContent = '⭐ ' + (name ? name + ', ton' : 'Ton') + ' score : ' + t + ' / ' + MAX + ' points.';
+  document.querySelector('#nav button[data-k="m4"]').classList.add('done');
+  setTimeout(() => $('epi').scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+}
+
+/* ---------- impressions ---------- */
+function cardSVG(vals, title, sub) {
+  const Wd = 120, Hd = 132, mx = 6, top = 22, p = 12;
+  let s = '<svg xmlns="http://www.w3.org/2000/svg" width="' + Wd + 'mm" height="' + Hd + 'mm" viewBox="0 0 ' + Wd + ' ' + Hd + '" font-family="sans-serif">';
+  s += '<rect x="0.15" y="0.15" width="' + (Wd - 0.3) + '" height="' + (Hd - 0.3) + '" fill="none" stroke="#000" stroke-width="0.3"/>';
+  s += '<text x="6" y="7" font-size="3.2" font-weight="700">↑ CE BORD ENTRE EN PREMIER</text>';
+  W.forEach((v, i) => { s += '<text x="' + (mx + p * (i + 0.5)) + '" y="' + (top - 8) + '" font-size="3.6" text-anchor="middle">' + v + '</text>'; });
+  vals.forEach((v, r) => {
+    const cy = top + p * (r + 0.5);
+    for (let c = 0; c < 8; c++) {
+      const cx = mx + p * (c + 0.5);
+      s += ((v >> (7 - c)) & 1) ? '<circle cx="' + cx + '" cy="' + cy + '" r="3" fill="none" stroke="#000" stroke-width="0.5"/><path d="M' + (cx - 1.6) + ',' + (cy - 1.6) + 'L' + (cx + 1.6) + ',' + (cy + 1.6) + 'M' + (cx + 1.6) + ',' + (cy - 1.6) + 'L' + (cx - 1.6) + ',' + (cy + 1.6) + '" stroke="#000" stroke-width="0.35"/>'
+        : '<circle cx="' + cx + '" cy="' + cy + '" r="3" fill="none" stroke="#aaa" stroke-width="0.2" stroke-dasharray="0.8 0.8"/>';
+    }
+    const kx = mx + p * 8.5;
+    s += '<circle cx="' + kx + '" cy="' + cy + '" r="2" fill="none" stroke="#000" stroke-width="0.4"/><path d="M' + (kx - 1) + ',' + (cy - 1) + 'L' + (kx + 1) + ',' + (cy + 1) + 'M' + (kx + 1) + ',' + (cy - 1) + 'L' + (kx - 1) + ',' + (cy + 1) + '" stroke="#000" stroke-width="0.3"/>';
+  });
+  // aucune inscription au-delà de x = 95 mm : la colonne d'horloge (x = 108 mm) doit rester vierge
+  const ty = Math.min(top + p * vals.length + 12, Hd - 22);
+  s += '<text x="8" y="' + ty + '" font-size="5.5" font-weight="800">' + esc(title) + '</text><text x="8" y="' + (ty + 6) + '" font-size="3.6">' + esc(sub) + '</text>';
+  s += '<text x="8" y="' + (Hd - 6) + '" font-size="3" fill="#555">Perforer les croix : données 6 mm, horloge 4 mm.</text>';
+  return s + '</svg>';
+}
+function printCards(list) {
+  const w = window.open('', '_blank'); if (!w) return alert('Autorise les fenêtres pop-up pour imprimer.');
+  w.document.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Cartes à perforer</title></head><body style="margin:10mm">' +
+    list.map((c, i) => '<div style="page-break-after:' + (i < list.length - 1 ? 'always' : 'auto') + '">' + cardSVG(c[0], c[1], c[2]) + '</div>').join('') +
+    '<script>setTimeout(function(){print()},300)<\/script></body></html>');
+  w.document.close();
+}
+const codes = w => [...w].map(c => c.charCodeAt(0));
+$('printBilan').onclick = () => {
+  const w = window.open('', '_blank'); if (!w) return;
+  const rowsH = [['Mission 1 · Lire la carte du Masque', 'm1_'], ['Mission 2 · Écrire la réponse', 'm2', 'ctl'], ['Mission 4 · Démasquer la fausse carte', 'm4', 'auth', 'where']].map(r => {
+    const ks = Object.keys(items).filter(k => r.slice(1).some(p => k.startsWith(p)));
+    const pts = ks.reduce((a, k) => a + (items[k].done ? items[k].pts : 0), 0), aides = ks.filter(k => items[k].hint).length;
+    return '<tr><td>' + r[0] + '</td><td>' + pts + ' pts</td><td>' + aides + ' aide' + (aides > 1 ? 's' : '') + '</td></tr>';
+  }).join('');
+  w.document.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Bilan · Le chien volé</title><style>body{font-family:system-ui,sans-serif;margin:15mm}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:6px 8px;text-align:left}</style></head><body>' +
+    '<h2>🐕 Le chien volé du gardien · Bilan</h2><p>Enquêteur·rice : <b>' + esc($('agent').value || '…') + '</b> · ' + new Date().toLocaleDateString('fr-FR') + '</p>' +
+    '<table><tr><th>Partie</th><th>Points</th><th>Aides utilisées</th></tr>' + rowsH + '<tr><td><b>Total</b></td><td><b>' + total() + ' / ' + MAX + '</b></td><td></td></tr></table>' +
+    '<p>Mission 3 (carte fabriquée et vérifiée par le lecteur) : ' + ($('n3').disabled ? 'non terminée' : 'réussie ✅') + '</p>' +
+    '<script>setTimeout(function(){print()},300)<\/script></body></html>');
+  w.document.close();
+};
+
+/* ---------- enseignant ---------- */
+$('unl').onclick = () => {
+  if (btoa($('tcode').value.trim().toUpperCase()) === 'UkVYMjAyNg==') { $('lock').style.display = 'none'; $('teacher').style.display = ''; }
+  else $('tmsg').textContent = 'Code incorrect.';
+};
+$('tcode').onkeydown = e => { if (e.key === 'Enter') $('unl').click(); };
+$('all').onclick = () => { unlock(4); ['n1', 'n2', 'n3'].forEach(id => { $(id).disabled = false; }); };
+$('pMasque').onclick = () => printCards([[codes(DEMANDE), 'CARTE DU MASQUE', 'Glissée sous la porte de la loge']]);
+$('pAB').onclick = () => printCards([[codes(CARD_A.word).concat([CARD_A.ctl]), 'CARTE A', 'Trouvée dans la boîte aux lettres'], [codes(CARD_B.word).concat([CARD_B.ctl]), 'CARTE B', 'Trouvée dans la boîte aux lettres']]);
+$('pOui').onclick = () => printCards([[EXPECT, 'RÉPONSE AU MASQUE (corrigé)', 'O, U, I et somme de contrôle']]);
+const solRow = (lab, v, ch) => '<tr><td>' + lab + '</td><td style="font-family:monospace">' + bin(v) + '</td><td>' + terms(v).join(' + ') + '</td><td>' + v + '</td><td><b>' + (ch || '—') + '</b></td></tr>';
+$('sol').innerHTML = '<table><tr><th>Ligne</th><th>Binaire</th><th>Calcul</th><th>Numéro</th><th>Lettre</th></tr>' +
+  '<tr><td colspan="5"><b>Mission 1 · carte du Masque</b></td></tr>' + [...DEMANDE].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') +
+  '<tr><td colspan="5"><b>Mission 2 · réponse</b></td></tr>' + [...REPONSE].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') + solRow('Σ', SUM, null) +
+  '<tr><td colspan="5"><b>Mission 4 · carte A (fausse : 71 + 89 + 77 = 237 ≠ 240)</b></td></tr>' + [...CARD_A.word].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') + solRow('Σ', CARD_A.ctl, null) +
+  '<tr><td colspan="5"><b>Mission 4 · carte B (vraie : 67 + 68 + 73 = 208)</b></td></tr>' + [...CARD_B.word].map((c, k) => solRow(k + 1, c.charCodeAt(0), c)).join('') + solRow('Σ', CARD_B.ctl, null) +
+  '</table><p>Réponses : la demande est <b>BONBONS</b> ; la vraie carte est la <b>B</b> ; Rex est au <b>CDI</b>.</p>';
+</script>
+</body>
+</html>
