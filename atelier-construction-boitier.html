@@ -248,6 +248,12 @@ footer{font-size:.8rem;color:var(--muted)}
           </div>
         </div></details>
 
+        <details class="sec" id="scrSec" open><summary>Fixation du couvercle</summary><div class="secbody">
+          <label class="tg"><input type="checkbox" id="scr"> Fixer le couvercle avec 2 vis</label>
+          <div class="field wide" id="scrTypeF"><label for="scrType">Vis autotaraudeuse</label><select id="scrType"><option value="auto">Automatique (conseillée)</option></select></div>
+          <p class="tip" id="scrTip"></p>
+        </div></details>
+
         <details class="sec" id="holeSec" open><summary>Ouvertures <span class="tip" id="holeCount"></span></summary><div class="secbody">
           <p class="tip">Les positions se mesurent depuis le coin en bas à gauche de la face, vue de l'extérieur.</p>
           <div id="holes" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -344,18 +350,18 @@ const PRESETS={
   sonnette:{inner:[64,40,30],reco:'3d',contents:'boîtier 2 piles AA et buzzer ; le bouton poussoir se fixe sur le couvercle',need:P2,holes:[['bp','dessus',.5,.5],['son','avant',.35,.5],['son','avant',.5,.5],['son','avant',.65,.5]]},
   adresse:{inner:[200,50,25],reco:'laser',contents:'socle du jeu : boîtier 2 piles AA et buzzer ; le parcours se plante dans le couvercle',need:P2,holes:[['parcours','dessus',.06,.5],['parcours','dessus',.94,.5],['fil','avant',.5,.5]]},
   manege:{inner:[90,90,45],reco:'laser',contents:'boîtier 2 piles AA et motoréducteur ; l’axe sort par le couvercle',need:[72,40,30],holes:[['axe','dessus',.5,.5],['inter_rond','avant',.5,.5]]},
-  dessin:{inner:[62,20,20],reco:'3d',contents:'boîtier 1 pile AA et interrupteur, à coller sur le gobelet',need:P1,holes:[['inter_rect','dessus',.5,.5],['fil','avant',.5,.5]]},
+  dessin:{inner:[62,20,20],reco:'3d',contents:'boîtier 1 pile AA et interrupteur, à coller sur le gobelet',need:P1,holes:[['inter_rect','dessus',.5,.5],['fil','avant',.5,.5]],noScrews:true},
   ventilo:{inner:[66,36,30],reco:'3d',contents:'boîtier 2 piles AA et moteur ; l’axe sort par le couvercle',need:P2,holes:[['inter_rect','gauche',.4,.5],['axe','dessus',.85,.5]]},
-  brosse:{inner:[62,20,18],reco:'3d',contents:'boîtier 1 pile AA et interrupteur, à coller sur la brosse',need:P1,holes:[['inter_rect','dessus',.5,.5],['fil','avant',.5,.5]]},
+  brosse:{inner:[62,20,18],reco:'3d',contents:'boîtier 1 pile AA et interrupteur, à coller sur la brosse',need:P1,holes:[['inter_rect','dessus',.5,.5],['fil','avant',.5,.5]],noScrews:true},
   grue:{inner:[64,40,25],reco:'3d',contents:'boîtier 1 pile AA et bouton poussoir ; le fil de l’électroaimant sort à l’arrière',need:P1,holes:[['bp','dessus',.5,.5],['fil','arriere',.5,.5]]},
   coffre:{inner:[120,80,60],reco:'laser',contents:'le coffre lui-même ; le circuit se colle sous le couvercle',need:P2,holes:[['del','avant',.5,.7]]},
   secrets:{inner:[120,80,50],reco:'laser',contents:'la boîte elle-même ; le circuit se colle dans un coin',need:P2,holes:[]},
-  clignotant:{inner:[64,36,24],reco:'3d',contents:'boîtier 2 piles AA ; la DEL sort à l’arrière',need:P2,holes:[['del','arriere',.5,.5],['inter_rect','dessus',.5,.5],['fente','gauche',.5,.5],['fente','droite',.5,.5]]},
+  clignotant:{inner:[64,36,27],reco:'3d',contents:'boîtier 2 piles AA ; la DEL sort à l’arrière',need:P2,holes:[['del','arriere',.5,.5],['inter_rect','dessus',.5,.5],['fente','gauche',.5,.5],['fente','droite',.5,.5]]},
   questions:{inner:[200,140,20],reco:'laser',contents:'plateau du jeu : boîtier 2 piles AA à l’intérieur, attaches parisiennes sur le dessus',need:P2,holes:Q.concat([['del','dessus',.5,.9],['fil','avant',.4,.5],['fil','avant',.6,.5]])},
-  frontale:{inner:[64,36,24],reco:'3d',contents:'boîtier 2 piles AA, interrupteur et DEL',need:P2,holes:[['del','avant',.5,.5],['inter_rect','dessus',.5,.5],['fente','gauche',.5,.5],['fente','droite',.5,.5]]},
-  lecture:{inner:[64,36,24],reco:'3d',contents:'boîtier 2 piles AA, interrupteur et DEL',need:P2,holes:[['del','avant',.5,.5],['inter_rect','dessus',.5,.5]]},
+  frontale:{inner:[64,36,27],reco:'3d',contents:'boîtier 2 piles AA, interrupteur et DEL',need:P2,holes:[['del','avant',.5,.5],['inter_rect','dessus',.5,.5],['fente','gauche',.5,.5],['fente','droite',.5,.5]]},
+  lecture:{inner:[64,36,27],reco:'3d',contents:'boîtier 2 piles AA, interrupteur et DEL',need:P2,holes:[['del','avant',.5,.5],['inter_rect','dessus',.5,.5]]},
   variateur:{inner:[70,40,32],reco:'3d',contents:'boîtier 2 piles AA, potentiomètre, interrupteur et DEL',need:P2,holes:[['pot','dessus',.3,.5],['inter_rect','dessus',.72,.5],['del','avant',.5,.6]]},
-  bicolore:{inner:[64,36,24],reco:'3d',contents:'boîtier 2 piles AA, inverseur et 2 DEL',need:P2,holes:[['del','avant',.35,.5],['del','avant',.65,.5],['inter_rect','dessus',.5,.5],['fente','gauche',.5,.5],['fente','droite',.5,.5]]},
+  bicolore:{inner:[64,36,27],reco:'3d',contents:'boîtier 2 piles AA, inverseur et 2 DEL',need:P2,holes:[['del','avant',.35,.5],['del','avant',.65,.5],['inter_rect','dessus',.5,.5],['fente','gauche',.5,.5],['fente','droite',.5,.5]]},
   echecs:{inner:[0,0,0],reco:'laser',contents:'',need:null,holes:[],chess:true},
   stopmotion:{inner:[0,0,0],reco:'laser',contents:'',need:null,holes:[],sm:true},
   libre:{inner:[80,50,30],reco:'3d',contents:'ce que tu veux y ranger',need:null,holes:[]}
@@ -366,9 +372,9 @@ const RECO={
 };
 
 /* ================= État ================= */
-const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1,txt:{text:'',panel:'',font:'sans',size:8,fu:.5,fv:.5,depth:0.6,place:false}};
+const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1,txt:{text:'',panel:'',font:'sans',size:8,fu:.5,fv:.5,depth:0.6,place:false},screws:true,screw:'auto'};
 function loadPreset(id){
-  const p=PRESETS[id];state.obj=id;state.mode=p.reco;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.sel=-1;
+  const p=PRESETS[id];state.obj=id;state.mode=p.reco;state.screws=!p.noScrews&&!p.chess&&!p.sm;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.sel=-1;
   state.holes=p.holes.map(([type,face,fu,fv])=>{const t=HT[type];return {type,label:t.label,face,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu,fv};});
 }
 const T=()=>state.mode==='3d'?state.t3:state.tl;
@@ -417,6 +423,36 @@ function outline(w,h,edges,d){ // edges: [bas, droite, haut, gauche] -> 'A' | 'B
 }
 const rect=(x0,y0,x1,y1)=>[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
 
+/* ================= Vis du couvercle ================= */
+const SCREWS={ // vis autotaraudeuses : d = diamètre, L = longueur, p3/pl = avant-trou (PLA / bois), pass = trou de passage
+  '22x65':{nom:'2,2 × 6,5 mm',d:2.2,L:6.5,p3:1.8,pl:1.5,pass:2.6},
+  '22x95':{nom:'2,2 × 9,5 mm',d:2.2,L:9.5,p3:1.8,pl:1.5,pass:2.6},
+  '22x13':{nom:'2,2 × 13 mm',d:2.2,L:13,p3:1.8,pl:1.5,pass:2.6},
+  '29x95':{nom:'2,9 × 9,5 mm',d:2.9,L:9.5,p3:2.4,pl:2.0,pass:3.3},
+  '29x13':{nom:'2,9 × 13 mm',d:2.9,L:13,p3:2.4,pl:2.0,pass:3.3},
+  '29x16':{nom:'2,9 × 16 mm',d:2.9,L:16,p3:2.4,pl:2.0,pass:3.3}};
+function screwKey(){ // « auto » : la plus courte qui mord d'au moins 4,5 mm
+  if(state.screw!=='auto')return state.screw;const t=T(),stack=state.mode==='3d'?t:2*t,ks=['22x65','22x95','22x13','29x13','29x16'];
+  return ks.find(k=>SCREWS[k].L-stack>=4.5)||'29x16';}
+function screwData(d){ // positions (coins opposés en diagonale) et dimensions des supports
+  if(!state.screws)return null;
+  const {L,W,H,t}=d,key=screwKey(),sc=SCREWS[key],laser=state.mode==='laser';
+  if(!laser){const c=Math.max(6,Math.round(sc.d*2.6*2)/2),stack=t,hs=Math.max(4,Math.min(state.Hi-c-2,sc.L-stack+0.5)),bite=Math.min(sc.L-stack,hs);
+    return {laser,key,sc,c,hs,bite,drop:hs+c,pilot:sc.p3,pos:[[t+c/2,t+c/2],[L-t-c/2,W-t-c/2]]};}
+  const c=Math.max(10,Math.ceil(sc.d*4)),stack=2*t,need=Math.max(4.5,sc.L-stack+0.5),n=Math.max(1,Math.ceil(need/t)),bite=Math.min(sc.L-stack,n*t);
+  return {laser,key,sc,c,n,bite,drop:t+n*t,pilot:sc.pl,pos:[[t+c/2,t+c/2],[L-t-c/2,W-t-c/2]]};
+}
+function bossGeos(d,S){ // supports 3D : bloc carré percé + dessous en pyramide à 45° (imprimable sans support)
+  const {L,W,H,t}=d,{c,hs,pilot}=S,e=0.05,zb=H-hs,out=[];
+  const one=()=>{const blk=extr(shapeOf(rect(-e,-e,c,c),[{shape:'rond',u:c/2,v:c/2,d:pilot}]),hs,zb);
+    const g=new THREE.BufferGeometry(),A=[-e,-e,zb-c],P=[[-e,-e,zb+e],[c,-e,zb+e],[c,c,zb+e],[-e,c,zb+e]];
+    const tri=[[P[0],P[1],P[2]],[P[0],P[2],P[3]],[P[1],A,P[2]],[P[2],A,P[3]],[P[0],A,P[1]],[P[3],A,P[0]]]; // normales vers l'extérieur
+    g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(tri.flat(2)),3));g.computeVertexNormals();return [blk,g];};
+  const a=one();a.forEach(g=>g.translate(t,t,0));out.push(...a);
+  const b=one(),M=new THREE.Matrix4().set(-1,0,0,L-t, 0,-1,0,W-t, 0,0,1,0, 0,0,0,1);b.forEach(g=>out.push(place(g,M)));
+  return out;
+}
+
 /* ================= Modèle ================= */
 function frames(d){
   const {L,W,H,t}=d;
@@ -432,7 +468,7 @@ function buildModelBase(){
   const d=dims(),{L,W,H,t}=d,F=frames(d),{res,abs}=checkHoles(d);
   const by={};FACES.forEach(([f])=>by[f]=[]);abs.forEach((h,i)=>{if(res[i].ok)by[h.face].push(h);});
   const panels=[]; // {part, name, face, frame, w, h, outline, holes, cuts, depth, explode}
-  const j=state.jeu;
+  const j=state.jeu,S=screwData(d),sHoles=S?S.pos.map(([u,v])=>({shape:'rond',u,v,d:S.sc.pass,screw:true})):[];
   if(state.mode==='3d'){
     const e=0.05; // léger recouvrement entre pièces : le logiciel d'impression les fusionne
     panels.push({part:'corps',name:'Fond',frame:F.dessous,outline:rect(0,0,L,W),holes:by.dessous,depth:t});
@@ -440,18 +476,23 @@ function buildModelBase(){
     panels.push({part:'corps',name:'Côté droit',frame:F.droite,outline:rect(0,t-e,L,H),holes:by.droite,depth:t});
     panels.push({part:'corps',name:'Face avant',frame:F.avant,outline:rect(t-e,t-e,W-t+e,H),holes:by.avant,depth:t});
     panels.push({part:'corps',name:'Face arrière',frame:F.arriere,outline:rect(t-e,t-e,W-t+e,H),holes:by.arriere,depth:t});
-    panels.push({part:'couvercle',name:'Couvercle',frame:F.dessus,outline:rect(0,0,L,W),holes:by.dessus,depth:t});
-    const a=t+j;panels.push({part:'couvercle',name:'Rebord',frame:F.rebord3d,outline:rect(a,a,L-a,W-a),holes:[{shape:'poly',pts:rect(a+1.2,a+1.2,L-a-1.2,W-a-1.2)}],depth:3+e,lift:e});
+    panels.push({part:'couvercle',name:'Couvercle',frame:F.dessus,outline:rect(0,0,L,W),holes:by.dessus.concat(sHoles),depth:t});
+    const a=t+j;
+    if(!S)panels.push({part:'couvercle',name:'Rebord',frame:F.rebord3d,outline:rect(a,a,L-a,W-a),holes:[{shape:'poly',pts:rect(a+1.2,a+1.2,L-a-1.2,W-a-1.2)}],depth:3+e,lift:e});
+    else{const w=1.2,n=t+S.c+0.5;[rect(n,a,L-a,a+w),rect(a,W-a-w,L-n,W-a),rect(a,n,a+w,W-a),rect(L-a-w,a,L-a,W-n)].forEach(o=>panels.push({part:'couvercle',name:'Rebord',frame:F.rebord3d,outline:o,holes:[],depth:3+e,lift:e}));}
   }else{
     panels.push({part:'corps',name:'Fond',face:'dessous',frame:F.dessous,w:L,h:W,outline:outline(L,W,['B','B','B','B'],d),holes:by.dessous,depth:t,ex:[0,0,-18]});
     panels.push({part:'corps',name:'Côté gauche',face:'gauche',frame:F.gauche,w:L,h:H,outline:outline(L,H,['A','A',null,'A'],d),holes:by.gauche,depth:t,ex:[0,-18,0]});
     panels.push({part:'corps',name:'Côté droit',face:'droite',frame:F.droite,w:L,h:H,outline:outline(L,H,['A','A',null,'A'],d),holes:by.droite,depth:t,ex:[0,18,0]});
     panels.push({part:'corps',name:'Face avant',face:'avant',frame:F.avant,w:W,h:H,outline:outline(W,H,['A','B',null,'B'],d),holes:by.avant,depth:t,ex:[18,0,0]});
     panels.push({part:'corps',name:'Face arrière',face:'arriere',frame:F.arriere,w:W,h:H,outline:outline(W,H,['A','B',null,'B'],d),holes:by.arriere,depth:t,ex:[-18,0,0]});
-    panels.push({part:'couvercle',name:'Couvercle',face:'dessus',frame:F.dessus,w:L,h:W,outline:rect(0,0,L,W),holes:by.dessus,depth:t});
-    const a=t+j;panels.push({part:'couvercle',name:'Cadre sous le couvercle',frame:F.rebord,w:L,h:W,outline:rect(a,a,L-a,W-a),holes:[{shape:'poly',pts:rect(a+6,a+6,L-a-6,W-a-6)}],depth:t,planOffset:[a,a]});
+    panels.push({part:'couvercle',name:'Couvercle',face:'dessus',frame:F.dessus,w:L,h:W,outline:rect(0,0,L,W),holes:by.dessus.concat(sHoles),depth:t});
+    const a=t+j,x0=a+6,y0=a+6,x1=L-a-6,y1=W-a-6,k=S?t+S.c+1:0;
+    const inner=S?[[k,y0],[x1,y0],[x1,W-k],[L-k,W-k],[L-k,y1],[x0,y1],[x0,k],[k,k]]:rect(x0,y0,x1,y1); // coins pleins au-dessus des cales
+    panels.push({part:'couvercle',name:'Cadre sous le couvercle',frame:F.rebord,w:L,h:W,outline:rect(a,a,L-a,W-a),holes:[{shape:'poly',pts:inner}].concat(sHoles),depth:t,planOffset:[a,a]});
+    if(S)S.pos.forEach(([u,v])=>{for(let k=0;k<S.n;k++)panels.push({part:'corps',name:'Cale de vissage',noLabel:true,frame:{U:[1,0,0],V:[0,1,0],N:[0,0,1],O:[0,0,H-t-(k+1)*t]},outline:rect(u-S.c/2,v-S.c/2,u+S.c/2,v+S.c/2),holes:[{shape:'rond',u,v,d:S.pilot}],depth:t});});
   }
-  return {d,panels,res,abs};
+  return {d,panels,res,abs,screws:S,bosses:S&&!S.laser?bossGeos(d,S):[]};
 }
 
 /* ================= Géométrie Three.js ================= */
@@ -531,6 +572,7 @@ function rebuild3D(m){
   m.panels.forEach(p=>{if(p.part==='couvercle'&&!state.lidShow)return;
     let off=null;if(state.explode){off=p.part==='couvercle'?[0,0,Math.max(25,m.d.H*0.6)]:(p.ex||null);}
     add(panelGeo(p),p.part==='couvercle'?cLid:cBody,off);});
+  (m.bosses||[]).forEach(g=>add(g,cBody,null));
   if(!laser&&state.reflector){const r=reflectorLocal(m.d),M=new THREE.Matrix4().set(0,1,0,m.d.L, 1,0,0,r.center[0], 0,0,1,r.center[1], 0,0,0,1);
     add(place(r.g,M),new THREE.Color(css('--metal')),state.explode?[25,0,0]:null);}
   if(state.sel>=0&&state.holes[state.sel]){const h=absHole(state.holes[state.sel],m.d),F=frames(m.d)[h.face],[a,b]=ext(h),R=Math.max(a,b)+2.5;
@@ -545,7 +587,7 @@ function rebuild3D(m){
 function laserSheet(m){
   const gap=6,maxRow=Math.max(420,m.d.L+2*gap);let x=gap,y=gap,rowH=0,W=0;const items=[];
   const order=['Fond','Couvercle','Cadre sous le couvercle','Côté gauche','Côté droit','Face avant','Face arrière'];
-  order.map(n=>m.panels.find(p=>p.name===n)).filter(Boolean).forEach(p=>{
+  order.concat(['Cale de vissage']).flatMap(n=>m.panels.filter(p=>p.name===n)).forEach(p=>{
     const xs=p.outline.map(q=>q[0]),ys=p.outline.map(q=>q[1]),minx=Math.min(...xs),miny=Math.min(...ys),w=Math.max(...xs)-minx,h=Math.max(...ys)-miny;
     if(x+w+gap>maxRow&&x>gap){x=gap;y+=rowH+gap;rowH=0;}
     items.push({p,ox:x-minx,oy:y,miny,minx,h,w});x+=w+gap;rowH=Math.max(rowH,h);W=Math.max(W,x);});
@@ -564,7 +606,7 @@ function svgOf(m,forExport){
     txt+=txtSvg(p,tr);
   });
   let labels='';
-  if(state.engrave||!forExport)sh.items.forEach(it=>{const xs=it.p.outline.map(q=>q[0]),ys=it.p.outline.map(q=>q[1]);
+  if(state.engrave||!forExport)sh.items.forEach(it=>{if(it.p.noLabel)return;const xs=it.p.outline.map(q=>q[0]),ys=it.p.outline.map(q=>q[1]);
     const [cx,cy]=it.tr((Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2);
     const small=it.p.name==='Cadre sous le couvercle',low=small||(it.p.txt&&it.p.txt.ok);const [lx,ly]=low?it.tr((Math.min(...xs)+Math.max(...xs))/2,Math.min(...ys)+(small?3:state.tl+4)):[cx,cy];
     labels+=`<text x="${n(lx)}" y="${n(ly)}" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="${small?3:4}" fill="#0000ff">${it.p.name}</text>`;});
@@ -594,7 +636,7 @@ function stlOf(geos,name){
 }
 function printParts(m){
   const d=m.d,parts=[];
-  const body=m.panels.filter(p=>p.part==='corps').map(panelGeo);parts.push({file:'corps.stl',label:'Corps',geos:body});
+  const body=m.panels.filter(p=>p.part==='corps').map(panelGeo).concat((m.bosses||[]).map(g=>g.clone()));parts.push({file:'corps.stl',label:'Corps',geos:body});
   const lidM=new THREE.Matrix4().set(1,0,0,0, 0,-1,0,d.W, 0,0,-1,d.H+d.t, 0,0,0,1);
   const lid=m.panels.filter(p=>p.part==='couvercle').map(p=>place(panelGeo(p),lidM));parts.push({file:'couvercle.stl',label:'Couvercle',geos:lid});
   if(state.reflector){const r=reflectorLocal(d);parts.push({file:'reflecteur.stl',label:'Réflecteur',geos:[place(r.g,new THREE.Matrix4().makeRotationX(Math.PI/2))]});}
@@ -616,8 +658,11 @@ function holesText(m){return state.holes.map((h,i)=>{const a=absHole(h,m.d),sz=h
 function notice(m,kind){
   const d=m.d,name=(OBJS.find(o=>o[0]===state.obj)||['','Boîtier'])[1];
   const head=`BOÎTIER – ${name.toUpperCase()}\nAtelier construction électronique – Modeleur de boîtiers\n\nDimensions intérieures : ${fmt(state.Li)} × ${fmt(state.Wi)} × ${fmt(state.Hi)} mm\nDimensions extérieures : ${fmt(d.L)} × ${fmt(d.W)} × ${fmt(d.H+d.t)} mm (couvercle compris)\n\nOuvertures :\n${holesText(m)}\n${txtNotice(m)}\n`;
-  if(kind==='3d')return head+`IMPRESSION 3D\n- Parois : ${fmt(d.t)} mm ; jeu du couvercle : ${fmt(state.jeu)} mm\n- PLA, couche 0,2 mm, remplissage 20 %, sans support\n- corps.stl : ouverture vers le haut ; couvercle.stl : déjà posé à plat, rebord vers le haut${state.reflector?' ; reflecteur.stl : fond percé sur le plateau':''}\n- Un trou dans une paroi verticale fait un « pont » en haut : au-delà de 15 mm, il peut légèrement s’affaisser, c’est normal.\n\nMesure tes composants avant de lancer une série.\n`;
-  return head+`DÉCOUPE LASER\n- Plaque de ${fmt(d.t)} mm (contreplaqué, MDF, carton gris rigide ou acrylique)\n- Trait rouge = découpe ; texte bleu = gravure (facultatif)\n- Créneaux d’environ ${fmt(state.fw)} mm ; largeur du trait laser compensée : ${fmt(state.kerf)} mm\n- Assemblage : fond + 4 côtés collés à la colle à bois (vinylique). Le couvercle ne se colle pas :\n  colle seulement le « cadre sous le couvercle » dessous, bien centré, pour qu’il reste en place.\n- Fais d’abord un essai d’emboîtement sur une chute et ajuste la largeur du trait si c’est trop lâche ou trop serré.\n`;
+  const S=m.screws,sTxt=!S?'':kind==='3d'
+    ?`\nFIXATION DU COUVERCLE (2 vis)\n- 2 vis autotaraudeuses ${S.sc.nom} (tête cylindrique ou bombée).\n- Les 2 supports de vis sont dans deux coins opposés du corps, juste sous le couvercle (avant-trou Ø ${fmt(S.pilot)} mm, ${fmt(S.hs)} mm de profondeur) ; leur dessous en pente à 45° s’imprime sans support.\n- Le couvercle est percé à Ø ${fmt(S.sc.pass)} mm au-dessus. Visse doucement à la main : dans le plastique, un tournevis électrique arrache le filetage.\n`
+    :`\nFIXATION DU COUVERCLE (2 vis)\n- 2 vis autotaraudeuses ${S.sc.nom}.\n- ${S.n*2} cales de vissage carrées de ${fmt(S.c)} mm (${S.n} par coin) : empile-les et colle-les dans deux coins opposés, contre les parois, juste sous le cadre du couvercle (pose le couvercle avec son cadre pour les caler pendant le séchage).\n- Le couvercle et le cadre sont percés à Ø ${fmt(S.sc.pass)} mm, les cales à Ø ${fmt(S.pilot)} mm (avant-trou). La vis traverse le couvercle et le cadre, puis mord ${fmt(S.bite)} mm dans les cales.\n`;
+  if(kind==='3d')return head+`IMPRESSION 3D\n- Parois : ${fmt(d.t)} mm ; jeu du couvercle : ${fmt(state.jeu)} mm\n- PLA, couche 0,2 mm, remplissage 20 %, sans support\n- corps.stl : ouverture vers le haut ; couvercle.stl : déjà posé à plat, rebord vers le haut${state.reflector?' ; reflecteur.stl : fond percé sur le plateau':''}\n- Un trou dans une paroi verticale fait un « pont » en haut : au-delà de 15 mm, il peut légèrement s’affaisser, c’est normal.\n${sTxt}\nMesure tes composants avant de lancer une série.\n`;
+  return head+`DÉCOUPE LASER\n- Plaque de ${fmt(d.t)} mm (contreplaqué, MDF, carton gris rigide ou acrylique)\n- Trait rouge = découpe ; texte bleu = gravure (facultatif)\n- Créneaux d’environ ${fmt(state.fw)} mm ; largeur du trait laser compensée : ${fmt(state.kerf)} mm\n- Assemblage : fond + 4 côtés collés à la colle à bois (vinylique). Le couvercle ne se colle pas :\n  colle seulement le « cadre sous le couvercle » dessous, bien centré${S?' (ses 2 trous en face de ceux du couvercle)':''}, pour qu’il reste en place.\n${sTxt}- Fais d’abord un essai d’emboîtement sur une chute et ajuste la largeur du trait si c’est trop lâche ou trop serré.\n`;
 }
 async function export3D(){const m=buildModel(),parts=printParts(m),z=new JSZip();parts.forEach(p=>z.file(p.file,stlOf(p.geos,p.label).buf));z.file('LISEZ-MOI.txt',notice(m,'3d'));
   await saveFile(`boitier-${slug()}-impression-3d.zip`,await z.generateAsync({type:'blob'}),'application/zip');}
@@ -1022,7 +1067,7 @@ function textGlyphs(T){
 }
 const cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 function txtMirror(p){return !!(p&&p.txt&&p.txt.ok&&p.txt.mirror);}
-function txtPanels(m){return m.panels.filter(p=>!p.noLabel&&p.part!=='butee'&&!['Rebord','Cadre sous le couvercle'].includes(p.name));}
+function txtPanels(m){return m.panels.filter(p=>!p.noLabel&&p.part!=='butee'&&!['Rebord','Cadre sous le couvercle','Cale de vissage'].includes(p.name));}
 function txtKind(m){return (m.chess||m.sm||state.mode!=='3d')?'laser':'3d';}
 function bboxOf(P){const xs=P.map(q=>q[0]),ys=P.map(q=>q[1]);return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];}
 function holeBox(h){if(h.shape==='poly')return bboxOf(h.pts);const [a,b]=h.shape==='rond'?[h.d/2,h.d/2]:ext(h);return [h.u-a,h.v-b,h.u+a,h.v+b];}
@@ -1120,6 +1165,8 @@ function renderControls(){
   sync('Li',state.Li);sync('Wi',state.Wi);sync('Hi',state.Hi);
   $('t3').value=state.t3;$('jeu').value=state.jeu;$('tl').value=state.tl;$('tl_r').value=state.tl;$('fw').value=state.fw;$('kerf').value=state.kerf;$('engrave').checked=state.engrave;
   $('mat3d').hidden=state.mode!=='3d'||isC||isS;$('matLaser').hidden=state.mode!=='laser'&&!isC&&!isS;
+  $('scrSec').hidden=isC||isS;$('scr').checked=state.screws;$('scrTypeF').hidden=!state.screws;
+  if($('scrType').options.length<2)$('scrType').insertAdjacentHTML('beforeend',Object.entries(SCREWS).map(([k,v])=>`<option value="${k}">${v.nom}</option>`).join(''));$('scrType').value=state.screw;
   $('refl').checked=state.reflector;$('reflH').value=state.reflH;$('accSec').hidden=state.mode!=='3d'||isC||isS;
   $('planTab').hidden=state.mode!=='laser'&&!isC&&!isS;if(state.mode!=='laser'&&!isC&&!isS&&state.view==='plan')state.view='3d';
   document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===state.view)));
@@ -1158,10 +1205,29 @@ function renderWarns(m){
   if(state.mode==='laser'&&state.tl>2&&state.holes.some(h=>h.type==='inter_rect'&&h.shape!=='rond'))W.push(['info',`Les interrupteurs à clipser sont prévus pour des parois fines. Avec ${fmt(state.tl)} mm de bois, vérifie la fiche de ton interrupteur ou choisis « Interrupteur rond à écrou ».`]);
   if(state.mode==='laser'&&Math.max(d.L,d.W)<50)W.push(['info','Petit boîtier en découpe laser : les créneaux seront très petits. L’impression 3D sera plus simple.']);
   if(state.mode==='3d'&&Math.max(d.L,d.W)>200)W.push(['info','Grand boîtier : l’impression sera longue et il faut un plateau d’au moins '+Math.ceil(Math.max(d.L,d.W))+' mm. La découpe laser sera plus rapide.']);
+  const S=m.screws;
+  if(S){
+    const free=state.Hi-S.drop,nh=p.need?p.need[2]:0;
+    const [nl,nw]=p.need||[0,0],c=S.c+0.5,avoid=nl<=state.Li-2*c||nw<=state.Wi-2*c||(nl<=state.Li-c&&nw<=state.Wi-c); // le contenu peut-il éviter les deux coins ?
+    if(p.need&&nh>free&&!avoid){const add=Math.ceil(nh-free);W.push(['info',`Les ${S.laser?'cales':'supports'} de vis descendent de ${fmt(S.drop)} mm sous le couvercle, dans deux coins : le contenu (${fmt(nh)} mm de haut) risque de les toucher. <button class="btn small" data-fixh="${add}">Rehausser de ${add} mm</button> ou décoche « Fixer le couvercle avec 2 vis ».`]);}
+    if(S.bite<4)W.push(['bad',`La vis ${S.sc.nom} ne mord que ${fmt(Math.max(0,S.bite))} mm : choisis une vis plus longue.`]);
+    const sz=S.c+2;
+    m.abs.forEach((h,i)=>{if(!m.res[i].ok)return;const [ru,rv]=ext(h);
+      const hit=S.pos.some(([x,y])=>{if(h.face==='dessus')return Math.abs(h.u-x)<ru+sz/2&&Math.abs(h.v-y)<rv+sz/2;
+        const F=frames(d)[h.face],cx=F.O[0]+F.U[0]*h.u,cy=F.O[1]+F.U[1]*h.u,ext3=Math.abs(F.U[0])>0?[ru,0]:[0,ru];
+        const nearXY=Math.abs(cx-x)<ext3[0]+sz/2+(Math.abs(F.N[0])>0?d.t+S.c:0)&&Math.abs(cy-y)<ext3[1]+sz/2+(Math.abs(F.N[1])>0?d.t+S.c:0);
+        return nearXY&&h.v+rv>d.H-S.drop;});
+      if(hit)W.push(['bad',`« ${h.label} » (${FL[h.face].toLowerCase()}) touche un ${S.laser?'coin de vissage':'support de vis'} : éloigne-la du coin.`]);});
+  }
   if(state.mode==='3d'&&state.reflector&&!state.holes.some(h=>h.face==='avant'&&h.shape==='rond'))W.push(['info','Le réflecteur est centré sur la face avant, mais aucune ouverture ronde n’y est prévue pour l’ampoule.']);
-  if(!W.length)W.push(['ok','Tout est en ordre : les ouvertures sont bien placées et le contenu prévu rentre.']);
+  if(!W.length)W.push(['ok','Tout est en ordre : les ouvertures sont bien placées et le contenu prévu rentre.'+(S?` Couvercle fixé par 2 vis ${S.sc.nom}.`:'')]);
   $('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');
 }
+function renderScrTip(m){const S=m.screws,el=$('scrTip');if(!el)return;
+  if(!S){el.textContent='Sans vis, le couvercle tient par emboîtement'+(state.mode==='laser'?' (cadre collé dessous).':' (rebord).')+(PRESETS[state.obj].noScrews?' Ce boîtier est très bas : les supports de vis gêneraient la pile. Si tu coches les vis, rehausse-le.':'');return;}
+  el.textContent=(state.screw==='auto'?`Vis choisie : ${S.sc.nom}. `:'')+(S.laser
+    ?`2 piles de ${S.n} cale${S.n>1?'s':''} carrée${S.n>1?'s':''} de ${fmt(S.c)} mm, collées dans deux coins opposés sous le cadre. Trous : Ø ${fmt(S.sc.pass)} mm dans le couvercle et le cadre, avant-trou Ø ${fmt(S.pilot)} mm dans les cales.`
+    :`2 supports d’angle intégrés au corps, sous le couvercle, dans deux coins opposés. Trous : Ø ${fmt(S.sc.pass)} mm dans le couvercle, avant-trou Ø ${fmt(S.pilot)} mm et ${fmt(S.hs)} mm de profondeur dans les supports.`);}
 function renderStats(m){
   const d=m.d;let s=[['Extérieur',`${fmt(d.L)} × ${fmt(d.W)} × ${fmt(d.H+d.t)} mm`]];
   if(state.mode==='3d'){const parts=printParts(m);let v=0;parts.forEach(p=>v+=Math.abs(signedVolume(p.geos)));
@@ -1174,7 +1240,7 @@ let raf=0;function update(full){cancelAnimationFrame(raf);raf=requestAnimationFr
   const m=buildModel();lastModel=m;rebuild3D(m);drawTxtMarker(m);renderTxt(m);
   if(m.sm){renderSMWarns(m);renderSMStats(m);txtWarn(m);renderCamDiagram();if(state.view==='plan')$('planBox').innerHTML=smSheets(m).map(g=>'<p class="tip" style="margin:8px 0 4px">'+g.label+'</p>'+sheetSVG(g.sheet,false,true).svg).join('');return;}
   if(m.chess){renderChessWarns(m);renderChessStats(m);txtWarn(m);if(state.view==='plan'){const sh=chessSheets(m);$('planBox').innerHTML=sh.board.map(g=>'<p class="tip" style="margin:8px 0 4px">'+g.label+'</p>'+sheetSVG(g.sheet,false,true).svg).join('')+(sh.pieces?'<p class="tip" style="margin-top:10px">Pièces : une couleur, à découper deux fois</p>'+sheetSVG(sh.pieces,false,false).svg:'');}return;}
-  renderWarns(m);renderStats(m);txtWarn(m);
+  renderWarns(m);renderStats(m);txtWarn(m);renderScrTip(m);
   if(state.mode==='laser')$('planBox').innerHTML=svgOf(m,false).svg;
   if(full)renderHoles();else{document.querySelectorAll('[data-card]').forEach(c=>{const i=+c.dataset.card;c.classList.toggle('bad',!m.res[i].ok);});}
 });}
@@ -1196,6 +1262,9 @@ $('fw').addEventListener('input',e=>{const v=+e.target.value;if(v>=4&&v<=40){sta
 $('kerf').addEventListener('input',e=>{const v=+e.target.value;if(v>=0&&v<=0.5){state.kerf=v;update(false);}});
 $('engrave').addEventListener('change',e=>{state.engrave=e.target.checked;});
 $('refl').addEventListener('change',e=>{state.reflector=e.target.checked;update(false);});
+$('scr').addEventListener('change',e=>{state.screws=e.target.checked;$('scrTypeF').hidden=!state.screws;update(false);});
+$('scrType').addEventListener('change',e=>{state.screw=e.target.value;update(false);});
+$('warns').addEventListener('click',e=>{const b=e.target.closest('[data-fixh]');if(!b)return;state.Hi=Math.min(150,state.Hi+(+b.dataset.fixh));sync('Hi',state.Hi);update(false);resetView();});
 $('reflH').addEventListener('input',e=>{const v=+e.target.value;if(v>=6&&v<=50){state.reflH=v;update(false);}});
 $('explode').addEventListener('change',e=>{state.explode=e.target.checked;update(false);});
 $('lidShow').addEventListener('change',e=>{state.lidShow=e.target.checked;update(false);});
