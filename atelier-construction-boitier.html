@@ -214,7 +214,7 @@ footer{font-size:.8rem;color:var(--muted)}
           <p class="tip" id="ch_layersTip">1 couche : fente traversante. 2 ou 3 couches collées : la couche du dessous reste pleine et la languette s’enfonce plus.</p>
           <div class="field" id="ch_tb3F"><label for="ch_tb3">Épaisseur des corps (mm)</label><input type="number" id="ch_tb3" min="2" max="8" step="0.2"></div>
           <div class="field" id="ch_hs3F"><label for="ch_hs3">Hauteur des socles (mm)</label><input type="number" id="ch_hs3" min="4" max="20" step="0.5"></div>
-          <div class="field"><label for="ch_jp">Jeu d’emboîtement (mm)</label><input type="number" id="ch_jp" min="0" max="1.5" step="0.05"></div>
+          <div class="field"><label for="ch_jp">Jeu d’emboîtement (mm)</label><input type="number" id="ch_jp" min="-0.5" max="1.5" step="0.05"></div>
           <p class="tip" id="ch_jpTip"></p>
           <p class="tip">Le plateau et le coffret se font toujours à la découpe laser (trop grands pour la plupart des imprimantes). Le bouton en haut choisit la technique pour les pièces.</p>
         </div></details>
@@ -673,6 +673,7 @@ function buildChess(){
   if(!cd.laserP&&cd.slotDepth<2)W.push(['bad','Socle trop bas pour une fente solide : augmente sa hauteur (au moins 5 mm).']);
   if(cd.laserP&&cd.t<2)W.push(['info',`Plaque de ${fmt(cd.t)} mm : les pièces seront fines et fragiles. 3 mm est un bon compromis.`]);
   if(!cd.laserP&&cd.jp<0.3)W.push(['info',`Jeu d’emboîtement de ${fmt(cd.jp)} mm : trop serré pour la plupart des imprimantes 3D, la languette risque de ne pas entrer. 0,4 mm est conseillé ; imprime d’abord le gabarit d’essai.`]);
+  if(cd.jp<0)W.push(['info',`Jeu négatif (${fmtJ(cd.jp)} mm) : la fente est plus étroite que la languette. Emboîtement en force : vérifie d’abord avec le gabarit d’essai que le socle ne se fend pas.`]);
   if(cd.laserP&&cd.jp>0.6)W.push(['info',`Jeu d’emboîtement de ${fmt(cd.jp)} mm : les pièces risquent de flotter dans les socles. Colle-les ou réduis le jeu.`]);
   }
   if(M.tiroir){const nx=Math.floor((cd.Wd-2*cd.t)/(cd.D+1)),ny=Math.floor((cd.Dd-2*cd.t)/(cd.D+1));cap=Math.max(0,nx*ny);}
@@ -735,10 +736,11 @@ function sheetDXF(sh){
   return ['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES',...L,'0','ENDSEC','0','EOF'].join('\n');
 }
 /* Gabarit d'essai : 5 fentes de jeux croissants, repérées par 1 à 5 encoches sur le bord avant */
-const GAUGE_J={'3d':[0.2,0.3,0.4,0.5,0.6],laser:[0,0.1,0.2,0.3,0.4]};
+const GAUGE_J={'3d':[-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5],laser:[-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4]};
+const fmtJ=j=>(j<0?'−':'')+fmt(Math.abs(j));
 function gaugeData(cd){
   const J=GAUGE_J[cd.laserP?'laser':'3d'],k=cd.laserP?state.kerf:0,ws=J.map(j=>cd.tw+j-k),hs=J.map(j=>cd.tb+j-k);
-  const pitch=Math.max(...ws)+6,L=pitch*J.length+4,Wg=Math.max(...hs)+16,nw=1.6,nd=1.4;
+  const pitch=Math.max(...ws)+6,L=pitch*J.length+4,Wg=Math.max(...hs)+16,nw=1.1,nd=1.2;
   const pts=[[0,0]];
   J.forEach((_,i)=>{const cx=2+pitch*(i+.5),n=i+1,st=cx-(n*nw*2-nw)/2;for(let q=0;q<n;q++){const x=st+q*nw*2;pts.push([x,0],[x+nw/2,nd],[x+nw,0]);}});
   pts.push([L,0],[L,Wg],[0,Wg]);
@@ -751,7 +753,7 @@ function gaugeGeos(cd){
   const base=cd.socH-cd.slotDepth;return [ext(sh(false),base+0.05,0),ext(sh(true),cd.slotDepth,base)];
 }
 function gaugeSheet(cd){
-  const g=gaugeData(cd),engr=g.slots.map(h=>({tx:fmt(h.j).replace('.',','),u:h.u,v:h.v-h.h/2-4.5,size:3.2}));
+  const g=gaugeData(cd),engr=g.slots.map(h=>({tx:fmtJ(h.j),u:h.u,v:h.v-h.h/2-4.5,size:3.2}));
   return packSheet([{name:'gabarit',noLabel:true,outline:g.pts,holes:g.slots.map(({shape,u,v,w,h})=>({shape,u,v,w,h})),engr},{name:'pion',noLabel:true,outline:pieceOutline('pion',cd),holes:[]}],400);
 }
 function testGeos(cd){ // gabarit + 1 pion couché à côté, dans le même fichier STL
@@ -762,8 +764,8 @@ function testNotice(cd){
   return `ESSAI D'EMBOÎTEMENT – JEU D'ÉCHECS\nAtelier construction électronique – Modeleur de boîtiers\n\n`+
   (cd.laserP?`Fichier : essai-gabarit-et-pion.svg (ou .dxf), plaque de ${fmt(cd.t)} mm, trait laser compensé ${fmt(state.kerf)} mm.\nRouge = découpe ; bleu = gravure des valeurs (facultatif). Utilise la même plaque que pour les vraies pièces.\n`
   :`Fichier : essai-gabarit-et-pion.stl (la barrette et un pion couché à côté). Imprime avec les mêmes réglages que les vraies pièces : PLA, couche 0,2 mm, sans support.\n`)+
-  `\nLa barrette a 5 fentes repérées par des encoches sur le bord avant :\n${J.map((j,i)=>`  ${i+1} encoche${i?'s':''} = jeu ${fmt(j)} mm`).join('\n')}\n\n`+
-  `1. Enfonce la languette du pion dans chaque fente, en commençant par 1 encoche.\n2. Garde la première fente où la languette entre à la main, sans forcer, et où le pion tient sans tomber.\n3. Reporte cette valeur dans « Jeu d'emboîtement » du modeleur, puis télécharge toutes les pièces.\n\nSi aucune fente ne convient, ébavure la languette (cutter, papier de verre) et recommence.\n`;
+  `\nLa barrette a ${J.length} fentes repérées par des encoches sur le bord avant${cd.laserP?' (la valeur est aussi gravée sous chaque fente)':''} :\n${J.map((j,i)=>`  ${i+1} encoche${i?'s':''} = jeu ${fmtJ(j)} mm`).join('\n')}\n\nJeu 0 = fente exactement à la taille de la languette. Jeu négatif = fente plus étroite que la languette : la pièce entre en force et tient sans colle.\n\n`+
+  `1. Enfonce la languette du pion dans chaque fente, de la plus serrée (1 encoche) à la plus large.\n2. Garde la plus serrée où la languette entre à la main, sans marteau, et où le pion tient sans tomber.\n3. Reporte cette valeur dans « Jeu d'emboîtement » du modeleur, puis télécharge toutes les pièces.\n\nSi aucune fente ne convient, ébavure la languette (cutter, papier de verre) et recommence.\n`;
 }
 async function exportChessTest(){
   const m=buildModel(),cd=m.cd,z=new JSZip();
@@ -795,14 +797,14 @@ function chessNotice(m){
   if(M.tiroir&&!M.plateau)s+=`- Sans plateau, le coffret reste ouvert en haut : pose ton propre plateau dessus ou colle une plaque de ${fmt(cd.S)} × ${fmt(cd.S)} mm.\n`;
   if(!M.pieces)return s;
   s+=`\nPIÈCES (32 = 16 claires + 16 foncées)\nPar couleur : 1 roi, 1 dame, 2 tours, 2 fous, 2 cavaliers, 8 pions, et 16 socles.\nChaque pièce = un socle avec une fente rectangulaire (${fmt(cd.tw+cd.jp)} × ${fmt(cd.tb+cd.jp)} mm) + un corps plat dont la languette s'enfonce de ${fmt(cd.tabD)} mm.\n`;
-  if(cd.laserP)s+=`- pieces-a-decouper-2-fois.svg : une couleur. Découpe la planche une fois dans un bois clair et une fois dans un bois foncé (ou peins la deuxième série).\n- Socles : ${C.layers} couche${C.layers>1?'s':''} de ${fmt(cd.t)} mm à coller ensemble${C.layers>=2?' (la couche sans fente en dessous)':''}.\n- Jeu d'emboîtement choisi : ${fmt(cd.jp)} mm (fente de ${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm après découpe, trait laser compensé).\n`;
-  else s+=`- Impression 3D : socle.stl (à imprimer 32 fois) et un fichier par corps (corps-roi.stl, etc.), à imprimer en 2 couleurs.\n- Corps de ${fmt(cd.tb)} mm d'épaisseur, posés à plat ; socles de ${fmt(cd.socH)} mm, fente de ${fmt(cd.slotDepth)} mm de profondeur. PLA, couche 0,2 mm, sans support.\n- Quantités par couleur : roi 1, dame 1, tour 2, fou 2, cavalier 2, pion 8.\n- Jeu d'emboîtement choisi : ${fmt(cd.jp)} mm (fente de ${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm). Le bout de la languette est chanfreiné pour entrer plus facilement.\n`;
+  if(cd.laserP)s+=`- pieces-a-decouper-2-fois.svg : une couleur. Découpe la planche une fois dans un bois clair et une fois dans un bois foncé (ou peins la deuxième série).\n- Socles : ${C.layers} couche${C.layers>1?'s':''} de ${fmt(cd.t)} mm à coller ensemble${C.layers>=2?' (la couche sans fente en dessous)':''}.\n- Jeu d'emboîtement choisi : ${fmtJ(cd.jp)} mm (fente de ${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm après découpe, trait laser compensé).\n`;
+  else s+=`- Impression 3D : socle.stl (à imprimer 32 fois) et un fichier par corps (corps-roi.stl, etc.), à imprimer en 2 couleurs.\n- Corps de ${fmt(cd.tb)} mm d'épaisseur, posés à plat ; socles de ${fmt(cd.socH)} mm, fente de ${fmt(cd.slotDepth)} mm de profondeur. PLA, couche 0,2 mm, sans support.\n- Quantités par couleur : roi 1, dame 1, tour 2, fou 2, cavalier 2, pion 8.\n- Jeu d'emboîtement choisi : ${fmtJ(cd.jp)} mm (fente de ${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm). Le bout de la languette est chanfreiné pour entrer plus facilement.\n`;
   const J=GAUGE_J[cd.laserP?'laser':'3d'];
-  s+=`\nAVANT DE TOUT ${cd.laserP?'DÉCOUPER':'IMPRIMER'} : LE GABARIT D'ESSAI\n- ${cd.laserP?'0-essai-gabarit-et-pion.svg / .dxf : une barrette percée de 5 fentes et un seul pion, à découper dans la même plaque que les pièces.':'0-essai-gabarit-et-pion.stl : une barrette avec 5 fentes et un seul pion couché à côté. Mêmes réglages que les vraies pièces.'}\n- Les fentes sont repérées par des encoches sur le bord avant : 1 encoche = jeu ${fmt(J[0])} mm, 2 = ${fmt(J[1])}, 3 = ${fmt(J[2])}, 4 = ${fmt(J[3])}, 5 = ${fmt(J[4])} mm.\n- Enfonce la languette du pion dans chaque fente. Choisis la première qui laisse entrer la languette à la main, sans marteau, et qui la tient sans qu'elle tombe.\n- Reporte cette valeur dans « Jeu d'emboîtement » du modeleur, puis télécharge à nouveau les fichiers.\n- Si la languette force encore : ébavure ses arêtes au cutter ou ponce-la légèrement${cd.laserP?'':' ; vérifie aussi que la première couche n\'est pas écrasée (« pied d\'éléphant »)'}.\n`;
+  s+=`\nAVANT DE TOUT ${cd.laserP?'DÉCOUPER':'IMPRIMER'} : LE GABARIT D'ESSAI\n- ${cd.laserP?'0-essai-gabarit-et-pion.svg / .dxf : une barrette percée de '+J.length+' fentes et un seul pion, à découper dans la même plaque que les pièces.':'0-essai-gabarit-et-pion.stl : une barrette avec '+J.length+' fentes et un seul pion couché à côté. Mêmes réglages que les vraies pièces.'}\n- Les fentes sont repérées par des encoches sur le bord avant : ${J.map((j,i)=>`${i+1} encoche${i?'s':''} = ${fmtJ(j)} mm`).join(', ')}.\n- Jeu 0 = fente exactement à la taille de la languette ; jeu négatif = fente plus étroite que la languette (emboîtement en force, le bois ou le plastique se comprime).\n- Enfonce la languette du pion dans chaque fente, de la plus serrée à la plus large. Garde la plus serrée où la languette entre à la main, sans marteau, et où le pion tient sans tomber.\n- Reporte cette valeur dans « Jeu d'emboîtement » du modeleur, puis télécharge à nouveau les fichiers.\n- Si la languette force encore : ébavure ses arêtes au cutter ou ponce-la légèrement${cd.laserP?'':' ; vérifie aussi que la première couche n\'est pas écrasée (« pied d\'éléphant »)'}.\n`;
   return s;
 }
 function renderJpTip(cd){const el=$('ch_jpTip');if(!el)return;
-  el.innerHTML=`Fente de ${fmt(cd.tw+cd.jp)} × ${fmt(cd.tb+cd.jp)} mm${cd.laserP?' après découpe':''} pour une languette de ${fmt(cd.tw)} × ${fmt(cd.tb)} mm. ${cd.laserP?'Conseil laser : 0,1 à 0,3 mm. Mesure l’épaisseur réelle de ta plaque au pied à coulisse : un contreplaqué « 3 mm » fait souvent 3,2 à 3,4 mm ; ajoute la différence au jeu.':'Conseil 3D : 0,3 à 0,5 mm (0,4 mm par défaut).'} Si ça force, augmente le jeu de 0,1 mm. Commence par le bouton « Essai : gabarit + 1 pion » en bas : tu ne fabriques qu’un pion et une barrette à 5 fentes pour trouver la bonne valeur.`;}
+  el.innerHTML=`Fente de ${fmt(cd.tw+cd.jp)} × ${fmt(cd.tb+cd.jp)} mm${cd.laserP?' après découpe':''} pour une languette de ${fmt(cd.tw)} × ${fmt(cd.tb)} mm. ${cd.laserP?'Conseil laser : de −0,1 à 0,3 mm (un jeu négatif rend la fente plus étroite que la languette, pour un emboîtement en force). Mesure l’épaisseur réelle de ta plaque au pied à coulisse : un contreplaqué « 3 mm » fait souvent 3,2 à 3,4 mm ; ajoute la différence au jeu.':'Conseil 3D : 0,3 à 0,5 mm (0,4 mm par défaut).'} Si ça force, augmente le jeu de 0,1 mm. Commence par le bouton « Essai : gabarit + 1 pion » en bas : tu ne fabriques qu’un pion et une barrette à ${GAUGE_J[cd.laserP?'laser':'3d'].length} fentes (jeux négatifs, 0 et positifs) pour trouver la bonne valeur.`;}
 function renderChessWarns(m){renderJpTip(m.cd);const W=m.W.length?m.W:[['ok',m.make.pieces&&m.make.tiroir?'Tout est en ordre : les pièces tiennent sur les cases et rentrent dans le tiroir.':'Tout est en ordre.']];$('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');}
 function renderChessStats(m){
   const cd=m.cd,M=m.make,sh=chessSheets(m);let s=[];
