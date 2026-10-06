@@ -216,6 +216,8 @@ footer{font-size:.8rem;color:var(--muted)}
           <div class="field" id="ch_hs3F"><label for="ch_hs3">Hauteur des socles (mm)</label><input type="number" id="ch_hs3" min="4" max="20" step="0.5"></div>
           <div class="field"><label for="ch_jp">Jeu d’emboîtement (mm)</label><input type="number" id="ch_jp" min="-0.5" max="1.5" step="0.05"></div>
           <p class="tip" id="ch_jpTip"></p>
+          <div class="field" id="ch_knF"><label for="ch_kn">Trait laser négatif des fentes (mm)</label><input type="number" id="ch_kn" min="-0.5" max="0" step="0.05"></div>
+          <p class="tip" id="ch_knTip">Uniquement pour les pièces en découpe laser : une valeur négative rétrécit les fentes des socles (et du gabarit d’essai) d’autant. Les contours des pièces, les créneaux du coffret et le plateau ne changent pas.</p>
           <p class="tip">Le plateau et le coffret se font toujours à la découpe laser (trop grands pour la plupart des imprimantes). Le bouton en haut choisit la technique pour les pièces.</p>
         </div></details>
 
@@ -349,7 +351,7 @@ const RECO={
 };
 
 /* ================= État ================= */
-const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1};
+const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1};
 function loadPreset(id){
   const p=PRESETS[id];state.obj=id;state.mode=p.reco;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.sel=-1;
   state.holes=p.holes.map(([type,face,fu,fv])=>{const t=HT[type];return {type,label:t.label,face,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu,fv};});
@@ -619,9 +621,9 @@ function chessDims(){
   const C=state.chess,t=state.tl,S=8*C.c+2*C.b,j=C.jt,laserP=state.mode==='laser';
   const s=C.K/100,tw=24*s,tb=laserP?t:C.tb3,socH=laserP?C.layers*t:C.hs3;
   const slotDepth=laserP?(C.layers>=2?(C.layers-1)*t:t):Math.min(C.hs3-1.5,5);
-  const tabD=laserP?slotDepth:slotDepth-0.3,k=laserP?state.kerf:0,jp=laserP?C.jpL:C.jp3;
-  return {t,S,j,Hw:C.Hw,c:C.c,b:C.b,Wd:S-2*t-2*j,Dd:S-t-j,Hd:C.Hw-t-j,s,tw,tb,socH,slotDepth,tabD,D:C.D,jp,k,
-    slotW:tw+jp-k,slotH:tb+jp-k,laserP,finger:Math.min(22,C.Hw-12)};
+  const tabD=laserP?slotDepth:slotDepth-0.3,k=laserP?state.kerf:0,jp=laserP?C.jpL:C.jp3,kn=laserP?(C.kn||0):0;
+  return {t,S,j,Hw:C.Hw,c:C.c,b:C.b,Wd:S-2*t-2*j,Dd:S-t-j,Hd:C.Hw-t-j,s,tw,tb,socH,slotDepth,tabD,D:C.D,jp,k,kn,
+    slotW:tw+jp-k+kn,slotH:tb+jp-k+kn,laserP,finger:Math.min(22,C.Hw-12)};
 }
 const fr=(U,V,N,O)=>({U,V,N,O});
 function chessBoardPanels(cd){
@@ -739,7 +741,7 @@ function sheetDXF(sh){
 const GAUGE_J={'3d':[-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5],laser:[-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4]};
 const fmtJ=j=>(j<0?'−':'')+fmt(Math.abs(j));
 function gaugeData(cd){
-  const J=GAUGE_J[cd.laserP?'laser':'3d'],k=cd.laserP?state.kerf:0,ws=J.map(j=>cd.tw+j-k),hs=J.map(j=>cd.tb+j-k);
+  const J=GAUGE_J[cd.laserP?'laser':'3d'],k=cd.laserP?state.kerf:0,kn=cd.kn||0,ws=J.map(j=>cd.tw+j-k+kn),hs=J.map(j=>cd.tb+j-k+kn);
   const pitch=Math.max(...ws)+6,L=pitch*J.length+4,Wg=Math.max(...hs)+16,nw=1.1,nd=1.2;
   const pts=[[0,0]];
   J.forEach((_,i)=>{const cx=2+pitch*(i+.5),n=i+1,st=cx-(n*nw*2-nw)/2;for(let q=0;q<n;q++){const x=st+q*nw*2;pts.push([x,0],[x+nw/2,nd],[x+nw,0]);}});
@@ -796,15 +798,15 @@ function chessNotice(m){
   if(M.plateau&&M.tiroir)s+=`- Colle le plateau sur le coffret, cases gravées vers le haut, la case a1 (foncée) en bas à gauche, côté tiroir.\n`;
   if(M.tiroir&&!M.plateau)s+=`- Sans plateau, le coffret reste ouvert en haut : pose ton propre plateau dessus ou colle une plaque de ${fmt(cd.S)} × ${fmt(cd.S)} mm.\n`;
   if(!M.pieces)return s;
-  s+=`\nPIÈCES (32 = 16 claires + 16 foncées)\nPar couleur : 1 roi, 1 dame, 2 tours, 2 fous, 2 cavaliers, 8 pions, et 16 socles.\nChaque pièce = un socle avec une fente rectangulaire (${fmt(cd.tw+cd.jp)} × ${fmt(cd.tb+cd.jp)} mm) + un corps plat dont la languette s'enfonce de ${fmt(cd.tabD)} mm.\n`;
-  if(cd.laserP)s+=`- pieces-a-decouper-2-fois.svg : une couleur. Découpe la planche une fois dans un bois clair et une fois dans un bois foncé (ou peins la deuxième série).\n- Socles : ${C.layers} couche${C.layers>1?'s':''} de ${fmt(cd.t)} mm à coller ensemble${C.layers>=2?' (la couche sans fente en dessous)':''}.\n- Jeu d'emboîtement choisi : ${fmtJ(cd.jp)} mm (fente de ${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm après découpe, trait laser compensé).\n`;
+  s+=`\nPIÈCES (32 = 16 claires + 16 foncées)\nPar couleur : 1 roi, 1 dame, 2 tours, 2 fous, 2 cavaliers, 8 pions, et 16 socles.\nChaque pièce = un socle avec une fente rectangulaire (${fmt(cd.tw+cd.jp+cd.kn)} × ${fmt(cd.tb+cd.jp+cd.kn)} mm) + un corps plat dont la languette s'enfonce de ${fmt(cd.tabD)} mm.\n`;
+  if(cd.laserP)s+=`- pieces-a-decouper-2-fois.svg : une couleur. Découpe la planche une fois dans un bois clair et une fois dans un bois foncé (ou peins la deuxième série).\n- Socles : ${C.layers} couche${C.layers>1?'s':''} de ${fmt(cd.t)} mm à coller ensemble${C.layers>=2?' (la couche sans fente en dessous)':''}.\n- Jeu d'emboîtement choisi : ${fmtJ(cd.jp)} mm (fente de ${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm dans le fichier, trait laser compensé)${cd.kn?` ; trait laser négatif des fentes : ${fmtJ(cd.kn)} mm (fentes plus étroites de ${fmt(-cd.kn)} mm, gabarit d'essai compris)`:''}.\n`;
   else s+=`- Impression 3D : socle.stl (à imprimer 32 fois) et un fichier par corps (corps-roi.stl, etc.), à imprimer en 2 couleurs.\n- Corps de ${fmt(cd.tb)} mm d'épaisseur, posés à plat ; socles de ${fmt(cd.socH)} mm, fente de ${fmt(cd.slotDepth)} mm de profondeur. PLA, couche 0,2 mm, sans support.\n- Quantités par couleur : roi 1, dame 1, tour 2, fou 2, cavalier 2, pion 8.\n- Jeu d'emboîtement choisi : ${fmtJ(cd.jp)} mm (fente de ${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm). Le bout de la languette est chanfreiné pour entrer plus facilement.\n`;
   const J=GAUGE_J[cd.laserP?'laser':'3d'];
   s+=`\nAVANT DE TOUT ${cd.laserP?'DÉCOUPER':'IMPRIMER'} : LE GABARIT D'ESSAI\n- ${cd.laserP?'0-essai-gabarit-et-pion.svg / .dxf : une barrette percée de '+J.length+' fentes et un seul pion, à découper dans la même plaque que les pièces.':'0-essai-gabarit-et-pion.stl : une barrette avec '+J.length+' fentes et un seul pion couché à côté. Mêmes réglages que les vraies pièces.'}\n- Les fentes sont repérées par des encoches sur le bord avant : ${J.map((j,i)=>`${i+1} encoche${i?'s':''} = ${fmtJ(j)} mm`).join(', ')}.\n- Jeu 0 = fente exactement à la taille de la languette ; jeu négatif = fente plus étroite que la languette (emboîtement en force, le bois ou le plastique se comprime).\n- Enfonce la languette du pion dans chaque fente, de la plus serrée à la plus large. Garde la plus serrée où la languette entre à la main, sans marteau, et où le pion tient sans tomber.\n- Reporte cette valeur dans « Jeu d'emboîtement » du modeleur, puis télécharge à nouveau les fichiers.\n- Si la languette force encore : ébavure ses arêtes au cutter ou ponce-la légèrement${cd.laserP?'':' ; vérifie aussi que la première couche n\'est pas écrasée (« pied d\'éléphant »)'}.\n`;
   return s;
 }
 function renderJpTip(cd){const el=$('ch_jpTip');if(!el)return;
-  el.innerHTML=`Fente de ${fmt(cd.tw+cd.jp)} × ${fmt(cd.tb+cd.jp)} mm${cd.laserP?' après découpe':''} pour une languette de ${fmt(cd.tw)} × ${fmt(cd.tb)} mm. ${cd.laserP?'Conseil laser : de −0,1 à 0,3 mm (un jeu négatif rend la fente plus étroite que la languette, pour un emboîtement en force). Mesure l’épaisseur réelle de ta plaque au pied à coulisse : un contreplaqué « 3 mm » fait souvent 3,2 à 3,4 mm ; ajoute la différence au jeu.':'Conseil 3D : 0,3 à 0,5 mm (0,4 mm par défaut).'} Si ça force, augmente le jeu de 0,1 mm. Commence par le bouton « Essai : gabarit + 1 pion » en bas : tu ne fabriques qu’un pion et une barrette à ${GAUGE_J[cd.laserP?'laser':'3d'].length} fentes (jeux négatifs, 0 et positifs) pour trouver la bonne valeur.`;}
+  el.innerHTML=`Fente de ${fmt(cd.tw+cd.jp+cd.kn)} × ${fmt(cd.tb+cd.jp+cd.kn)} mm${cd.laserP?' après découpe':''}${cd.kn?` (trait négatif ${fmtJ(cd.kn)} mm inclus)`:''} pour une languette de ${fmt(cd.tw)} × ${fmt(cd.tb)} mm. ${cd.laserP?'Conseil laser : de −0,1 à 0,3 mm (un jeu négatif rend la fente plus étroite que la languette, pour un emboîtement en force). Mesure l’épaisseur réelle de ta plaque au pied à coulisse : un contreplaqué « 3 mm » fait souvent 3,2 à 3,4 mm ; ajoute la différence au jeu.':'Conseil 3D : 0,3 à 0,5 mm (0,4 mm par défaut).'} Si ça force, augmente le jeu de 0,1 mm. Commence par le bouton « Essai : gabarit + 1 pion » en bas : tu ne fabriques qu’un pion et une barrette à ${GAUGE_J[cd.laserP?'laser':'3d'].length} fentes (jeux négatifs, 0 et positifs) pour trouver la bonne valeur.`;}
 function renderChessWarns(m){renderJpTip(m.cd);const W=m.W.length?m.W:[['ok',m.make.pieces&&m.make.tiroir?'Tout est en ordre : les pièces tiennent sur les cases et rentrent dans le tiroir.':'Tout est en ordre.']];$('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');}
 function renderChessStats(m){
   const cd=m.cd,M=m.make,sh=chessSheets(m);let s=[];
@@ -955,11 +957,11 @@ function renderControls(){
   $('smSec').hidden=!isS;$('modeSeg').hidden=isS;if(isS)state.mode='laser';$('chessSec').hidden=!isC;$('dimSec').hidden=isC||isS;$('holeSec').hidden=isC||isS;$('lidLbl').textContent=isS?'Tablette et décor':isC?'Pièces':'Couvercle';
   if(isS){const S=state.sm;['pw','pd','tw','td','ca','cb','win','hc','fov'].forEach(k=>$('sm_'+k).value=S[k]);$('sm_paper').value=S.paper;$('sm_dev').value=S.dev;$('sm_winShape').value=S.winShape;$('sm_cable').value=S.cable;$('sm_stops').checked=S.stops;
     $('sm_pwF').hidden=S.paper!=='perso';$('sm_pdF').hidden=S.paper!=='perso';}
-  if(isC){const C=state.chess;['c','b','Hw','jt','K','D','tb3','hs3'].forEach(k=>$('ch_'+k).value=C[k]);$('ch_jp').value=C[state.mode==='laser'?'jpL':'jp3'];$('ch_marks').checked=C.marks;$('ch_soc').value=C.soc;$('ch_layers').value=String(C.layers);
+  if(isC){const C=state.chess;['c','b','Hw','jt','K','D','tb3','hs3'].forEach(k=>$('ch_'+k).value=C[k]);$('ch_jp').value=C[state.mode==='laser'?'jpL':'jp3'];$('ch_kn').value=C.kn||0;$('ch_marks').checked=C.marks;$('ch_soc').value=C.soc;$('ch_layers').value=String(C.layers);
     const M=C.make;['pieces','plateau','tiroir'].forEach(k=>$('mk_'+k).checked=M[k]);$('modeSeg').hidden=!M.pieces;
     const show=(id,on)=>{const el=$(id).closest('.field')||$(id).closest('label');el.hidden=!on;};show('ch_b',M.plateau||M.tiroir);show('ch_Hw',M.tiroir);show('ch_jt',M.tiroir);show('ch_marks',M.plateau);
     ['ch_K','ch_soc','ch_D','ch_jp'].forEach(id=>show(id,M.pieces));$('ch_jpTip').hidden=!M.pieces;$('ch_piecesH').hidden=!M.pieces;
-    $('ch_layersF').hidden=state.mode!=='laser'||!M.pieces;$('ch_layersTip').hidden=state.mode!=='laser';$('ch_tb3F').hidden=state.mode!=='3d'||!M.pieces;$('ch_hs3F').hidden=state.mode!=='3d'||!M.pieces;$('ch_layersTip').hidden=state.mode!=='laser'||!M.pieces;}
+    $('ch_layersF').hidden=state.mode!=='laser'||!M.pieces;$('ch_layersTip').hidden=state.mode!=='laser';$('ch_tb3F').hidden=state.mode!=='3d'||!M.pieces;$('ch_hs3F').hidden=state.mode!=='3d'||!M.pieces;$('ch_layersTip').hidden=state.mode!=='laser'||!M.pieces;$('ch_knF').hidden=state.mode!=='laser'||!M.pieces;$('ch_knTip').hidden=state.mode!=='laser'||!M.pieces;}
   const r=$('reco');if(isS){r.textContent='Découpe laser : grand cadre plat en contreplaqué de 4 ou 5 mm, assemblé par tenons et mortaises. Les fentes sont compensées pour que les languettes tiennent serrées.';r.classList.remove('other');}
   else if(isC){r.textContent=state.mode==='laser'?'Plateau, coffret et tiroir en découpe laser (gravure des cases). Pièces aussi en découpe laser : corps et socles dans la même plaque, rapide et sans plastique.':'Plateau, coffret et tiroir en découpe laser. Pièces en impression 3D : socles plus lourds et plus stables, fente borgne qui cache la languette.';r.classList.remove('other');}
   else r.textContent=state.mode===p.reco?RECO[p.reco]:RECO[p.reco]+' Tu as choisi l’autre technique : c’est possible, vérifie les avertissements.';r.classList.toggle('other',state.mode!==p.reco);
@@ -1046,7 +1048,7 @@ $('reflH').addEventListener('input',e=>{const v=+e.target.value;if(v>=6&&v<=50){
 $('explode').addEventListener('change',e=>{state.explode=e.target.checked;update(false);});
 $('lidShow').addEventListener('change',e=>{state.lidShow=e.target.checked;update(false);});
 $('resetView').addEventListener('click',resetView);
-['c','b','Hw','jt','K','D','tb3','hs3','jp'].forEach(k=>$('ch_'+k).addEventListener('input',e=>{const el=e.target,v=+el.value.replace(',','.'),ok=el.value!==''&&v>=+el.min&&v<=+el.max;el.classList.toggle('bad',!ok);if(!ok)return;
+['c','b','Hw','jt','K','D','tb3','hs3','jp','kn'].forEach(k=>$('ch_'+k).addEventListener('input',e=>{const el=e.target,v=+el.value.replace(',','.'),ok=el.value!==''&&v>=+el.min&&v<=+el.max;el.classList.toggle('bad',!ok);if(!ok)return;
   if(k==='jp'){state.chess[state.mode==='laser'?'jpL':'jp3']=v;update(false);return;}
   if(k==='c'){const old=state.chess.c;state.chess.D=Math.max(12,Math.round(state.chess.D+(v-old)));$('ch_D').value=state.chess.D;}state.chess[k]=v;update(false);if(k==='c'||k==='Hw')resetView();}));
 ['pw','pd','tw','td','ca','cb','win','hc','fov'].forEach(k=>$('sm_'+k).addEventListener('input',e=>{const el=e.target,v=+el.value;if(el.value===''||!(v>=+el.min&&v<=+el.max))return;state.sm[k]=v;
