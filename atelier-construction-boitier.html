@@ -118,6 +118,7 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline
 .hole{border:1.5px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--board)}
 .hole.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 .hole.bad{border-color:var(--bad);background:var(--bad-soft)}
+.field input.bad{border-color:var(--bad);background:var(--bad-soft)}
 .holehead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .holehead b{font-size:.9rem}
 .x{all:unset;cursor:pointer;font-size:1.2rem;line-height:1;padding:2px 8px;border-radius:6px;color:var(--muted)}
@@ -213,7 +214,8 @@ footer{font-size:.8rem;color:var(--muted)}
           <p class="tip" id="ch_layersTip">1 couche : fente traversante. 2 ou 3 couches collées : la couche du dessous reste pleine et la languette s’enfonce plus.</p>
           <div class="field" id="ch_tb3F"><label for="ch_tb3">Épaisseur des corps (mm)</label><input type="number" id="ch_tb3" min="2" max="8" step="0.2"></div>
           <div class="field" id="ch_hs3F"><label for="ch_hs3">Hauteur des socles (mm)</label><input type="number" id="ch_hs3" min="4" max="20" step="0.5"></div>
-          <div class="field"><label for="ch_jp">Jeu d’emboîtement (mm)</label><input type="number" id="ch_jp" min="0" max="0.6" step="0.05"></div>
+          <div class="field"><label for="ch_jp">Jeu d’emboîtement (mm)</label><input type="number" id="ch_jp" min="0" max="1.5" step="0.05"></div>
+          <p class="tip" id="ch_jpTip"></p>
           <p class="tip">Le plateau et le coffret se font toujours à la découpe laser (trop grands pour la plupart des imprimantes). Le bouton en haut choisit la technique pour les pièces.</p>
         </div></details>
 
@@ -347,7 +349,7 @@ const RECO={
 };
 
 /* ================= État ================= */
-const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp:0.1},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1};
+const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1};
 function loadPreset(id){
   const p=PRESETS[id];state.obj=id;state.mode=p.reco;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.sel=-1;
   state.holes=p.holes.map(([type,face,fu,fv])=>{const t=HT[type];return {type,label:t.label,face,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu,fv};});
@@ -609,16 +611,17 @@ function pieceOutline(k,cd){
   const P=PIECES[k],s=cd.s;let body;
   if(P.full)body=P.full.map(([x,y])=>[x*s,y*s]);
   else{const h=P.half.map(([x,y])=>[x*s,y*s]);body=h.concat(h.slice(0,-1).reverse().map(([x,y])=>[-x,y]));}
-  return [[-cd.tw/2,-cd.tabD],[cd.tw/2,-cd.tabD],[cd.tw/2,0]].concat(body,[[-cd.tw/2,0]]);
+  const ch=Math.min(0.8,cd.tw/6,cd.tabD/3);
+  return [[-cd.tw/2+ch,-cd.tabD],[cd.tw/2-ch,-cd.tabD],[cd.tw/2,-cd.tabD+ch],[cd.tw/2,0]].concat(body,[[-cd.tw/2,0],[-cd.tw/2,-cd.tabD+ch]]);
 }
 const circlePts=(r,n=72)=>Array.from({length:n},(_,i)=>[r*Math.cos(i/n*2*Math.PI),r*Math.sin(i/n*2*Math.PI)]);
 function chessDims(){
   const C=state.chess,t=state.tl,S=8*C.c+2*C.b,j=C.jt,laserP=state.mode==='laser';
   const s=C.K/100,tw=24*s,tb=laserP?t:C.tb3,socH=laserP?C.layers*t:C.hs3;
   const slotDepth=laserP?(C.layers>=2?(C.layers-1)*t:t):Math.min(C.hs3-1.5,5);
-  const tabD=laserP?slotDepth:slotDepth-0.2,k=laserP?state.kerf:0;
-  return {t,S,j,Hw:C.Hw,c:C.c,b:C.b,Wd:S-2*t-2*j,Dd:S-t-j,Hd:C.Hw-t-j,s,tw,tb,socH,slotDepth,tabD,D:C.D,
-    slotW:tw+C.jp-k,slotH:tb+C.jp-k,laserP,finger:Math.min(22,C.Hw-12)};
+  const tabD=laserP?slotDepth:slotDepth-0.3,k=laserP?state.kerf:0,jp=laserP?C.jpL:C.jp3;
+  return {t,S,j,Hw:C.Hw,c:C.c,b:C.b,Wd:S-2*t-2*j,Dd:S-t-j,Hd:C.Hw-t-j,s,tw,tb,socH,slotDepth,tabD,D:C.D,jp,k,
+    slotW:tw+jp-k,slotH:tb+jp-k,laserP,finger:Math.min(22,C.Hw-12)};
 }
 const fr=(U,V,N,O)=>({U,V,N,O});
 function chessBoardPanels(cd){
@@ -669,6 +672,8 @@ function buildChess(){
   if(cd.slotW>cd.D*(state.chess.soc==='rond'?0.86:0.95)-3)W.push(['bad',`La fente (${fmt(cd.slotW)} mm) est trop longue pour le socle de ${fmt(cd.D)} mm : réduis la hauteur du roi ou agrandis le socle.`]);
   if(!cd.laserP&&cd.slotDepth<2)W.push(['bad','Socle trop bas pour une fente solide : augmente sa hauteur (au moins 5 mm).']);
   if(cd.laserP&&cd.t<2)W.push(['info',`Plaque de ${fmt(cd.t)} mm : les pièces seront fines et fragiles. 3 mm est un bon compromis.`]);
+  if(!cd.laserP&&cd.jp<0.3)W.push(['info',`Jeu d’emboîtement de ${fmt(cd.jp)} mm : trop serré pour la plupart des imprimantes 3D, la languette risque de ne pas entrer. 0,4 mm est conseillé ; imprime d’abord le gabarit d’essai.`]);
+  if(cd.laserP&&cd.jp>0.6)W.push(['info',`Jeu d’emboîtement de ${fmt(cd.jp)} mm : les pièces risquent de flotter dans les socles. Colle-les ou réduis le jeu.`]);
   }
   if(M.tiroir){const nx=Math.floor((cd.Wd-2*cd.t)/(cd.D+1)),ny=Math.floor((cd.Dd-2*cd.t)/(cd.D+1));cap=Math.max(0,nx*ny);}
   if(M.tiroir&&M.pieces){
@@ -729,6 +734,44 @@ function sheetDXF(sh){
     (p.engr||[]).forEach(e=>{if(e.r)poly(rect(...e.r),tr,'GRAVURE');if(e.l)poly(rect(...e.l),tr,'GRAVURE');});});
   return ['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES',...L,'0','ENDSEC','0','EOF'].join('\n');
 }
+/* Gabarit d'essai : 5 fentes de jeux croissants, repérées par 1 à 5 encoches sur le bord avant */
+const GAUGE_J={'3d':[0.2,0.3,0.4,0.5,0.6],laser:[0,0.1,0.2,0.3,0.4]};
+function gaugeData(cd){
+  const J=GAUGE_J[cd.laserP?'laser':'3d'],k=cd.laserP?state.kerf:0,ws=J.map(j=>cd.tw+j-k),hs=J.map(j=>cd.tb+j-k);
+  const pitch=Math.max(...ws)+6,L=pitch*J.length+4,Wg=Math.max(...hs)+16,nw=1.6,nd=1.4;
+  const pts=[[0,0]];
+  J.forEach((_,i)=>{const cx=2+pitch*(i+.5),n=i+1,st=cx-(n*nw*2-nw)/2;for(let q=0;q<n;q++){const x=st+q*nw*2;pts.push([x,0],[x+nw/2,nd],[x+nw,0]);}});
+  pts.push([L,0],[L,Wg],[0,Wg]);
+  const slots=J.map((j,i)=>({shape:'rect',u:2+pitch*(i+.5),v:Wg/2+1,w:ws[i],h:hs[i],j}));
+  return {J,L,Wg,pts,slots};
+}
+function gaugeGeos(cd){
+  const g=gaugeData(cd),sh=withSlots=>{const s=new THREE.Shape();g.pts.forEach((q,i)=>i?s.lineTo(q[0],q[1]):s.moveTo(q[0],q[1]));if(withSlots)g.slots.forEach(h=>s.holes.push(holePath(h)));return s;};
+  const ext=(s,h,z)=>{const e=new THREE.ExtrudeGeometry(s,{depth:h,bevelEnabled:false});e.translate(0,0,z);return e;};
+  const base=cd.socH-cd.slotDepth;return [ext(sh(false),base+0.05,0),ext(sh(true),cd.slotDepth,base)];
+}
+function gaugeSheet(cd){
+  const g=gaugeData(cd),engr=g.slots.map(h=>({tx:fmt(h.j).replace('.',','),u:h.u,v:h.v-h.h/2-4.5,size:3.2}));
+  return packSheet([{name:'gabarit',noLabel:true,outline:g.pts,holes:g.slots.map(({shape,u,v,w,h})=>({shape,u,v,w,h})),engr},{name:'pion',noLabel:true,outline:pieceOutline('pion',cd),holes:[]}],400);
+}
+function testGeos(cd){ // gabarit + 1 pion couché à côté, dans le même fichier STL
+  const g=gaugeData(cd),pion=bodyGeo('pion',cd);pion.translate(g.L+6+cd.tw/2,cd.tabD+2,0);return gaugeGeos(cd).concat([pion]);
+}
+function testNotice(cd){
+  const J=GAUGE_J[cd.laserP?'laser':'3d'];
+  return `ESSAI D'EMBOÎTEMENT – JEU D'ÉCHECS\nAtelier construction électronique – Modeleur de boîtiers\n\n`+
+  (cd.laserP?`Fichier : essai-gabarit-et-pion.svg (ou .dxf), plaque de ${fmt(cd.t)} mm, trait laser compensé ${fmt(state.kerf)} mm.\nRouge = découpe ; bleu = gravure des valeurs (facultatif). Utilise la même plaque que pour les vraies pièces.\n`
+  :`Fichier : essai-gabarit-et-pion.stl (la barrette et un pion couché à côté). Imprime avec les mêmes réglages que les vraies pièces : PLA, couche 0,2 mm, sans support.\n`)+
+  `\nLa barrette a 5 fentes repérées par des encoches sur le bord avant :\n${J.map((j,i)=>`  ${i+1} encoche${i?'s':''} = jeu ${fmt(j)} mm`).join('\n')}\n\n`+
+  `1. Enfonce la languette du pion dans chaque fente, en commençant par 1 encoche.\n2. Garde la première fente où la languette entre à la main, sans forcer, et où le pion tient sans tomber.\n3. Reporte cette valeur dans « Jeu d'emboîtement » du modeleur, puis télécharge toutes les pièces.\n\nSi aucune fente ne convient, ébavure la languette (cutter, papier de verre) et recommence.\n`;
+}
+async function exportChessTest(){
+  const m=buildModel(),cd=m.cd,z=new JSZip();
+  if(cd.laserP){const gs=gaugeSheet(cd);z.file('essai-gabarit-et-pion.svg',sheetSVG(gs,true,false).svg);z.file('essai-gabarit-et-pion.dxf',sheetDXF(gs));}
+  else z.file('essai-gabarit-et-pion.stl',stlOf(testGeos(cd),'Essai gabarit et pion').buf);
+  z.file('LISEZ-MOI.txt',testNotice(cd));
+  await saveFile('essai-emboitement-'+(cd.laserP?'laser':'3d')+'.zip',await z.generateAsync({type:'blob'}),'application/zip');
+}
 function chessSheets(m){
   const cd=m.cd;
   const get=n=>m.panels.find(p=>p.name===n),mr=Math.max(300,cd.S+8);
@@ -751,12 +794,16 @@ function chessNotice(m){
   if(M.plateau&&M.tiroir)s+=`- Colle le plateau sur le coffret, cases gravées vers le haut, la case a1 (foncée) en bas à gauche, côté tiroir.\n`;
   if(M.tiroir&&!M.plateau)s+=`- Sans plateau, le coffret reste ouvert en haut : pose ton propre plateau dessus ou colle une plaque de ${fmt(cd.S)} × ${fmt(cd.S)} mm.\n`;
   if(!M.pieces)return s;
-  s+=`\nPIÈCES (32 = 16 claires + 16 foncées)\nPar couleur : 1 roi, 1 dame, 2 tours, 2 fous, 2 cavaliers, 8 pions, et 16 socles.\nChaque pièce = un socle avec une fente rectangulaire (${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm) + un corps plat dont la languette s'enfonce de ${fmt(cd.tabD)} mm.\n`;
-  if(cd.laserP)s+=`- pieces-a-decouper-2-fois.svg : une couleur. Découpe la planche une fois dans un bois clair et une fois dans un bois foncé (ou peins la deuxième série).\n- Socles : ${C.layers} couche${C.layers>1?'s':''} de ${fmt(cd.t)} mm à coller ensemble${C.layers>=2?' (la couche sans fente en dessous)':''}.\n- L'emboîtement doit être serré : fais un essai et ajuste le jeu d'emboîtement (${fmt(C.jp)} mm) si besoin.\n`;
-  else s+=`- Impression 3D : socle.stl (à imprimer 32 fois) et un fichier par corps (corps-roi.stl, etc.), à imprimer en 2 couleurs.\n- Corps de ${fmt(cd.tb)} mm d'épaisseur, posés à plat ; socles de ${fmt(cd.socH)} mm, fente de ${fmt(cd.slotDepth)} mm de profondeur. PLA, couche 0,2 mm, sans support.\n- Quantités par couleur : roi 1, dame 1, tour 2, fou 2, cavalier 2, pion 8.\n`;
+  s+=`\nPIÈCES (32 = 16 claires + 16 foncées)\nPar couleur : 1 roi, 1 dame, 2 tours, 2 fous, 2 cavaliers, 8 pions, et 16 socles.\nChaque pièce = un socle avec une fente rectangulaire (${fmt(cd.tw+cd.jp)} × ${fmt(cd.tb+cd.jp)} mm) + un corps plat dont la languette s'enfonce de ${fmt(cd.tabD)} mm.\n`;
+  if(cd.laserP)s+=`- pieces-a-decouper-2-fois.svg : une couleur. Découpe la planche une fois dans un bois clair et une fois dans un bois foncé (ou peins la deuxième série).\n- Socles : ${C.layers} couche${C.layers>1?'s':''} de ${fmt(cd.t)} mm à coller ensemble${C.layers>=2?' (la couche sans fente en dessous)':''}.\n- Jeu d'emboîtement choisi : ${fmt(cd.jp)} mm (fente de ${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm après découpe, trait laser compensé).\n`;
+  else s+=`- Impression 3D : socle.stl (à imprimer 32 fois) et un fichier par corps (corps-roi.stl, etc.), à imprimer en 2 couleurs.\n- Corps de ${fmt(cd.tb)} mm d'épaisseur, posés à plat ; socles de ${fmt(cd.socH)} mm, fente de ${fmt(cd.slotDepth)} mm de profondeur. PLA, couche 0,2 mm, sans support.\n- Quantités par couleur : roi 1, dame 1, tour 2, fou 2, cavalier 2, pion 8.\n- Jeu d'emboîtement choisi : ${fmt(cd.jp)} mm (fente de ${fmt(cd.slotW)} × ${fmt(cd.slotH)} mm). Le bout de la languette est chanfreiné pour entrer plus facilement.\n`;
+  const J=GAUGE_J[cd.laserP?'laser':'3d'];
+  s+=`\nAVANT DE TOUT ${cd.laserP?'DÉCOUPER':'IMPRIMER'} : LE GABARIT D'ESSAI\n- ${cd.laserP?'0-essai-gabarit-et-pion.svg / .dxf : une barrette percée de 5 fentes et un seul pion, à découper dans la même plaque que les pièces.':'0-essai-gabarit-et-pion.stl : une barrette avec 5 fentes et un seul pion couché à côté. Mêmes réglages que les vraies pièces.'}\n- Les fentes sont repérées par des encoches sur le bord avant : 1 encoche = jeu ${fmt(J[0])} mm, 2 = ${fmt(J[1])}, 3 = ${fmt(J[2])}, 4 = ${fmt(J[3])}, 5 = ${fmt(J[4])} mm.\n- Enfonce la languette du pion dans chaque fente. Choisis la première qui laisse entrer la languette à la main, sans marteau, et qui la tient sans qu'elle tombe.\n- Reporte cette valeur dans « Jeu d'emboîtement » du modeleur, puis télécharge à nouveau les fichiers.\n- Si la languette force encore : ébavure ses arêtes au cutter ou ponce-la légèrement${cd.laserP?'':' ; vérifie aussi que la première couche n\'est pas écrasée (« pied d\'éléphant »)'}.\n`;
   return s;
 }
-function renderChessWarns(m){const W=m.W.length?m.W:[['ok',m.make.pieces&&m.make.tiroir?'Tout est en ordre : les pièces tiennent sur les cases et rentrent dans le tiroir.':'Tout est en ordre.']];$('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');}
+function renderJpTip(cd){const el=$('ch_jpTip');if(!el)return;
+  el.innerHTML=`Fente de ${fmt(cd.tw+cd.jp)} × ${fmt(cd.tb+cd.jp)} mm${cd.laserP?' après découpe':''} pour une languette de ${fmt(cd.tw)} × ${fmt(cd.tb)} mm. ${cd.laserP?'Conseil laser : 0,1 à 0,3 mm. Mesure l’épaisseur réelle de ta plaque au pied à coulisse : un contreplaqué « 3 mm » fait souvent 3,2 à 3,4 mm ; ajoute la différence au jeu.':'Conseil 3D : 0,3 à 0,5 mm (0,4 mm par défaut).'} Si ça force, augmente le jeu de 0,1 mm. Commence par le bouton « Essai : gabarit + 1 pion » en bas : tu ne fabriques qu’un pion et une barrette à 5 fentes pour trouver la bonne valeur.`;}
+function renderChessWarns(m){renderJpTip(m.cd);const W=m.W.length?m.W:[['ok',m.make.pieces&&m.make.tiroir?'Tout est en ordre : les pièces tiennent sur les cases et rentrent dans le tiroir.':'Tout est en ordre.']];$('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');}
 function renderChessStats(m){
   const cd=m.cd,M=m.make,sh=chessSheets(m);let s=[];
   if(M.plateau||M.tiroir)s.push([M.plateau?'Plateau':'Coffret',`${fmt(cd.S)} × ${fmt(cd.S)} mm`]);
@@ -768,14 +815,16 @@ function renderChessStats(m){
   $('stats').innerHTML=s.map(([x,y])=>`<div class="stat"><span>${x}</span><b>${y}</b></div>`).join('');
   const inc=[];if(sh.board.length)inc.push(`${sh.board.length===1?'le plan':'les '+sh.board.length+' plans'} laser (${sh.board.map(g=>g.label.toLowerCase()).join(', ')})`);if(M.pieces)inc.push(cd.laserP?'la planche de pièces à découper deux fois':'les STL du socle et des 6 corps de pièces');
   $('expInfo').textContent=inc.length?`Un .zip avec ${inc.join(' et ')}, en ${cd.laserP||!M.pieces?'SVG et DXF':'SVG, DXF et STL'}, et la notice de montage.`:'Coche au moins un élément à fabriquer.';
-  const b1=$('exCh'),b2=$('exChSvg');if(b1)b1.disabled=!inc.length;if(b2)b2.hidden=!M.plateau;
+  const b1=$('exCh'),b2=$('exChSvg'),b3=$('exChTest');if(b1)b1.disabled=!inc.length;if(b2)b2.hidden=!M.plateau;if(b3){b3.hidden=!M.pieces;b3.textContent=cd.laserP?'Essai : gabarit + 1 pion à découper (.zip)':'Essai : gabarit + 1 pion à imprimer (.zip)';}
 }
 async function exportChess(){
   const m=buildModel(),sh=chessSheets(m),z=new JSZip();
   if(!m.make.pieces&&!m.make.plateau&&!m.make.tiroir){$('dlStatus').textContent='Coche au moins un élément à fabriquer.';return;}
   sh.board.forEach((g,i)=>{z.file(`${i+1}-${g.key}.svg`,sheetSVG(g.sheet,true,state.engrave).svg);z.file(`${i+1}-${g.key}.dxf`,sheetDXF(g.sheet));});
   if(sh.pieces){z.file('pieces-a-decouper-2-fois.svg',sheetSVG(sh.pieces,true,false).svg);z.file('pieces-a-decouper-2-fois.dxf',sheetDXF(sh.pieces));}
-  else if(m.make.pieces){z.file('socle.stl',stlOf(socleGeos(m.cd),'Socle').buf);Object.keys(PIECES).forEach(k=>z.file(`corps-${k}.stl`,stlOf([bodyGeo(k,m.cd)],PIECES[k].nom).buf));}
+  if(m.make.pieces&&m.cd.laserP){const gs=gaugeSheet(m.cd);z.file('0-essai-gabarit-et-pion.svg',sheetSVG(gs,true,false).svg);z.file('0-essai-gabarit-et-pion.dxf',sheetDXF(gs));}
+  if(m.make.pieces&&!m.cd.laserP)z.file('0-essai-gabarit-et-pion.stl',stlOf(testGeos(m.cd),'Essai gabarit et pion').buf);
+  if(!sh.pieces&&m.make.pieces){z.file('socle.stl',stlOf(socleGeos(m.cd),'Socle').buf);Object.keys(PIECES).forEach(k=>z.file(`corps-${k}.stl`,stlOf([bodyGeo(k,m.cd)],PIECES[k].nom).buf));}
   z.file('LISEZ-MOI.txt',chessNotice(m));
   await saveFile('jeu-d-echecs'+(m.make.pieces?'-pieces':'')+(m.make.plateau?'-plateau':'')+(m.make.tiroir?'-tiroir':'')+'.zip',await z.generateAsync({type:'blob'}),'application/zip');
 }
@@ -904,10 +953,10 @@ function renderControls(){
   $('smSec').hidden=!isS;$('modeSeg').hidden=isS;if(isS)state.mode='laser';$('chessSec').hidden=!isC;$('dimSec').hidden=isC||isS;$('holeSec').hidden=isC||isS;$('lidLbl').textContent=isS?'Tablette et décor':isC?'Pièces':'Couvercle';
   if(isS){const S=state.sm;['pw','pd','tw','td','ca','cb','win','hc','fov'].forEach(k=>$('sm_'+k).value=S[k]);$('sm_paper').value=S.paper;$('sm_dev').value=S.dev;$('sm_winShape').value=S.winShape;$('sm_cable').value=S.cable;$('sm_stops').checked=S.stops;
     $('sm_pwF').hidden=S.paper!=='perso';$('sm_pdF').hidden=S.paper!=='perso';}
-  if(isC){const C=state.chess;['c','b','Hw','jt','K','D','tb3','hs3','jp'].forEach(k=>$('ch_'+k).value=C[k]);$('ch_marks').checked=C.marks;$('ch_soc').value=C.soc;$('ch_layers').value=String(C.layers);
+  if(isC){const C=state.chess;['c','b','Hw','jt','K','D','tb3','hs3'].forEach(k=>$('ch_'+k).value=C[k]);$('ch_jp').value=C[state.mode==='laser'?'jpL':'jp3'];$('ch_marks').checked=C.marks;$('ch_soc').value=C.soc;$('ch_layers').value=String(C.layers);
     const M=C.make;['pieces','plateau','tiroir'].forEach(k=>$('mk_'+k).checked=M[k]);$('modeSeg').hidden=!M.pieces;
     const show=(id,on)=>{const el=$(id).closest('.field')||$(id).closest('label');el.hidden=!on;};show('ch_b',M.plateau||M.tiroir);show('ch_Hw',M.tiroir);show('ch_jt',M.tiroir);show('ch_marks',M.plateau);
-    ['ch_K','ch_soc','ch_D','ch_jp'].forEach(id=>show(id,M.pieces));$('ch_piecesH').hidden=!M.pieces;
+    ['ch_K','ch_soc','ch_D','ch_jp'].forEach(id=>show(id,M.pieces));$('ch_jpTip').hidden=!M.pieces;$('ch_piecesH').hidden=!M.pieces;
     $('ch_layersF').hidden=state.mode!=='laser'||!M.pieces;$('ch_layersTip').hidden=state.mode!=='laser';$('ch_tb3F').hidden=state.mode!=='3d'||!M.pieces;$('ch_hs3F').hidden=state.mode!=='3d'||!M.pieces;$('ch_layersTip').hidden=state.mode!=='laser'||!M.pieces;}
   const r=$('reco');if(isS){r.textContent='Découpe laser : grand cadre plat en contreplaqué de 4 ou 5 mm, assemblé par tenons et mortaises. Les fentes sont compensées pour que les languettes tiennent serrées.';r.classList.remove('other');}
   else if(isC){r.textContent=state.mode==='laser'?'Plateau, coffret et tiroir en découpe laser (gravure des cases). Pièces aussi en découpe laser : corps et socles dans la même plaque, rapide et sans plastique.':'Plateau, coffret et tiroir en découpe laser. Pièces en impression 3D : socles plus lourds et plus stables, fente borgne qui cache la languette.';r.classList.remove('other');}
@@ -923,7 +972,7 @@ function renderControls(){
   $('explode').checked=state.explode;$('lidShow').checked=state.lidShow;
   $('addType').innerHTML=Object.entries(HT).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
   $('addFace').innerHTML=FACES.map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
-  $('expBtns').innerHTML=isS?'<button class="btn primary" id="exSM">Télécharger le banc de stop motion (.zip)</button>':isC?'<button class="btn primary" id="exCh">Télécharger la sélection (.zip)</button><button class="btn" id="exChSvg">Plateau gravé seul (SVG)</button>':state.mode==='3d'?'<button class="btn primary" id="ex3d">Télécharger les fichiers STL (.zip)</button>':
+  $('expBtns').innerHTML=isS?'<button class="btn primary" id="exSM">Télécharger le banc de stop motion (.zip)</button>':isC?'<button class="btn primary" id="exCh">Télécharger la sélection (.zip)</button><button class="btn" id="exChTest">Essai : gabarit + 1 pion (.zip)</button><button class="btn" id="exChSvg">Plateau gravé seul (SVG)</button>':state.mode==='3d'?'<button class="btn primary" id="ex3d">Télécharger les fichiers STL (.zip)</button>':
     '<button class="btn primary" id="exSvg">Télécharger le plan SVG</button><button class="btn" id="exZip">SVG + DXF + notice (.zip)</button>';
   if(!isC&&!isS)renderHoles();
 }
@@ -995,7 +1044,8 @@ $('reflH').addEventListener('input',e=>{const v=+e.target.value;if(v>=6&&v<=50){
 $('explode').addEventListener('change',e=>{state.explode=e.target.checked;update(false);});
 $('lidShow').addEventListener('change',e=>{state.lidShow=e.target.checked;update(false);});
 $('resetView').addEventListener('click',resetView);
-['c','b','Hw','jt','K','D','tb3','hs3','jp'].forEach(k=>$('ch_'+k).addEventListener('input',e=>{const el=e.target,v=+el.value;if(el.value===''||!(v>=+el.min&&v<=+el.max))return;
+['c','b','Hw','jt','K','D','tb3','hs3','jp'].forEach(k=>$('ch_'+k).addEventListener('input',e=>{const el=e.target,v=+el.value.replace(',','.'),ok=el.value!==''&&v>=+el.min&&v<=+el.max;el.classList.toggle('bad',!ok);if(!ok)return;
+  if(k==='jp'){state.chess[state.mode==='laser'?'jpL':'jp3']=v;update(false);return;}
   if(k==='c'){const old=state.chess.c;state.chess.D=Math.max(12,Math.round(state.chess.D+(v-old)));$('ch_D').value=state.chess.D;}state.chess[k]=v;update(false);if(k==='c'||k==='Hw')resetView();}));
 ['pw','pd','tw','td','ca','cb','win','hc','fov'].forEach(k=>$('sm_'+k).addEventListener('input',e=>{const el=e.target,v=+el.value;if(el.value===''||!(v>=+el.min&&v<=+el.max))return;state.sm[k]=v;
   if(k==='tw'||k==='td'){state.sm.dev='perso';$('sm_dev').value='perso';}update(false);if(k==='hc')resetView();}));
@@ -1022,7 +1072,7 @@ hl.addEventListener('click',e=>{const del=e.target.closest('[data-del]');if(del)
 hl.addEventListener('focusin',e=>{const c=e.target.closest('[data-card]');if(c&&state.sel!==+c.dataset.card){state.sel=+c.dataset.card;document.querySelectorAll('[data-card]').forEach(x=>x.classList.toggle('sel',+x.dataset.card===state.sel));update(false);}});
 $('expBtns').addEventListener('click',e=>{const id=e.target.id;
   const run=f=>f().catch(err=>{$('dlStatus').textContent='Erreur pendant la création du fichier : '+(err&&err.message||err);});
-  if(id==='exSM')run(exportSM);if(id==='exCh')run(exportChess);if(id==='exChSvg')run(exportChessBoardSVG);if(id==='ex3d')run(export3D);if(id==='exSvg')run(exportSVG);if(id==='exZip')run(exportLaserZip);});
+  if(id==='exSM')run(exportSM);if(id==='exCh')run(exportChess);if(id==='exChSvg')run(exportChessBoardSVG);if(id==='exChTest')run(exportChessTest);if(id==='ex3d')run(export3D);if(id==='exSvg')run(exportSVG);if(id==='exZip')run(exportLaserZip);});
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(lastModel)rebuild3D(lastModel);});
 
 renderPick();initGL();
