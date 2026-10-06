@@ -118,6 +118,9 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline
 .hole{border:1.5px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--board)}
 .hole.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 .hole.bad{border-color:var(--bad);background:var(--bad-soft)}
+.field.wide{grid-template-columns:minmax(0,1fr)}
+.sec textarea{font:inherit;font-size:.9rem;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--board);color:var(--ink);width:100%;min-width:0;resize:vertical;box-sizing:border-box}
+.txtrow{display:flex;gap:8px;flex-wrap:wrap}
 .field input.bad{border-color:var(--bad);background:var(--bad-soft)}
 .holehead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .holehead b{font-size:.9rem}
@@ -255,6 +258,18 @@ footer{font-size:.8rem;color:var(--muted)}
           </div>
         </div></details>
 
+        <details class="sec" id="txtSec" open><summary>Texte personnalisé <span class="tip" id="txtBadge"></span></summary><div class="secbody">
+          <p class="tip" id="txtTip"></p>
+          <div class="field wide"><label for="tx_text">Ton texte (3 lignes au plus)</label><textarea id="tx_text" rows="2" maxlength="60" placeholder="Ex. : Léa – 5e B"></textarea></div>
+          <div class="field wide"><label for="tx_panel">Sur la pièce</label><select id="tx_panel"></select></div>
+          <div class="field wide"><label for="tx_font">Police</label><select id="tx_font"><option value="sans">Bâton (Arial)</option><option value="impact">Épaisse (Impact)</option><option value="serif">Avec empattements (Georgia)</option><option value="round">Manuscrite (Comic Sans)</option><option value="mono">Machine à écrire (Courier)</option></select></div>
+          <div class="field"><label for="tx_size">Hauteur des lettres (mm)</label><input type="number" id="tx_size" min="3" max="80" step="0.5"></div>
+          <div class="field"><label for="tx_u">Position horizontale (%)</label><input type="number" id="tx_u" min="0" max="100" step="1"><input type="range" id="tx_u_r" min="0" max="100" step="1" aria-label="Position horizontale du texte"></div>
+          <div class="field"><label for="tx_v">Position verticale (%)</label><input type="number" id="tx_v" min="0" max="100" step="1"><input type="range" id="tx_v_r" min="0" max="100" step="1" aria-label="Position verticale du texte"></div>
+          <div class="field" id="tx_depthF"><label for="tx_depth">Profondeur du creux (mm)</label><input type="number" id="tx_depth" min="0.2" max="2" step="0.1"></div>
+          <div class="txtrow"><button class="btn small" id="tx_center">Centrer</button><button class="btn small" id="tx_auto">Trouver une place libre</button><button class="btn small" id="tx_clear">Effacer le texte</button></div>
+        </div></details>
+
         <details class="sec" id="accSec"><summary>Accessoires</summary><div class="secbody">
           <label class="tg"><input type="checkbox" id="refl"> Réflecteur conique sur la face avant</label>
           <div class="field"><label for="reflH">Hauteur du réflecteur (mm)</label><input type="number" id="reflH" min="8" max="40" step="1"></div>
@@ -351,7 +366,7 @@ const RECO={
 };
 
 /* ================= État ================= */
-const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1};
+const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1,txt:{text:'',panel:'',font:'sans',size:8,fu:.5,fv:.5,depth:0.6,place:false}};
 function loadPreset(id){
   const p=PRESETS[id];state.obj=id;state.mode=p.reco;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.sel=-1;
   state.holes=p.holes.map(([type,face,fu,fv])=>{const t=HT[type];return {type,label:t.label,face,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu,fv};});
@@ -410,7 +425,8 @@ function frames(d){
     dessous:{U:[1,0,0],V:[0,1,0],N:[0,0,1],O:[0,0,0]},dessus:{U:[1,0,0],V:[0,1,0],N:[0,0,-1],O:[0,0,H+t]},
     rebord:{U:[1,0,0],V:[0,1,0],N:[0,0,-1],O:[0,0,H]},rebord3d:{U:[1,0,0],V:[0,1,0],N:[0,0,-1],O:[0,0,H+0.05]}};
 }
-function buildModel(){
+function buildModel(){const m=buildModelBase();applyText(m);return m;}
+function buildModelBase(){
   if(state.obj==='stopmotion')return buildSM();
   if(state.obj==='echecs')return buildChess();
   const d=dims(),{L,W,H,t}=d,F=frames(d),{res,abs}=checkHoles(d);
@@ -451,10 +467,19 @@ function flip(g){
   Object.values(g.attributes).forEach(at=>{const s=at.itemSize,a=at.array;for(let i=0;i<at.count;i+=3){for(let c=0;c<s;c++){const x=a[(i+1)*s+c];a[(i+1)*s+c]=a[(i+2)*s+c];a[(i+2)*s+c]=x;}}at.needsUpdate=true;});
 }
 function place(g,m){g.applyMatrix4(m);if(m.determinant()<0)flip(g);g.computeVertexNormals();return g;}
+function shapeOf(outline,holes){const s=new THREE.Shape();outline.forEach((q,i)=>i?s.lineTo(q[0],q[1]):s.moveTo(q[0],q[1]));holes.forEach(h=>s.holes.push(holePath(h)));return s;}
+function extr(s,h,z){const g=new THREE.ExtrudeGeometry(s,{depth:h,bevelEnabled:false,curveSegments:40});if(z)g.translate(0,0,z);return g;}
+function mergeGeos(gs){let n=0;gs=gs.map(g=>g.index?g.toNonIndexed():g);gs.forEach(g=>n+=g.attributes.position.array.length);
+  const a=new Float32Array(n);let o=0;gs.forEach(g=>{a.set(g.attributes.position.array,o);o+=g.attributes.position.array.length;});
+  const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.BufferAttribute(a,3));return out;}
 function panelGeo(p){
-  const s=new THREE.Shape();p.outline.forEach((q,i)=>i?s.lineTo(q[0],q[1]):s.moveTo(q[0],q[1]));
-  p.holes.forEach(h=>s.holes.push(holePath(h)));
-  return place(new THREE.ExtrudeGeometry(s,{depth:p.depth,bevelEnabled:false,curveSegments:40}),frameMatrix(p.frame));
+  const T=p.txt;
+  if(!(T&&T.ok))return place(extr(shapeOf(p.outline,p.holes),p.depth,0),frameMatrix(p.frame));
+  // texte en creux : corps plein sous le texte + « peau » percée à l'emplacement des lettres
+  const D=p.depth,e=T.e,front=!p.vis,skinZ=front?0:D-e-0.05;
+  const geos=[extr(shapeOf(p.outline,p.holes),D-e,front?e:0),extr(shapeOf(p.outline,p.holes.concat([{shape:'poly',pts:rect(...T.box)}])),e+0.05,skinZ)];
+  txtTiles(T).forEach(sh=>geos.push(extr(sh,e+0.05,skinZ)));
+  return place(mergeGeos(geos),frameMatrix(p.frame));
 }
 function reflectorLocal(d){
   const D=Math.min(d.W,d.H+d.t)-0.4,Ro=D/2,bulb=state.holes.map(h=>absHole(h,d)).find(h=>h.face==='avant'&&h.shape==='rond'),rh=bulb?bulb.d/2:7,bt=2,H=state.reflH;
@@ -523,34 +548,36 @@ function laserSheet(m){
   order.map(n=>m.panels.find(p=>p.name===n)).filter(Boolean).forEach(p=>{
     const xs=p.outline.map(q=>q[0]),ys=p.outline.map(q=>q[1]),minx=Math.min(...xs),miny=Math.min(...ys),w=Math.max(...xs)-minx,h=Math.max(...ys)-miny;
     if(x+w+gap>maxRow&&x>gap){x=gap;y+=rowH+gap;rowH=0;}
-    items.push({p,ox:x-minx,oy:y,miny,h,w});x+=w+gap;rowH=Math.max(rowH,h);W=Math.max(W,x);});
+    items.push({p,ox:x-minx,oy:y,miny,minx,h,w});x+=w+gap;rowH=Math.max(rowH,h);W=Math.max(W,x);});
   const H=y+rowH+gap;
-  items.forEach(it=>{it.tr=(u,v)=>[it.ox+u,it.oy+(it.h+it.miny)-v];});
+  items.forEach(it=>{const mx=txtMirror(it.p);it.tr=(u,v)=>[it.ox+(mx?2*it.minx+it.w-u:u),it.oy+(it.h+it.miny)-v];});
   return {items,W,H};
 }
 function svgOf(m,forExport){
-  const sh=laserSheet(m),n=v=>(Math.round(v*100)/100);let body='';let cut=0;
+  const sh=laserSheet(m),n=v=>(Math.round(v*100)/100);let body='';let cut=0,txt='';
   sh.items.forEach(it=>{const p=it.p,tr=it.tr;
     const poly=pts=>{const q=pts.map(([u,v])=>tr(u,v));for(let i=0;i<q.length;i++){const a=q[i],b=q[(i+1)%q.length];cut+=Math.hypot(a[0]-b[0],a[1]-b[1]);}
       return `<path d="M${q.map(([a,b])=>n(a)+' '+n(b)).join(' L')} Z"/>`;};
     body+=poly(p.outline);
     p.holes.forEach(h=>{if(h.shape==='rond'){const [cx,cy]=tr(h.u,h.v);cut+=Math.PI*h.d;body+=`<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(h.d/2)}"/>`;}
       else{const pts=h.shape==='poly'?h.pts:(()=>{const [a,b]=ext(h);return rect(h.u-a,h.v-b,h.u+a,h.v+b);})();body+=poly(pts);}});
+    txt+=txtSvg(p,tr);
   });
   let labels='';
   if(state.engrave||!forExport)sh.items.forEach(it=>{const xs=it.p.outline.map(q=>q[0]),ys=it.p.outline.map(q=>q[1]);
     const [cx,cy]=it.tr((Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2);
-    const small=it.p.name==='Cadre sous le couvercle';const [lx,ly]=small?it.tr((Math.min(...xs)+Math.max(...xs))/2,Math.min(...ys)+3):[cx,cy];
+    const small=it.p.name==='Cadre sous le couvercle',low=small||(it.p.txt&&it.p.txt.ok);const [lx,ly]=low?it.tr((Math.min(...xs)+Math.max(...xs))/2,Math.min(...ys)+(small?3:state.tl+4)):[cx,cy];
     labels+=`<text x="${n(lx)}" y="${n(ly)}" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="${small?3:4}" fill="#0000ff">${it.p.name}</text>`;});
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${n(sh.W)}mm" height="${n(sh.H)}mm" viewBox="0 0 ${n(sh.W)} ${n(sh.H)}">`+
-    `<g fill="none" stroke="#ff0000" stroke-width="${forExport?0.1:0.4}">${body}</g>${labels?`<g>${labels}</g>`:''}</svg>`;
+    `${txt?`<g fill="#0000ff" fill-rule="evenodd" stroke="none">${txt}</g>`:''}<g fill="none" stroke="#ff0000" stroke-width="${forExport?0.1:0.4}">${body}</g>${labels?`<g>${labels}</g>`:''}</svg>`;
   return {svg,W:sh.W,H:sh.H,cut,items:sh.items};
 }
 function dxfOf(m){
   const sh=laserSheet(m),L=[];const ln=(a,b)=>L.push('0','LINE','8','DECOUPE','10',a[0].toFixed(3),'20',(sh.H-a[1]).toFixed(3),'11',b[0].toFixed(3),'21',(sh.H-b[1]).toFixed(3));
   sh.items.forEach(it=>{const p=it.p,tr=it.tr;const poly=pts=>{const q=pts.map(([u,v])=>tr(u,v));q.forEach((a,i)=>ln(a,q[(i+1)%q.length]));};
     poly(p.outline);p.holes.forEach(h=>{if(h.shape==='rond'){const [cx,cy]=tr(h.u,h.v);L.push('0','CIRCLE','8','DECOUPE','10',cx.toFixed(3),'20',(sh.H-cy).toFixed(3),'40',(h.d/2).toFixed(3));}
-      else poly(h.shape==='poly'?h.pts:(()=>{const [a,b]=ext(h);return rect(h.u-a,h.v-b,h.u+a,h.v+b);})());});});
+      else poly(h.shape==='poly'?h.pts:(()=>{const [a,b]=ext(h);return rect(h.u-a,h.v-b,h.u+a,h.v+b);})());});
+    txtDxf(p,tr,sh.H,L);});
   return ['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES',...L,'0','ENDSEC','0','EOF'].join('\n');
 }
 
@@ -588,7 +615,7 @@ function holesText(m){return state.holes.map((h,i)=>{const a=absHole(h,m.d),sz=h
   return `- ${h.label} : ${FL[h.face].toLowerCase()}, ${sz} mm, centre à ${fmt(a.u)} mm du bord gauche et ${fmt(a.v)} mm du bas${m.res[i].ok?'':' (NON DÉCOUPÉE : mal placée)'}`;}).join('\n')||'- aucune';}
 function notice(m,kind){
   const d=m.d,name=(OBJS.find(o=>o[0]===state.obj)||['','Boîtier'])[1];
-  const head=`BOÎTIER – ${name.toUpperCase()}\nAtelier construction électronique – Modeleur de boîtiers\n\nDimensions intérieures : ${fmt(state.Li)} × ${fmt(state.Wi)} × ${fmt(state.Hi)} mm\nDimensions extérieures : ${fmt(d.L)} × ${fmt(d.W)} × ${fmt(d.H+d.t)} mm (couvercle compris)\n\nOuvertures :\n${holesText(m)}\n\n`;
+  const head=`BOÎTIER – ${name.toUpperCase()}\nAtelier construction électronique – Modeleur de boîtiers\n\nDimensions intérieures : ${fmt(state.Li)} × ${fmt(state.Wi)} × ${fmt(state.Hi)} mm\nDimensions extérieures : ${fmt(d.L)} × ${fmt(d.W)} × ${fmt(d.H+d.t)} mm (couvercle compris)\n\nOuvertures :\n${holesText(m)}\n${txtNotice(m)}\n`;
   if(kind==='3d')return head+`IMPRESSION 3D\n- Parois : ${fmt(d.t)} mm ; jeu du couvercle : ${fmt(state.jeu)} mm\n- PLA, couche 0,2 mm, remplissage 20 %, sans support\n- corps.stl : ouverture vers le haut ; couvercle.stl : déjà posé à plat, rebord vers le haut${state.reflector?' ; reflecteur.stl : fond percé sur le plateau':''}\n- Un trou dans une paroi verticale fait un « pont » en haut : au-delà de 15 mm, il peut légèrement s’affaisser, c’est normal.\n\nMesure tes composants avant de lancer une série.\n`;
   return head+`DÉCOUPE LASER\n- Plaque de ${fmt(d.t)} mm (contreplaqué, MDF, carton gris rigide ou acrylique)\n- Trait rouge = découpe ; texte bleu = gravure (facultatif)\n- Créneaux d’environ ${fmt(state.fw)} mm ; largeur du trait laser compensée : ${fmt(state.kerf)} mm\n- Assemblage : fond + 4 côtés collés à la colle à bois (vinylique). Le couvercle ne se colle pas :\n  colle seulement le « cadre sous le couvercle » dessous, bien centré, pour qu’il reste en place.\n- Fais d’abord un essai d’emboîtement sur une chute et ajuste la largeur du trait si c’est trop lâche ou trop serré.\n`;
 }
@@ -712,19 +739,20 @@ function packSheet(list,maxRow){
   const gap=4;let x=gap,y=gap,rowH=0,W=0;const items=[];
   list.forEach(p=>{const xs=p.outline.map(q=>q[0]),ys=p.outline.map(q=>q[1]),minx=Math.min(...xs),miny=Math.min(...ys),w=Math.max(...xs)-minx,h=Math.max(...ys)-miny;
     if(x+w+gap>maxRow&&x>gap){x=gap;y+=rowH+gap;rowH=0;}
-    const ox=x-minx,oy=y+h+miny;items.push({p,tr:(u,v)=>[ox+u,oy-v],cx:x+w/2,cy:y+h/2,w,h});x+=w+gap;rowH=Math.max(rowH,h);W=Math.max(W,x);});
+    const ox=x-minx,oy=y+h+miny,mx=txtMirror(p);items.push({p,tr:(u,v)=>[ox+(mx?2*minx+w-u:u),oy-v],cx:x+w/2,cy:y+h/2,w,h});x+=w+gap;rowH=Math.max(rowH,h);W=Math.max(W,x);});
   return {items,W,H:y+rowH+gap};
 }
 function sheetSVG(sh,forExport,labels){
   const n=v=>Math.round(v*100)/100;let cut='',eng='',len=0;
   const poly=(pts,tr)=>{const q=pts.map(([u,v])=>tr(u,v));q.forEach((a,i)=>{const b=q[(i+1)%q.length];len+=Math.hypot(a[0]-b[0],a[1]-b[1]);});return `<path d="M${q.map(([a,b])=>n(a)+' '+n(b)).join(' L')} Z"/>`;};
-  sh.items.forEach(({p,tr,cx,cy})=>{
+  sh.items.forEach(({p,tr,cx,cy,h})=>{
     if(p.circ){const [x,y]=tr(0,0);cut+=`<circle cx="${n(x)}" cy="${n(y)}" r="${n(p.circ)}"/>`;len+=2*Math.PI*p.circ;}else cut+=poly(p.outline,tr);
     p.holes.forEach(h=>{if(h.shape==='rond'){const [x,y]=tr(h.u,h.v);len+=Math.PI*h.d;cut+=`<circle cx="${n(x)}" cy="${n(y)}" r="${n(h.d/2)}"/>`;}else if(h.shape==='poly')cut+=poly(h.pts,tr);else{const [a,b]=ext(h);cut+=poly(rect(h.u-a,h.v-b,h.u+a,h.v+b),tr);}});
     (p.engr||[]).forEach(e=>{if(e.r){const [x0,y0]=tr(e.r[0],e.r[3]);eng+=`<rect x="${n(x0)}" y="${n(y0)}" width="${n(e.r[2]-e.r[0])}" height="${n(e.r[3]-e.r[1])}" fill="#0000ff"/>`;}
       if(e.l){const [x0,y0]=tr(e.l[0],e.l[3]);eng+=`<rect x="${n(x0)}" y="${n(y0)}" width="${n(e.l[2]-e.l[0])}" height="${n(e.l[3]-e.l[1])}" fill="none" stroke="#0000ff" stroke-width="0.3"/>`;}
       if(e.tx){const [x,y]=tr(e.u,e.v);eng+=`<text x="${n(x)}" y="${n(y)}" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="${n(e.size)}" fill="#0000ff">${e.tx}</text>`;}});
-    if(labels&&p.name&&!p.noLabel)eng+=`<text x="${n(cx)}" y="${n(cy)}" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="3.5" fill="#0000ff">${p.name}</text>`;
+    const tp=txtSvg(p,tr);if(tp)eng+=`<g fill="#0000ff" fill-rule="evenodd" stroke="none">${tp}</g>`;
+    if(labels&&p.name&&!p.noLabel)eng+=`<text x="${n(cx)}" y="${n(p.txt&&p.txt.ok?cy+h/2-3:cy)}" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="3.5" fill="#0000ff">${p.name}</text>`;
   });
   return {svg:`<svg xmlns="http://www.w3.org/2000/svg" width="${n(sh.W)}mm" height="${n(sh.H)}mm" viewBox="0 0 ${n(sh.W)} ${n(sh.H)}"><g fill="none" stroke="#ff0000" stroke-width="${forExport?0.1:0.4}">${cut}</g><g>${eng}</g></svg>`,len};
 }
@@ -734,7 +762,8 @@ function sheetDXF(sh){
   sh.items.forEach(({p,tr})=>{
     if(p.circ){const [x,y]=tr(0,0);L.push('0','CIRCLE','8','DECOUPE','10',x.toFixed(3),'20',(H-y).toFixed(3),'40',p.circ.toFixed(3));}else poly(p.outline,tr,'DECOUPE');
     p.holes.forEach(h=>{if(h.shape==='rond'){const [x,y]=tr(h.u,h.v);L.push('0','CIRCLE','8','DECOUPE','10',x.toFixed(3),'20',(H-y).toFixed(3),'40',(h.d/2).toFixed(3));}else if(h.shape==='poly')poly(h.pts,tr,'DECOUPE');else{const [a,b]=ext(h);poly(rect(h.u-a,h.v-b,h.u+a,h.v+b),tr,'DECOUPE');}});
-    (p.engr||[]).forEach(e=>{if(e.r)poly(rect(...e.r),tr,'GRAVURE');if(e.l)poly(rect(...e.l),tr,'GRAVURE');});});
+    (p.engr||[]).forEach(e=>{if(e.r)poly(rect(...e.r),tr,'GRAVURE');if(e.l)poly(rect(...e.l),tr,'GRAVURE');});
+    txtDxf(p,tr,H,L);});
   return ['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES',...L,'0','ENDSEC','0','EOF'].join('\n');
 }
 /* Gabarit d'essai : 5 fentes de jeux croissants, repérées par 1 à 5 encoches sur le bord avant */
@@ -791,7 +820,7 @@ function chessSheets(m){
 function chessNotice(m){
   const cd=m.cd,C=state.chess,M=m.make,parts=[M.pieces&&'pièces',M.plateau&&'plateau',M.tiroir&&'tiroir et coffret'].filter(Boolean);
   const files=chessSheets(m).board.map((g,i)=>`${i+1}-${g.key}`).join(', ');
-  let s=`JEU D'ÉCHECS – ${parts.join(', ').toUpperCase()}\nAtelier construction électronique – Modeleur de boîtiers (projet sans électronique)\n\nCases de ${fmt(cd.c)} mm ; plaque de ${fmt(cd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n`;
+  let s=`JEU D'ÉCHECS – ${parts.join(', ').toUpperCase()}\nAtelier construction électronique – Modeleur de boîtiers (projet sans électronique)\n\nCases de ${fmt(cd.c)} mm ; plaque de ${fmt(cd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n`+txtNotice(m);
   if(M.plateau||M.tiroir)s+=`\n${M.plateau&&M.tiroir?'PLATEAU, COFFRET ET TIROIR':M.plateau?'PLATEAU':'COFFRET ET TIROIR'} (découpe laser : ${files}, en .svg et .dxf)\n- Rouge = découpe ; bleu = gravure.\n`;
   if(M.plateau)s+=`- Plateau de ${fmt(cd.S)} × ${fmt(cd.S)} mm : grave les cases foncées${C.marks?', les lettres a à h et les chiffres 1 à 8':''} avant de le découper.\n`;
   if(M.tiroir)s+=`- Coffret de ${fmt(cd.S)} × ${fmt(cd.S)} × ${fmt(cd.Hw)} mm : colle le fond, l'arrière et les deux côtés (créneaux). L'avant reste ouvert pour le tiroir.\n- Tiroir de ${fmt(cd.Wd)} × ${fmt(cd.Dd)} × ${fmt(cd.Hd)} mm (jeu ${fmt(C.jt)} mm) : colle le fond et les 4 côtés, puis la façade devant, centrée et à fleur du bas. Le trou sert de poignée.\n- Laisse sécher avant d'essayer le tiroir. S'il frotte, ponce légèrement ses côtés.\n`;
@@ -938,8 +967,130 @@ function smNotice(m){
   const sd=m.sd,S=state.sm;
   return `BANC DE STOP MOTION\nAtelier construction électronique – Modeleur de boîtiers (projet sans électronique)\n\nDécor : ${S.paper==='perso'?fmt(sd.sw)+' × '+fmt(sd.sd)+' mm':S.paper+' à l’horizontale ('+sd.sw+' × '+sd.sd+' mm)'}\nTablette : ${fmt(sd.TW)} × ${fmt(sd.TD)} mm ; objectif mesuré au dos à ${fmt(S.ca)} mm du bord gauche et ${fmt(S.cb)} mm du bord haut\nObjectif à ${fmt(sd.hc)} mm au-dessus du décor ; champ estimé ≈ ${Math.round(sd.Wc)} × ${Math.round(sd.Hc)} mm (angle de vue ${S.fov}°)\nPlaque : ${fmt(sd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n\nFICHIERS (rouge = découpe, bleu = gravure)\n- 1-socle : le socle (le contour du décor est gravé)${S.stops?' et 4 butées d’angle':''}\n- 2-structure : les 2 montants et la traverse arrière\n- 3-plateau : le plateau percé pour l’objectif et le cadre qui retient la tablette\n\nMONTAGE\n1. Enfonce les languettes du bas des deux montants dans les fentes du socle.\n2. Glisse la traverse arrière : ses languettes latérales entrent dans les fentes des montants, celles du bas dans le socle.\n3. Pose le plateau sur les languettes du haut des montants.\n4. Si tout s’emboîte bien, démonte, mets une goutte de colle à bois dans chaque fente et remonte.\n5. Colle le cadre sur le plateau : son ouverture doit entourer l’emplacement de la tablette${S.cable!=='aucune'?' (l’encoche laisse passer le câble de charge)':''}.\n${S.stops?'6. Colle les 4 butées d’angle sur le socle, aux coins du rectangle gravé.\n':''}\nUTILISATION\n- Pose la feuille de décor dans le rectangle gravé, puis les personnages en papier.\n- Pose la tablette écran vers le haut dans le cadre : l’objectif arrière se place au-dessus du trou.\n- Ouvre une application d’animation image par image. Déplace un peu les personnages entre deux photos.\n- Pour éviter les images floues ou décalées : ne touche pas la tablette pendant la photo (retardateur ou déclencheur Bluetooth), garde la même lumière pendant toute la prise de vue, fixe le socle à la table.\n- Si la traverse arrière apparaît sur le bord de l’image, recadre dans l’application ou réduis la hauteur.\n\nL’angle de vue varie selon les appareils : vérifie le cadrage avec la vraie tablette avant de coller.\n`;
 }
-async function exportSM(){const m=buildModel(),z=new JSZip();smSheets(m).forEach((g,i)=>{z.file(`${i+1}-${g.key}.svg`,sheetSVG(g.sheet,true,state.engrave).svg);z.file(`${i+1}-${g.key}.dxf`,sheetDXF(g.sheet));});z.file('LISEZ-MOI.txt',smNotice(m));
+async function exportSM(){const m=buildModel(),z=new JSZip();smSheets(m).forEach((g,i)=>{z.file(`${i+1}-${g.key}.svg`,sheetSVG(g.sheet,true,state.engrave).svg);z.file(`${i+1}-${g.key}.dxf`,sheetDXF(g.sheet));});z.file('LISEZ-MOI.txt',smNotice(m)+txtNotice(m));
   await saveFile('banc-de-stop-motion.zip',await z.generateAsync({type:'blob'}),'application/zip');}
+
+/* ================= Texte personnalisé (gravure laser / creux 3D) ================= */
+const TXT_FONTS={sans:'bold {px}px Arial, Helvetica, sans-serif',impact:'{px}px Impact, "Arial Black", sans-serif',serif:'bold {px}px Georgia, "Times New Roman", serif',round:'bold {px}px "Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive',mono:'bold {px}px "Courier New", Courier, monospace'};
+let glyphCache={key:null,val:null};
+function pip(pt,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>pt[1])!==(b[1]>pt[1])&&pt[0]<(b[0]-a[0])*(pt[1]-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;}
+function areaOf(P){let s=0;for(let i=0,j=P.length-1;i<P.length;j=i++)s+=(P[j][0]-P[i][0])*(P[j][1]+P[i][1]);return s/2;}
+function simplify(P,tol){ // retire les points presque alignés (contour fermé)
+  let pts=P.slice(),changed=true;
+  while(changed&&pts.length>8){changed=false;const out=[];
+    for(let i=0;i<pts.length;i++){const a=out.length?out[out.length-1]:pts[pts.length-1],b=pts[i],c=pts[(i+1)%pts.length];
+      const dx=c[0]-a[0],dy=c[1]-a[1],L=Math.hypot(dx,dy)||1e-9,dist=Math.abs(dx*(a[1]-b[1])-dy*(a[0]-b[0]))/L;
+      if(dist<tol&&i%2===1){changed=true;continue;}out.push(b);}
+    pts=out;}
+  return pts;
+}
+function marching(a,w,h){ // contours iso 0,5 d'une image (valeurs 0..1), bords à 0
+  const V=(x,y)=>(x<0||y<0||x>=w||y>=h)?0:a[y*w+x],P=new Map(),adj=new Map();
+  const link=(k1,k2)=>{(adj.get(k1)||adj.set(k1,[]).get(k1)).push(k2);(adj.get(k2)||adj.set(k2,[]).get(k2)).push(k1);};
+  const TB={1:[['L','B']],2:[['B','R']],3:[['L','R']],4:[['T','R']],6:[['T','B']],7:[['L','T']],8:[['L','T']],9:[['T','B']],11:[['T','R']],12:[['L','R']],13:[['B','R']],14:[['L','B']]};
+  for(let y=-1;y<h;y++)for(let x=-1;x<w;x++){
+    const tl=V(x,y),tr=V(x+1,y),br=V(x+1,y+1),bl=V(x,y+1),c=(tl>.5)*8+(tr>.5)*4+(br>.5)*2+(bl>.5);if(c===0||c===15)continue;
+    const E={T:['h',x,y,tl,tr],B:['h',x,y+1,bl,br],L:['v',x,y,tl,bl],R:['v',x+1,y,tr,br]},ctr=(tl+tr+br+bl)/4>.5;
+    const segs=c===5?(ctr?[['L','T'],['B','R']]:[['T','R'],['L','B']]):c===10?(ctr?[['T','R'],['L','B']]:[['L','T'],['B','R']]):TB[c];
+    const key=k=>{const [o,ex,ey,va,vb]=E[k],id=o+ex+'_'+ey;if(!P.has(id)){const t=(0.5-va)/(vb-va);P.set(id,o==='h'?[ex+t,ey]:[ex,ey+t]);}return id;};
+    segs.forEach(([p,q])=>link(key(p),key(q)));}
+  const seen=new Set(),loops=[];
+  adj.forEach((_,start)=>{if(seen.has(start))return;const L=[];let prev=null,cur=start,guard=0;
+    while(guard++<1e6){seen.add(cur);L.push(P.get(cur));const nb=adj.get(cur);const nx=nb[0]!==prev?nb[0]:nb[1];prev=cur;cur=nx;if(cur===start||cur===undefined||seen.has(cur))break;}
+    if(L.length>=3)loops.push(L);});
+  return loops;
+}
+function textGlyphs(T){
+  const lines=T.text.replace(/\r/g,'').split('\n').slice(0,3).map(l=>l.replace(/\s+$/,''));while(lines.length&&!lines[lines.length-1].trim())lines.pop();
+  if(!lines.length||!lines.join('').trim())return null;
+  const key=[lines.join('\n'),T.font,T.size].join('|');if(glyphCache.key===key)return glyphCache.val;
+  const H=T.size,fam=TXT_FONTS[T.font]||TXT_FONTS.sans,font=r=>fam.replace('{px}',(H/0.72*r).toFixed(2));
+  const cx0=document.createElement('canvas').getContext('2d');let r=12;cx0.font=font(r);
+  let wmax=Math.max(...lines.map(l=>cx0.measureText(l).width))/r;if(wmax*r>2600){r=Math.max(3,2600/wmax);}
+  const lh=H*1.35,pad=H,W=Math.ceil((wmax+2*pad)*r),Hp=Math.ceil((lines.length*lh+2*pad)*r);
+  const cv=document.createElement('canvas');cv.width=W;cv.height=Hp;const ctx=cv.getContext('2d');
+  ctx.font=font(r);ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillStyle='#000';
+  lines.forEach((l,i)=>ctx.fillText(l,W/2,(pad+H*1.02+i*lh)*r));
+  const d=ctx.getImageData(0,0,W,Hp).data,a=new Float32Array(W*Hp);for(let i=0;i<W*Hp;i++)a[i]=d[i*4+3]/255;
+  let loops=marching(a,W,Hp).map(L=>simplify(L,0.18)).filter(L=>Math.abs(areaOf(L))>r*r*0.01);
+  if(!loops.length){glyphCache={key,val:null};return null;}
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;loops.forEach(L=>L.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}));
+  const cx=(x0+x1)/2,cy=(y0+y1)/2;
+  const mm=loops.map(L=>L.map(([x,y])=>[(x-cx)/r,(cy-y)/r])),ar=mm.map(L=>Math.abs(areaOf(L)));
+  const info=mm.map((L,i)=>{let depth=0,parent=-1,best=1e18;mm.forEach((M,j)=>{if(j!==i&&ar[j]>ar[i]&&pip(L[0],M)){depth++;if(ar[j]<best){best=ar[j];parent=j;}}});return {pts:L,depth,parent};});
+  const val={loops:info,w:(x1-x0)/r,h:(y1-y0)/r,lines:lines.length};glyphCache={key,val};return val;
+}
+const cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+function txtMirror(p){return !!(p&&p.txt&&p.txt.ok&&p.txt.mirror);}
+function txtPanels(m){return m.panels.filter(p=>!p.noLabel&&p.part!=='butee'&&!['Rebord','Cadre sous le couvercle'].includes(p.name));}
+function txtKind(m){return (m.chess||m.sm||state.mode!=='3d')?'laser':'3d';}
+function bboxOf(P){const xs=P.map(q=>q[0]),ys=P.map(q=>q[1]);return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];}
+function holeBox(h){if(h.shape==='poly')return bboxOf(h.pts);const [a,b]=h.shape==='rond'?[h.d/2,h.d/2]:ext(h);return [h.u-a,h.v-b,h.u+a,h.v+b];}
+function txtPlace(p,G,fu,fv){
+  const [mx0,my0,mx1,my1]=bboxOf(p.outline),vis=p.vis?p.frame.N:p.frame.N.map(x=>-x),c=cross3(p.frame.U,p.frame.V),mirror=c[0]*vis[0]+c[1]*vis[1]+c[2]*vis[2]<0;
+  const cu=mx0+(mirror?1-fu:fu)*(mx1-mx0),cv=my0+fv*(my1-my0),mg=0.8,box=[cu-G.w/2-mg,cv-G.h/2-mg,cu+G.w/2+mg,cv+G.h/2+mg];
+  let msg='';
+  const corners=[[box[0],box[1]],[box[2],box[1]],[box[2],box[3]],[box[0],box[3]]];
+  if(!corners.every(q=>pip(q,p.outline))||p.outline.some(([x,y])=>x>box[0]-0.5&&x<box[2]+0.5&&y>box[1]-0.5&&y<box[3]+0.5))msg='dépasse du bord de la pièce ou en est trop près';
+  else if(p.holes.some(h=>{const b=holeBox(h);return b[0]<box[2]+0.5&&b[2]>box[0]-0.5&&b[1]<box[3]+0.5&&b[3]>box[1]-0.5;}))msg='chevauche une ouverture';
+  return {cu,cv,box,mirror,msg};
+}
+function applyText(m){
+  m.txt=null;const T=state.txt,list=txtPanels(m);m.txtList=list.map(p=>p.name);
+  if(!list.length)return;
+  if(m.sm)list.forEach(q=>{if(['socle','plateau','cadre'].includes(q.part))q.vis=1;});
+  const pref=(m.chess?['Tiroir – façade','Plateau','Coffret – arrière']:m.sm?['Socle','Montant gauche','Montant droit']:['Couvercle','Face avant','Côté gauche','Côté droit','Face arrière','Fond']).map(n=>list.find(q=>q.name===n)).filter(Boolean);
+  let p=list.find(q=>q.name===T.panel);
+  if(!p){p=pref[0]||list[0];T.panel=p.name;T.fu=.5;T.fv=.5;T.place=true;T.auto=true;}
+  const G=textGlyphs(T);if(!G)return;
+  const kind=txtKind(m);
+  if(T.auto&&txtPlace(p,G,T.fu,T.fv).msg){ // pièce choisie automatiquement : on prend la première où le texte tient
+    const fits=q=>{for(let i=0;i<=20;i++)for(let j=0;j<=20;j++)if(!txtPlace(q,G,i/20,j/20).msg)return true;return false;};
+    const q=pref.concat(list).find(fits);if(q&&q!==p){p=q;T.panel=q.name;T.place=true;}else if(q)T.place=true;}
+  if(T.place){T.place=false;const tries=[];for(let i=0;i<=20;i++)for(let j=0;j<=20;j++)tries.push([i/20,j/20]);tries.sort((a,b)=>Math.hypot(a[0]-.5,a[1]-.5)-Math.hypot(b[0]-.5,b[1]-.5));
+    const ok=tries.find(([u,v])=>!txtPlace(p,G,u,v).msg);if(ok){T.fu=ok[0];T.fv=ok[1];}syncTxtPos();}
+  const pl=txtPlace(p,G,T.fu,T.fv),e=kind==='3d'?Math.max(0.2,Math.min(T.depth,p.depth-0.6)):Math.min(0.3,p.depth/4);
+  const loops=G.loops.map(L=>({...L,pts:L.pts.map(([x,y])=>[pl.cu+(pl.mirror?-x:x),pl.cv+y])}));
+  p.txt={ok:!pl.msg,loops,box:pl.box,e,mirror:pl.mirror,kind};
+  m.txt={ok:!pl.msg,msg:pl.msg,p,kind,e,G,box:pl.box};
+}
+function txtTiles(T){ // zone autour des lettres (cadre moins lettres), pour la peau du creux
+  const v2=P=>P.map(([x,y])=>new THREE.Vector2(x,y)),out=[];
+  const s0=new THREE.Shape(v2(rect(...T.box)));T.loops.forEach(L=>{if(L.depth===0)s0.holes.push(new THREE.Path(v2(L.pts)));});out.push(s0);
+  T.loops.forEach((L,i)=>{if(L.depth%2!==1)return;const s=new THREE.Shape(v2(L.pts));T.loops.forEach(K=>{if(K.parent===i)s.holes.push(new THREE.Path(v2(K.pts)));});out.push(s);});
+  return out;
+}
+function txtSvg(p,tr){
+  if(!(p.txt&&p.txt.ok))return '';const n=v=>Math.round(v*100)/100;
+  return `<path d="${p.txt.loops.map(L=>'M'+L.pts.map(([u,v])=>{const [x,y]=tr(u,v);return n(x)+' '+n(y);}).join(' L')+' Z').join(' ')}"/>`;
+}
+function txtDxf(p,tr,H,L){
+  if(!(p.txt&&p.txt.ok))return;
+  p.txt.loops.forEach(K=>{const q=K.pts.map(([u,v])=>tr(u,v));q.forEach((a,i)=>{const b=q[(i+1)%q.length];L.push('0','LINE','8','GRAVURE','10',a[0].toFixed(3),'20',(H-a[1]).toFixed(3),'11',b[0].toFixed(3),'21',(H-b[1]).toFixed(3));});});
+}
+function txtNotice(m){
+  if(!m.txt||!m.txt.ok)return '';const T=state.txt,one=T.text.trim().replace(/\s*\n\s*/g,' / ');
+  return `\nTEXTE PERSONNALISÉ\n- « ${one} » sur : ${m.txt.p.name.toLowerCase()} ; lettres de ${fmt(T.size)} mm de haut\n- `+(m.txt.kind==='3d'?`Lettres en creux de ${fmt(m.txt.e)} mm, déjà dans le fichier STL (rien à régler).`:`Gravure en bleu dans le plan (le texte est déjà converti en tracés : la police n’a pas besoin d’être installée). Règle le bleu en gravure / remplissage dans le logiciel de la découpeuse, avant la découpe.`)+`\n- Monte cette pièce face ${m.txt.kind==='3d'?'creusée':'gravée'} vers l’extérieur.\n`;
+}
+function txtWarn(m){
+  const el=$('warns');if(!el||!m.txt)return;const T=state.txt,add=(c,t)=>el.insertAdjacentHTML('afterbegin',`<div class="w ${c==='bad'?'':c}">${t}</div>`);
+  if(!m.txt.ok){el.querySelectorAll('.w.ok').forEach(x=>x.remove());add('bad',`Le texte ${m.txt.msg} (${m.txt.p.name.toLowerCase()}) : il ne sera pas ${m.txt.kind==='3d'?'creusé':'gravé'}. Déplace-le, réduis la hauteur des lettres, choisis une autre pièce ou clique sur « Trouver une place libre ».`);return;}
+  if(m.txt.kind==='3d'&&T.size<5)add('info',`Lettres de ${fmt(T.size)} mm : à l’impression 3D, elles risquent d’être peu lisibles. 6 mm ou plus, avec une police épaisse, donne un résultat net.`);
+  if(m.txt.kind==='laser'&&T.size<3.5)add('info','Lettres très petites : la gravure laser risque d’être peu lisible.');
+}
+function drawTxtMarker(m){
+  if(!renderer||!m.txt||m.txt.ok)return;const p=m.txt.p,b=m.txt.box,z=p.vis?p.depth+0.4:-0.4,M=frameMatrix(p.frame);
+  const pts=rect(...b).map(([u,v])=>new THREE.Vector3(u,v,z).applyMatrix4(M));
+  group.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:new THREE.Color(css('--bad'))})));needs=true;
+}
+function syncTxtPos(){const T=state.txt,u=Math.round(T.fu*100),v=Math.round(T.fv*100);$('tx_u').value=u;$('tx_u_r').value=u;$('tx_v').value=v;$('tx_v_r').value=v;}
+function renderTxt(m){
+  const sel=$('tx_panel'),names=m.txtList||[],cur=[...sel.options].map(o=>o.value).join('|');
+  if(cur!==names.join('|'))sel.innerHTML=names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  sel.value=state.txt.panel;const kind=txtKind(m);$('tx_depthF').hidden=kind!=='3d';
+  $('txtTip').textContent=kind==='3d'?'Impression 3D : les lettres sont creusées dans la face extérieure de la pièce choisie, sans support à ajouter.':'Découpe laser : le texte est gravé (en bleu dans le plan) sur la face visible. Il est converti en tracés : pas besoin d’installer la police sur l’ordinateur de la découpeuse.';
+  $('txtBadge').textContent=!m.txt?'':m.txt.ok?'✓':'⚠';
+}
 
 /* ================= Interface ================= */
 function renderPick(){
@@ -974,6 +1125,7 @@ function renderControls(){
   document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===state.view)));
   $('view3d').hidden=state.view!=='3d';$('viewPlan').hidden=state.view!=='plan';
   $('explode').checked=state.explode;$('lidShow').checked=state.lidShow;
+  {const T=state.txt;$('tx_text').value=T.text;$('tx_font').value=T.font;$('tx_size').value=T.size;$('tx_depth').value=T.depth;syncTxtPos();}
   $('addType').innerHTML=Object.entries(HT).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
   $('addFace').innerHTML=FACES.map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
   $('expBtns').innerHTML=isS?'<button class="btn primary" id="exSM">Télécharger le banc de stop motion (.zip)</button>':isC?'<button class="btn primary" id="exCh">Télécharger la sélection (.zip)</button><button class="btn" id="exChTest">Essai : gabarit + 1 pion (.zip)</button><button class="btn" id="exChSvg">Plateau gravé seul (SVG)</button>':state.mode==='3d'?'<button class="btn primary" id="ex3d">Télécharger les fichiers STL (.zip)</button>':
@@ -1019,14 +1171,14 @@ function renderStats(m){
   $('expInfo').textContent=state.mode==='3d'?'Un fichier .zip avec un fichier STL par pièce, déjà posées à plat pour l’impression, et une notice.':'Le plan SVG s’ouvre dans le logiciel de la découpeuse (LightBurn, Inkscape…). Le .zip ajoute un DXF et une notice d’assemblage.';
 }
 let raf=0;function update(full){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{
-  const m=buildModel();lastModel=m;rebuild3D(m);
-  if(m.sm){renderSMWarns(m);renderSMStats(m);renderCamDiagram();if(state.view==='plan')$('planBox').innerHTML=smSheets(m).map(g=>'<p class="tip" style="margin:8px 0 4px">'+g.label+'</p>'+sheetSVG(g.sheet,false,true).svg).join('');return;}
-  if(m.chess){renderChessWarns(m);renderChessStats(m);if(state.view==='plan'){const sh=chessSheets(m);$('planBox').innerHTML=sh.board.map(g=>'<p class="tip" style="margin:8px 0 4px">'+g.label+'</p>'+sheetSVG(g.sheet,false,true).svg).join('')+(sh.pieces?'<p class="tip" style="margin-top:10px">Pièces : une couleur, à découper deux fois</p>'+sheetSVG(sh.pieces,false,false).svg:'');}return;}
-  renderWarns(m);renderStats(m);
+  const m=buildModel();lastModel=m;rebuild3D(m);drawTxtMarker(m);renderTxt(m);
+  if(m.sm){renderSMWarns(m);renderSMStats(m);txtWarn(m);renderCamDiagram();if(state.view==='plan')$('planBox').innerHTML=smSheets(m).map(g=>'<p class="tip" style="margin:8px 0 4px">'+g.label+'</p>'+sheetSVG(g.sheet,false,true).svg).join('');return;}
+  if(m.chess){renderChessWarns(m);renderChessStats(m);txtWarn(m);if(state.view==='plan'){const sh=chessSheets(m);$('planBox').innerHTML=sh.board.map(g=>'<p class="tip" style="margin:8px 0 4px">'+g.label+'</p>'+sheetSVG(g.sheet,false,true).svg).join('')+(sh.pieces?'<p class="tip" style="margin-top:10px">Pièces : une couleur, à découper deux fois</p>'+sheetSVG(sh.pieces,false,false).svg:'');}return;}
+  renderWarns(m);renderStats(m);txtWarn(m);
   if(state.mode==='laser')$('planBox').innerHTML=svgOf(m,false).svg;
   if(full)renderHoles();else{document.querySelectorAll('[data-card]').forEach(c=>{const i=+c.dataset.card;c.classList.toggle('bad',!m.res[i].ok);});}
 });}
-function open(id){loadPreset(id);if(id==='stopmotion'){state.sm.hc=smAdvised();if(state.tl<4)state.tl=4;}$('pick').hidden=true;$('editor').hidden=false;renderControls();resetView();update(true);window.scrollTo(0,0);if(renderer)sizeGL();}
+function open(id){loadPreset(id);state.txt.panel='';state.txt.auto=true;if(id==='stopmotion'){state.sm.hc=smAdvised();if(state.tl<4)state.tl=4;}$('pick').hidden=true;$('editor').hidden=false;renderControls();resetView();update(true);window.scrollTo(0,0);if(renderer)sizeGL();}
 
 /* ================= Évènements ================= */
 $('objects').addEventListener('click',e=>{const b=e.target.closest('.obj');if(b)open(b.dataset.id);});
@@ -1077,6 +1229,16 @@ hl.addEventListener('focusin',e=>{const c=e.target.closest('[data-card]');if(c&&
 $('expBtns').addEventListener('click',e=>{const id=e.target.id;
   const run=f=>f().catch(err=>{$('dlStatus').textContent='Erreur pendant la création du fichier : '+(err&&err.message||err);});
   if(id==='exSM')run(exportSM);if(id==='exCh')run(exportChess);if(id==='exChSvg')run(exportChessBoardSVG);if(id==='exChTest')run(exportChessTest);if(id==='ex3d')run(export3D);if(id==='exSvg')run(exportSVG);if(id==='exZip')run(exportLaserZip);});
+$('tx_text').addEventListener('input',e=>{const v=e.target.value.split('\n');if(v.length>3){e.target.value=v.slice(0,3).join('\n');}state.txt.text=e.target.value;update(false);});
+$('tx_panel').addEventListener('change',e=>{state.txt.panel=e.target.value;state.txt.place=true;state.txt.auto=false;update(false);});
+$('tx_font').addEventListener('change',e=>{state.txt.font=e.target.value;update(false);});
+$('tx_size').addEventListener('input',e=>{const el=e.target,v=+el.value.replace(',','.'),ok=el.value!==''&&v>=+el.min&&v<=+el.max;el.classList.toggle('bad',!ok);if(ok){state.txt.size=v;update(false);}});
+$('tx_depth').addEventListener('input',e=>{const el=e.target,v=+el.value.replace(',','.'),ok=el.value!==''&&v>=+el.min&&v<=+el.max;el.classList.toggle('bad',!ok);if(ok){state.txt.depth=v;update(false);}});
+[['u','fu'],['v','fv']].forEach(([k,f])=>{const set=v=>{v=Math.max(0,Math.min(100,+v||0));state.txt[f]=v/100;syncTxtPos();update(false);};
+  $('tx_'+k).addEventListener('input',e=>{if(e.target.value!=='')set(e.target.value);});$('tx_'+k+'_r').addEventListener('input',e=>set(e.target.value));});
+$('tx_center').addEventListener('click',()=>{state.txt.fu=.5;state.txt.fv=.5;syncTxtPos();update(false);});
+$('tx_auto').addEventListener('click',()=>{state.txt.place=true;update(false);});
+$('tx_clear').addEventListener('click',()=>{state.txt.text='';$('tx_text').value='';update(false);});
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(lastModel)rebuild3D(lastModel);});
 
 renderPick();initGL();
