@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Organigramme interactif — La trottinette en libre-service</title>
+<style>
+  :root{
+    --bg: #eef3f7;
+    --card-bg: #ffffff;
+    --text: #1c2b36;
+    --text-soft: #5b6b76;
+    --rect-bg: #dceaf7;
+    --rect-border: #3b7bb8;
+    --diamond-bg: #fdeed3;
+    --diamond-border: #c8862c;
+    --accent: #2d6ca3;
+    --green: #2e9e5b;
+    --green-bg: #e2f6ea;
+    --red: #cf4438;
+    --red-bg: #fbe6e3;
+    --line: #9fb3c1;
+    --overlay: rgba(15, 25, 35, 0.55);
+    --locked-bg: #e4e8eb;
+    --locked-border: #c3ccd2;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #121a20; --card-bg: #1b262e; --text: #eaf1f5; --text-soft: #a7b6c0;
+      --rect-bg: #1f3a52; --rect-border: #4f9be0; --diamond-bg: #4a3a1c; --diamond-border: #e0a94f;
+      --accent: #6fb3e6; --green: #4fc987; --green-bg: #17301f; --red: #ef7266; --red-bg: #341c19;
+      --line: #3c4c58; --overlay: rgba(0,0,0,0.7); --locked-bg: #202b32; --locked-border: #33404a;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #121a20; --card-bg: #1b262e; --text: #eaf1f5; --text-soft: #a7b6c0;
+    --rect-bg: #1f3a52; --rect-border: #4f9be0; --diamond-bg: #4a3a1c; --diamond-border: #e0a94f;
+    --accent: #6fb3e6; --green: #4fc987; --green-bg: #17301f; --red: #ef7266; --red-bg: #341c19;
+    --line: #3c4c58; --overlay: rgba(0,0,0,0.7); --locked-bg: #202b32; --locked-border: #33404a;
+  }
+  html, body{ height: 100%; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 0 0 40px;
+  }
+
+  /* ---- Sticky animation panel ---- */
+  .anim-sticky{
+    position: fixed;
+    top: env(safe-area-inset-top, 0px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    width: 100%;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    padding: 10px 12px 8px;
+  }
+  .anim-inner{
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  h1{
+    font-size: 1.05rem;
+    margin: 2px 0 6px;
+    line-height:1.25;
+    text-align:center;
+  }
+  .scene-wrap{
+    width:100%;
+    max-width: 460px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #cfe8f7 0%, #eaf5fb 100%);
+    border-radius: 12px;
+    overflow:hidden;
+    border: 1px solid var(--line);
+  }
+  @media (min-width: 700px){
+    .anim-inner{ max-width: 900px; }
+    .scene-wrap{ max-width: 820px; }
+  }
+  @media (min-width: 1100px){
+    .anim-inner{ max-width: 1150px; }
+    .scene-wrap{ max-width: 1050px; }
+  }
+  @media (prefers-color-scheme: dark){ .scene-wrap{ background: linear-gradient(180deg, #16303f 0%, #1b262e 100%); } }
+  :root[data-theme="dark"] .scene-wrap{ background: linear-gradient(180deg, #16303f 0%, #1b262e 100%); }
+  svg#scene{ display:block; width:100%; height:auto; }
+
+  .caption{
+    text-align:center;
+    font-size: 0.82rem;
+    color: var(--text-soft);
+    margin: 6px 4px 4px;
+    min-height: 2.2em;
+  }
+  .scene-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "scene scene" "tests actions";
+    gap: 8px;
+    align-items: start;
+    font-size: 0.72rem;
+    color: var(--text);
+  }
+  .scene-row .scene-wrap{ grid-area: scene; }
+  .scene-row .status-col.tests{ grid-area: tests; }
+  .scene-row .status-col.actions{ grid-area: actions; }
+  @media (min-width: 760px){
+    .scene-row{
+      grid-template-columns: minmax(170px, 240px) minmax(0, 1fr) minmax(170px, 240px);
+      grid-template-areas: "tests scene actions";
+      align-items: center;
+      font-size: 0.74rem;
+    }
+    .scene-row .scene-wrap{ margin: 0 auto; }
+  }
+  .status-col{
+    border-radius: 10px;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    min-width: 0;
+  }
+  .status-col.tests{ background: var(--diamond-bg); border-color: var(--diamond-border); }
+  .status-col.actions{ background: var(--rect-bg); border-color: var(--rect-border); }
+  .status-col h3{
+    margin: 0 0 4px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .status-col.tests h3{ color: var(--diamond-border); }
+  .status-col.actions h3{ color: var(--rect-border); }
+  .status-row{
+    display:flex; justify-content:space-between; align-items:center; gap: 6px;
+    padding: 2px 0; border-top: 1px dashed rgba(0,0,0,0.08);
+  }
+  .status-row:first-of-type{ border-top: none; }
+  .status-row .sname{ flex: 1; min-width: 0; }
+  .status-val{
+    flex-shrink: 0; font-weight: 700; border-radius: 8px; padding: 1px 7px;
+    background: var(--red-bg); color: var(--red); white-space: nowrap;
+  }
+  .status-val.on{ background: var(--green-bg); color: var(--green); }
+  @media (max-width: 420px){
+    .scene-row{ font-size: 0.64rem; gap: 5px; }
+    .status-col{ padding: 5px 6px; }
+  }
+
+  .anim-actions{
+    display:flex;
+    justify-content:center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .replay-btn{
+    background: var(--accent);
+    color: white;
+    border:none;
+    border-radius: 16px;
+    padding: 6px 14px;
+    font-size: 0.76rem;
+    cursor:pointer;
+  }
+  .replay-btn:disabled{ opacity: 0.4; }
+  .anim-actions{ flex-wrap: wrap; align-items:center; }
+  .zoom-controls{ display:flex; align-items:center; gap: 6px; }
+  .zoom-btn{
+    width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--rect-bg); color: var(--text); font-size: 1.1rem; font-weight:700;
+    cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .zoom-btn:disabled{ opacity: 0.35; cursor:default; }
+  .fs-btn{
+    background: var(--card-bg); color: var(--text); border: 1px solid var(--line);
+    border-radius: 16px; padding: 6px 14px; font-size: 0.76rem; cursor: pointer;
+  }
+  .fs-btn[hidden]{ display:none; }
+  .zoom-level{ font-size: 0.78rem; color: var(--text-soft); min-width: 44px; text-align:center; }
+  .anim-inner.zoomed{ max-width: 100% !important; }
+
+  /* ---- Rest of page ---- */
+  main{ width:100%; display:flex; flex-direction:column; align-items:center; padding: 14px 12px 0; }
+  .subtitle{ color: var(--text-soft); font-size: 0.88rem; margin: 0 0 10px; text-align:center; max-width: 480px; }
+  .legend{ display:flex; justify-content:center; gap: 18px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-soft); margin-bottom: 10px; }
+  .legend-item{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width: 16px; height: 16px; flex-shrink:0; border-width: 2px; border-style: solid; }
+  .swatch.rect{ background: var(--rect-bg); border-color: var(--rect-border); border-radius: 3px; }
+  .swatch.diamond{ background: var(--diamond-bg); border-color: var(--diamond-border); transform: rotate(45deg); width:12px; height:12px; }
+
+  .progress-wrap{ width:100%; max-width: 640px; margin-bottom: 18px; }
+  .progress-label{ display:flex; justify-content:space-between; font-size: 0.82rem; color: var(--text-soft); margin-bottom: 4px; }
+  .progress-bar{ width:100%; height: 10px; border-radius: 6px; background: var(--card-bg); border: 1px solid var(--line); overflow:hidden; }
+  .progress-fill{ height:100%; width:0%; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width 0.4s ease; }
+
+  .flow{ width:100%; max-width: 460px; display:flex; flex-direction:column; align-items:center; }
+  .flow-area{
+    position: relative; width: 100%; max-width: 520px; padding: 0 30px;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .flow-end{ height: 50px; }
+  .loop-back{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+  .flow-start{ width:100%; max-width: 460px; display:flex; flex-direction:column; align-items:center; }
+  .start-oval{
+    background: var(--green-bg); border: 2px solid var(--green); color: var(--green);
+    font-weight: 700; font-size: 0.9rem; border-radius: 999px; padding: 10px 30px;
+  }
+  .node-wrap{ display:flex; flex-direction:column; align-items:center; width:100%; }
+  .arrow{ font-size: 1.3rem; color: var(--line); line-height:1; margin: 2px 0; }
+  .node{
+    cursor:pointer; border-width: 2px; border-style: solid; color: var(--text); font-size: 0.9rem;
+    text-align:center; display:flex; align-items:center; justify-content:center; padding: 14px;
+    width: 100%; min-height: 64px; transition: transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative; user-select: none;
+  }
+  .node:active{ transform: scale(0.98); }
+  .node.rect{ background: var(--rect-bg); border-color: var(--rect-border); border-radius: 12px; }
+  .node.diamond-outer{
+    background: transparent; border: none; padding: 0; width: 200px; height: 200px; min-height: unset;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .node.diamond-outer .diamond-shape{
+    width: 100%; height: 100%; background: var(--diamond-bg); border: 2px solid var(--diamond-border);
+    clip-path: polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%);
+    display:flex; align-items:center; justify-content:center; text-align:center; padding: 16px;
+  }
+  .diamond-shape span{ max-width: 120px; font-size: 0.85rem; }
+  .label.placeholder{ color: var(--text-soft); font-style: italic; font-size: 0.82rem; }
+  .placeholder-q{ font-size: 1.4rem; display:block; margin-bottom: 2px; }
+  .node .tag{
+    position:absolute; top: -9px; left: 10px; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em;
+    background: var(--card-bg); padding: 1px 6px; border-radius: 8px; color: var(--text-soft); border: 1px solid var(--line);
+  }
+  .node.diamond-outer .tag{ left: 50%; transform: translateX(-50%); top:-6px; }
+  .node.rect.correct{ background: var(--green-bg) !important; border-color: var(--green) !important; }
+  .node.diamond-outer.correct .diamond-shape{ background: var(--green-bg); border-color: var(--green); }
+  .node.locked{ cursor: default; opacity: 0.55; }
+  .node.locked.rect{ background: var(--locked-bg); border-color: var(--locked-border); }
+  .node.locked.diamond-outer .diamond-shape{ background: var(--locked-bg); border-color: var(--locked-border); }
+  .lock-icon{ position:absolute; top:6px; right:10px; font-size: 0.85rem; }
+  .node.diamond-outer .lock-icon{ top: 14%; right: 18%; }
+  .node.diamond-outer .decision-oui{
+    position:absolute; bottom:-6px; left:50%; transform:translateX(-50%);
+    font-size:0.78rem; font-weight:700; color: var(--green); white-space:nowrap;
+  }
+  .node.diamond-outer .decision-loop{
+    position:absolute; left:100%; top:0; width:60px; height:200px; overflow:visible; pointer-events:none;
+  }
+  .check{
+    position:absolute; bottom: -8px; right: -8px; background: var(--green); color: white; border-radius: 50%;
+    width: 22px; height: 22px; display:none; align-items:center; justify-content:center; font-size: 0.8rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .node.correct .check{ display:flex; }
+
+  .final-msg{
+    margin-top: 18px; padding: 16px; border-radius: 12px; background: var(--green-bg); border: 2px solid var(--green);
+    text-align:center; max-width: 440px; display:none; font-size: 0.95rem;
+  }
+  .final-msg.show{ display:block; }
+
+  .reset-btn{
+    margin-top: 22px; background: transparent; border: 1px solid var(--line); color: var(--text-soft);
+    padding: 8px 16px; border-radius: 20px; font-size: 0.82rem; cursor: pointer;
+  }
+  .reset-btn:active{ opacity: 0.7; }
+
+  .score-chip{
+    display:inline-flex; align-items:center; gap: 3px; padding: 5px 12px; border-radius: 16px;
+    background: var(--diamond-bg); border: 1px solid var(--diamond-border);
+    font-size: 0.8rem; font-weight: 700; color: var(--text); white-space: nowrap;
+  }
+  .modal-head{ display:flex; justify-content:space-between; align-items:center; gap: 10px; margin-bottom: 6px; }
+  .modal-head .modal-kicker{ margin-bottom: 0; }
+  .modal-score{ padding: 3px 10px; font-size: 0.75rem; }
+  .score-chip #modalScoreValue{ color: var(--accent); font-size: 0.9rem; font-weight: 800; }
+  .score-chip #scoreValue{ color: var(--accent); font-size: 0.95rem; font-weight: 800; }
+  .score-chip.bump{ animation: scoreBump 0.6s ease; }
+  @keyframes scoreBump{ 0%{ transform: scale(1); } 40%{ transform: scale(1.25); } 100%{ transform: scale(1); } }
+
+  /* Animation affichée à côté de la question après une bonne réponse */
+  .modal.with-scene{ max-width: 920px; display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 0 18px; align-items:start; }
+  .modal.with-scene .modal-main{ min-width: 0; }
+  .modal-scene{ display:none; }
+  .modal.with-scene .modal-scene{
+    display:block; position: sticky; top: 0; padding: 8px; border-radius: 12px;
+    background: var(--bg); border: 1px solid var(--line);
+  }
+  .modal-scene .scene-wrap{ max-width: 100% !important; width: 100%; }
+  .modal-scene .caption{ margin: 6px 2px 0; min-height: 0; font-size: 0.8rem; }
+  .modal-scene-title{ font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 600; margin: 0 2px 6px; }
+  @media (max-width: 700px){
+    .modal.with-scene{ display:block; }
+    .modal.with-scene .modal-scene{ position: static; margin-top: 12px; }
+  }
+  .device-progress-wrap{ width:100%; max-width: 460px; display:none; flex-direction:column; align-items:center; margin-top: 4px; }
+  .device-progress-wrap.show{ display:flex; }
+
+  .device-chip{
+    margin-top: 8px; display:none; align-items:center; gap: 4px; justify-content:center;
+    font-size: 0.72rem; font-weight:600; color: var(--text-soft);
+    background: var(--locked-bg); border: 1px solid var(--locked-border); border-radius: 14px;
+    padding: 4px 10px; cursor:pointer; text-align:center; max-width: 92%;
+  }
+  .device-chip.show{ display:inline-flex; }
+  .device-chip .dchip-value{ font-weight:700; }
+  .device-chip.correct{ background: var(--green-bg); border-color: var(--green); color: var(--green); }
+
+  .toast{
+    position: fixed; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 20px; font-size: 0.82rem;
+    opacity: 0; pointer-events:none; transition: opacity 0.25s ease, transform 0.25s ease; z-index: 200; max-width: 88%; text-align:center;
+  }
+  .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Modal */
+  .overlay{
+    position: fixed; inset: 0; background: var(--overlay); display:none; align-items:flex-end; justify-content:center;
+    z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .overlay.open{ display:flex; }
+  @media (min-width: 560px){ .overlay{ align-items:center; } }
+  .modal{
+    background: var(--card-bg); width: 100%; max-width: 480px; border-radius: 18px 18px 0 0;
+    padding: 20px 18px calc(20px + env(safe-area-inset-bottom, 0px)); max-height: 78vh; overflow-y: auto;
+    animation: slideUp 0.2s ease;
+  }
+  @media (min-width: 560px){ .modal{ border-radius: 18px; margin: 16px; } }
+  @keyframes slideUp{ from{ transform: translateY(24px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
+  .modal-kicker{ font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+  .modal h2{ font-size: 1.05rem; margin: 0 0 14px; line-height: 1.35; }
+  .options{ display:flex; flex-direction:column; gap: 10px; }
+  .option{ text-align:left; background: var(--rect-bg); border: 2px solid transparent; border-radius: 10px; padding: 12px 14px; font-size: 0.9rem; color: var(--text); cursor:pointer; }
+  .option:active{ opacity: 0.8; }
+  .option.correct-pick{ background: var(--green-bg); border-color: var(--green); }
+  .option.wrong-pick{ background: var(--red-bg); border-color: var(--red); }
+  .feedback{ margin-top: 12px; font-size: 0.85rem; padding: 10px 12px; border-radius: 10px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.ok{ background: var(--green-bg); color: var(--green); }
+  .feedback.ko{ background: var(--red-bg); color: var(--red); }
+  .modal-actions{ display:flex; justify-content:flex-end; margin-top: 16px; }
+  .close-btn{ background: var(--accent); color: white; border: none; padding: 9px 18px; border-radius: 20px; font-size: 0.88rem; cursor: pointer; display:none; }
+  .close-btn.show{ display:inline-block; }
+
+  /* Scène de la trottinette */
+  #scooter{ transition: transform 3.6s ease-in-out; }
+  #personStand{ transition: transform 1.5s ease, opacity 0.6s ease; }
+  #rider, #phone, #qrBeam, #payCheck, #frontBeam, #bolt, #kickDown, #kickUp, #shackleClosed, #shackleOpen{ transition: opacity 0.5s ease; }
+  #frontLight, #rearLight, #lockBody, #batFill{ transition: fill 0.5s ease; }
+  #wheelF.spin, #wheelR.spin{ animation: wheelSpin 0.45s linear infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes wheelSpin{ to{ transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="anim-sticky">
+  <div class="anim-inner">
+    <h1>🛴 La trottinette électrique en libre-service</h1>
+    <div class="scene-row">
+    <div class="status-col tests" id="statusTests"></div>
+    <div class="scene-wrap">
+      <svg id="scene" viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg">
+        <!-- décor -->
+        <rect x="0" y="0" width="600" height="240" fill="#dcecf6"></rect>
+        <rect x="20" y="58" width="90" height="150" fill="#c9b99a"></rect>
+        <rect x="118" y="86" width="70" height="122" fill="#b8c4cc"></rect>
+        <rect x="360" y="70" width="80" height="138" fill="#c9b99a"></rect>
+        <rect x="448" y="96" width="120" height="112" fill="#b8c4cc"></rect>
+        <g fill="#eef5fa" opacity="0.8">
+          <rect x="34" y="72" width="16" height="18"></rect><rect x="62" y="72" width="16" height="18"></rect>
+          <rect x="34" y="104" width="16" height="18"></rect><rect x="62" y="104" width="16" height="18"></rect>
+          <rect x="374" y="84" width="16" height="18"></rect><rect x="404" y="84" width="16" height="18"></rect>
+          <rect x="462" y="110" width="16" height="18"></rect><rect x="494" y="110" width="16" height="18"></rect>
+        </g>
+        <rect x="0" y="208" width="600" height="6" fill="#9aa6ae"></rect>
+        <rect x="0" y="214" width="600" height="26" fill="#6f7c86"></rect>
+        <g stroke="#eef5fa" stroke-width="3" stroke-dasharray="18 14"><line x1="0" y1="228" x2="600" y2="228"></line></g>
+
+        <!-- serveur de l'opérateur -->
+        <g id="cloud">
+          <path d="M488,46 a14,14 0 0 1 26,-8 a12,12 0 0 1 22,6 a11,11 0 0 1 -2,22 h-44 a10,10 0 0 1 -2,-20 z" fill="#ffffff" stroke="#8a97a1" stroke-width="1.5"></path>
+          <text x="512" y="58" font-size="9" fill="#5b6b76" text-anchor="middle">Serveur</text>
+          <text id="payCheck" x="512" y="84" font-size="11" font-weight="700" fill="#2e9e5b" text-anchor="middle" opacity="0">✓ Paiement validé</text>
+        </g>
+
+        <!-- l'élève debout -->
+        <g id="personStand" transform="translate(70,208)">
+          <circle cx="0" cy="-60" r="9" fill="#f0c7a0" stroke="#8a6a45" stroke-width="1"></circle>
+          <path d="M-8,-65 q8,-11 16,0 z" fill="#3a2a1c"></path>
+          <rect x="-10" y="-50" width="20" height="30" rx="6" fill="#2d6ca3"></rect>
+          <rect x="-8" y="-21" width="7" height="21" rx="3" fill="#2b3440"></rect>
+          <rect x="1" y="-21" width="7" height="21" rx="3" fill="#2b3440"></rect>
+          <rect x="-15" y="-46" width="8" height="14" rx="3" fill="#c0392b"></rect>
+          <g id="phone" opacity="0">
+            <line x1="8" y1="-44" x2="18" y2="-56" stroke="#f0c7a0" stroke-width="4" stroke-linecap="round"></line>
+            <rect x="15" y="-66" width="9" height="15" rx="2" fill="#1c2b36"></rect>
+            <rect x="16.5" y="-64" width="6" height="10" fill="#8fd0f5"></rect>
+          </g>
+        </g>
+        <line id="qrBeam" x1="94" y1="146" x2="196" y2="148" stroke="#2e9e5b" stroke-width="2" stroke-dasharray="4 3" opacity="0"></line>
+
+        <!-- la trottinette -->
+        <g id="scooter" transform="translate(0,0)">
+          <polygon id="frontBeam" points="214,122 300,196 300,150" fill="#ffe88a" opacity="0"></polygon>
+          <g id="wheelR"><circle cx="122" cy="200" r="13" fill="#2b3440"></circle><circle cx="122" cy="200" r="6" fill="#8a97a1"></circle>
+            <line x1="122" y1="189" x2="122" y2="211" stroke="#d6dde2" stroke-width="2"></line><line x1="111" y1="200" x2="133" y2="200" stroke="#d6dde2" stroke-width="2"></line></g>
+          <g id="wheelF"><circle cx="218" cy="200" r="13" fill="#2b3440"></circle><circle cx="218" cy="200" r="6" fill="#8a97a1"></circle>
+            <line x1="218" y1="189" x2="218" y2="211" stroke="#d6dde2" stroke-width="2"></line><line x1="207" y1="200" x2="229" y2="200" stroke="#d6dde2" stroke-width="2"></line></g>
+          <text id="bolt" x="218" y="182" font-size="13" text-anchor="middle" opacity="0">⚡</text>
+          <line id="kickDown" x1="150" y1="194" x2="140" y2="213" stroke="#2b3440" stroke-width="3" stroke-linecap="round"></line>
+          <line id="kickUp" x1="150" y1="194" x2="128" y2="196" stroke="#2b3440" stroke-width="3" stroke-linecap="round" opacity="0"></line>
+          <rect x="116" y="187" width="94" height="8" rx="3" fill="#2d6ca3"></rect>
+          <line x1="212" y1="190" x2="218" y2="200" stroke="#1c2b36" stroke-width="4"></line>
+          <line x1="212" y1="192" x2="200" y2="112" stroke="#1c2b36" stroke-width="5" stroke-linecap="round"></line>
+          <line x1="186" y1="112" x2="210" y2="112" stroke="#1c2b36" stroke-width="5" stroke-linecap="round"></line>
+          <rect x="196" y="140" width="10" height="10" fill="#ffffff" stroke="#1c2b36" stroke-width="1"></rect>
+          <g fill="#1c2b36"><rect x="198" y="142" width="3" height="3"></rect><rect x="202" y="146" width="2" height="2"></rect><rect x="198" y="146" width="2" height="2"></rect><rect x="202" y="142" width="2" height="2"></rect></g>
+          <circle id="frontLight" cx="208" cy="122" r="4" fill="#9aa6ae"></circle>
+          <rect id="rearLight" x="110" y="185" width="7" height="6" rx="1" fill="#6b2a24"></rect>
+          <!-- écran batterie -->
+          <rect x="174" y="88" width="42" height="16" rx="3" fill="#1c2b36"></rect>
+          <rect x="178" y="92" width="22" height="8" rx="1" fill="none" stroke="#9aa6ae" stroke-width="1"></rect>
+          <rect x="200" y="94" width="2" height="4" fill="#9aa6ae"></rect>
+          <rect id="batFill" x="179" y="93" width="16" height="6" fill="#6f7c86"></rect>
+          <text id="batText" x="209" y="99" font-size="6.5" fill="#d6dde2" text-anchor="middle">?</text>
+          <!-- verrou -->
+          <g id="lockGroup">
+            <path id="shackleClosed" d="M152,172 v-7 a6,6 0 0 1 12,0 v7" fill="none" stroke="#cf4438" stroke-width="2.5"></path>
+            <path id="shackleOpen" d="M152,172 v-7 a6,6 0 0 1 12,0 v-5" fill="none" stroke="#2e9e5b" stroke-width="2.5" opacity="0" transform="translate(0,-5)"></path>
+            <rect id="lockBody" x="149" y="171" width="18" height="13" rx="2" fill="#cf4438"></rect>
+            <text x="158" y="162" font-size="7.5" fill="#5b6b76" text-anchor="middle"></text>
+          </g>
+          <!-- l'élève sur la trottinette -->
+          <g id="rider" opacity="0">
+            <rect x="160" y="166" width="7" height="22" rx="3" fill="#2b3440"></rect>
+            <rect x="170" y="166" width="7" height="22" rx="3" fill="#2b3440"></rect>
+            <rect x="158" y="132" width="21" height="36" rx="6" fill="#2d6ca3"></rect>
+            <line x1="176" y1="140" x2="196" y2="114" stroke="#f0c7a0" stroke-width="4" stroke-linecap="round"></line>
+            <circle cx="170" cy="122" r="9" fill="#f0c7a0" stroke="#8a6a45" stroke-width="1"></circle>
+            <path d="M162,117 q8,-11 16,0 z" fill="#3a2a1c"></path>
+            <rect x="152" y="136" width="8" height="14" rx="3" fill="#c0392b"></rect>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="status-col actions" id="statusActions"></div>
+    </div>
+    <p class="caption" id="caption">Une trottinette est garée et verrouillée. Un élève veut l'emprunter.</p>
+    <div class="anim-actions">
+      <button class="replay-btn" id="replayBtn">▶ Revoir l'animation depuis le début</button>
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomOut" aria-label="Réduire l'animation">−</button>
+        <span class="zoom-level" id="zoomLevel">100 %</span>
+        <button class="zoom-btn" id="zoomIn" aria-label="Agrandir l'animation">+</button>
+      </div>
+      <span class="score-chip" id="scoreBox" title="2 points du premier coup · 1 point au 2e essai · 0 ensuite">⭐ <span id="scoreValue">0</span> / <span id="scoreMax">48</span> pts</span>
+      <button class="fs-btn" id="fsBtn" type="button">⛶ Plein écran</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <p class="subtitle">Clique sur chaque case, dans l'ordre, pour choisir la bonne proposition : le schéma ci-dessus s'anime à chaque bonne réponse.<br><strong>Barème :</strong> 2 points du premier coup · 1 point au 2<sup>e</sup> essai · 0 ensuite.</p>
+  <div class="legend">
+    <div class="legend-item"><span class="swatch rect"></span> Action / état</div>
+    <div class="legend-item"><span class="swatch diamond"></span> Test</div>
+  </div>
+  <p class="subtitle">🛴 Les <strong>capteurs</strong> (lecteur de QR code, jauge de batterie, gâchette, frein, béquille) informent la carte électronique de la trottinette. Le <strong>serveur de l'opérateur</strong> valide le paiement à distance, par le réseau. Les <strong>actionneurs</strong> (verrou, feux, moteur de la roue) agissent.</p>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Progression</span>
+      <span id="progressText">0 / 12</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="flow-area" id="flowArea">
+    <div class="flow-start">
+      <div class="start-oval">Début</div>
+      <div class="arrow">▼</div>
+    </div>
+    <div class="flow" id="flow"></div>
+    <div class="flow-end"></div>
+    <svg class="loop-back" id="loopBack" aria-hidden="true"></svg>
+  </div>
+
+  <div class="final-msg" id="finalMsg">
+    🎉 Bravo, tu as complété tout le cycle de la location !<br>
+    Remonte maintenant en haut de l'organigramme : clique sous chaque case pour indiquer le capteur, l'actionneur ou l'élément qui s'en occupe.
+  </div>
+
+  <div class="device-progress-wrap" id="deviceProgressWrap">
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Capteurs / actionneurs placés</span>
+        <span id="progressText2">0 / 12</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill2"></div></div>
+    </div>
+    <div class="final-msg" id="finalMsg2">
+      🏆 Bravo, tu as placé tous les capteurs et actionneurs ! Tu maîtrises le fonctionnement complet de la trottinette en libre-service.
+    </div>
+  </div>
+
+  <button class="reset-btn" id="resetBtn">Réinitialiser ma progression</button>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-main">
+      <div class="modal-head">
+        <div class="modal-kicker" id="modalKicker">Question</div>
+        <span class="score-chip modal-score" id="modalScore">⭐ <span id="modalScoreValue">0</span> / <span class="score-max">48</span> pts</span>
+      </div>
+      <h2 id="modalQuestion"></h2>
+      <div class="options" id="modalOptions"></div>
+      <div class="feedback" id="modalFeedback"></div>
+      <div class="modal-actions">
+        <button class="close-btn" id="modalClose">Continuer</button>
+      </div>
+    </div>
+    <div class="modal-scene" id="modalScene">
+      <div class="modal-scene-title">Ce qui se passe dans la rue</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Liaison SCORM 1.2 avec ÉLÉA / Moodle (sans effet si la page est ouverte hors plateforme) */
+window.SCORM = (function(){
+  let api = null, ok = false;
+  function find(w){
+    let tries = 0;
+    while(w && tries < 10){
+      try{ if(w.API) return w.API; }catch(e){}
+      if(w.parent === w) break;
+      w = w.parent; tries++;
+    }
+    return null;
+  }
+  try{ api = find(window) || (window.opener ? find(window.opener) : null); }catch(e){ api = null; }
+  if(api){
+    try{ ok = String(api.LMSInitialize("")) === "true"; }catch(e){ ok = false; }
+    if(ok){
+      try{
+        const st = api.LMSGetValue("cmi.core.lesson_status");
+        if(st === "not attempted" || st === "") api.LMSSetValue("cmi.core.lesson_status", "incomplete");
+        api.LMSCommit("");
+      }catch(e){}
+    }
+  }
+  function get(k){ if(!ok) return ""; try{ return api.LMSGetValue(k) || ""; }catch(e){ return ""; } }
+  function set(k,v){ if(!ok) return; try{ api.LMSSetValue(k, String(v)); }catch(e){} }
+  function commit(){ if(!ok) return; try{ api.LMSCommit(""); }catch(e){} }
+  let finished = false;
+  function finish(){ if(!ok || finished) return; finished = true; try{ api.LMSCommit(""); api.LMSFinish(""); }catch(e){} }
+  window.addEventListener("pagehide", finish);
+  window.addEventListener("beforeunload", finish);
+  return {
+    active: function(){ return ok; },
+    load: function(){ const s = get("cmi.suspend_data"); try{ return s ? JSON.parse(s) : null; }catch(e){ return null; } },
+    save: function(state, answered, totalQuestions, points, maxPoints){
+      if(!ok) return;
+      set("cmi.suspend_data", JSON.stringify(state));
+      set("cmi.core.score.min", 0);
+      set("cmi.core.score.max", 100);
+      set("cmi.core.score.raw", Math.round(points / maxPoints * 100));
+      set("cmi.core.lesson_status", answered >= totalQuestions ? "completed" : "incomplete");
+      commit();
+    }
+  };
+})();
+</script>
+<script>
+(function(){
+  const nodes = [
+    { id:"n0", type:"diamond", kicker:"Étape 1", label:"Le QR code est-il scanné ?",
+      device:{kind:"capteur", name:"Lecteur de QR code"},
+      question:"Une trottinette est garée et verrouillée. Un élève veut l'emprunter. Que doit vérifier le système en premier ?",
+      options:[
+        "Qu'un utilisateur a scanné le QR code de la trottinette",
+        "Que le moteur tourne",
+        "Que les feux sont allumés",
+        "Que le frein est actionné"
+      ], correct:0 },
+    { id:"n1", type:"diamond", kicker:"Étape 2", label:"La batterie est-elle assez chargée ?",
+      device:{kind:"capteur", name:"Capteur de niveau de batterie"},
+      question:"Le QR code est scanné. Avant de proposer la location, que doit vérifier la trottinette ?",
+      options:[
+        "Que sa batterie est assez chargée pour rouler",
+        "Que la béquille est relevée",
+        "Que le phare est allumé",
+        "Que le moteur est en marche"
+      ], correct:0 },
+    { id:"n2", type:"diamond", kicker:"Étape 3", label:"Le paiement est-il validé ?",
+      device:{kind:"traitement", name:"Serveur de l'opérateur (réseau)"},
+      question:"La batterie est suffisante. Que faut-il vérifier avant de libérer la trottinette ?",
+      options:[
+        "Que le paiement de la location est validé",
+        "Que le frein est actionné",
+        "Que la trottinette roule déjà",
+        "Que les feux sont éteints"
+      ], correct:0 },
+    { id:"n3", type:"rect", kicker:"Étape 4", label:"Déverrouiller la trottinette",
+      device:{kind:"actionneur", name:"Verrou électrique"},
+      question:"Le paiement est validé. Quelle action permet à l'élève de partir ?",
+      options:[
+        "Déverrouiller la trottinette",
+        "Faire tourner le moteur",
+        "Éteindre les feux",
+        "Verrouiller la trottinette"
+      ], correct:0 },
+    { id:"n4", type:"rect", kicker:"Étape 5", label:"Allumer les feux",
+      device:{kind:"actionneur", name:"Feux (phare avant et feu arrière)"},
+      question:"La trottinette est déverrouillée. Quelle action rend l'élève visible des autres usagers de la route ?",
+      options:[
+        "Allumer les feux (phare avant et feu arrière)",
+        "Faire sonner l'alarme",
+        "Verrouiller la trottinette",
+        "Arrêter le moteur"
+      ], correct:0 },
+    { id:"n5", type:"diamond", kicker:"Étape 6", label:"L'accélérateur est-il actionné ?",
+      device:{kind:"capteur", name:"Gâchette d'accélérateur"},
+      question:"L'élève est monté sur la trottinette. Que doit détecter le système avant de la faire avancer ?",
+      options:[
+        "Que l'élève appuie sur la gâchette d'accélérateur",
+        "Que la béquille est dépliée",
+        "Que la batterie est vide",
+        "Que le paiement est refusé"
+      ], correct:0 },
+    { id:"n6", type:"rect", kicker:"Étape 7", label:"Faire tourner le moteur",
+      device:{kind:"actionneur", name:"Moteur de la roue"},
+      question:"L'accélérateur est actionné. Quelle action fait avancer la trottinette ?",
+      options:[
+        "Faire tourner le moteur de la roue",
+        "Allumer les feux",
+        "Déverrouiller la trottinette",
+        "Arrêter le moteur"
+      ], correct:0 },
+    { id:"n7", type:"diamond", kicker:"Étape 8", label:"Le frein est-il actionné ?",
+      device:{kind:"capteur", name:"Capteur de frein (levier)"},
+      question:"La trottinette roule et l'élève arrive à destination. Que doit détecter le système pour arrêter le moteur ?",
+      options:[
+        "Que l'élève actionne le levier de frein",
+        "Que la batterie est pleine",
+        "Qu'un autre QR code est scanné",
+        "Que les feux sont allumés"
+      ], correct:0 },
+    { id:"n8", type:"rect", kicker:"Étape 9", label:"Arrêter le moteur",
+      device:{kind:"actionneur", name:"Moteur de la roue"},
+      question:"Le frein est actionné. Quelle action réalise le système ?",
+      options:[
+        "Arrêter le moteur de la roue",
+        "Accélérer encore",
+        "Déverrouiller la trottinette",
+        "Allumer les feux"
+      ], correct:0 },
+    { id:"n9", type:"diamond", kicker:"Étape 10", label:"La béquille est-elle dépliée ?",
+      device:{kind:"capteur", name:"Capteur de béquille"},
+      question:"La trottinette est arrêtée. Que doit vérifier le système avant de terminer la location ?",
+      options:[
+        "Que la trottinette est bien garée, béquille dépliée",
+        "Que le moteur tourne",
+        "Que l'accélérateur est actionné",
+        "Que le QR code est scanné"
+      ], correct:0 },
+    { id:"n10", type:"rect", kicker:"Étape 11", label:"Éteindre les feux",
+      device:{kind:"actionneur", name:"Feux (phare avant et feu arrière)"},
+      question:"La trottinette est garée. Quelle action économise la batterie ?",
+      options:[
+        "Éteindre les feux",
+        "Allumer les feux",
+        "Faire tourner le moteur",
+        "Déverrouiller la trottinette"
+      ], correct:0 },
+    { id:"n11", type:"rect", kicker:"Étape 12", label:"Verrouiller la trottinette",
+      device:{kind:"actionneur", name:"Verrou électrique"},
+      question:"Les feux sont éteints. Comment se termine la location ?",
+      options:[
+        "Verrouiller la trottinette : la location est terminée",
+        "Laisser la trottinette déverrouillée",
+        "Faire tourner le moteur",
+        "Rallumer les feux"
+      ], correct:0 }
+  ];
+
+  function shuffleArray(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  nodes.forEach(n => {
+    const correctText = n.options[n.correct];
+    shuffleArray(n.options);
+    n.correct = n.options.indexOf(correctText);
+  });
+
+  const SENSORS = [
+    "Lecteur de QR code",
+    "Capteur de niveau de batterie",
+    "Gâchette d'accélérateur",
+    "Capteur de frein (levier)",
+    "Capteur de béquille",
+    "Capteur de vitesse"
+  ];
+  const ACTUATORS = [
+    "Verrou électrique",
+    "Feux (phare avant et feu arrière)",
+    "Moteur de la roue",
+    "Klaxon électronique"
+  ];
+  const PROCESSING = [
+    "Serveur de l'opérateur (réseau)",
+    "Lecteur de QR code",
+    "Capteur de niveau de batterie",
+    "Moteur de la roue"
+  ];
+  const KIND_LABEL = { capteur: "Capteur", actionneur: "Actionneur", traitement: "Géré par" };
+  const KIND_QUESTION = {
+    capteur: "Quel capteur permet de répondre à ce test",
+    actionneur: "Quel actionneur réalise cette action",
+    traitement: "Quel élément du système s'occupe de cette étape"
+  };
+  const KIND_POOL = { capteur: SENSORS, actionneur: ACTUATORS, traitement: PROCESSING };
+
+  const RIDE = 250;
+  const stages = [
+    { dx:0, stand:{x:70, op:1}, rider:false, phone:false, qr:false, bat:false, pay:false, lock:true, lights:false, brake:false, kick:true, motor:false, throttle:false,
+      caption:"Une trottinette est garée et verrouillée. Un élève veut l'emprunter." },
+    { dx:0, stand:{x:70, op:1}, rider:false, phone:true, qr:true, bat:false, pay:false, lock:true, lights:false, brake:false, kick:true, motor:false, throttle:false,
+      caption:"L'élève scanne le QR code avec l'application de son téléphone." },
+    { dx:0, stand:{x:70, op:1}, rider:false, phone:true, qr:true, bat:true, pay:false, lock:true, lights:false, brake:false, kick:true, motor:false, throttle:false,
+      caption:"La jauge indique 78 % : la batterie est assez chargée." },
+    { dx:0, stand:{x:70, op:1}, rider:false, phone:true, qr:true, bat:true, pay:true, lock:true, lights:false, brake:false, kick:true, motor:false, throttle:false,
+      caption:"Le serveur de l'opérateur valide le paiement, via le réseau." },
+    { dx:0, stand:{x:70, op:1}, rider:false, phone:false, qr:true, bat:true, pay:true, lock:false, lights:false, brake:false, kick:true, motor:false, throttle:false,
+      caption:"Le verrou électrique s'ouvre : la trottinette est libérée." },
+    { dx:0, stand:{x:70, op:1}, rider:false, phone:false, qr:true, bat:true, pay:true, lock:false, lights:true, brake:false, kick:true, motor:false, throttle:false,
+      caption:"Les feux s'allument : phare avant et feu arrière." },
+    { dx:0, stand:{x:70, op:0}, rider:true, phone:false, qr:true, bat:true, pay:true, lock:false, lights:true, brake:false, kick:false, motor:false, throttle:true,
+      caption:"L'élève monte, relève la béquille et appuie sur la gâchette d'accélérateur." },
+    { dx:RIDE, stand:{x:70, op:0}, rider:true, phone:false, qr:true, bat:true, pay:true, lock:false, lights:true, brake:false, kick:false, motor:true, throttle:true, slow:true,
+      caption:"Le moteur de la roue tourne : la trottinette avance." },
+    { dx:RIDE, stand:{x:70, op:0}, rider:true, phone:false, qr:true, bat:true, pay:true, lock:false, lights:true, brake:true, kick:false, motor:true, throttle:false,
+      caption:"L'élève actionne le levier de frein : le feu arrière brille plus fort." },
+    { dx:RIDE, stand:{x:70, op:0}, rider:true, phone:false, qr:true, bat:true, pay:true, lock:false, lights:true, brake:true, kick:false, motor:false, throttle:false,
+      caption:"Le moteur s'arrête : la trottinette est immobile." },
+    { dx:RIDE, stand:{x:330, op:1}, rider:false, phone:false, qr:true, bat:true, pay:true, lock:false, lights:true, brake:false, kick:true, motor:false, throttle:false,
+      caption:"L'élève descend et déplie la béquille : la trottinette est garée." },
+    { dx:RIDE, stand:{x:330, op:1}, rider:false, phone:false, qr:true, bat:true, pay:true, lock:false, lights:false, brake:false, kick:true, motor:false, throttle:false,
+      caption:"Les feux s'éteignent pour économiser la batterie." },
+    { dx:RIDE, stand:{x:330, op:1}, rider:false, phone:false, qr:true, bat:true, pay:true, lock:true, lights:false, brake:false, kick:true, motor:false, throttle:false,
+      caption:"Le verrou se ferme : la location est terminée !" }
+  ];
+
+  const els = {};
+  ["scooter","personStand","phone","qrBeam","payCheck","frontBeam","frontLight","rearLight","wheelF","wheelR","bolt","kickDown","kickUp",
+   "batFill","batText","shackleClosed","shackleOpen","lockBody","rider","caption","statusTests","statusActions"].forEach(id=>{
+    els[id] = document.getElementById(id);
+  });
+  const animated = [els.scooter, els.personStand, els.phone, els.qrBeam, els.payCheck, els.frontBeam, els.frontLight, els.rearLight, els.bolt,
+                    els.kickDown, els.kickUp, els.batFill, els.shackleClosed, els.shackleOpen, els.lockBody, els.rider];
+  let lastStandX = null;
+
+  function applyStage(idx, animate){
+    const s = stages[idx];
+    animated.forEach(el => { el.style.transition = animate ? "" : "none"; });
+
+    els.scooter.setAttribute("transform", "translate(" + s.dx + ",0)");
+    const jump = lastStandX !== null && lastStandX !== s.stand.x;
+    if(jump) els.personStand.style.transition = "none";
+    els.personStand.setAttribute("transform", "translate(" + s.stand.x + ",208)");
+    els.personStand.setAttribute("opacity", s.stand.op);
+    lastStandX = s.stand.x;
+    els.rider.setAttribute("opacity", s.rider ? 1 : 0);
+    els.phone.setAttribute("opacity", s.phone ? 1 : 0);
+    els.qrBeam.setAttribute("opacity", s.phone && s.qr ? 1 : 0);
+    els.payCheck.setAttribute("opacity", s.pay && s.dx === 0 && !s.rider ? 1 : 0);
+
+        els.batFill.setAttribute("fill", s.bat ? "#4fc987" : "#6f7c86");
+    els.batText.textContent = s.bat ? "78%" : "?";
+
+    els.shackleClosed.setAttribute("opacity", s.lock ? 1 : 0);
+    els.shackleOpen.setAttribute("opacity", s.lock ? 0 : 1);
+    els.lockBody.setAttribute("fill", s.lock ? "#cf4438" : "#2e9e5b");
+
+    els.frontBeam.setAttribute("opacity", s.lights ? 0.5 : 0);
+    els.frontLight.setAttribute("fill", s.lights ? "#fff2a8" : "#9aa6ae");
+    els.rearLight.setAttribute("fill", s.brake ? "#ff2a1a" : (s.lights ? "#cf4438" : "#6b2a24"));
+    els.rearLight.setAttribute("width", s.brake ? 9 : 7);
+
+    els.kickDown.setAttribute("opacity", s.kick ? 1 : 0);
+    els.kickUp.setAttribute("opacity", s.kick ? 0 : 1);
+
+    els.bolt.setAttribute("opacity", s.motor ? 1 : 0);
+    els.wheelF.classList.toggle("spin", s.motor && animate);
+    els.wheelR.classList.toggle("spin", s.motor && animate);
+
+    els.caption.textContent = s.caption;
+    renderStatus(s);
+
+    if(!animate || jump){
+      void els.scooter.getBoundingClientRect();
+      if(!animate) animated.forEach(el => { el.style.transition = ""; });
+      else els.personStand.style.transition = "";
+    }
+  }
+
+  function renderStatus(s){
+    const tests = [
+      ["QR code scanné ?", s.qr],
+      ["Batterie assez chargée ?", s.bat],
+      ["Paiement validé ?", s.pay],
+      ["Accélérateur actionné ?", s.throttle],
+      ["Frein actionné ?", s.brake],
+      ["Béquille dépliée ?", s.kick]
+    ];
+    const actions = [
+      ["Verrou", s.lock ? "fermé" : "ouvert", !s.lock],
+      ["Feux", s.lights ? "allumés" : "éteints", s.lights],
+      ["Moteur de la roue", s.motor ? "tourne" : "arrêté", s.motor]
+    ];
+    const testsHtml = tests.map(t =>
+      '<div class="status-row"><span class="sname">' + t[0] + '</span>' +
+      '<span class="status-val' + (t[1] ? ' on' : '') + '">' + (t[1] ? 'Oui' : 'Non') + '</span></div>'
+    ).join("");
+    const actionsHtml = actions.map(a =>
+      '<div class="status-row"><span class="sname">' + a[0] + '</span>' +
+      '<span class="status-val' + (a[2] ? ' on' : '') + '">' + a[1] + '</span></div>'
+    ).join("");
+    els.statusTests.innerHTML = '<h3>Tests (capteurs)</h3>' + testsHtml;
+    els.statusActions.innerHTML = '<h3>Actions (actionneurs)</h3>' + actionsHtml;
+  }
+
+  const flow = document.getElementById("flow");
+  const overlay = document.getElementById("overlay");
+  const modalKicker = document.getElementById("modalKicker");
+  const modalQuestion = document.getElementById("modalQuestion");
+  const modalOptions = document.getElementById("modalOptions");
+  const modalFeedback = document.getElementById("modalFeedback");
+  const modalClose = document.getElementById("modalClose");
+  const progressText = document.getElementById("progressText");
+  const progressFill = document.getElementById("progressFill");
+  const finalMsg = document.getElementById("finalMsg");
+  const resetBtn = document.getElementById("resetBtn");
+  const replayBtn = document.getElementById("replayBtn");
+  const toast = document.getElementById("toast");
+  const deviceProgressWrap = document.getElementById("deviceProgressWrap");
+  const progressText2 = document.getElementById("progressText2");
+  const progressFill2 = document.getElementById("progressFill2");
+  const finalMsg2 = document.getElementById("finalMsg2");
+
+  const STORAGE_KEY = "trottinette-progress-v1";
+  let completedUpTo = 0;
+  let deviceDone = {};
+  let scores = {};   // question -> points obtenus (0, 1 ou 2)
+  let misses = {};   // question -> nombre d'essais ratés
+  const MAX_POINTS = nodes.length * 4;
+  function pointsFor(key){ const m = misses[key] || 0; return m === 0 ? 2 : (m === 1 ? 1 : 0); }
+  function refreshScore(){
+    const t = totalPoints();
+    const a = document.getElementById("scoreValue"), b = document.getElementById("modalScoreValue");
+    if(a) a.textContent = t;
+    if(b) b.textContent = t;
+    const m = document.getElementById("scoreMax"); if(m) m.textContent = MAX_POINTS;
+    document.querySelectorAll(".score-max").forEach(el => el.textContent = MAX_POINTS);
+  }
+  function totalPoints(){ return Object.keys(scores).reduce((s, k) => s + (scores[k] || 0), 0); }
+  function addMiss(key){ misses[key] = (misses[key] || 0) + 1; saveProgress(); }
+  function award(key){
+    if(scores[key] === undefined){
+      scores[key] = pointsFor(key);
+      refreshScore();
+      if(scores[key] > 0) setTimeout(bumpScore, 50);
+    }
+    return scores[key];
+  }
+  function ptsText(p){
+    return p === 2 ? "+2 points, du premier coup !" : (p === 1 ? "+1 point, au deuxième essai." : "0 point : il a fallu plus de deux essais.");
+  }
+
+  function loadProgress(){
+    try{
+      let parsed = window.SCORM.active() ? window.SCORM.load() : null;
+      if(!parsed && !window.SCORM.active()){
+        const raw = localStorage.getItem(STORAGE_KEY);
+        parsed = raw ? JSON.parse(raw) : {};
+      }
+      parsed = parsed || {};
+      const val = parseInt(parsed.completedUpTo, 10);
+      completedUpTo = isNaN(val) ? 0 : Math.max(0, Math.min(nodes.length, val));
+      deviceDone = (parsed.deviceDone && typeof parsed.deviceDone === "object") ? parsed.deviceDone : {};
+      scores = (parsed.scores && typeof parsed.scores === "object") ? parsed.scores : {};
+      misses = (parsed.misses && typeof parsed.misses === "object") ? parsed.misses : {};
+    }catch(e){ completedUpTo = 0; deviceDone = {}; scores = {}; misses = {}; }
+  }
+  function saveProgress(){
+    const state = {completedUpTo: completedUpTo, deviceDone: deviceDone, scores: scores, misses: misses};
+    if(window.SCORM.active()){
+      const answered = completedUpTo + Object.keys(deviceDone).filter(k => deviceDone[k]).length;
+      window.SCORM.save(state, answered, nodes.length * 2, totalPoints(), MAX_POINTS);
+    } else {
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    }
+    refreshScore();
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=> toast.classList.remove("show"), 1800);
+  }
+
+  function buildFlow(){
+    nodes.forEach((n, i) => {
+      if(i > 0){
+        const arrow = document.createElement("div");
+        arrow.className = "arrow";
+        arrow.textContent = "▼";
+        flow.appendChild(arrow);
+      }
+      const wrap = document.createElement("div");
+      wrap.className = "node-wrap";
+      const revealed = i < completedUpTo;
+      const rectPlaceholder = '<span class="placeholder-q">❓</span>Touche pour répondre';
+      const diamondPlaceholder = '<span class="placeholder-q">❓</span>?';
+      let el;
+      if(n.type === "rect"){
+        el = document.createElement("div");
+        el.className = "node rect";
+        el.innerHTML = '<span class="tag">Action ' + (i+1) + '</span><span class="label' + (revealed ? '' : ' placeholder') + '">' + (revealed ? n.label : rectPlaceholder) + '</span><span class="check">✓</span><span class="lock-icon">🔒</span>';
+      } else {
+        el = document.createElement("div");
+        el.className = "node diamond-outer";
+        el.innerHTML =
+          '<span class="tag">Test ' + (i+1) + '</span>' +
+          '<div class="diamond-shape"><span class="label' + (revealed ? '' : ' placeholder') + '">' + (revealed ? n.label : diamondPlaceholder) + '</span></div>' +
+          '<span class="check">✓</span><span class="lock-icon">🔒</span>' +
+          '<span class="decision-oui">Oui ↓</span>' +
+          '<svg class="decision-loop" viewBox="0 0 60 200" preserveAspectRatio="none">' +
+            '<path d="M-4,100 C36,100 36,10 -46,10" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"></path>' +
+            '<path d="M-46,10 L-37,4 L-37,16 Z" fill="var(--red)"></path>' +
+            '<text x="42" y="58" font-size="13" fill="var(--red)" font-weight="600">Non</text>' +
+          '</svg>';
+      }
+      el.dataset.id = n.id;
+      el.dataset.index = i;
+      el.addEventListener("click", () => handleNodeClick(n, i));
+      wrap.appendChild(el);
+
+      const chip = document.createElement("div");
+      chip.className = "device-chip";
+      chip.dataset.id = n.id;
+      const kindLabel = KIND_LABEL[n.device.kind];
+      chip.innerHTML = '<span class="dchip-label">' + kindLabel + ' : </span><span class="dchip-value">?</span>';
+      chip.addEventListener("click", () => openDeviceModal(n));
+      wrap.appendChild(chip);
+
+      flow.appendChild(wrap);
+    });
+  }
+
+  function updateNodeVisuals(){
+    nodes.forEach((n, i) => {
+      const el = flow.querySelector('[data-id="' + n.id + '"]');
+      if(!el) return;
+      el.classList.toggle("correct", i < completedUpTo);
+      el.classList.toggle("locked", i > completedUpTo);
+    });
+    progressText.textContent = completedUpTo + " / " + nodes.length;
+    progressFill.style.width = Math.round((completedUpTo / nodes.length) * 100) + "%";
+    finalMsg.classList.toggle("show", completedUpTo === nodes.length);
+    replayBtn.disabled = completedUpTo === 0;
+    refreshScore();
+    updateDeviceVisuals();
+    if(typeof drawLoop === "function") requestAnimationFrame(drawLoop);
+  }
+
+  function updateDeviceVisuals(){
+    const total = nodes.length;
+    const unlocked = completedUpTo === total;
+    let done = 0;
+    nodes.forEach(n => {
+      const chip = flow.querySelector('.device-chip[data-id="' + n.id + '"]');
+      if(!chip) return;
+      chip.classList.toggle("show", unlocked);
+      const valueEl = chip.querySelector(".dchip-value");
+      if(deviceDone[n.id]){
+        done++;
+        chip.classList.add("correct");
+        valueEl.textContent = n.device.name;
+      } else {
+        chip.classList.remove("correct");
+        valueEl.textContent = "?";
+      }
+    });
+    progressText2.textContent = done + " / " + total;
+    progressFill2.style.width = Math.round((done / total) * 100) + "%";
+    deviceProgressWrap.classList.toggle("show", unlocked);
+    finalMsg2.classList.toggle("show", done === total);
+  }
+
+  function revealLabel(n){
+    const el = flow.querySelector('[data-id="' + n.id + '"] .label');
+    if(!el) return;
+    el.textContent = n.label;
+    el.classList.remove("placeholder");
+  }
+
+  let currentNode = null, currentIndex = null, currentDeviceNode = null;
+
+  const modalBox = document.getElementById("modalBox");
+  const modalScene = document.getElementById("modalScene");
+  const sceneWrapEl = document.querySelector(".scene-wrap");
+  const captionEl = document.getElementById("caption");
+  let scenePlaceholder = null, captionPlaceholder = null;
+  function showSceneInModal(){
+    if(modalBox.classList.contains("with-scene")) return;
+    scenePlaceholder = document.createElement("div");
+    scenePlaceholder.style.height = sceneWrapEl.offsetHeight + "px";
+    scenePlaceholder.style.gridArea = "scene";
+    captionPlaceholder = document.createElement("p");
+    captionPlaceholder.className = "caption";
+    captionPlaceholder.style.height = captionEl.offsetHeight + "px";
+    sceneWrapEl.replaceWith(scenePlaceholder);
+    captionEl.replaceWith(captionPlaceholder);
+    modalScene.appendChild(sceneWrapEl);
+    modalScene.appendChild(captionEl);
+    modalBox.classList.add("with-scene");
+    void sceneWrapEl.getBoundingClientRect();
+  }
+  function restoreScene(){
+    if(!modalBox.classList.contains("with-scene")) return;
+    modalBox.classList.remove("with-scene");
+    if(scenePlaceholder){ scenePlaceholder.replaceWith(sceneWrapEl); scenePlaceholder = null; }
+    if(captionPlaceholder){ captionPlaceholder.replaceWith(captionEl); captionPlaceholder = null; }
+  }
+  function closeModal(){
+    overlay.classList.remove("open");
+    restoreScene();
+    currentNode = null; currentIndex = null; currentDeviceNode = null;
+  }
+  function bumpScore(){
+    ["scoreBox","modalScore"].forEach(id => {
+      const chip = document.getElementById(id);
+      if(!chip) return;
+      chip.classList.remove("bump"); void chip.offsetWidth; chip.classList.add("bump");
+    });
+  }
+
+  function handleNodeClick(n, i){
+    if(i > completedUpTo){
+      showToast("Termine d'abord les étapes précédentes 🔒");
+      return;
+    }
+    openModal(n, i);
+  }
+
+  function openModal(n, i){
+    currentNode = n;
+    currentIndex = i;
+    modalKicker.textContent = n.kicker;
+    modalQuestion.textContent = n.question;
+    modalOptions.innerHTML = "";
+    modalFeedback.className = "feedback";
+    modalFeedback.textContent = "";
+    modalClose.classList.remove("show");
+
+    const alreadyDone = i < completedUpTo;
+
+    n.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.textContent = opt;
+      if(alreadyDone){
+        if(idx === n.correct) btn.classList.add("correct-pick");
+        btn.style.pointerEvents = "none";
+      } else {
+        btn.addEventListener("click", () => selectOption(idx, btn));
+      }
+      modalOptions.appendChild(btn);
+    });
+
+    if(alreadyDone){
+      modalFeedback.classList.add("show", "ok");
+      modalFeedback.textContent = "✅ Déjà validé — voici la bonne réponse en revue.";
+      modalClose.classList.add("show");
+    }
+
+    overlay.classList.add("open");
+  }
+
+  function selectOption(idx, btn){
+    if(!currentNode) return;
+    const options = Array.from(modalOptions.children);
+    options.forEach(o => o.style.pointerEvents = "none");
+
+    const qKey = "e:" + currentNode.id;
+    if(idx === currentNode.correct){
+      btn.classList.add("correct-pick");
+      modalFeedback.className = "feedback show ok";
+      const pts = award(qKey);
+      modalFeedback.textContent = "✅ Exact ! " + ptsText(pts) + " Regarde l'animation : c'est l'action qui vient de se produire.";
+      if(currentIndex === completedUpTo){
+        completedUpTo = currentIndex + 1;
+        saveProgress();
+        showSceneInModal();
+        applyStage(completedUpTo, true);
+      }
+      revealLabel(currentNode);
+      updateNodeVisuals();
+      modalClose.classList.add("show");
+    } else {
+      btn.classList.add("wrong-pick");
+      modalFeedback.className = "feedback show ko";
+      addMiss(qKey);
+      const left = pointsFor(qKey);
+      modalFeedback.textContent = "❌ Pas tout à fait. Réfléchis à ce que le système doit vérifier ou faire à cette étape, puis réessaie." +
+        (left > 0 ? " (Encore " + left + " point à gagner.)" : " (Plus de point à gagner sur cette question.)");
+      setTimeout(() => {
+        options.forEach(o => { o.style.pointerEvents = "auto"; o.classList.remove("wrong-pick"); });
+      }, 700);
+    }
+  }
+
+  function openDeviceModal(n){
+    currentDeviceNode = n;
+    currentNode = null;
+    currentIndex = null;
+    const kindLabel = KIND_LABEL[n.device.kind];
+    modalKicker.textContent = n.device.kind === "traitement" ? "Unité de traitement" : kindLabel;
+    modalQuestion.textContent = KIND_QUESTION[n.device.kind] + " : « " + n.label + " » ?";
+    modalOptions.innerHTML = "";
+    modalFeedback.className = "feedback";
+    modalFeedback.textContent = "";
+    modalClose.classList.remove("show");
+
+    const alreadyDone = !!deviceDone[n.id];
+    const pool = KIND_POOL[n.device.kind];
+    const opts = shuffleArray(pool.slice());
+
+    opts.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.textContent = opt;
+      if(alreadyDone){
+        if(opt.replace(/\s+/g," ").trim() === n.device.name.replace(/\s+/g," ").trim()) btn.classList.add("correct-pick");
+        btn.style.pointerEvents = "none";
+      } else {
+        btn.addEventListener("click", () => selectDeviceOption(opt, btn, n));
+      }
+      modalOptions.appendChild(btn);
+    });
+
+    if(alreadyDone){
+      modalFeedback.classList.add("show", "ok");
+      modalFeedback.textContent = "✅ Déjà validé — voici la bonne réponse en revue.";
+      modalClose.classList.add("show");
+    }
+
+    overlay.classList.add("open");
+  }
+
+  function selectDeviceOption(opt, btn, n){
+    const options = Array.from(modalOptions.children);
+    options.forEach(o => o.style.pointerEvents = "none");
+
+    if(opt.replace(/\s+/g," ").trim() === n.device.name.replace(/\s+/g," ").trim()){
+      btn.classList.add("correct-pick");
+      modalFeedback.className = "feedback show ok";
+      const pts = award("d:" + n.id);
+      modalFeedback.textContent = "✅ Exact ! " + ptsText(pts) + " Regarde la case : elle est maintenant complétée.";
+      deviceDone[n.id] = true;
+      saveProgress();
+      updateDeviceVisuals();
+      refreshScore();
+      modalClose.classList.add("show");
+    } else {
+      btn.classList.add("wrong-pick");
+      modalFeedback.className = "feedback show ko";
+      addMiss("d:" + n.id);
+      const left = pointsFor("d:" + n.id);
+      modalFeedback.textContent = "❌ Pas celui-ci. Aide-toi de la fiche ressource, puis réessaie." +
+        (left > 0 ? " (Encore " + left + " point à gagner.)" : " (Plus de point à gagner sur cette question.)");
+      setTimeout(() => {
+        options.forEach(o => { o.style.pointerEvents = "auto"; o.classList.remove("wrong-pick"); });
+      }, 700);
+    }
+  }
+
+  modalClose.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (e) => { if(e.target === overlay) closeModal(); });
+
+  resetBtn.addEventListener("click", () => {
+    completedUpTo = 0;
+    deviceDone = {};
+    scores = {};
+    misses = {};
+    saveProgress();
+    nodes.forEach(n => {
+      const el = flow.querySelector('[data-id="' + n.id + '"] .label');
+      if(!el) return;
+      el.innerHTML = n.type === "rect"
+        ? '<span class="placeholder-q">❓</span>Touche pour répondre'
+        : '<span class="placeholder-q">❓</span>?';
+      el.classList.add("placeholder");
+    });
+    updateNodeVisuals();
+    applyStage(0, true);
+  });
+
+  let replaying = false;
+  replayBtn.addEventListener("click", () => {
+    if(replaying || completedUpTo === 0) return;
+    replaying = true;
+    replayBtn.disabled = true;
+    applyStage(0, false);
+    let i = 1;
+    function step(){
+      if(i > completedUpTo){ replaying = false; updateNodeVisuals(); return; }
+      applyStage(i, true);
+      i++;
+      const slow = stages[i - 1] && stages[i - 1].slow;
+      setTimeout(step, slow ? 4000 : 1700);
+    }
+    setTimeout(step, 300);
+  });
+
+  const flowArea = document.getElementById("flowArea");
+  const loopBack = document.getElementById("loopBack");
+  function drawLoop(){
+    const area = flowArea.getBoundingClientRect();
+    const oval = flowArea.querySelector(".start-oval").getBoundingClientRect();
+    const last = flow.lastElementChild;
+    if(!last || area.width === 0) return;
+    const lastBox = last.getBoundingClientRect();
+    const cx = oval.left + oval.width / 2 - area.left;
+    const fromY = lastBox.bottom - area.top + 2;
+    const endY = area.height - 30;
+    const leftX = 10;
+    const joinY = oval.bottom - area.top + 7;
+    loopBack.setAttribute("viewBox", "0 0 " + area.width + " " + area.height);
+    loopBack.innerHTML =
+      '<path d="M' + cx + ',' + fromY + ' V' + endY + ' H' + leftX + ' V' + joinY + ' H' + (cx - 9) + '" fill="none" stroke="var(--line)" stroke-width="2.5" stroke-linejoin="round"></path>' +
+      '<path d="M' + (cx - 1) + ',' + joinY + ' l-10,-5.5 v11 z" fill="var(--line)"></path>' +
+      '<text x="' + (leftX + 8) + '" y="' + (endY + 17) + '" font-size="12" fill="var(--text-soft)">Retour au début : on attend le prochain utilisateur</text>';
+  }
+  if(window.ResizeObserver){ new ResizeObserver(drawLoop).observe(flowArea); }
+  window.addEventListener("resize", drawLoop);
+
+  loadProgress();
+  buildFlow();
+  updateNodeVisuals();
+  applyStage(completedUpTo, false);
+
+  const animSticky = document.querySelector(".anim-sticky");
+  const mainEl = document.querySelector("main");
+  function syncSpacer(){
+    mainEl.style.paddingTop = (animSticky.offsetHeight + 12) + "px";
+  }
+  const ZOOM_LEVELS = [0.6, 0.8, 1, 1.25, 1.5, 1.75, 2, 2.5];
+  const ZOOM_KEY = "trottinette-zoom-v1";
+  const sceneWrap = document.querySelector(".scene-wrap");
+  const animInner = document.querySelector(".anim-inner");
+  const zoomInBtn = document.getElementById("zoomIn");
+  const zoomOutBtn = document.getElementById("zoomOut");
+  const zoomLevelEl = document.getElementById("zoomLevel");
+  let zoomIndex = 1;
+  try{
+    const saved = parseInt(localStorage.getItem(ZOOM_KEY), 10);
+    if(!isNaN(saved) && saved >= 0 && saved < ZOOM_LEVELS.length) zoomIndex = saved;
+  }catch(e){}
+
+  function applyZoom(){
+    const z = ZOOM_LEVELS[zoomIndex];
+    sceneWrap.style.maxWidth = "";
+    animInner.classList.remove("zoomed");
+    const baseWidth = sceneWrap.getBoundingClientRect().width || 460;
+    if(z > 1) animInner.classList.add("zoomed");
+    if(z !== 1) sceneWrap.style.maxWidth = Math.round(baseWidth * z) + "px";
+    zoomLevelEl.textContent = Math.round(z * 100) + " %";
+    zoomOutBtn.disabled = zoomIndex === 0;
+    zoomInBtn.disabled = zoomIndex === ZOOM_LEVELS.length - 1;
+    try{ localStorage.setItem(ZOOM_KEY, String(zoomIndex)); }catch(e){}
+    syncSpacer();
+  }
+  const fsBtn = document.getElementById("fsBtn");
+  const root = document.documentElement;
+  const fsEnabled = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement; }
+  function updateFsBtn(){
+    fsBtn.textContent = fsElement() ? "✕ Quitter le plein écran" : "⛶ Plein écran";
+    setTimeout(applyZoom, 150);
+  }
+  if(!fsEnabled){
+    fsBtn.hidden = true;
+  } else {
+    fsBtn.addEventListener("click", () => {
+      try{
+        if(fsElement()){
+          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        } else {
+          const req = root.requestFullscreen || root.webkitRequestFullscreen;
+          const r = req.call(root);
+          if(r && r.catch) r.catch(() => showToast("Le plein écran n'est pas autorisé ici : utilise la touche F11."));
+        }
+      }catch(e){ showToast("Le plein écran n'est pas autorisé ici : utilise la touche F11."); }
+    });
+    document.addEventListener("fullscreenchange", updateFsBtn);
+    document.addEventListener("webkitfullscreenchange", updateFsBtn);
+  }
+  zoomInBtn.addEventListener("click", () => { if(zoomIndex < ZOOM_LEVELS.length - 1){ zoomIndex++; applyZoom(); } });
+  zoomOutBtn.addEventListener("click", () => { if(zoomIndex > 0){ zoomIndex--; applyZoom(); } });
+  applyZoom();
+
+  syncSpacer();
+  window.addEventListener("resize", applyZoom);
+  window.addEventListener("orientationchange", syncSpacer);
+  if(window.ResizeObserver){
+    new ResizeObserver(syncSpacer).observe(animSticky);
+  }
+})();
+</script>
+
+</body>
+</html>
