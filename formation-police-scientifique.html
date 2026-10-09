@@ -78,6 +78,23 @@
   .mut{color:var(--mut);font-size:.9rem}
   .warn{background:#fff3cd;border:2px solid #f1d27a;border-radius:10px;padding:8px 12px;margin:8px 0}
   .tablewrap{overflow-x:auto}
+  .lvls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:8px 0}
+  @media(max-width:600px){.lvls{grid-template-columns:1fr}}
+  .lvl{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;background:#fff}
+  .lvl input{position:absolute;opacity:0;pointer-events:none}
+  .lvl .lvi{grid-row:1/3;font-size:1.8rem}
+  .lvl b{font-size:1.1rem}.lvl span:last-child{color:var(--mut);font-size:.88rem}
+  .lvl:has(input:checked){border-color:var(--blue);background:#eef4ff;box-shadow:0 0 0 3px rgba(47,111,237,.18)}
+  .lvl:has(input:focus-visible){outline:2px solid var(--blue);outline-offset:2px}
+  .lvtag{display:inline-block;font-size:.8rem;font-weight:800;border-radius:999px;padding:2px 10px;background:#eef4ff;color:var(--navy);border:1px solid #c9d6f5}
+  .oct{display:inline-flex;gap:2px;font-family:ui-monospace,Menlo,Consolas,monospace;vertical-align:middle}
+  .oct b{color:#fff;border-radius:4px;padding:0 4px;font-size:1.05rem}
+  .oct .d,.ftab .d b{background:#e07a1f}.oct .l,.ftab .l b{background:#2f6fed}.oct .a,.ftab .a b{background:#1e8e3e}.oct .p,.ftab .p b{background:#8e44ad}
+  .oct b:nth-child(3),.oct b:nth-child(6),.oct b:nth-child(8){margin-left:5px}
+  .ftab{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:8px 0;font-size:.88rem}
+  .ftab>div{border:2px solid var(--line);border-radius:10px;padding:0 8px 6px;background:#fff;overflow:hidden;line-height:1.45}
+  .ftab b{display:block;color:#fff;padding:3px 8px;margin:0 -8px 3px}
+  @media(max-width:600px){.ftab{grid-template-columns:1fr 1fr}}
   @media(max-width:600px){.fiche .ill{width:80px}.enq{grid-template-columns:auto 1fr}.enq .tag{grid-column:1/-1;justify-self:start}}
 </style>
 </head>
@@ -92,7 +109,7 @@
   <section id="s-id" class="on">
     <div class="panel">
       <h2 style="margin-top:0">Bienvenue, futur·e enquêteur·rice !</h2>
-      <p>Avant de te confier une enquête, l'école doit connaître ton niveau en <b>binaire</b>, le langage des machines. Tu vas étudier <b>6 fiches de cours</b>. Chacune se termine par un <b>petit test</b>.</p>
+      <p>Avant de te confier une enquête, l'école doit connaître ton niveau en <b>binaire</b>, le langage des machines. Tu vas choisir ton <b>parcours</b>, puis étudier <b>8 fiches de cours</b>. Chacune se termine par un <b>petit test</b>.</p>
       <ul>
         <li>Lis bien chaque fiche : tu peux l'écouter avec le bouton 🔊.</li>
         <li>Pour chaque test, tu n'as <b>qu'un seul essai</b>. Si tu ne sais pas, choisis « Je ne sais pas » : c'est mieux que de répondre au hasard.</li>
@@ -104,6 +121,13 @@
         <input class="txt" id="ln" placeholder="Nom" maxlength="30" autocomplete="off">
         <input class="txt" id="cl" placeholder="Classe (ex. 4e B)" maxlength="12" autocomplete="off" style="width:150px">
       </div>
+      <h3 style="margin-top:16px">Choisis ton parcours</h3>
+      <div class="lvls" role="radiogroup" aria-label="Parcours">
+        <label class="lvl"><input type="radio" name="lvl" value="L"><span class="lvi">🔍</span><b>Loupe</b><span>Je découvre le binaire</span></label>
+        <label class="lvl"><input type="radio" name="lvl" value="B"><span class="lvi">🧪</span><b>Labo</b><span>Je connais déjà les bases</span></label>
+        <label class="lvl"><input type="radio" name="lvl" value="C"><span class="lvi">🛰️</span><b>Cyber</b><span>Je veux des défis</span></label>
+      </div>
+      <p class="mut" style="margin:4px 0 0">Les fiches de cours sont les mêmes pour tous : seules les questions des tests changent. Demande à ton professeur si tu hésites.</p>
       <p class="mut" id="idMsg"></p>
       <div class="next"><button class="primary" id="start">Commencer la formation →</button></div>
     </div>
@@ -128,22 +152,10 @@
       </div>
       <div class="panel">
         <h2 style="margin-top:0">Barème et orientation</h2>
-        <p>25 questions, 1 point chacune. Trois groupes de compétences :</p>
-        <table>
-          <tr><th>Groupe</th><th>Fiches</th><th>Points</th></tr>
-          <tr><td>A · Lire le binaire</td><td>1 · Le bit, 2 · Les valeurs des places, 3 · Lire un nombre</td><td>12</td></tr>
-          <tr><td>B · Écrire et coder</td><td>4 · Écrire un nombre, 5 · Le code ASCII</td><td>8</td></tr>
-          <tr><td>C · Programmer</td><td>6 · L'algorithme du lecteur</td><td>5</td></tr>
-        </table>
-        <table style="margin-top:12px">
-          <tr><th>Grade</th><th>Condition (seuil : 60 %)</th><th>Enquête conseillée</th></tr>
-          <tr><td>🔰 Recrue</td><td>Groupe A sous 60 %</td><td>Le Chat de Minuit (très guidée)</td></tr>
-          <tr><td>🥉 Agent</td><td>A acquis, B sous 60 %</td><td>Le casier du Pr Zéro, niveau Apprenti</td></tr>
-          <tr><td>🥈 Inspecteur</td><td>A et B acquis, C sous 60 %</td><td>Le casier du Pr Zéro, niveau Expert</td></tr>
-          <tr><td>🥇 Lieutenant</td><td>A, B et C acquis</td><td>L'affaire NéoPulse (programmation, câblage)</td></tr>
-        </table>
+        <div id="bareme"></div>
         <p class="mut">Code enseignant : <b>FORMATION</b>. Les enquêtes sont des fichiers du même dossier : gardez-les ensemble pour que les liens fonctionnent.</p>
         <h3 style="margin-top:14px">Corrigé</h3>
+        <div class="row" style="margin-bottom:8px"><label>Parcours : <select id="keyLv" style="font:inherit;padding:6px;border-radius:8px"><option value="L">🔍 Loupe (5e)</option><option value="B" selected>🧪 Labo (4e)</option><option value="C">🛰️ Cyber (3e)</option></select></label></div>
         <div class="tablewrap" id="key"></div>
       </div>
     </div>
@@ -180,6 +192,8 @@ const ICON = {
   lire: '<svg class="ill" viewBox="0 0 120 90" aria-hidden="true"><rect x="4" y="22" width="90" height="40" rx="6" fill="#fffdf6" stroke="#b9b29c" stroke-width="3"/><circle cx="24" cy="42" r="8" fill="#1d1d1f"/><circle cx="50" cy="42" r="8" fill="none" stroke="#b9b29c" stroke-width="2"/><circle cx="74" cy="42" r="8" fill="#1d1d1f"/><circle cx="72" cy="46" r="24" fill="#dff3ff" fill-opacity=".4" stroke="#14213d" stroke-width="5"/><line x1="90" y1="63" x2="112" y2="84" stroke="#14213d" stroke-width="9" stroke-linecap="round"/></svg>',
   ecrire: '<svg class="ill" viewBox="0 0 120 90" aria-hidden="true"><rect x="4" y="48" width="112" height="34" rx="6" fill="#fffdf6" stroke="#b9b29c" stroke-width="3"/><circle cx="30" cy="65" r="8" fill="#1d1d1f"/><circle cx="60" cy="65" r="8" fill="none" stroke="#b9b29c" stroke-width="2" stroke-dasharray="3 3"/><path d="M78 8 L102 8 L102 30 L96 30 L96 46 L84 46 L84 30 L78 30 Z" fill="#8e98a8" stroke="#5d6676" stroke-width="2"/><path d="M90 50 L90 58" stroke="#c62828" stroke-width="3" stroke-dasharray="2 2"/></svg>',
   ascii: '<svg class="ill" viewBox="0 0 120 90" aria-hidden="true"><g font-family="sans-serif" font-weight="900" text-anchor="middle"><rect x="6" y="14" width="46" height="56" rx="8" fill="#fff" stroke="#14213d" stroke-width="3"/><text x="29" y="52" font-size="30" fill="#14213d">A</text><text x="29" y="84" font-size="13" fill="#2f6fed">65</text><rect x="66" y="14" width="46" height="56" rx="8" fill="#f7f2ff" stroke="#8a63d2" stroke-width="3"/><text x="89" y="52" font-size="30" fill="#5b3aa8">7</text><text x="89" y="84" font-size="13" fill="#2f6fed">55</text></g></svg>',
+  ctl: '<svg class="ill" viewBox="0 0 120 90" aria-hidden="true"><g font-family="sans-serif" font-weight="900" text-anchor="middle"><text x="30" y="26" font-size="16" fill="#14213d">67</text><text x="30" y="46" font-size="16" fill="#14213d">68</text><text x="30" y="66" font-size="16" fill="#14213d">+73</text><line x1="8" y1="72" x2="52" y2="72" stroke="#14213d" stroke-width="3"/><text x="30" y="88" font-size="16" fill="#2f6fed">208</text><circle cx="88" cy="48" r="26" fill="#e3f6e8" stroke="#1e8e3e" stroke-width="4"/><path d="M74 48 L84 58 L102 38" fill="none" stroke="#1e8e3e" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g></svg>',
+  champs: '<svg class="ill" viewBox="0 0 120 90" aria-hidden="true"><g font-family="monospace" font-weight="800" font-size="15" text-anchor="middle" fill="#fff"><rect x="2" y="30" width="26" height="26" rx="5" fill="#e07a1f"/><text x="15" y="48">10</text><rect x="32" y="30" width="36" height="26" rx="5" fill="#2f6fed"/><text x="50" y="48">011</text><rect x="72" y="30" width="26" height="26" rx="5" fill="#1e8e3e"/><text x="85" y="48">11</text><rect x="102" y="30" width="16" height="26" rx="5" fill="#8e44ad"/><text x="110" y="48">1</text></g><g font-family="sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#5f6370"><text x="15" y="72">dir.</text><text x="50" y="72">dist.</text><text x="85" y="72">alt.</text><text x="110" y="72">P</text></g></svg>',
   algo: '<svg class="ill" viewBox="0 0 120 90" aria-hidden="true"><rect x="36" y="4" width="48" height="16" rx="8" fill="#14213d"/><line x1="60" y1="20" x2="60" y2="30" stroke="#14213d" stroke-width="2"/><rect x="34" y="30" width="52" height="16" rx="3" fill="#fff" stroke="#14213d" stroke-width="2"/><line x1="60" y1="46" x2="60" y2="54" stroke="#14213d" stroke-width="2"/><path d="M60 54 L84 68 L60 82 L36 68 Z" fill="#fff8e6" stroke="#14213d" stroke-width="2"/><path d="M84 68 H104 V38 H86" fill="none" stroke="#14213d" stroke-width="2"/></svg>'
 };
 const FICHES = [
@@ -233,7 +247,31 @@ const FICHES = [
       { t: 'Le caractère « 7 » a pour code…', o: ['7', '55', '70', '77'], a: 1, ex: 'Les chiffres commencent à 48 : 48 + 7 = 55.' },
       { t: 'Quel caractère est codé par cette ligne ?', img: lineSVG(79), type: 'chr', a: 'O', ex: '64 + 8 + 4 + 2 + 1 = 79, et 79 correspond à la lettre O.' }
     ] },
-  { id: 'f6', titre: 'L\'algorithme du lecteur', icon: 'algo', grp: 'C',
+  { id: 'f7', titre: 'La somme de contrôle', icon: 'ctl', grp: 'C',
+    cours: '<p>Un message peut être <b>abîmé</b> (un trou mal percé, un parasite) ou <b>trafiqué</b> par un faussaire. Pour le vérifier, on ajoute une dernière ligne : la <b>somme de contrôle</b>, c\'est-à-dire la somme de tous les numéros du message.</p>' +
+      '<p>Exemple : le mot <b>CDI</b> → C = 67, D = 68, I = 73. Somme : 67 + 68 + 73 = <b>208</b>. La carte contient 4 lignes : 67, 68, 73 et 208.</p>' +
+      '<p>Celui qui reçoit la carte <b>refait l\'addition</b>. Si son résultat est différent de la ligne de contrôle, le message est faux !</p>' +
+      '<div class="key">🔑 La somme de contrôle ne cache rien : elle sert à <b>détecter une erreur</b>. Les ordinateurs l\'utilisent pour vérifier les fichiers qu\'ils reçoivent.</div>',
+    qs: [
+      { t: 'Un message contient les nombres 10, 20 et 5. Quelle ligne de contrôle faut-il ajouter ?', type: 'num', a: 35, ex: '10 + 20 + 5 = 35.' },
+      { t: 'Le mot « BAC » s\'écrit 66, 65, 67. Quelle est sa somme de contrôle ?', type: 'num', a: 198, ex: '66 + 65 + 67 = 198.' },
+      { t: 'Une carte contient les lignes 65, 67, 70, puis la ligne de contrôle 200. Que conclus-tu ?', o: ['La carte est juste.', 'La carte est fausse : 65 + 67 + 70 = 202, pas 200.', 'On ne peut pas savoir.'], a: 1, ex: '65 + 67 + 70 = 202 ≠ 200 : une ligne est abîmée ou trafiquée.' },
+      { t: 'À quoi sert une somme de contrôle ?', o: ['À rendre le message secret', 'À repérer un message abîmé ou trafiqué', 'À écrire plus vite', 'À compter les cartes'], a: 1, ex: 'Elle permet de vérifier que le message n\'a pas changé.' }
+    ] },
+  { id: 'f8', titre: 'Un octet en morceaux et le bit de parité', icon: 'champs', grp: 'D',
+    cours: '<p>Un octet ne code pas toujours une lettre ! On peut le <b>découper en morceaux</b> (des <b>champs</b>), chacun avec sa propre information. Exemple : la boîte noire d\'un drone.</p>' +
+      '<div class="ftab"><div class="d"><b>Direction</b> 2 bits<br>00 Nord · 01 Est<br>10 Sud · 11 Ouest</div><div class="l"><b>Distance</b> 3 bits<br>poids 4 · 2 · 1</div><div class="a"><b>Altitude</b> 2 bits<br>00 posé · 01 bas<br>10 moyen · 11 haut</div><div class="p"><b>Parité</b> 1 bit</div></div>' +
+      '<p>Exemple : <span class="oct"><b class="d">0</b><b class="d">1</b><b class="l">1</b><b class="l">0</b><b class="l">1</b><b class="a">1</b><b class="a">0</b><b class="p">1</b></span> → <b>01</b> Est, <b>101</b> = 4 + 1 = 5 cases, <b>10</b> altitude moyenne.</p>' +
+      '<p>Le dernier bit est le <b>bit de parité</b> : on le choisit pour que la ligne contienne toujours un nombre <b>pair</b> de 1. Si une ligne arrive avec un nombre <b>impair</b> de 1, un bit a été abîmé.</p>' +
+      '<div class="key">⚠️ Le bit de parité dit <b>qu\'il y a</b> une erreur, mais pas <b>où</b> elle est. Il faut un autre indice pour la réparer.</div>',
+    qs: [
+      { t: 'Avec le code de la fiche, que vaut la distance <b>101</b> ?', o: ['3 cases', '5 cases', '101 cases', '6 cases'], a: 1, ex: 'Poids 4, 2, 1 : 4 + 1 = 5.' },
+      { t: 'Combien de valeurs différentes un champ de <b>2 bits</b> peut-il prendre ?', o: ['2', '3', '4', '8'], a: 2, ex: '00, 01, 10 et 11 : 4 valeurs (c\'est pourquoi il y a 4 directions).' },
+      { t: 'Avec le code de la fiche, que dit l\'octet <span class="oct"><b class="d">1</b><b class="d">0</b><b class="l">0</b><b class="l">1</b><b class="l">1</b><b class="a">1</b><b class="a">1</b><b class="p">1</b></span> ?', o: ['Sud, 3 cases, haut', 'Nord, 3 cases, bas', 'Sud, 6 cases, haut', 'Est, 3 cases, moyen'], a: 0, ex: '10 = Sud, 011 = 2 + 1 = 3 cases, 11 = haut.' },
+      { t: 'Les 7 premiers bits d\'une ligne sont <b>0101100</b>. Quel bit de parité faut-il ajouter pour avoir un nombre pair de 1 ?', o: ['0', '1'], a: 1, ex: '0101100 contient trois 1 (impair) : on ajoute un 1 pour arriver à 4.' },
+      { t: 'Une ligne arrive : <b>01101011</b>. Que dit le bit de parité ?', o: ['La ligne est bonne.', 'La ligne est abîmée : elle contient un nombre impair de 1.', 'Le drone est posé.'], a: 1, ex: '01101011 contient cinq 1 : c\'est impair, un bit a changé.' }
+    ] },
+  { id: 'f6', titre: 'L\'algorithme du lecteur', icon: 'algo', grp: 'E',
     cours: '<p>Un <b>programme</b> est une suite d\'instructions. On le dessine avec un <b>organigramme</b> :</p>' +
       '<ul><li>un <b>rectangle</b> = une action (« lire les capteurs ») ;</li><li>un <b>losange</b> = une <b>condition</b>, une question avec deux sorties : oui ou non (« le badge est-il fini ? ») ;</li><li>une flèche qui remonte = une <b>boucle</b> : on <b>répète</b> des instructions.</li></ul>' +
       '<p>Une <b>variable</b> garde un nombre en mémoire, par exemple un <b>compteur</b> de lignes. Les capteurs envoient une information à la carte Arduino : ce sont des <b>entrées</b>.</p>' +
@@ -246,13 +284,134 @@ const FICHES = [
       { t: 'Un capteur envoie une information à la carte Arduino. Pour la Nano, c\'est…', o: ['une entrée', 'une sortie', 'une alimentation', 'une boucle'], a: 0, ex: 'L\'information entre dans la Nano : c\'est une entrée.' }
     ] }
 ];
+
+/* ================= PARCOURS (même fiches, questions adaptées) ================= */
+const LEVELS = {
+  L: { nom: 'Loupe', ico: '🔍', desc: 'Je découvre le binaire', classe: '5e' },
+  B: { nom: 'Labo',  ico: '🧪', desc: 'Je connais déjà les bases', classe: '4e' },
+  C: { nom: 'Cyber', ico: '🛰️', desc: 'Je veux des défis', classe: '3e' }
+};
+const LEVEL_QS = {
+  L: {
+    f1: [
+      { t: 'Sur nos cartes perforées, un trou représente…', o: ['0', '1', '8', 'une lettre'], a: 1, ex: 'Un trou = 1, pas de trou = 0.' },
+      { t: 'Un bit peut valoir…', o: ['0 ou 1', 'de 0 à 9', 'de 1 à 8', 'n\'importe quel nombre'], a: 0, ex: 'Un bit n\'a que deux valeurs : 0 ou 1.' },
+      { t: 'Combien de places (bits) y a-t-il sur une ligne de carte ?', type: 'num', a: 8, ex: 'Une ligne a 8 places : c\'est un octet.' },
+      { t: 'Combien de trous y a-t-il sur cette ligne ?', img: lineNoW(5), o: ['1', '2', '3', '5'], a: 1, ex: 'On compte 2 trous noirs.' }
+    ],
+    f2: [
+      { t: 'Quelle est la valeur de la place la plus à droite ?', o: ['0', '1', '2', '128'], a: 1, ex: 'De droite à gauche : 1, 2, 4, 8…' },
+      { t: 'Quelle valeur vient juste à gauche de 4 ?', o: ['5', '6', '8', '16'], a: 2, ex: 'Chaque valeur est le double de la précédente : 4 × 2 = 8.' },
+      { t: 'En allant vers la gauche, chaque valeur est…', o: ['le double de la précédente', 'la moitié de la précédente', 'égale à la précédente', 'le triple de la précédente'], a: 0, ex: '1, 2, 4, 8, 16… : on double à chaque fois.' },
+      { t: 'Quelle est la valeur de la place la plus à gauche ?', o: ['8', '64', '128', '255'], a: 2, ex: 'La place de gauche vaut 128.' }
+    ],
+    f3: [
+      { t: 'Quel nombre code cette ligne ?', img: lineSVG(3), type: 'num', a: 3, ex: '2 + 1 = 3.' },
+      { t: 'Quel nombre code cette ligne ?', img: lineSVG(10), type: 'num', a: 10, ex: '8 + 2 = 10.' },
+      { t: 'Quel nombre s\'écrit <b>00000101</b> en binaire ?', type: 'num', a: 5, ex: 'Les 1 sont sous 4 et 1 : 4 + 1 = 5.' },
+      { t: 'Quel nombre code cette ligne ?', img: lineSVG(65), type: 'num', a: 65, ex: '64 + 1 = 65.' }
+    ],
+    f4: [
+      { t: 'Perce les trous pour écrire <b>3</b> (clique sur les ronds).', type: 'bits', a: 3, ex: '3 = 2 + 1 → 00000011.' },
+      { t: 'Perce les trous pour écrire <b>9</b>.', type: 'bits', a: 9, ex: '9 = 8 + 1 → 00001001.' },
+      { t: 'Perce les trous pour écrire <b>12</b>.', type: 'bits', a: 12, ex: '12 = 8 + 4 → 00001100.' },
+      { t: 'Comment s\'écrit <b>2</b> en binaire sur 4 bits ?', o: ['0010', '0100', '0001', '0011'], a: 0, ex: '2 → un seul trou, sous le 2 : 0010.' }
+    ],
+    f5: [
+      { t: 'Quelle lettre a le code 65 ?', type: 'chr', a: 'A', ex: 'A = 65 : c\'est la première lettre.' },
+      { t: 'Quel est le code de la lettre C ?', type: 'num', a: 67, ex: 'A = 65, B = 66, C = 67.' },
+      { t: 'Quel caractère est codé par cette ligne ?', img: lineSVG(66), type: 'chr', a: 'B', ex: '64 + 2 = 66, et 66 correspond à la lettre B.' },
+      { t: 'Le code ASCII sert à…', o: ['écrire du texte avec des nombres', 'compter les trous', 'dessiner des images', 'ouvrir les portes'], a: 0, ex: 'Chaque caractère reçoit un numéro : l\'ordinateur écrit du texte avec des nombres.' }
+    ],
+    f7: [
+      { t: 'Un message contient les nombres 2, 3 et 4. Quelle ligne de contrôle faut-il ajouter ?', type: 'num', a: 9, ex: '2 + 3 + 4 = 9.' },
+      { t: 'Le mot « AB » s\'écrit 65, 66. Quelle est sa somme de contrôle ?', type: 'num', a: 131, ex: '65 + 66 = 131.' },
+      { t: 'Une carte contient 10 et 20, puis la ligne de contrôle 30. Elle est…', o: ['juste', 'fausse'], a: 0, ex: '10 + 20 = 30 : le contrôle est juste.' },
+      { t: 'À quoi sert une somme de contrôle ?', o: ['À rendre le message secret', 'À repérer un message abîmé ou trafiqué', 'À écrire plus vite', 'À compter les cartes'], a: 1, ex: 'Elle permet de vérifier que le message n\'a pas changé.' }
+    ],
+    f8: [
+      { t: 'Avec le code de la fiche, que veut dire la direction <b>00</b> ?', o: ['Nord', 'Est', 'Sud', 'Ouest'], a: 0, ex: '00 = Nord.' },
+      { t: 'Avec le code de la fiche, que vaut la distance <b>011</b> ?', o: ['3 cases', '11 cases', '2 cases', '1 case'], a: 0, ex: 'Poids 4, 2, 1 : 2 + 1 = 3 cases.' },
+      { t: 'Combien de fois le chiffre 1 apparaît-il dans <b>01100110</b> ?', o: ['3', '4', '5', '6'], a: 1, ex: '0 1 1 0 0 1 1 0 : quatre 1.' },
+      { t: 'Le nombre 4 est…', o: ['pair', 'impair'], a: 0, ex: '4 se divise par 2 : il est pair.' },
+      { t: 'Une ligne arrive avec <b>trois</b> 1. D\'après le bit de parité, elle est…', o: ['bonne', 'abîmée'], a: 1, ex: '3 est impair : un bit a changé pendant le voyage.' }
+    ],
+    f6: [
+      { t: 'Dans un programme, une boucle sert à…', o: ['répéter des instructions', 'choisir entre deux chemins', 'garder un nombre en mémoire', 'afficher un message'], a: 0, ex: 'Une boucle répète des instructions.' },
+      { t: 'Dans un organigramme, le losange pose…', o: ['une question (oui ou non)', 'une action', 'le début du programme', 'la fin du programme'], a: 0, ex: 'Le losange est une condition : une question avec deux sorties.' },
+      { t: 'Un compteur vaut 0. On ajoute 1 trois fois. Combien vaut-il ?', o: ['1', '2', '3', '4'], a: 2, ex: '0 + 1 + 1 + 1 = 3.' },
+      { t: 'Quel trou dit au lecteur « lis la ligne maintenant » ?', o: ['le trou de la colonne d\'horloge', 'le trou de la colonne 128', 'n\'importe quel trou', 'aucun trou'], a: 0, ex: 'Chaque ligne a un trou d\'horloge : il donne le top de lecture.' },
+      { t: 'Un capteur envoie une information à la carte Arduino. C\'est…', o: ['une entrée', 'une sortie'], a: 0, ex: 'L\'information entre dans la carte : c\'est une entrée.' }
+    ]
+  },
+  C: {
+    f1: [
+      { t: 'Combien de bits y a-t-il dans 3 octets ?', type: 'num', a: 24, ex: '3 × 8 = 24 bits.' },
+      { t: 'Combien de valeurs différentes peut-on écrire avec 2 bits ?', o: ['2', '3', '4', '8'], a: 2, ex: '00, 01, 10, 11 : 4 valeurs.' },
+      { t: 'Combien de valeurs différentes peut-on écrire avec un octet ?', o: ['8', '255', '256', '1 000'], a: 2, ex: 'De 0 à 255 : cela fait 256 valeurs.' },
+      { t: 'Combien de bits valent 0 sur cette ligne ?', img: lineNoW(169), o: ['3', '4', '5', '8'], a: 1, ex: '4 trous sur 8 places : il reste 4 bits à 0.' }
+    ],
+    f2: [
+      { t: 'Quelle valeur aurait une 9e place, à gauche de 128 ?', type: 'num', a: 256, ex: '128 × 2 = 256.' },
+      { t: 'Quelle est la valeur de la 6e place en partant de la droite ?', type: 'num', a: 32, ex: '1, 2, 4, 8, 16, 32.' },
+      { t: 'Avec seulement les 4 places de droite, quel est le plus grand nombre possible ?', type: 'num', a: 15, ex: '8 + 4 + 2 + 1 = 15.' },
+      { t: 'Combien vaut 128 + 64 + 32 + 16 + 8 + 4 + 2 + 1 ?', type: 'num', a: 255, ex: 'C\'est le plus grand nombre d\'un octet : 255.' }
+    ],
+    f3: [
+      { t: 'Quel nombre code cette ligne ?', img: lineSVG(200), type: 'num', a: 200, ex: '128 + 64 + 8 = 200.' },
+      { t: 'Quel nombre s\'écrit <b>10101010</b> en binaire ?', type: 'num', a: 170, ex: '128 + 32 + 8 + 2 = 170.' },
+      { t: 'Une ligne a des trous sous 64, 8 et 1. Quel nombre code-t-elle ?', type: 'num', a: 73, ex: '64 + 8 + 1 = 73.' },
+      { t: 'Quel nombre s\'écrit <b>01111111</b> en binaire ?', type: 'num', a: 127, ex: 'Tous les trous sauf 128 : 255 − 128 = 127.' }
+    ],
+    f4: [
+      { t: 'Perce les trous pour écrire <b>77</b>.', type: 'bits', a: 77, ex: '77 = 64 + 8 + 4 + 1 → 01001101.' },
+      { t: 'Perce les trous pour écrire <b>129</b>.', type: 'bits', a: 129, ex: '129 = 128 + 1 → 10000001.' },
+      { t: 'Perce les trous pour écrire <b>250</b>.', type: 'bits', a: 250, ex: '250 = 128 + 64 + 32 + 16 + 8 + 2 → 11111010.' },
+      { t: 'Comment s\'écrit <b>13</b> en binaire sur 4 bits ?', o: ['1011', '1101', '1110', '0111'], a: 1, ex: '13 = 8 + 4 + 1 → 1101.' }
+    ],
+    f5: [
+      { t: 'Quelle lettre a le code 87 ?', type: 'chr', a: 'W', ex: 'A = 65… W est la 23e lettre : 65 + 22 = 87.' },
+      { t: 'Quel est le code du caractère « 9 » ?', type: 'num', a: 57, ex: 'Les chiffres commencent à 48 : 48 + 9 = 57.' },
+      { t: 'Quel mot codent les nombres 79 et 75 ?', o: ['OK', 'NO', 'ON', 'KO'], a: 0, ex: '79 = O et 75 = K.' },
+      { t: 'Quel caractère est codé par cette ligne ?', img: lineSVG(90), type: 'chr', a: 'Z', ex: '64 + 16 + 8 + 2 = 90, et 90 correspond à Z.' }
+    ],
+    f7: [
+      { t: 'Quelle est la somme de contrôle du mot « OUI » (79, 85, 73) ?', type: 'num', a: 237, ex: '79 + 85 + 73 = 237.' },
+      { t: 'Une carte contient 72, 73, 84, puis la ligne de contrôle 229. Elle est…', o: ['juste', 'fausse', 'impossible à vérifier'], a: 0, ex: '72 + 73 + 84 = 229 : le contrôle est juste.' },
+      { t: 'Un faussaire change la lettre A (65) en B (66) sans toucher à la ligne de contrôle. Que se passe-t-il ?', o: ['La somme des lettres augmente de 1 : le contrôle ne correspond plus', 'Rien : le contrôle reste juste', 'La somme diminue de 1'], a: 0, ex: 'La somme vaut 1 de plus que la ligne de contrôle : la fraude est repérée.' },
+      { t: 'La ligne de contrôle doit tenir sur une ligne de 8 bits. Quelle est la plus grande somme possible ?', type: 'num', a: 255, ex: 'Un octet va jusqu\'à 255.' }
+    ],
+    f8: [
+      { t: 'Avec le code de la fiche, que dit l\'octet <span class="oct"><b class="d">1</b><b class="d">1</b><b class="l">1</b><b class="l">0</b><b class="l">1</b><b class="a">0</b><b class="a">1</b><b class="p">1</b></span> ?', o: ['Ouest, 5 cases, bas', 'Est, 5 cases, haut', 'Ouest, 3 cases, bas', 'Sud, 5 cases, bas'], a: 0, ex: '11 = Ouest, 101 = 4 + 1 = 5 cases, 01 = bas.' },
+      { t: 'Combien de valeurs différentes un champ de <b>3 bits</b> peut-il prendre ?', o: ['3', '6', '8', '9'], a: 2, ex: 'De 000 à 111 : 8 valeurs (0 à 7).' },
+      { t: 'Perce l\'octet complet pour : <b>Sud</b> (10), <b>4 cases</b> (100), <b>haut</b> (11), avec le bon bit de parité.', type: 'bits', a: 166, ex: '10 100 11 contient quatre 1 (pair) : parité 0 → 10100110 = 166.' },
+      { t: 'Une ligne arrive avec un nombre impair de 1. Si UN seul bit a changé, combien de lignes d\'origine sont possibles ?', o: ['1', '2', '8', '255'], a: 2, ex: 'N\'importe lequel des 8 bits a pu changer : 8 possibilités. Il faut un autre indice.' },
+      { t: 'Pourquoi le bit de parité ne repère-t-il pas DEUX bits abîmés ?', o: ['Le nombre de 1 redevient pair : l\'erreur passe inaperçue', 'La ligne devient trop longue', 'Le lecteur s\'arrête', 'Deux erreurs donnent toujours 0'], a: 0, ex: 'Deux changements gardent la parité : la ligne a l\'air bonne.' }
+    ],
+    f6: [
+      { t: 'Un compteur part de 0. Après chaque ligne lue, on ajoute 1 ; quand il vaut 3, on affiche le badge et on le remet à 0. Après 7 lignes lues, combien vaut-il ?', type: 'num', a: 1, ex: '3 → 0, puis 6 → 0, puis encore 1 ligne : il vaut 1.' },
+      { t: 'On oublie de remettre le compteur à 0 après le 1er badge (test « compteur = 3 »). Que se passe-t-il au 2e badge ?', o: ['Il n\'est jamais affiché : le compteur dépasse 3', 'Il est affiché deux fois', 'Rien ne change'], a: 0, ex: 'Le compteur vaut 4, 5, 6… et n\'est plus jamais égal à 3.' },
+      { t: 'Pour chaque capteur qui voit un trou, le programme fait : valeur = valeur + poids. Avec des trous sous 64 et 4, que vaut la valeur ?', type: 'num', a: 68, ex: '0 + 64 + 4 = 68.' },
+      { t: 'Pourquoi la Nano lit-elle la ligne à la FIN du trou d\'horloge ?', o: ['Pour être sûre que toute la ligne est bien sous les capteurs', 'Pour aller plus vite', 'Pour économiser l\'énergie', 'Pour compter les cartes'], a: 0, ex: 'Quand le trou d\'horloge finit de passer, la ligne est bien centrée sous les capteurs.' },
+      { t: 'Pour la Nano, un capteur et une LED sont…', o: ['capteur = entrée, LED = sortie', 'capteur = sortie, LED = entrée', 'deux entrées', 'deux sorties'], a: 0, ex: 'Le capteur envoie une information (entrée), la LED reçoit un ordre (sortie).' }
+    ]
+  }
+};
+FICHES.forEach(f => { f.qsB = f.qs; });
+Object.values(LEVEL_QS).forEach(L => FICHES.forEach(f => { if (L[f.id].length !== f.qsB.length) throw new Error('nombre de questions : ' + f.id); }));
+const qsOf = (lv, f) => lv === 'B' ? f.qsB : LEVEL_QS[lv][f.id];
+function useLevel(lv) { FICHES.forEach(f => { f.qs = qsOf(lv, f); }); }
 const TOTAL = FICHES.reduce((a, f) => a + f.qs.length, 0);
-const GRP = { A: ['f1', 'f2', 'f3'], B: ['f4', 'f5'], C: ['f6'] };
+const GRP = { A: ['f1', 'f2', 'f3'], B: ['f4', 'f5'], C: ['f7'], D: ['f8'], E: ['f6'] };
+const GLAB = { A: 'Lire le binaire', B: 'Écrire et coder', C: 'Contrôler un message', D: 'Champs et parité', E: 'Programmer' };
+const GKEYS = Object.keys(GRP);
 const ENQ = [
-  { grade: 'Recrue', ico: '🔰', file: 'chat-de-minuit.html', nom: 'L\'affaire du Chat de Minuit', desc: 'Décoder le message d\'un voleur. Très guidée : calculette à trous, aides en 3 niveaux.' },
-  { grade: 'Agent', ico: '🥉', file: 'professeur-zero-niveau1.html', nom: 'Le casier du Pr Zéro · Apprenti', desc: 'Lire des chiffres en binaire pour ouvrir un vrai cadenas.' },
-  { grade: 'Inspecteur', ico: '🥈', file: 'professeur-zero-niveau2.html', nom: 'Le casier du Pr Zéro · Expert', desc: 'Code caché en caractères ASCII, écrit à l\'envers.' },
-  { grade: 'Lieutenant', ico: '🥇', file: 'enquete-neopulse.html', nom: 'L\'affaire NéoPulse', desc: 'Programmer la Nano, câbler le lecteur et confondre un voleur de données.' }
+  { grade: 'Recrue', ico: '🔰', file: 'chat_de_minuit.html', nom: 'L\'affaire du Chat de Minuit', desc: 'Décoder le message d\'un voleur. Très guidée : calculette à trous, aides en 3 niveaux.' },
+  { grade: 'Agent', ico: '🥉', file: 'casier_professeur_zero_niveau1.html', nom: 'Le casier du Pr Zéro · Apprenti', desc: 'Lire des chiffres en binaire pour ouvrir un vrai cadenas.' },
+  { grade: 'Brigadier', ico: '🎖️', file: 'casier_professeur_zero_niveau2.html', nom: 'Le casier du Pr Zéro · Expert', desc: 'Code caché en caractères ASCII, écrit à l\'envers.' },
+  { grade: 'Inspecteur', ico: '🥈', file: 'chien_vole.html', nom: 'Le chien volé du gardien', desc: 'Lire et écrire en binaire, puis démasquer une fausse carte grâce à la somme de contrôle.' },
+  { grade: 'Lieutenant', ico: '🥇', file: 'boite_noire_drone.html', nom: 'La boîte noire du drone', desc: 'Octet découpé en champs, bit de parité : trouver la donnée abîmée et innocenter un pilote.' },
+  { grade: 'Commissaire', ico: '🏆', file: 'enquete_neopulse.html', nom: 'L\'affaire NéoPulse', desc: 'Programmer la Nano, câbler le lecteur et confondre un voleur de données.' }
 ];
 
 /* ================= ÉTAT ================= */
@@ -357,21 +516,19 @@ function grpPct(g) {
   const pts = ids.reduce((a, id) => a + (state.scores[id] || 0), 0);
   return { pts, max, pct: pts / max };
 }
+// grade = nombre de groupes acquis à la suite (seuil 60 %), dans l'ordre A, B, C, D, E
 function gradeIndex() {
-  const A = grpPct('A').pct, B = grpPct('B').pct, C = grpPct('C').pct;
-  if (A < 0.6) return 0;
-  if (B < 0.6) return 1;
-  if (C < 0.6) return 2;
-  return 3;
+  const k = GKEYS.findIndex(g => grpPct(g).pct < 0.6);
+  return k < 0 ? GKEYS.length : k;
 }
 function badgeSVG(gi) {
-  const col = ['#7aa6d8', '#c98a4b', '#b8bec8', '#f2b705'][gi];
+  const col = ['#7aa6d8', '#c98a4b', '#8fb39a', '#b8bec8', '#f2b705', '#e0565b'][gi];
   return '<svg class="badge" viewBox="0 0 160 180" role="img" aria-label="Insigne de ' + ENQ[gi].grade + '">' +
     '<path d="M80 6 L148 30 V86 Q148 146 80 174 Q12 146 12 86 V30 Z" fill="' + col + '" stroke="#14213d" stroke-width="6"/>' +
     '<path d="M80 26 L130 44 V88 Q130 132 80 154 Q30 132 30 88 V44 Z" fill="#14213d"/>' +
     '<text x="80" y="92" text-anchor="middle" font-size="34" font-weight="900" fill="' + col + '" font-family="sans-serif">01</text>' +
-    '<text x="80" y="122" text-anchor="middle" font-size="14" font-weight="800" fill="#fff" font-family="sans-serif" letter-spacing="1">' + ENQ[gi].grade.toUpperCase() + '</text>' +
-    '<g fill="' + col + '">' + Array.from({ length: gi + 1 }, (_, k) => '<path transform="translate(' + (80 - gi * 10 + k * 20) + ' 138)" d="M0 -7 l2 5 l6 0 l-5 4 l2 6 l-5 -4 l-5 4 l2 -6 l-5 -4 l6 0 z"/>').join('') + '</g></svg>';
+    '<text x="80" y="122" text-anchor="middle" font-size="' + (ENQ[gi].grade.length > 10 ? 12 : 14) + '" font-weight="800" fill="#fff" font-family="sans-serif" letter-spacing="1">' + ENQ[gi].grade.toUpperCase() + '</text>' +
+    '<g fill="' + col + '">' + Array.from({ length: gi + 1 }, (_, k) => '<path transform="translate(' + (80 - gi * 8 + k * 16) + ' 138)" d="M0 -7 l2 5 l6 0 l-5 4 l2 6 l-5 -4 l-5 4 l2 -6 l-5 -4 l6 0 z"/>').join('') + '</g></svg>';
 }
 function results() {
   const total = Object.values(state.scores).reduce((a, b) => a + b, 0);
@@ -385,7 +542,7 @@ function results() {
     '<h2 style="margin-top:0">Résultats de la formation</h2>' +
     '<div class="row" style="align-items:center;gap:20px">' + badgeSVG(gi) +
     '<div><p style="margin:0">Félicitations, <b>' + esc(name) + '</b> !</p><p style="font-size:1.4rem;margin:6px 0"><b>' + ENQ[gi].ico + ' Grade : ' + ENQ[gi].grade + '</b></p>' +
-    '<p style="margin:0">Score : <b>' + total + ' / ' + TOTAL + '</b></p></div></div>' +
+    '<p style="margin:0">Score : <b>' + total + ' / ' + TOTAL + '</b> · <span class="lvtag">' + LEVELS[state.level].ico + ' Parcours ' + LEVELS[state.level].nom + '</span></p></div></div>' +
     '<h3 style="margin-top:16px">Tes compétences</h3><table>' + rows + '</table>' +
     '<h3 style="margin-top:16px">Tes enquêtes</h3>' +
     ENQ.map((e, k) => '<div class="enq' + (k === gi ? ' rec' : '') + '"><span class="ico">' + e.ico + '</span><div><a href="' + e.file + '">' + esc(e.nom) + '</a><div class="mut">' + esc(e.desc) + '</div></div><span class="tag">' + tag(k) + '</span></div>').join('') +
@@ -398,11 +555,11 @@ function results() {
 function reportData() {
   const gi = gradeIndex();
   return {
-    v: 1, eleve: state.id, debut: state.start.toISOString(), fin: state.end.toISOString(),
+    v: 3, parcours: LEVELS[state.level].nom, eleve: state.id, debut: state.start.toISOString(), fin: state.end.toISOString(),
     duree_min: Math.max(1, Math.round((state.end - state.start) / 60000)),
     score: Object.values(state.scores).reduce((a, b) => a + b, 0), total: TOTAL,
     fiches: FICHES.map((f, i) => ({ n: i + 1, titre: f.titre, pts: state.scores[f.id], max: f.qs.length })),
-    groupes: { A: grpPct('A'), B: grpPct('B'), C: grpPct('C') },
+    groupes: Object.fromEntries(GKEYS.map(g => [g, grpPct(g)])),
     grade: ENQ[gi].grade, enquete: ENQ[gi].nom, fichier: ENQ[gi].file,
     reponses: state.answers
   };
@@ -423,12 +580,10 @@ function downloadReport() {
     'tr.ok td:last-child{color:#1e8e3e}tr.ko td:last-child{color:#c62828}.big{font-size:1.3rem;font-weight:800}.box{border:2px solid #f2b705;background:#fffaf0;border-radius:12px;padding:12px 16px;margin:14px 0}' +
     '.mut{color:#5f6370;font-size:.85rem}@media print{header{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>' +
     '<header><h1>ÉCOLE DE POLICE SCIENTIFIQUE · Rapport de formation</h1><div>Test d\'aptitude « binaire »</div></header>' +
-    '<p><b>Élève :</b> ' + esc(d.eleve.fn + ' ' + d.eleve.ln) + ' · <b>Classe :</b> ' + esc(d.eleve.cl) + '<br><b>Date :</b> ' + dt.toLocaleDateString('fr-FR') + ' à ' + dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' · <b>Durée :</b> ' + d.duree_min + ' min</p>' +
+    '<p><b>Élève :</b> ' + esc(d.eleve.fn + ' ' + d.eleve.ln) + ' · <b>Classe :</b> ' + esc(d.eleve.cl) + '<br><b>Date :</b> ' + dt.toLocaleDateString('fr-FR') + ' à ' + dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' · <b>Durée :</b> ' + d.duree_min + ' min<br><b>Parcours :</b> ' + esc(d.parcours) + '</p>' +
     '<div class="box"><div class="big">Grade : ' + esc(d.grade) + ' · ' + d.score + ' / ' + d.total + '</div>Enquête conseillée : <b>' + esc(d.enquete) + '</b> (' + esc(d.fichier) + ')</div>' +
     '<table><tr><th>Groupe</th><th style="text-align:right">Points</th></tr>' +
-    '<tr><td>A · Lire le binaire</td><td style="text-align:right">' + d.groupes.A.pts + ' / ' + d.groupes.A.max + '</td></tr>' +
-    '<tr><td>B · Écrire et coder</td><td style="text-align:right">' + d.groupes.B.pts + ' / ' + d.groupes.B.max + '</td></tr>' +
-    '<tr><td>C · Programmer</td><td style="text-align:right">' + d.groupes.C.pts + ' / ' + d.groupes.C.max + '</td></tr></table>' +
+    GKEYS.map(g => '<tr><td>' + g + ' · ' + GLAB[g] + '</td><td style="text-align:right">' + d.groupes[g].pts + ' / ' + d.groupes[g].max + '</td></tr>').join('') + '</table>' +
     '<table>' + fiches + '</table><h2>Réponses détaillées</h2>' + det +
     '<p class="mut">Code de contrôle : <b>' + code + '</b>. Il permet au professeur de vérifier que ce rapport n\'a pas été modifié.</p>' +
     '<script type="application/json" id="rapport-data">' + json + '<\/script>' +
@@ -445,8 +600,12 @@ function downloadReport() {
 $('start').onclick = () => {
   const fn = $('fn').value.trim(), ln = $('ln').value.trim(), cl = $('cl').value.trim();
   if (!fn || !ln || !cl) { $('idMsg').textContent = '⚠️ Remplis ton prénom, ton nom et ta classe.'; $('idMsg').style.color = 'var(--bad)'; return; }
+  const lvIn = document.querySelector('input[name="lvl"]:checked');
+  if (!lvIn) { $('idMsg').textContent = '⚠️ Choisis ton parcours : Loupe, Labo ou Cyber.'; $('idMsg').style.color = 'var(--bad)'; return; }
+  state.level = lvIn.value; useLevel(state.level); buildFiches();
   state.id = { fn, ln, cl }; state.start = new Date();
-  $('who').textContent = '🪪 ' + fn + ' ' + ln + ' · ' + cl;
+  const LV = LEVELS[state.level];
+  $('who').textContent = '🪪 ' + fn + ' ' + ln + ' · ' + cl + ' · ' + LV.ico + ' ' + LV.nom;
   goFiche(0);
 };
 
@@ -457,9 +616,18 @@ $('pbtn').onclick = () => {
 };
 $('pback').onclick = () => goFiche(current < 0 ? -1 : current);
 $('pcode').onkeydown = e => { if (e.key === 'Enter') $('pbtn').click(); };
-$('key').innerHTML = '<table><tr><th>Question</th><th>Réponse</th></tr>' + FICHES.map((f, i) => f.qs.map((q, j) =>
-  '<tr><td>F' + (i + 1) + '.' + (j + 1) + ' · ' + q.t.replace(/<[^>]+>/g, '') + '</td><td><b>' + esc(goodTxt(q)) + '</b></td></tr>').join('')).join('') + '</table>';
+$('bareme').innerHTML = '<p><b>Trois parcours</b>, choisis par l\'élève au départ : 🔍 <b>Loupe</b> (prévu pour la 5e), 🧪 <b>Labo</b> (4e) et 🛰️ <b>Cyber</b> (3e). Les fiches de cours, le nombre de questions et l\'orientation sont identiques ; seules les questions des tests sont plus simples (Loupe) ou plus exigeantes (Cyber). Le parcours figure dans le rapport et dans la synthèse.</p><p>' + TOTAL + ' questions, 1 point chacune, réparties en ' + GKEYS.length + ' groupes de compétences :</p><table><tr><th>Groupe</th><th>Fiches</th><th>Points</th><th>Utile pour</th></tr>' +
+  GKEYS.map((g, k) => '<tr><td>' + g + ' · ' + GLAB[g] + '</td><td>' + GRP[g].map(id => { const i = FICHES.findIndex(f => f.id === id); return (i + 1) + ' · ' + FICHES[i].titre; }).join('<br>') + '</td><td>' + grpPct(g).max + '</td><td>' + ENQ[k + 1].nom + '</td></tr>').join('') + '</table>' +
+  '<table style="margin-top:12px"><tr><th>Grade</th><th>Condition (seuil : 60 % par groupe)</th><th>Enquête conseillée</th></tr>' +
+  ENQ.map((e, k) => '<tr><td>' + e.ico + ' ' + e.grade + '</td><td>' + (k === 0 ? 'Groupe A sous 60 %' : (k > 1 ? GKEYS.slice(0, k).join(', ') : 'A') + ' acquis' + (k < GKEYS.length ? ', ' + GKEYS[k] + ' sous 60 %' : '')) + '</td><td>' + e.nom + '</td></tr>').join('') + '</table>' +
+  '<p class="mut">Les groupes se valident <b>dans l\'ordre</b> : un élève qui échoue au groupe C reçoit le grade Brigadier, même s\'il réussit la programmation. Les enquêtes plus faciles restent marquées « déjà à ta portée ».</p>';
+function keyDraw() { const lv = $('keyLv').value; $('key').innerHTML = '<table><tr><th>Question</th><th>Réponse</th></tr>' + FICHES.map((f, i) => qsOf(lv, f).map((q, j) =>
+  '<tr><td>F' + (i + 1) + '.' + (j + 1) + ' · ' + q.t.replace(/<[^>]+>/g, '') + '</td><td><b>' + esc(goodTxt(q)) + '</b></td></tr>').join('')).join('') + '</table>'; }
+$('keyLv').onchange = keyDraw; keyDraw();
 let synthRows = [];
+// les rapports de la 1re version (6 fiches) avaient 3 groupes : A, B et C = programmer
+const grpOf = (d, g) => d.v >= 2 ? d.groupes[g] : (g === 'E' ? d.groupes.C : g === 'C' || g === 'D' ? null : d.groupes[g]);
+const grpCell = (d, g) => { const x = grpOf(d, g); return x ? x.pts + '/' + x.max : '—'; };
 $('files').onchange = async e => {
   synthRows = [];
   for (const file of e.target.files) {
@@ -472,20 +640,20 @@ $('files').onchange = async e => {
   }
   synthRows.sort((a, b) => a.err ? 1 : b.err ? -1 : (a.d.eleve.cl + a.d.eleve.ln).localeCompare(b.d.eleve.cl + b.d.eleve.ln));
   const counts = {};
-  synthRows.forEach(r => { if (r.d) counts[r.d.grade] = (counts[r.d.grade] || 0) + 1; });
+  synthRows.forEach(r => { if (r.d && r.d.v >= 2) counts[r.d.grade] = (counts[r.d.grade] || 0) + 1; });
   $('synth').innerHTML = '<p>' + ENQ.map(e => e.ico + ' ' + e.grade + ' : <b>' + (counts[e.grade] || 0) + '</b>').join(' · ') + '</p>' +
-    '<table><tr><th>Classe</th><th>Élève</th><th>Score</th><th>A</th><th>B</th><th>C</th><th>Grade</th><th>Enquête conseillée</th><th>Durée</th><th>Contrôle</th></tr>' +
-    synthRows.map(r => r.err ? '<tr><td colspan="10">⚠️ ' + esc(r.err) + ' : ce fichier n\'est pas un rapport de formation.</td></tr>' :
-      '<tr><td>' + esc(r.d.eleve.cl) + '</td><td>' + esc(r.d.eleve.ln + ' ' + r.d.eleve.fn) + '</td><td><b>' + r.d.score + '/' + r.d.total + '</b></td><td>' + r.d.groupes.A.pts + '/' + r.d.groupes.A.max + '</td><td>' + r.d.groupes.B.pts + '/' + r.d.groupes.B.max + '</td><td>' + r.d.groupes.C.pts + '/' + r.d.groupes.C.max + '</td><td>' + esc(r.d.grade) + '</td><td>' + esc(r.d.enquete) + '</td><td>' + r.d.duree_min + ' min</td><td>' + (r.ok ? '✅' : '⚠️ modifié ?') + '</td></tr>').join('') + '</table>';
+    '<table><tr><th>Classe</th><th>Élève</th><th>Parcours</th><th>Score</th>' + GKEYS.map(g => '<th title="' + GLAB[g] + '">' + g + '</th>').join('') + '<th>Grade</th><th>Enquête conseillée</th><th>Durée</th><th>Contrôle</th></tr>' +
+    synthRows.map(r => r.err ? '<tr><td colspan="' + (9 + GKEYS.length) + '">⚠️ ' + esc(r.err) + ' : ce fichier n\'est pas un rapport de formation.</td></tr>' :
+      '<tr><td>' + esc(r.d.eleve.cl) + '</td><td>' + esc(r.d.eleve.ln + ' ' + r.d.eleve.fn) + '</td><td>' + esc(r.d.parcours || '—') + '</td><td><b>' + r.d.score + '/' + r.d.total + '</b></td>' + GKEYS.map(g => '<td>' + grpCell(r.d, g) + '</td>').join('') + '<td>' + esc(r.d.grade) + (r.d.v >= 2 ? '' : ' <span class="mut">(ancien test)</span>') + '</td><td>' + esc(r.d.enquete) + '</td><td>' + r.d.duree_min + ' min</td><td>' + (r.ok ? '✅' : '⚠️ modifié ?') + '</td></tr>').join('') + '</table>';
   $('csv').disabled = !synthRows.some(r => r.d);
 };
 $('csv').onclick = () => {
   const q = s => '"' + String(s).replace(/"/g, '""') + '"';
-  const lines = [['Classe', 'Nom', 'Prénom', 'Date', 'Durée (min)', 'Score', 'Total', 'Groupe A', 'Groupe B', 'Groupe C'].concat(FICHES.map((f, i) => 'Fiche ' + (i + 1))).concat(['Grade', 'Enquête conseillée', 'Contrôle']).map(q).join(';')];
+  const lines = [['Classe', 'Nom', 'Prénom', 'Parcours', 'Date', 'Durée (min)', 'Score', 'Total'].concat(GKEYS.map(g => 'Groupe ' + g + ' · ' + GLAB[g])).concat(FICHES.map((f, i) => 'Fiche ' + (i + 1))).concat(['Grade', 'Enquête conseillée', 'Contrôle']).map(q).join(';')];
   synthRows.filter(r => r.d).forEach(r => {
     const d = r.d;
-    lines.push([d.eleve.cl, d.eleve.ln, d.eleve.fn, new Date(d.fin).toLocaleString('fr-FR'), d.duree_min, d.score, d.total, d.groupes.A.pts, d.groupes.B.pts, d.groupes.C.pts]
-      .concat(d.fiches.map(f => f.pts)).concat([d.grade, d.enquete, r.ok ? 'OK' : 'MODIFIE ?']).map(q).join(';'));
+    lines.push([d.eleve.cl, d.eleve.ln, d.eleve.fn, d.parcours || '', new Date(d.fin).toLocaleString('fr-FR'), d.duree_min, d.score, d.total].concat(GKEYS.map(g => { const x = grpOf(d, g); return x ? x.pts : ''; }))
+      .concat(FICHES.map(f => { const i = d.v >= 2 ? FICHES.indexOf(f) : ['f1', 'f2', 'f3', 'f4', 'f5', 'f6'].indexOf(f.id); return i >= 0 && d.fiches[i] ? d.fiches[i].pts : ''; })).concat([d.grade, d.enquete, r.ok ? 'OK' : 'MODIFIE ?']).map(q).join(';'));
   });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' }));
