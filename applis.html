@@ -84,6 +84,11 @@
              display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
   .app .go{align-self:end; font-size:.9rem; color:var(--mut); opacity:0; transition:opacity .15s;}
   .app:hover .go{opacity:1; color:var(--c);}
+  .app .ia{display:inline-block; vertical-align:2px; margin-left:4px; padding:1px 7px; border-radius:999px; font-size:.68rem; font-weight:900; letter-spacing:.06em; color:#fff;
+    background:linear-gradient(90deg,#7b5cff,#20c3d0,#ff5fa2,#7b5cff); background-size:300% 100%; animation:iaflow 4s linear infinite; box-shadow:0 0 0 0 rgba(123,92,255,.5);}
+  .app .ia::before{content:'✦ '; display:inline-block; animation:iatwinkle 1.6s ease-in-out infinite;}
+  @keyframes iaflow{to{background-position:300% 0;}}
+  @keyframes iatwinkle{0%,100%{transform:scale(1) rotate(0); opacity:1;}50%{transform:scale(1.35) rotate(45deg); opacity:.7;}}
   .app .cat{grid-column:2 / 4; font-size:.7rem; font-weight:800; color:var(--c); letter-spacing:.04em;}
   mark{background:#ffe58a; color:inherit; border-radius:3px; padding:0 1px;}
   .empty{text-align:center; color:var(--mut); padding:40px 10px; font-size:1rem;}
@@ -108,7 +113,7 @@
     .search{flex-basis:100%; margin-left:0;}
     .grid{grid-template-columns:1fr;}
   }
-  @media (prefers-reduced-motion: reduce){ .content.swap{animation:none;} .app{transition:none;} }
+  @media (prefers-reduced-motion: reduce){ .content.swap{animation:none;} .app{transition:none;} .app .ia,.app .ia::before{animation:none;} }
 </style>
 </head>
 <body>
@@ -311,6 +316,20 @@ var CATS = [
     "ico": "🛴",
     "name": "La trottinette partagée",
     "desc": "Brevet blanc de technologie, noté sur 25 points."
+   },
+   {
+    "href": "brevet-blanc-prothese-main-intelligente.html",
+    "ico": "🦾",
+    "name": "La prothèse de main intelligente",
+    "desc": "Brevet blanc de technologie, avec l'IA au programme.",
+    "ia": true
+   },
+   {
+    "href": "brevet-blanc-navette-autonome.html",
+    "ico": "🚌",
+    "name": "La navette autonome",
+    "desc": "Brevet blanc de technologie, avec l'IA au programme.",
+    "ia": true
    }
   ],
   "ico": "🎓",
@@ -374,7 +393,7 @@ var CATS = [
   }
   function card(a, c, term, showCat){
     return '<a class="app" href="' + a.href + '" target="_blank" rel="noopener" style="--c:' + c.c1 + ';--c2:' + c.c2 + '">' +
-      '<span class="icon" aria-hidden="true">' + a.ico + '</span><span class="name">' + hl(a.name, term) + '</span><span class="go" aria-hidden="true">↗</span>' +
+      '<span class="icon" aria-hidden="true">' + a.ico + '</span><span class="name">' + hl(a.name, term) + (a.ia ? ' <span class="ia" title="Intelligence artificielle">IA</span>' : '') + '</span><span class="go" aria-hidden="true">↗</span>' +
       '<span class="desc">' + hl(a.desc, term) + '</span>' + (showCat ? '<span class="cat">' + c.ico + ' ' + esc(c.name) + '</span>' : '') + '</a>';
   }
 
