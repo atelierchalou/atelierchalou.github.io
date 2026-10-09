@@ -152,6 +152,57 @@
     .content{overflow:visible; padding:4px 14px 22px;}
     .rack{grid-template-columns:1fr; gap:32px;}
   }
+
+  /* ===== Le petit robot de l'accueil qui se promène sur l'établi ===== */
+  .track{position:absolute; left:14px; right:14px; bottom:100%; height:124px; pointer-events:none; z-index:3; overflow:hidden;}
+  @media (max-width:699px){ .track{display:none;} }
+  .walker{position:absolute; bottom:-2px; left:0; width:122px; height:90px; animation:walk 26s linear infinite;}
+  .bot{position:absolute; left:0; top:0; width:760px; height:560px; transform-origin:0 0; transform:scale(.16);}
+  .bot .b{position:absolute; border:6px solid #6b3d16; border-radius:14px;
+    background:repeating-linear-gradient(92deg, rgba(110,62,24,.16) 0 4px, transparent 4px 22px), linear-gradient(170deg,#e2b077,#c68a4c 45%,#a8703a);
+    box-shadow:inset 0 -10px 16px rgba(80,40,10,.3), 0 12px 20px rgba(0,0,0,.35);}
+  .bot .head{left:255px; top:44px; width:250px; height:140px; border-radius:26px; display:flex; justify-content:center; align-items:center; gap:52px;}
+  .bot .eye{width:46px; height:46px; border-radius:50%; background:radial-gradient(circle at 40% 35%,#fff8d0,#ffd34d 45%,#e8a400); box-shadow:0 0 0 6px #8a5a2b, 0 0 26px 8px rgba(255,211,77,.8); animation:blink 4.5s infinite 1s;}
+  .bot .torso{left:228px; top:204px; width:304px; height:212px; border-radius:20px; display:flex; justify-content:center; align-items:flex-end; gap:22px; padding-bottom:40px;}
+  .bot .led{width:30px; height:30px; border-radius:50%; animation:pulse 1.6s infinite;}
+  .bot .led:nth-child(1){background:#7fe08a; box-shadow:0 0 16px #7fe08a;}
+  .bot .led:nth-child(2){background:#ffd34d; box-shadow:0 0 16px #ffd34d; animation-delay:.4s;}
+  .bot .led:nth-child(3){background:#ff7a5c; box-shadow:0 0 16px #ff7a5c; animation-delay:.8s;}
+  .bot .larm{left:18px; top:214px; width:196px; height:116px; border-radius:18px; transform-origin:100% 50%; animation:swingL 1.2s ease-in-out infinite;}
+  .bot .rarm{left:546px; top:214px; width:196px; height:116px; border-radius:18px; transform-origin:0 50%; animation:swingR 1.2s ease-in-out infinite;}
+  .bot .lhand{left:2px; top:326px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0,30% 0,50% 45%,70% 0,100% 0,100% 100%,0 100%);}
+  .bot .rhand{left:702px; top:326px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0,30% 0,50% 45%,70% 0,100% 0,100% 100%,0 100%);}
+  .bot .larm .lhand,.bot .rarm .rhand{top:106px;}
+  .bot .larm .lhand{left:-22px;} .bot .rarm .rhand{left:150px;}
+  .bot .legs{left:252px; top:428px; width:256px; height:98px; border-radius:16px;}
+  .bot .antenna{left:374px; top:6px; width:12px; height:40px; border-radius:6px; border-width:4px;}
+  .bot .ball{left:362px; top:-6px; width:36px; height:36px; border-radius:50%; border-width:4px; background:radial-gradient(circle at 40% 35%,#ffd9cf,#ff6b4a 55%,#c0381c); box-shadow:0 0 22px 6px rgba(255,107,74,.75); animation:pulse 1.2s infinite;}
+  .bot .neck{left:350px; top:182px; width:60px; height:26px; border-radius:6px;}
+  .bot .lsh{left:202px; top:238px; width:40px; height:40px; border-radius:50%;}
+  .bot .rsh{left:518px; top:238px; width:40px; height:40px; border-radius:50%;}
+  .bot .hips{left:300px; top:412px; width:160px; height:22px; border-radius:6px;}
+  .bot .lfoot{left:250px; top:522px; width:110px; height:32px; border-radius:16px 16px 6px 6px; animation:step .6s ease-in-out infinite;}
+  .bot .rfoot{left:400px; top:522px; width:110px; height:32px; border-radius:16px 16px 6px 6px; animation:step .6s ease-in-out infinite .3s;}
+  .bot .up{position:absolute; inset:0; animation:bob .3s ease-in-out infinite alternate;}
+  .say{position:absolute; right:112px; top:-8px; white-space:nowrap; padding:4px 10px; border-radius:12px; background:#fff8e8; color:#3b2412; font-weight:900; font-size:.78rem;
+    box-shadow:0 4px 10px rgba(0,0,0,.35); opacity:0; transform:scale(.6); transform-origin:right bottom; animation:say 26s infinite;}
+  .say::after{content:""; position:absolute; right:-6px; bottom:5px; border:6px solid transparent; border-left-color:#fff8e8; border-right:0;}
+  @keyframes walk{
+    0%{left:0; transform:scaleX(1);} 44%{left:calc(100% - 122px); transform:scaleX(1);}
+    50%{left:calc(100% - 122px); transform:scaleX(1);} 50.01%{transform:scaleX(-1);}
+    94%{left:0; transform:scaleX(-1);} 99.99%{left:0; transform:scaleX(-1);} 100%{left:0; transform:scaleX(1);}
+  }
+  @keyframes say{0%,44%{opacity:0; transform:scale(.6);} 45.5%,49%{opacity:1; transform:none;} 50%,100%{opacity:0; transform:scale(.6);}}
+  @keyframes step{0%,100%{transform:translateY(0);} 50%{transform:translateY(-26px);}}
+  @keyframes bob{to{transform:translateY(-10px);}}
+  @keyframes swingL{0%,100%{transform:rotate(10deg);} 50%{transform:rotate(-10deg);}}
+  @keyframes swingR{0%,100%{transform:rotate(-10deg);} 50%{transform:rotate(10deg);}}
+  @keyframes blink{0%,92%,100%{transform:scaleY(1);} 95%{transform:scaleY(.1);}}
+  @keyframes pulse{50%{opacity:.35;}}
+  
+  @media (prefers-reduced-motion: reduce){
+    .walker{animation:none; left:auto; right:0;} .bot *, .bot .up{animation:none !important;} .say{animation:none; opacity:1; transform:none;}
+  }
   @media (prefers-reduced-motion: reduce){ .tool{animation:none; transition:none;} .drawer{transition:none;} .tool .ia,.tool .ia::before{animation:none;} }
 </style>
 </head>
@@ -173,7 +224,15 @@
       </div>
       <div class="content" id="content" role="tabpanel" aria-live="polite"></div>
     </section>
-    <div class="bench" aria-hidden="true"></div>
+    <div class="bench" aria-hidden="true">
+      <div class="track"><div class="walker"><div class="bot"><div class="up">
+        <div class="b antenna"></div><div class="b ball"></div><div class="b neck"></div><div class="b lsh"></div><div class="b rsh"></div>
+        <div class="b larm"><div class="b lhand"></div></div><div class="b rarm"><div class="b rhand"></div></div>
+        <div class="b hips"></div><div class="b lfoot"></div><div class="b rfoot"></div><div class="b legs"></div>
+        <div class="b torso"><span class="led"></span><span class="led"></span><span class="led"></span></div>
+        <div class="b head"><span class="eye"></span><span class="eye"></span></div>
+      </div></div><span class="say">Bonne appli !</span></div></div>
+    </div>
     <nav class="cabinet" role="tablist" aria-label="Tiroirs : catégories d’applis" id="tabs"></nav>
   </main>
 
