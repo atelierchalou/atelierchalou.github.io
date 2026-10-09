@@ -278,8 +278,9 @@ footer{font-size:.8rem;color:var(--muted)}
 
         <details class="sec" id="accSec"><summary>Accessoires</summary><div class="secbody">
           <label class="tg"><input type="checkbox" id="refl"> Réflecteur conique sur la face avant</label>
+          <label class="tg" id="reflSnapL"><input type="checkbox" id="reflSnap"> S’emboîte dans la face avant (tenon)</label>
           <div class="field"><label for="reflH">Hauteur du réflecteur (mm)</label><input type="number" id="reflH" min="8" max="40" step="1"></div>
-          <p class="tip" id="accNote">Le réflecteur se centre sur l'ouverture « Ampoule E10 » de la face avant. Tapisse-le de papier aluminium.</p>
+          <p class="tip" id="accNote">Le réflecteur se centre sur l'ouverture « Ampoule E10 » de la face avant. Emboîté, il porte un tenon creux qui entre dans cette ouverture (agrandie d’autant) : l’ampoule passe au milieu. Tapisse-le de papier aluminium.</p>
         </div></details>
 
         <div class="exp">
@@ -372,7 +373,7 @@ const RECO={
 };
 
 /* ================= État ================= */
-const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1,txt:{text:'',panel:'',font:'sans',size:8,fu:.5,fv:.5,depth:0.6,place:false},screws:true,screw:'auto'};
+const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1,txt:{text:'',panel:'',font:'sans',size:8,fu:.5,fv:.5,depth:0.6,place:false},screws:true,screw:'auto',reflSnap:true};
 function loadPreset(id){
   const p=PRESETS[id];state.obj=id;state.mode=p.reco;state.screws=!p.noScrews&&!p.chess&&!p.sm;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.sel=-1;
   state.holes=p.holes.map(([type,face,fu,fv])=>{const t=HT[type];return {type,label:t.label,face,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu,fv};});
@@ -467,6 +468,7 @@ function buildModelBase(){
   if(state.obj==='echecs')return buildChess();
   const d=dims(),{L,W,H,t}=d,F=frames(d),{res,abs}=checkHoles(d);
   const by={};FACES.forEach(([f])=>by[f]=[]);abs.forEach((h,i)=>{if(res[i].ok)by[h.face].push(h);});
+  if(state.mode==='3d'&&state.reflector&&state.reflSnap){const bulb=abs.find(h=>h.face==='avant'&&h.shape==='rond');if(bulb)by.avant=by.avant.map(h=>h===bulb?{...h,d:h.d+2*(REFL.ws+REFL.fit)}:h);}
   const panels=[]; // {part, name, face, frame, w, h, outline, holes, cuts, depth, explode}
   const j=state.jeu,S=screwData(d),sHoles=S?S.pos.map(([u,v])=>({shape:'rond',u,v,d:S.sc.pass,screw:true})):[];
   if(state.mode==='3d'){
@@ -522,11 +524,16 @@ function panelGeo(p){
   txtTiles(T).forEach(sh=>geos.push(extr(sh,e+0.05,skinZ)));
   return place(mergeGeos(geos),frameMatrix(p.frame));
 }
+const REFL={ws:1.6,fit:0.15,crush:0.25}; // tenon du réflecteur : paroi 1,6 mm, jeu radial 0,15 mm, nervures +0,25 mm
 function reflectorLocal(d){
   const D=Math.min(d.W,d.H+d.t)-0.4,Ro=D/2,bulb=state.holes.map(h=>absHole(h,d)).find(h=>h.face==='avant'&&h.shape==='rond'),rh=bulb?bulb.d/2:7,bt=2,H=state.reflH;
-  const prof=[[rh,0],[Ro,0],[Ro,H],[Ro-1.5,H],[rh,bt],[rh,0]].map(([x,y])=>new THREE.Vector2(x,y));
-  const g=new THREE.LatheGeometry(prof,72);
-  return {g,center:bulb?[bulb.u,bulb.v]:[d.W/2,d.H/2],D};
+  const snap=state.reflSnap&&state.mode==='3d',ws=REFL.ws,sp=Math.max(1.2,d.t-0.2),ch=0.5;
+  const prof=(snap?[[rh,-sp],[rh+ws-ch,-sp],[rh+ws,-sp+ch],[rh+ws,0],[Ro,0],[Ro,H],[Ro-1.5,H],[rh,bt],[rh,-sp]]:[[rh,0],[Ro,0],[Ro,H],[Ro-1.5,H],[rh,bt],[rh,0]]).map(([x,y])=>new THREE.Vector2(x,y));
+  let g=new THREE.LatheGeometry(prof,72);
+  if(snap){const gs=[g],rIn=rh+ws-0.2,rOut=rh+ws+REFL.fit+REFL.crush,len=sp-ch-0.1; // nervures : dépassent de 0,25 mm le trou de la face avant
+    for(let i=0;i<3;i++){const b=new THREE.BoxGeometry(rOut-rIn,len,0.9);b.translate((rIn+rOut)/2,-len/2-0.05,0);b.rotateY(i*2*Math.PI/3+Math.PI/6);gs.push(b);}
+    g=mergeGeos(gs);g.computeVertexNormals();}
+  return {g,center:bulb?[bulb.u,bulb.v]:[d.W/2,d.H/2],D,snap,sp,hole:2*(rh+ws+REFL.fit)};
 }
 function signedVolume(geos){let v=0;geos.forEach(g=>{const p=g.attributes.position.array,idx=g.index?g.index.array:null,n=idx?idx.length:p.length/3;
   for(let i=0;i<n;i+=3){const a=(idx?idx[i]:i)*3,b=(idx?idx[i+1]:i+1)*3,c=(idx?idx[i+2]:i+2)*3;
@@ -639,7 +646,8 @@ function printParts(m){
   const body=m.panels.filter(p=>p.part==='corps').map(panelGeo).concat((m.bosses||[]).map(g=>g.clone()));parts.push({file:'corps.stl',label:'Corps',geos:body});
   const lidM=new THREE.Matrix4().set(1,0,0,0, 0,-1,0,d.W, 0,0,-1,d.H+d.t, 0,0,0,1);
   const lid=m.panels.filter(p=>p.part==='couvercle').map(p=>place(panelGeo(p),lidM));parts.push({file:'couvercle.stl',label:'Couvercle',geos:lid});
-  if(state.reflector){const r=reflectorLocal(d);parts.push({file:'reflecteur.stl',label:'Réflecteur',geos:[place(r.g,new THREE.Matrix4().makeRotationX(Math.PI/2))]});}
+  if(state.reflector){const r=reflectorLocal(d),M=r.snap?new THREE.Matrix4().makeTranslation(0,0,state.reflH).multiply(new THREE.Matrix4().makeRotationX(-Math.PI/2)):new THREE.Matrix4().makeRotationX(Math.PI/2);
+    parts.push({file:'reflecteur.stl',label:'Réflecteur',geos:[place(r.g,M)]});}
   return parts;
 }
 
@@ -661,7 +669,7 @@ function notice(m,kind){
   const S=m.screws,sTxt=!S?'':kind==='3d'
     ?`\nFIXATION DU COUVERCLE (2 vis)\n- 2 vis autotaraudeuses ${S.sc.nom} (tête cylindrique ou bombée).\n- Les 2 supports de vis sont dans deux coins opposés du corps, juste sous le couvercle (avant-trou Ø ${fmt(S.pilot)} mm, ${fmt(S.hs)} mm de profondeur) ; leur dessous en pente à 45° s’imprime sans support.\n- Le couvercle est percé à Ø ${fmt(S.sc.pass)} mm au-dessus. Visse doucement à la main : dans le plastique, un tournevis électrique arrache le filetage.\n`
     :`\nFIXATION DU COUVERCLE (2 vis)\n- 2 vis autotaraudeuses ${S.sc.nom}.\n- ${S.n*2} cales de vissage carrées de ${fmt(S.c)} mm (${S.n} par coin) : empile-les et colle-les dans deux coins opposés, contre les parois, juste sous le cadre du couvercle (pose le couvercle avec son cadre pour les caler pendant le séchage).\n- Le couvercle et le cadre sont percés à Ø ${fmt(S.sc.pass)} mm, les cales à Ø ${fmt(S.pilot)} mm (avant-trou). La vis traverse le couvercle et le cadre, puis mord ${fmt(S.bite)} mm dans les cales.\n`;
-  if(kind==='3d')return head+`IMPRESSION 3D\n- Parois : ${fmt(d.t)} mm ; jeu du couvercle : ${fmt(state.jeu)} mm\n- PLA, couche 0,2 mm, remplissage 20 %, sans support\n- corps.stl : ouverture vers le haut ; couvercle.stl : déjà posé à plat, rebord vers le haut${state.reflector?' ; reflecteur.stl : fond percé sur le plateau':''}\n- Un trou dans une paroi verticale fait un « pont » en haut : au-delà de 15 mm, il peut légèrement s’affaisser, c’est normal.\n${sTxt}\nMesure tes composants avant de lancer une série.\n`;
+  if(kind==='3d')return head+`IMPRESSION 3D\n- Parois : ${fmt(d.t)} mm ; jeu du couvercle : ${fmt(state.jeu)} mm\n- PLA, couche 0,2 mm, remplissage 20 %, sans support\n- corps.stl : ouverture vers le haut ; couvercle.stl : déjà posé à plat, rebord vers le haut${state.reflector?(state.reflSnap?' ; reflecteur.stl : grande ouverture sur le plateau, tenon vers le haut':' ; reflecteur.stl : fond percé sur le plateau'):''}\n- Un trou dans une paroi verticale fait un « pont » en haut : au-delà de 15 mm, il peut légèrement s’affaisser, c’est normal.\n${state.reflector&&state.reflSnap?(()=>{const r=reflectorLocal(d);return `\nRÉFLECTEUR EMBOÎTÉ\n- Le réflecteur porte un tenon creux de ${fmt(r.sp)} mm (Ø extérieur ${fmt(r.hole-2*REFL.fit)} mm) avec 3 petites nervures. Il s’enfonce dans le trou de ${fmt(r.hole)} mm de la face avant ; l’ampoule passe dans le tenon.\n- Emboîte-le en appuyant fort, bien droit : les nervures s’écrasent un peu et le serrent. S’il est trop dur, gratte les nervures au cutter ; s’il tient mal, une goutte de colle suffit.\n- Tapisse l’intérieur de papier aluminium avant de l’emboîter.\n`;})():''}${sTxt}\nMesure tes composants avant de lancer une série.\n`;
   return head+`DÉCOUPE LASER\n- Plaque de ${fmt(d.t)} mm (contreplaqué, MDF, carton gris rigide ou acrylique)\n- Trait rouge = découpe ; texte bleu = gravure (facultatif)\n- Créneaux d’environ ${fmt(state.fw)} mm ; largeur du trait laser compensée : ${fmt(state.kerf)} mm\n- Assemblage : fond + 4 côtés collés à la colle à bois (vinylique). Le couvercle ne se colle pas :\n  colle seulement le « cadre sous le couvercle » dessous, bien centré${S?' (ses 2 trous en face de ceux du couvercle)':''}, pour qu’il reste en place.\n${sTxt}- Fais d’abord un essai d’emboîtement sur une chute et ajuste la largeur du trait si c’est trop lâche ou trop serré.\n`;
 }
 async function export3D(){const m=buildModel(),parts=printParts(m),z=new JSZip();parts.forEach(p=>z.file(p.file,stlOf(p.geos,p.label).buf));z.file('LISEZ-MOI.txt',notice(m,'3d'));
@@ -1167,7 +1175,7 @@ function renderControls(){
   $('mat3d').hidden=state.mode!=='3d'||isC||isS;$('matLaser').hidden=state.mode!=='laser'&&!isC&&!isS;
   $('scrSec').hidden=isC||isS;$('scr').checked=state.screws;$('scrTypeF').hidden=!state.screws;
   if($('scrType').options.length<2)$('scrType').insertAdjacentHTML('beforeend',Object.entries(SCREWS).map(([k,v])=>`<option value="${k}">${v.nom}</option>`).join(''));$('scrType').value=state.screw;
-  $('refl').checked=state.reflector;$('reflH').value=state.reflH;$('accSec').hidden=state.mode!=='3d'||isC||isS;
+  $('refl').checked=state.reflector;$('reflSnap').checked=state.reflSnap;$('reflSnapL').hidden=!state.reflector;$('reflH').value=state.reflH;$('accSec').hidden=state.mode!=='3d'||isC||isS;
   $('planTab').hidden=state.mode!=='laser'&&!isC&&!isS;if(state.mode!=='laser'&&!isC&&!isS&&state.view==='plan')state.view='3d';
   document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===state.view)));
   $('view3d').hidden=state.view!=='3d';$('viewPlan').hidden=state.view!=='plan';
@@ -1261,7 +1269,8 @@ $('tl').addEventListener('input',e=>{if(e.target.value!=='')setTl(e.target.value
 $('fw').addEventListener('input',e=>{const v=+e.target.value;if(v>=4&&v<=40){state.fw=v;update(false);}});
 $('kerf').addEventListener('input',e=>{const v=+e.target.value;if(v>=0&&v<=0.5){state.kerf=v;update(false);}});
 $('engrave').addEventListener('change',e=>{state.engrave=e.target.checked;});
-$('refl').addEventListener('change',e=>{state.reflector=e.target.checked;update(false);});
+$('refl').addEventListener('change',e=>{state.reflector=e.target.checked;$('reflSnapL').hidden=!state.reflector;update(false);});
+$('reflSnap').addEventListener('change',e=>{state.reflSnap=e.target.checked;update(false);});
 $('scr').addEventListener('change',e=>{state.screws=e.target.checked;$('scrTypeF').hidden=!state.screws;update(false);});
 $('scrType').addEventListener('change',e=>{state.screw=e.target.value;update(false);});
 $('warns').addEventListener('click',e=>{const b=e.target.closest('[data-fixh]');if(!b)return;state.Hi=Math.min(150,state.Hi+(+b.dataset.fixh));sync('Hi',state.Hi);update(false);resetView();});
