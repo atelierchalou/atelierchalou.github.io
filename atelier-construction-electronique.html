@@ -403,7 +403,7 @@ td.chk input{width:18px;height:18px;accent-color:var(--ok)}
     <div class="navrow"><button class="btn" data-go="4">← Revenir à la nomenclature</button><button class="btn" data-go="1">Choisir un autre objet</button></div>
   </section>
 
-  <footer>Tous les montages fonctionnent avec 1 ou 2 piles AA de 1,5 V. Symboles conformes aux schémas utilisés au collège.</footer>
+  <footer>Tous les montages fonctionnent avec 1 ou 2 piles AA de 1,5 V, ou une pile bouton de 3 V. Symboles conformes aux schémas utilisés au collège.</footer>
 </div>
 <script>
 (function(){
@@ -413,6 +413,7 @@ const $=s=>document.getElementById(s);
 const C={
   pile1:{name:'1 pile 1,5 V',spec:'AA · 1,5 V',art:'La pile de 1,5 V',role:'Alimenter',fn:'alim',q:'À quoi sert la pile ?',info:'Une seule pile AA fournit une tension de 1,5 V. Le grand trait du symbole est la borne +.'},
   pile2:{name:'2 piles 1,5 V',spec:'en série · 3 V',art:'Le boîtier de 2 piles',role:'Alimenter',fn:'alim',q:'À quoi servent les 2 piles ?',info:'Deux piles AA l’une derrière l’autre (en série) : leurs tensions s’additionnent, 1,5 V + 1,5 V = 3 V.'},
+  pileb:{name:'Pile bouton 3 V',spec:'CR2032 · 3 V',art:'La pile bouton',role:'Alimenter',fn:'alim',q:'À quoi sert la pile bouton ?',info:'Une pile plate au lithium, à peine plus grande qu’une pièce de 1 centime : à elle seule, elle fournit 3 V. Le grand trait du symbole est la borne +.'},
   inter:{name:'Interrupteur',spec:'2 bornes',art:'L’interrupteur',role:'Commander',fn:'inter',q:'À quoi sert l’interrupteur ?',info:'Il ouvre ou ferme le circuit et reste dans la position choisie.'},
   inv:{name:'Inverseur',spec:'3 positions',art:'L’inverseur',role:'Commander',fn:'inv',q:'À quoi sert l’inverseur ?',info:'Il a 3 bornes : il envoie le courant soit vers une branche, soit vers l’autre. Au milieu, tout est éteint.'},
   bp:{name:'Bouton poussoir',spec:'contact bref',art:'Le bouton poussoir',role:'Commander',fn:'bp',q:'À quoi sert le bouton poussoir ?',info:'Il ferme le circuit seulement tant qu’on appuie dessus, puis revient tout seul.'},
@@ -448,7 +449,7 @@ const FN={
   magnet:'Devenir un aimant quand le courant passe',
   sound:'Transformer l’énergie électrique en son'
 };
-const ORDER=['pile1','pile2','inter','inv','bp','micro','contact','ils','ldr','pot','res100','res10','delr','delb','delc','lampe','moteur','motored','bobine','buzzer'];
+const ORDER=['pile1','pile2','pileb','inter','inv','bp','micro','contact','ils','ldr','pot','res100','res10','delr','delb','delc','lampe','moteur','motored','bobine','buzzer'];
 const ROLE_ORDER=['Alimenter','Commander','Détecter','Protéger','Convertir'];
 
 /* Bornes pour les soudures : [entrée côté +, sortie côté −] */
@@ -475,6 +476,7 @@ const WIRED=['buzzer','bobine','contact'];
 /* ================= Nomenclature ================= */
 const B={
   pile2:[['2','Piles AA','1,5 V alcaline (LR6)'],['1','Boîtier pour 2 piles AA, avec fils','sortie 3 V · fil rouge = +']],
+  pileb:[['1','Pile bouton au lithium','CR2032 · 3 V'],['1','Support pour pile CR2032, avec fils','sortie 3 V · fil rouge = +']],
   pile1:[['1','Pile AA','1,5 V alcaline (LR6)'],['1','Boîtier pour 1 pile AA, avec fils','sortie 1,5 V · fil rouge = +']],
   inter:[['1','Interrupteur à bascule','2 bornes à souder · marche/arrêt']],
   inv:[['1','Inverseur à bascule 3 positions','ON-OFF-ON · 3 bornes à souder']],
@@ -662,14 +664,14 @@ const OBJ=[
    hot:[DEL_HOT],test:'Ferme l’interrupteur : la DEL blanche doit s’allumer.',
    learn:'La lumière baisse vite quand les piles s’usent, car la DEL blanche a besoin de presque toute leur tension.'},
   {id:'porteclef',name:'Porte-clé lumineux',lvl:3,
-   story:'Fabrique un porte-clé lumineux pour trouver la serrure dans le noir. Il éclaire avec une DEL blanche, qui a besoin d’environ 3 V, et seulement tant qu’on appuie : dans la poche, il ne doit pas rester allumé.',
-   need:[{ok:['pile2'],hint:'Il manque une source d’énergie d’environ 3 V.'},{ok:['bp'],hint:'Il manque ce sur quoi on appuie, et qui revient tout seul quand on le relâche.'},{ok:['res10'],hint:'Il manque une petite résistance de protection. Compare les deux valeurs du tiroir.'},{ok:['delb'],hint:'Il manque la source de lumière blanche.'}],
+   story:'Fabrique un porte-clé lumineux pour trouver la serrure dans le noir. Il doit être tout petit pour tenir dans la poche. Il éclaire avec une DEL blanche, qui a besoin d’environ 3 V, et seulement tant qu’on appuie : dans la poche, il ne doit pas rester allumé.',
+   need:[{ok:['pileb'],hint:'Il manque une source d’énergie de 3 V, assez petite pour tenir dans un porte-clé.'},{ok:['bp'],hint:'Il manque ce sur quoi on appuie, et qui revient tout seul quand on le relâche.'},{ok:['res10'],hint:'Il manque une petite résistance de protection. Compare les deux valeurs du tiroir.'},{ok:['delb'],hint:'Il manque la source de lumière blanche.'}],
    ctrl:['push'],pushLabel:'Maintenir appuyé pour éclairer',out:'la DEL blanche éclaire',
-   wrong:{pile1:'Une DEL blanche a besoin d’environ 3 V : avec une seule pile de 1,5 V, elle reste éteinte.',inter:'Avec un interrupteur, la lumière risquerait de rester allumée dans ta poche et de vider les piles. Ici, elle ne doit éclairer que tant que tu appuies.',res100:'Avec 100 Ω, la DEL blanche brillerait à peine. Les piles donnent 3 V et la DEL en utilise déjà environ 3 V : il ne reste presque rien pour pousser le courant à travers une grosse résistance.',delr:'Pour voir la serrure et la couleur des clés, on veut une lumière blanche.',lampe:'Une ampoule consomme beaucoup plus qu’une DEL : les piles seraient vite vides.',buzzer:'Un buzzer fait du bruit, mais il n’éclaire pas.'},
+   wrong:{pile2:'Deux piles AA donnent bien 3 V, mais leur boîtier est bien trop gros pour un porte-clé. Cherche dans le tiroir une seule pile, plate comme une pièce, qui donne déjà 3 V.',pile1:'Une DEL blanche a besoin d’environ 3 V : avec une seule pile de 1,5 V, elle reste éteinte. Et une pile AA serait trop grosse pour un porte-clé.',inter:'Avec un interrupteur, la lumière risquerait de rester allumée dans ta poche et de vider la pile. Ici, elle ne doit éclairer que tant que tu appuies.',res100:'Avec 100 Ω, la DEL blanche brillerait à peine. La pile donne 3 V et la DEL en utilise déjà environ 3 V : il ne reste presque rien pour pousser le courant à travers une grosse résistance.',delr:'Pour voir la serrure et la couleur des clés, on veut une lumière blanche.',lampe:'Une ampoule consomme beaucoup plus qu’une DEL : la petite pile bouton serait vide en quelques minutes.',buzzer:'Un buzzer fait du bruit, mais il n’éclaire pas.'},
    extra:[['1','Anneau porte-clé (Ø 20 à 25 mm)','à passer dans la patte du boîtier']],
-   extraQ:{q:'Pourquoi ce porte-clé utilise-t-il un bouton poussoir plutôt qu’un interrupteur ?',a:'La lumière s’éteint dès qu’on relâche : les piles ne se vident pas dans la poche',d:['Le bouton poussoir laisse passer plus de courant','Un interrupteur ne fonctionne pas avec une DEL'],e:'Le bouton poussoir ne ferme le circuit que pendant l’appui. Même s’il reste dans une poche, le porte-clé ne s’allume que si quelque chose appuie dessus.'},
-   hot:[DEL_HOT],test:'Appuie sur le bouton : la DEL blanche doit s’allumer, puis s’éteindre dès que tu relâches.',
-   learn:'Les porte-clés lumineux du commerce utilisent une pile bouton de 3 V (CR2032), plus petite que nos 2 piles AA mais qui donne la même tension.'},
+   extraQ:{q:'Pourquoi ce porte-clé utilise-t-il un bouton poussoir plutôt qu’un interrupteur ?',a:'La lumière s’éteint dès qu’on relâche : la pile ne se vide pas dans la poche',d:['Le bouton poussoir laisse passer plus de courant','Un interrupteur ne fonctionne pas avec une DEL'],e:'Le bouton poussoir ne ferme le circuit que pendant l’appui. Même s’il reste dans une poche, le porte-clé ne s’allume que si quelque chose appuie dessus.'},
+   hot:[DEL_HOT,'Pile bouton : ne la laisse jamais traîner. Avalée par un petit enfant, elle est très dangereuse. Range-la hors de portée et rapporte les piles usagées au point de collecte.'],test:'Appuie sur le bouton : la DEL blanche doit s’allumer, puis s’éteindre dès que tu relâches.',
+   learn:'La pile bouton CR2032 est une pile au lithium : à elle seule, elle donne 3 V, comme 2 piles AA, mais dans un volume environ 15 fois plus petit. Elle fournit peu de courant : parfait pour une DEL, pas pour un moteur.'},
   {id:'variateur',name:'Lampe à variateur',lvl:3,
    story:'Fabrique une veilleuse dont on peut régler la lumière en tournant un bouton. Elle utilise une DEL rouge, sa résistance de protection et une résistance réglable.',
    need:[{ok:['pile2'],hint:'Il manque une source d’énergie de plus de 2 V.'},{ok:['inter'],hint:'Il manque la commande marche/arrêt.'},{ok:['pot'],hint:'Il manque la résistance réglable qu’on tourne pour changer la lumière.'},{ok:['res100'],hint:'Il manque la protection de la DEL quand le bouton est tourné à fond.'},{ok:['delr'],hint:'Il manque la lumière rouge.'}],
@@ -842,6 +844,9 @@ function compPic(c){
   }
   return lead+`<rect x="-20" y="-12" width="40" height="24" rx="4" class="f-comp"/>`;
 }
+function coinPic(){ // support de pile bouton, fils rouge (haut) et noir (bas)
+  return `<path d="M-12 -70V-30" class="s-wred" stroke-width="4"/><path d="M12 30V70" class="s-wblack" stroke-width="4"/><rect x="-30" y="-32" width="60" height="64" rx="8" class="f-dark"/><circle r="23" class="f-cell"/><circle r="17" class="f-tin"/>`+T(0,6,15,'+','text-anchor="middle" class="t-on" font-weight="700"')+T(0,-38,0,'');
+}
 function holderPic(n){ // boîtier de piles vertical, borne + en haut
   let s=`<rect x="-30" y="-70" width="60" height="140" rx="7" class="f-dark"/>`;
   const cells=n===1?[[0,-50,100]]:[[-13,-50,100],[13,-50,100]];
@@ -850,7 +855,7 @@ function holderPic(n){ // boîtier de piles vertical, borne + en haut
 }
 function wiringSVG(o,seq){
   const W=660,Hh=280,yTop=62,yBot=250,hx=60,hy=150,dot=(x,y,n)=>`<circle cx="${x}" cy="${y}" r="10" class="f-acc"/>${T(x,y+4,11,n,'text-anchor="middle" class="t-on" font-weight="700"')}`;
-  let s=`<g transform="translate(${hx},${hy})">${holderPic(seq[0]==='pile1'?1:2)}</g>`+T(hx+44,hy,11,seq[0]==='pile1'?'boîtier 1 pile':'boîtier 2 piles',`text-anchor="middle" transform="rotate(-90 ${hx+44} ${hy})"`);
+  let s=`<g transform="translate(${hx},${hy})">${seq[0]==='pileb'?coinPic():holderPic(seq[0]==='pile1'?1:2)}</g>`+T(hx+44,hy,11,seq[0]==='pileb'?'support pile bouton':seq[0]==='pile1'?'boîtier 1 pile':'boîtier 2 piles',`text-anchor="middle" transform="rotate(-90 ${hx+44} ${hy})"`);
   const others=seq.slice(1),n=others.length,x0=180,x1=W-60,xs=others.map((_,i)=>n===1?(x0+x1)/2:x0+i*(x1-x0)/(n-1));
   // fil rouge + vers le premier composant
   s+=`<path d="M${hx-12} ${hy-70}V${yTop}H${xs[0]-36}" class="s-wred" stroke-width="4"/>`;
@@ -887,7 +892,7 @@ function delSym(cls,st){const op=st.bright!=null?` style="fill-opacity:${st.brig
   return leads(10)+ln(-10,0,10,0)+`<path class="glow ${cls}"${op} d="M-10,-12 L-10,12 L10,0 Z"/>`+ln(10,-12,10,12)+arrow(2,-14,14,-28)+arrow(10,-10,22,-24);}
 function sym(id,st){st=st||{};
   switch(id){
-    case 'pile1': return ln(-45,0,-6,0)+ln(6,0,45,0)+ln(-6,-10,-6,10,'thick')+ln(6,-20,6,20)+plus(18,-18);
+    case 'pileb': case 'pile1': return ln(-45,0,-6,0)+ln(6,0,45,0)+ln(-6,-10,-6,10,'thick')+ln(6,-20,6,20)+plus(18,-18);
     case 'pile2': return ln(-45,0,-18,0)+ln(18,0,45,0)+ln(-18,-9,-18,9,'thick')+ln(-8,-18,-8,18)+ln(8,-9,8,9,'thick')+ln(18,-18,18,18)+ln(-8,0,8,0)+plus(28,-18);
     case 'inter': return leads(15)+dot(-15,0)+dot(15,0)+(st.closed?ln(-15,0,15,0):ln(-15,0,12,-17));
     case 'inv': {
@@ -942,7 +947,9 @@ function sound(on){
 
 /* ================= Vérification ================= */
 function perms(a){if(a.length<=1)return[a];const r=[];a.forEach((x,i)=>perms(a.slice(0,i).concat(a.slice(i+1))).forEach(p=>r.push([x].concat(p))));return r;}
-function msgFor(o,c){return o.wrong&&o.wrong[c]?`${C[c].name} : ${o.wrong[c]}`:`${C[c].art} n’a pas sa place ici. Rappel : ${C[c].info.charAt(0).toLowerCase()+C[c].info.slice(1)}`;}
+function msgFor(o,c){
+  if(c==='pileb'&&!(o.wrong&&o.wrong[c])){const n1=(o.need||[]).some(x=>x.ok.includes('pile1'));return `${C[c].name} : `+(n1?'elle ne fournit qu’un tout petit courant, beaucoup trop faible pour un moteur ou un électroaimant. Ici, une pile AA de 1,5 V convient.':'elle donne bien 3 V, mais elle ne fournit qu’un petit courant et se vide vite. Elle est faite pour les très petits objets qui consomment peu, comme un porte-clé. Ici, on utilise 2 piles AA.');}
+  return o.wrong&&o.wrong[c]?`${C[c].name} : ${o.wrong[c]}`:`${C[c].art} n’a pas sa place ici. Rappel : ${C[c].info.charAt(0).toLowerCase()+C[c].info.slice(1)}`;}
 function evaluateSeries(o){
   const pl=state.placed[o.id],n=o.need.length;
   let best=null,bs=-1;
@@ -1042,7 +1049,7 @@ function wiresNeeded(others){let n=0;for(let k=0;k<others.length-1;k++)if(!isDir
 function loopOrder(){
   const o=cur(),pl=state.placed[o.id],an=anchorsOf(o);
   const idx=an.map((a,i)=>i).sort((a,b)=>LOOP.indexOf(an[a])-LOOP.indexOf(an[b]));
-  const seq=idx.map(i=>pl[i]);const p=seq.findIndex(c=>c==='pile1'||c==='pile2');
+  const seq=idx.map(i=>pl[i]);const p=seq.findIndex(c=>c==='pile1'||c==='pile2'||c==='pileb');
   return seq.slice(p).concat(seq.slice(0,p));
 }
 function bomRows(){
@@ -1067,14 +1074,15 @@ function renderFab(){
   if(o.joints){J=o.joints.map(t=>({t,w:false}));w=o.wires;$('jointsIntro').textContent='Chaque DEL a sa branche : soude-les une par une, puis rejoins les deux pattes −.';}
   else{
     $('jointsIntro').textContent='Dans l’ordre du courant : de la borne + des piles jusqu’à la borne −.';
-    const seq=loopOrder(),others=seq.slice(1),pn=seq[0]==='pile1'?'du boîtier de pile':'du boîtier de piles';
+    const seq=loopOrder(),others=seq.slice(1),pn=seq[0]==='pileb'?'du support de pile':seq[0]==='pile1'?'du boîtier de pile':'du boîtier de piles';
     const first=others[0],last=others[others.length-1];w=wiresNeeded(others);
     J=[{t:`Relie le fil rouge (+) ${pn} à ${term(o,first,0)}.`,w:WIRED.includes(first)}];
     for(let k=0;k<others.length-1;k++){const a=others[k],b=others[k+1];
       J.push({t:isDirect(a,b)?`Soude directement ${term(o,a,1)} à ${term(o,b,0)} (pas besoin de fil : torsade les deux pattes ensemble).`:`Avec un fil de câblage, relie ${term(o,a,1)} à ${term(o,b,0)}.`,w:WIRED.includes(a)||WIRED.includes(b)});}
     J.push({t:`Relie ${term(o,last,1)} au fil noir (−) ${pn}.`,w:WIRED.includes(last)});
   }
-  const prep=['Vérifie que tu as reçu toutes les pièces de ta nomenclature (étape 4).','Enlève les piles du boîtier : elles ne seront remises qu’au test final.',
+  const coin=state.placed[o.id].includes('pileb');
+  const prep=['Vérifie que tu as reçu toutes les pièces de ta nomenclature (étape 4).',coin?'Enlève la pile bouton de son support : elle ne sera remise qu’au test final.':'Enlève les piles du boîtier : elles ne seront remises qu’au test final.',
     w?`Coupe ${w} morceau${w>1?'x':''} de fil de câblage de 10 cm et dénude 5 mm à chaque bout. Torsade les brins pour qu’ils ne s’écartent pas.`:'Dénude 5 mm au bout de chaque fil et torsade les brins.',
     'Pour protéger chaque soudure, enfile un morceau de gaine sur le fil avant de souder. Une fois la soudure froide, fais glisser la gaine dessus et demande au professeur de la chauffer : elle se rétracte.',
     'Pose tes composants sur la table dans l’ordre du schéma, pour ne pas te tromper de branchement.'];
@@ -1094,7 +1102,7 @@ function renderFab(){
   if(pl.includes('lampe'))tr.push('Vérifie que l’ampoule est bien vissée au fond de la douille.');
   if(pl.includes('bobine'))tr.push('Vérifie que l’émail est bien gratté aux deux bouts du fil de cuivre.');
   tr.push('Essaie avec des piles neuves.','Si un composant ou un fil chauffe, retire tout de suite les piles et appelle le professeur : il y a un court-circuit.');
-  $('testSteps').innerHTML=['Contrôle ton montage avec le professeur avant de mettre les piles.','Mets les piles dans le boîtier, en respectant les signes + et −.',o.test].concat(tr).map(t=>`<li>${t}</li>`).join('');
+  $('testSteps').innerHTML=[coin?'Contrôle ton montage avec le professeur avant de mettre la pile.':'Contrôle ton montage avec le professeur avant de mettre les piles.',coin?'Glisse la pile bouton dans son support, face + (celle où c’est écrit) vers le haut.':'Mets les piles dans le boîtier, en respectant les signes + et −.',o.test].concat(tr).map(t=>`<li>${t}</li>`).join('');
   $('toolList').innerHTML=TOOLS.map(t=>`<li>${t}</li>`).join('');
   const p3=$('print3d');p3.hidden=!o.print3d;
   if(o.print3d)p3.innerHTML=`<h3>Boîtier imprimé en 3D</h3><img src="${o.print3d.img}" alt="Vue du boîtier de lampe torche assemblé : corps, couvercle et réflecteur"><p class="tip">${o.print3d.intro}</p><ol class="list">${o.print3d.steps.map(t=>`<li>${t}</li>`).join('')}</ol>`;
