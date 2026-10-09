@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vigie DNB Techno 2024</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Concept : fiche d'épreuve. Panneaux « Document » encadrés comme dans le sujet, bandeau de score collant, une question visible à la fois. */
+:root{
+  --bg:#EBEFE8; --surface:#F7F9F4; --ink:#14221C; --muted:#52625A; --line:#C6D0C3;
+  --accent:#1F4FA3; --accent-ink:#FFFFFF;
+  --ok:#1F6B40; --ok-bg:#DCEFE2;
+  --warn:#8F4408; --warn-bg:#F8E5D0;
+  --ko:#A12A22; --ko-bg:#F6DAD6;
+  --pill-bg:#FFFFFF; --pill-ink:#14221C;
+  --blk-ev:#8F4A0A; --blk-ctrl:#A5590E; --blk-var:#74451A; --blk-act:#5B4894;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1713; --surface:#16231D; --ink:#E4ECE6; --muted:#9DB0A5; --line:#2B3C33;
+    --accent:#8DB1FF; --accent-ink:#0E1713;
+    --ok:#7FD3A0; --ok-bg:#163A27; --warn:#F0A868; --warn-bg:#3F290F; --ko:#F29B94; --ko-bg:#47201C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1713; --surface:#16231D; --ink:#E4ECE6; --muted:#9DB0A5; --line:#2B3C33;
+  --accent:#8DB1FF; --accent-ink:#0E1713;
+  --ok:#7FD3A0; --ok-bg:#163A27; --warn:#F0A868; --warn-bg:#3F290F; --ko:#F29B94; --ko-bg:#47201C;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--body);margin:0}
+h1,h2,h3,h4,p{margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:840px;margin-inline:auto;padding-inline:16px}
+
+/* En-tête collant */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1.5px solid var(--ink)}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px 6px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{width:30px;height:30px;flex:none;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.brand b{display:block;font:700 1.5rem/1 var(--display);text-transform:uppercase;letter-spacing:.03em}
+.brand small{display:block;color:var(--muted);font-size:.8rem;line-height:1.2}
+.score{display:flex;align-items:baseline;gap:4px;font-family:var(--mono);white-space:nowrap}
+.score b{font-size:1.7rem;font-weight:600}
+.score span{color:var(--muted)}
+.nav{display:flex;gap:6px;overflow-x:auto;padding-block:4px 10px;scrollbar-width:thin}
+.pill{flex:1 0 auto;min-width:64px;min-height:44px;display:grid;justify-items:center;align-content:center;gap:1px;padding:4px 12px;border:1.5px solid var(--ink);border-radius:4px;background:transparent;cursor:pointer}
+.pill .pl{font:700 1.05rem/1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.pill .ps{font:500 .72rem/1 var(--mono);color:var(--muted)}
+.pill[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.pill[aria-current="page"] .ps{color:inherit}
+.pill.complete .ps{color:var(--ok);font-weight:600}
+.pill.complete[aria-current="page"] .ps{color:inherit}
+
+main{padding-block:22px 64px}
+.qsec{display:grid;gap:18px}
+.q-head{display:grid;gap:6px}
+.eyebrow{font:500 .8rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.q-title{font:700 clamp(2rem,6vw,3rem)/.95 var(--display);text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.intro{max-width:65ch}
+.how{border:1.5px dashed var(--line);border-radius:6px;padding:12px 14px;font-size:.95rem;display:grid;gap:4px;max-width:70ch}
+.how b{font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+
+/* Documents */
+.docs{display:grid;gap:14px}
+.doc{border:1.5px solid var(--ink);background:var(--surface);min-width:0}
+.doc>header{background:var(--ink);color:var(--bg);padding:6px 12px;font-weight:600;font-size:.95rem}
+.doc-body{padding:12px 14px;display:grid;gap:10px;min-width:0}
+.doc-body p{max-width:70ch}
+.note{font-size:.85rem;color:var(--muted)}
+.scroll{overflow-x:auto}
+.scroll>svg{display:block;min-width:560px;width:100%;height:auto}
+.sk text{fill:var(--ink);font:500 12px var(--body)}
+.sk .ln{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round}
+.sk .thin{fill:none;stroke:var(--ink);stroke-width:1.2}
+.sk .bld{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.sk .ink{fill:var(--ink)}
+.sk .win{fill:var(--line);stroke:var(--ink);stroke-width:1.5}
+.sk .strip{fill:var(--muted);stroke:var(--ink);stroke-width:1.2}
+.sk .mesh{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:2 3}
+.sk .lead{fill:none;stroke:var(--muted);stroke-width:1}
+.sk .dim{fill:none;stroke:var(--muted);stroke-width:1}
+.sk .dimt{font:500 12px var(--mono)}
+.sols{display:flex;flex-wrap:wrap;gap:6px}
+.sol{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:var(--bg);padding:3px 8px;border-radius:4px;font-size:.9rem}
+.sol b{font:600 .85rem var(--mono);background:var(--ink);color:var(--bg);min-width:1.4em;text-align:center;border-radius:3px}
+.ch text{fill:var(--muted);font:11px var(--mono)}
+.ch .ax{stroke:var(--ink);stroke-width:1.5;fill:none}
+.ch .gr{stroke:var(--line);stroke-width:1}
+.ch .pl{fill:none;stroke:var(--accent);stroke-width:2}
+.ch .dot{fill:var(--accent)}
+.ch .cy{fill:var(--ink);font:600 12px var(--mono)}
+.ch .hl{display:none}
+.ch.show-hl .hl{display:inline}
+.ch .hl line{stroke:var(--warn);stroke-width:1.5;stroke-dasharray:4 3}
+.ch .hl circle{fill:none;stroke:var(--warn);stroke-width:2.5}
+.ch .hl text{fill:var(--warn);font-weight:600;font-size:12px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.node{border:1.5px solid var(--ink);background:var(--bg);padding:6px 10px;border-radius:4px;font-size:.92rem;text-align:center}
+.node.sun{border-radius:999px}
+.arrow{font-family:var(--mono);color:var(--muted)}
+.loads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.loads .node b{display:block;font:600 1rem var(--mono);color:var(--accent)}
+.formula{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;border:1.5px solid var(--ink);padding:10px 12px;background:var(--bg)}
+.formula strong{font:600 1.6rem var(--mono)}
+.formula ul{margin:0;padding:0;list-style:none;font-size:.9rem;display:grid;gap:2px}
+.wrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.wrow .scroll{flex:1 1 320px;min-width:0}
+.pxw{display:grid;gap:4px;justify-items:center;font:500 .8rem var(--mono);color:var(--muted);width:92px}
+.px{width:56px;height:56px;border:4px solid #14221C;display:block}
+.wv text{fill:var(--ink);font:500 12px var(--mono)}
+.wv .g{stroke:var(--line);stroke-width:1}
+.wv .w{fill:none;stroke:var(--accent);stroke-width:3.5}
+.wv .d{font-weight:600;font-size:14px}
+table.t{border-collapse:collapse;min-width:520px;width:100%;font-family:var(--mono);font-size:.85rem}
+table.t th,table.t td{border:1px solid var(--ink);padding:5px 8px;text-align:center}
+table.t th{text-align:left;font-family:var(--body);font-weight:600;background:var(--bg)}
+
+/* Parties */
+.parts{display:grid;gap:16px}
+.part{background:var(--surface);border:1.5px solid var(--ink);border-radius:6px;padding:16px;display:grid;gap:14px;min-width:0}
+.part-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.tag{font:600 .85rem var(--mono);background:var(--ink);color:var(--bg);padding:2px 8px;border-radius:3px}
+.part-head h3{flex:1 1 220px;min-width:0;font:400 1.02rem/1.45 var(--body)}
+.part-head h3 b{font-weight:600}
+.pts{font:500 .85rem var(--mono);color:var(--muted);white-space:nowrap}
+.part-body{display:grid;gap:12px;min-width:0}
+.field{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--mono)}
+.field label{font-family:var(--body)}
+.field .u{color:var(--muted)}
+input[type=text],select{font:500 1.05rem var(--mono);padding:9px 10px;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:4px;min-height:44px}
+input[type=text]{width:8rem}
+select{width:100%;font-family:var(--body);font-size:1rem}
+input:disabled,select:disabled{opacity:1;-webkit-text-fill-color:currentColor;cursor:default}
+.is-ok{border-color:var(--ok)!important;background:var(--ok-bg)!important}
+.is-ko{border-color:var(--ko)!important;background:var(--ko-bg)!important}
+.fix{font:600 .85rem var(--mono);color:var(--ok);background:var(--ok-bg);padding:2px 6px;border-radius:3px}
+
+.choices{display:grid;gap:8px}
+.choices.inline{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.choice{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);background:var(--bg);padding:10px 12px;border-radius:4px;cursor:pointer;min-height:44px}
+.choice input{margin-top:.28em;accent-color:var(--accent);width:18px;height:18px;flex:none}
+.choice:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.choice.is-right{border-color:var(--ok);background:var(--ok-bg);box-shadow:none}
+.choice.is-ok{box-shadow:none}
+.choice.is-ko{box-shadow:none}
+
+.exgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.ex{border:1.5px solid var(--line);background:var(--bg);border-radius:4px;padding:10px 12px;display:grid;gap:8px;align-content:start;min-width:0}
+.ex h4{font:600 .98rem/1.3 var(--body)}
+.ex h4 span{font-family:var(--mono);background:var(--ink);color:var(--bg);padding:1px 6px;border-radius:3px;margin-right:6px;font-size:.85rem}
+.ex p{font-size:.88rem;color:var(--muted)}
+.ex.given{border-style:dashed}
+.ex.off{opacity:.8}
+.ex .given-v{font:600 .95rem var(--mono)}
+
+.bits{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;max-width:480px}
+.bit{display:grid;gap:2px;justify-items:center;padding:6px 0;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font:600 1.5rem/1.1 var(--mono);border-radius:4px;cursor:pointer;min-height:64px}
+.bit .bn{font:500 .7rem var(--mono);color:var(--muted)}
+.bit[data-v="1"]{background:var(--accent);color:var(--accent-ink)}
+.bit[data-v="1"] .bn{color:inherit}
+.bit:disabled{opacity:1;cursor:default}
+.bit.is-ok{outline:3px solid var(--ok);outline-offset:1px}
+.bit.is-ko{outline:3px solid var(--ko);outline-offset:1px}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+
+/* Programme */
+.prog{display:grid;gap:3px;font-size:.95rem;max-width:620px}
+.blk{color:#fff;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:600}
+.blk.ev{background:var(--blk-ev)}.blk.ctrl{background:var(--blk-ctrl)}.blk.var{background:var(--blk-var)}.blk.act{background:var(--blk-act)}
+.cwrap{display:grid;gap:3px}
+.cwrap>.blk{border-bottom-left-radius:0}
+.inner{margin-left:20px;display:grid;gap:3px;border-left:6px solid var(--blk-ctrl);padding-left:6px}
+.chip{background:var(--blk-var);border:1px solid rgba(255,255,255,.55);padding:1px 8px;border-radius:4px;font-weight:600}
+.blk.var .chip{background:#5A3512}
+.blk input{width:5.2rem;min-height:36px;padding:3px 10px;background:var(--pill-bg);color:var(--pill-ink);border:2px solid var(--pill-bg);border-radius:999px;text-align:center;font-size:1rem}
+.blk input.is-ok{background:#DCEFE2!important;border-color:#1F6B40!important;color:#14221C}
+.blk input.is-ko{background:#F6DAD6!important;border-color:#A12A22!important;color:#14221C}
+.blk .fix{background:#fff;color:#1F6B40}
+
+/* Aides + actions */
+.aid-list{display:grid;gap:8px}
+.aid{background:var(--warn-bg);color:var(--ink);padding:10px 12px;border-radius:4px;display:grid;gap:2px;font-size:.95rem}
+.aid b{font:600 .78rem var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--warn)}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.btn{min-height:44px;padding:8px 16px;border-radius:4px;border:1.5px solid var(--ink);background:transparent;cursor:pointer;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.aid-btn{border-color:var(--warn);color:var(--warn)}
+.btn:hover{filter:brightness(1.06)}
+.max{font:500 .82rem var(--mono);color:var(--muted);margin-left:auto}
+.warnmsg{color:var(--ko);font-weight:600}
+.part.done .actions{display:none}
+
+/* Résultat */
+.result{border-radius:6px;padding:14px;display:grid;gap:10px}
+.result.ok{background:var(--ok-bg)}.result.partial{background:var(--warn-bg)}.result.ko{background:var(--ko-bg)}
+.verdict{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font:700 1.25rem/1 var(--display);text-transform:uppercase;letter-spacing:.05em}
+.result.ok .badge{color:var(--ok)}.result.partial .badge{color:var(--warn)}.result.ko .badge{color:var(--ko)}
+.sline{font:600 1.05rem var(--mono)}
+.pen{font-size:.92rem}
+.explain{display:grid;gap:6px;min-width:0}
+.explain h4{font:600 .78rem var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:6px}
+.explain p{max-width:68ch}
+.answer{font:500 .98rem/1.5 var(--mono);background:var(--surface);border:1px solid var(--line);padding:8px 10px;border-radius:4px;overflow-wrap:anywhere}
+.errnote{font-weight:600}
+.xl{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.xl li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.m{font:700 .95rem var(--mono);width:1.7em;height:1.7em;display:grid;place-items:center;border-radius:3px;background:var(--surface)}
+.m.ok{color:var(--ok)}.m.ko{color:var(--ko)}.m.pa{color:var(--warn)}
+.qfoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* Bilan */
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.big b{font:600 clamp(3rem,12vw,5rem)/1 var(--mono)}
+.big span{font:500 1.2rem var(--mono);color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.stat{border:1.5px solid var(--ink);padding:10px 12px;background:var(--surface);display:grid;gap:2px}
+.stat b{font:600 1.5rem var(--mono)}
+.stat span{font-size:.85rem;color:var(--muted)}
+.brow{display:grid;gap:4px}
+.brow-h{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.brow-h span:last-child{font-family:var(--mono)}
+.bar{display:flex;height:14px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%}
+.bar .e{background:var(--ok)}
+.bar .l{background:var(--warn)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.rev{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.rev li{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);background:var(--surface);padding:8px 12px;border-radius:4px;flex-wrap:wrap}
+.rev button{min-height:36px;padding:4px 12px}
+.keep{margin:0;padding-left:1.2em;display:grid;gap:8px;max-width:68ch}
+.sec-h{font:700 1.5rem/1 var(--display);text-transform:uppercase;letter-spacing:.03em;margin-top:6px}
+.block{display:grid;gap:10px}
+@media (max-width:480px){
+  .formula{grid-template-columns:1fr}
+  .part{padding:12px}
+  .max{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12v7H6zM4 8h16M9 4h2v4M13 5h2v3M8 15l-2 7M16 15l2 7M12 15v7"/></svg>
+        <div><b>Vigie</b><small>DNB 2024 · Technologie · 30 min conseillées · 25 points</small></div>
+      </div>
+      <div class="score" aria-live="polite"><b id="scoreVal">0</b><span>/ 25</span></div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Questions"></nav>
+  </div>
+</header>
+<main class="wrap" id="stage"></main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var fmt=function(n){return String(Math.round(n*100)/100).replace('.',',')};
+var r2=function(n){return Math.round(n*100)/100};
+var num=function(s){var t=String(s==null?'':s).replace(',','.').replace(/[^0-9.\-]/g,'');if(t===''||t==='.'||t==='-')return NaN;return parseFloat(t)};
+var eq=function(a,b){return Math.abs(a-b)<1e-6};
+var shuffle=function(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a};
+var mk=function(el,ok){el.classList.add(ok?'is-ok':'is-ko')};
+var pl=function(n){return n>1?'pts':'pt'};
+
+function choices(name,opts,inline,keep){
+  var list=keep?opts:shuffle(opts);
+  return '<div class="choices'+(inline?' inline':'')+'" role="radiogroup">'+list.map(function(o){
+    return '<label class="choice"><input type="radio" name="'+name+'" value="'+o[0]+'"><span>'+o[1]+'</span></label>';
+  }).join('')+'</div>';
+}
+function sel(root,name){var c=$('input[name="'+name+'"]:checked',root);return c?c.value:null}
+function choiceMark(root,name,correct){
+  var chosen=sel(root,name);
+  $$('.choice',root).forEach(function(l){
+    var i=$('input',l); if(i.name!==name)return;
+    if(i.value===correct){l.classList.add(chosen===correct?'is-ok':'is-right')}
+    else if(i.checked){l.classList.add('is-ko')}
+  });
+  return chosen;
+}
+function ex(answer,why,note){
+  return (note?'<p class="errnote">'+note+'</p>':'')+'<h4>Réponse attendue</h4><div class="answer">'+answer+'</div><h4>Pourquoi</h4>'+why;
+}
+
+/* ---------- Documents ---------- */
+function doc(title,body){return '<section class="doc"><header>'+title+'</header><div class="doc-body">'+body+'</div></section>'}
+
+function doc1(){
+  var sols=[[1,'volets pliants'],[2,'appareil photo 1'],[3,'isolation laine de bois'],[4,'panneau photovoltaïque et batterie'],[5,'appareil photo 2'],[6,'ventilation'],[7,'structure métallique acier']];
+  var svg='<svg class="sk" viewBox="0 0 640 330" role="img" aria-label="Schéma de la vigie : cabine sur structure métallique, deux appareils photo, ventilation, panneau photovoltaïque, volets pliants au-dessus de la fenêtre, balcon à droite. Hauteur de la cabine 3,6 m, dessous 0,9 m, total 4,5 m.">'+
+  '<line class="ln" x1="20" y1="300" x2="620" y2="300" style="stroke-width:3"/>'+
+  '<path class="ln" d="M168 260 L188 300 M312 260 L292 300 M240 260 V300"/>'+
+  '<rect class="bld" x="150" y="100" width="180" height="160"/>'+
+  '<rect class="ink" x="144" y="94" width="192" height="6"/>'+
+  '<rect class="win" x="174" y="146" width="132" height="76"/><line class="thin" x1="240" y1="146" x2="240" y2="222"/>'+
+  '<rect class="strip" x="174" y="128" width="132" height="12"/>'+
+  '<rect class="ink" x="336" y="238" width="120" height="6"/><path class="ln" d="M352 244 V300 M440 244 V300"/>'+
+  '<rect class="mesh" x="336" y="196" width="120" height="42"/>'+
+  '<rect class="bld" x="178" y="68" width="22" height="16" rx="2"/><line class="ln" x1="189" y1="84" x2="189" y2="94"/>'+
+  '<rect class="bld" x="229" y="68" width="22" height="16" rx="2"/><line class="ln" x1="240" y1="84" x2="240" y2="94"/>'+
+  '<path class="ln" d="M158 94 V80 M152 87 L158 79 L164 87"/>'+
+  '<path class="ln" d="M282 90 L330 74" style="stroke-width:5"/><path class="ln" d="M292 94 V88 M318 94 V80"/>'+
+  '<text x="10" y="26">appareil photo 1</text><path class="lead" d="M108 22 H189 V66"/>'+
+  '<text x="300" y="26">appareil photo 2</text><path class="lead" d="M296 22 H240 V66"/>'+
+  '<text x="345" y="66">panneau photovoltaïque et batterie</text><path class="lead" d="M341 62 L328 73"/>'+
+  '<text x="10" y="88">ventilation</text><path class="lead" d="M72 84 H154"/>'+
+  '<text x="10" y="140">murs et toiture</text><text x="10" y="156">isolés avec de la</text><text x="10" y="172">laine de bois</text><path class="lead" d="M104 152 H150"/>'+
+  '<text x="350" y="124">volets pliants 1 et 2</text><path class="lead" d="M346 121 L308 133"/>'+
+  '<text x="10" y="268">structure</text><text x="10" y="284">métallique acier</text><path class="lead" d="M104 277 H176"/>'+
+  '<path class="dim" d="M336 100 H560 M456 260 H500 M456 300 H560"/>'+
+  '<path class="dim" d="M490 100 V300 M484 100 H496 M484 260 H496 M484 300 H496 M540 100 V300 M534 100 H546 M534 300 H546"/>'+
+  '<text class="dimt" x="496" y="184">3,6 m</text><text class="dimt" x="496" y="284">0,9 m</text><text class="dimt" x="546" y="204">4,5 m</text>'+
+  '</svg>';
+  return doc('Document 1 – vigie et son système automatisé de surveillance',
+    '<div class="scroll">'+svg+'</div><p class="note">Schéma redessiné d’après le sujet. Dimensions en mètres.</p>'+
+    '<div><p class="note" style="margin-bottom:6px">Solutions techniques à placer :</p><div class="sols">'+sols.map(function(s){return '<span class="sol"><b>'+s[0]+'</b>'+s[1]+'</span>'}).join('')+'</div></div>');
+}
+
+function chart2(){
+  var X=function(t){return 58+t*5.75}, Y=function(a){return 216-a*1.05};
+  var s='<svg class="ch" id="chart2" viewBox="0 0 640 276" role="img" aria-label="Angle de l’appareil photo 1 en fonction du temps : il monte de 0 à 180 degrés en 36 secondes par pas de 10 degrés toutes les 2 secondes, puis revient à 0 avant le cycle suivant à 48 secondes.">';
+  for(var a=0;a<=180;a+=30){s+='<line class="gr" x1="'+X(0)+'" x2="'+X(96)+'" y1="'+Y(a)+'" y2="'+Y(a)+'"/><text x="'+(X(0)-6)+'" y="'+(Y(a)+4)+'" text-anchor="end">'+a+'</text>'}
+  for(var t=6;t<=96;t+=6){s+='<text x="'+X(t)+'" y="236" text-anchor="middle">'+t+'</text>'}
+  s+='<path class="ax" d="M'+X(0)+' '+Y(185)+' V'+Y(0)+' H'+X(98)+'"/>';
+  s+='<line class="gr" x1="'+X(48)+'" x2="'+X(48)+'" y1="'+Y(185)+'" y2="'+Y(0)+'" style="stroke:var(--ink);stroke-dasharray:5 4"/>';
+  for(var c=0;c<2;c++){
+    var o=48*c, d='M'+X(o)+' '+Y(0);
+    for(var k=1;k<=18;k++){d+=' L'+X(o+2*k)+' '+Y(10*k)}
+    d+=' L'+X(o+46)+' '+Y(0)+' L'+X(o+48)+' '+Y(0);
+    s+='<path class="pl" d="'+d+'"/>';
+    for(var k2=0;k2<=18;k2++){s+='<circle class="dot" cx="'+X(o+2*k2)+'" cy="'+Y(10*k2)+'" r="2.6"/>'}
+    s+='<text class="cy" x="'+X(o+3)+'" y="'+Y(176)+'">CYCLE '+(c+1)+'</text>';
+  }
+  s+='<g class="hl"><line x1="'+X(10)+'" x2="'+X(10)+'" y1="'+Y(50)+'" y2="'+Y(0)+'"/><line x1="'+X(12)+'" x2="'+X(12)+'" y1="'+Y(60)+'" y2="'+Y(0)+'"/>'+
+     '<line x1="'+X(0)+'" x2="'+X(10)+'" y1="'+Y(50)+'" y2="'+Y(50)+'"/><line x1="'+X(0)+'" x2="'+X(12)+'" y1="'+Y(60)+'" y2="'+Y(60)+'"/>'+
+     '<circle cx="'+X(10)+'" cy="'+Y(50)+'" r="6"/><circle cx="'+X(12)+'" cy="'+Y(60)+'" r="6"/>'+
+     '<text x="'+(X(12)+10)+'" y="'+(Y(60)+22)+'">10 s → 12 s : 2 s</text></g>';
+  s+='<text x="350" y="266" text-anchor="middle">temps (seconde)</text><text transform="translate(12 120) rotate(-90)" text-anchor="middle">angle (degré)</text></svg>';
+  return s;
+}
+function doc2(){
+  return doc('Document 2 – étude du cycle de mouvement de l’appareil photo 1',
+   '<p>Au départ du cycle, l’appareil photo est orienté vers la position initiale d’angle 0° (« état initial »). Il pivote de 10° et prend une première prise de vue (« prise de vue 1 »). Il répète ce processus jusqu’à la prise de vue 18 et a ainsi parcouru 180°. Ensuite il retourne à son état initial et démarre un nouveau cycle.</p>'+
+   '<p><b>Il s’écoule deux secondes entre deux prises de vue consécutives.</b></p>'+
+   '<div class="scroll">'+chart2()+'</div>');
+}
+function doc3(){
+  return doc('Document 3 – présentation de la gestion de l’énergie du système',
+   '<p>La batterie alimente le système de surveillance. Intensité moyenne consommée par le système en fonctionnement normal : <b>0,7 A par appareil photo</b> et <b>0,5 A par moteur</b>.</p>'+
+   '<div class="flow"><span class="node sun">soleil</span><span class="arrow">→</span><span class="node">panneau photovoltaïque</span><span class="arrow">→</span><span class="node">batterie</span><span class="arrow">→</span>'+
+   '<div class="loads"><span class="node">appareil photo 1<b>0,7 A</b></span><span class="node">motorisation 1<b>0,5 A</b></span><span class="node">appareil photo 2<b>0,7 A</b></span><span class="node">motorisation 2<b>0,5 A</b></span></div></div>'+
+   '<p>La capacité Q détermine l’autonomie de la batterie :</p>'+
+   '<div class="formula"><strong>Q = I × t</strong><ul><li>Q : capacité de la batterie en A·h (ampère × heure)</li><li>I : intensité moyenne consommée par le système en A</li><li>t : durée d’utilisation du système en h (heure)</li></ul></div>'+
+   '<p class="note">Exigence à respecter : assurer une autonomie énergétique du système pendant 12 heures, sans apport solaire.</p>');
+}
+function wave(bits,show){
+  var W=56,x0=46,yH=24,yL=80,s='<svg class="wv" viewBox="0 0 '+(x0+8*W+10)+' 116" role="img" aria-label="Signal logique du pixel P sur huit bits">';
+  var Y=function(i){return bits.charAt(i)==='1'?yH:yL};
+  for(var i=0;i<=8;i++){s+='<line class="g" x1="'+(x0+i*W)+'" x2="'+(x0+i*W)+'" y1="12" y2="92"/>'}
+  s+='<line class="g" x1="'+x0+'" x2="'+(x0+8*W)+'" y1="'+yH+'" y2="'+yH+'"/><line class="g" x1="'+x0+'" x2="'+(x0+8*W)+'" y1="'+yL+'" y2="'+yL+'"/>';
+  s+='<text x="'+(x0-16)+'" y="'+(yH+4)+'">1</text><text x="'+(x0-16)+'" y="'+(yL+4)+'">0</text>';
+  var d='M'+x0+' '+Y(0)+' H'+(x0+W);
+  for(var k=1;k<8;k++){d+=' V'+Y(k)+' H'+(x0+(k+1)*W)}
+  s+='<path class="w" d="'+d+'"/>';
+  for(var j=0;j<8;j++){
+    s+='<text x="'+(x0+j*W+W/2)+'" y="110" text-anchor="middle">b'+(8-j)+'</text>';
+    if(show){s+='<text class="d" x="'+(x0+j*W+W/2)+'" y="9" text-anchor="middle">'+bits.charAt(j)+'</text>'}
+  }
+  return s+'</svg>';
+}
+function doc4(){
+  var t='<table class="t"><tbody><tr><th>valeur de P en binaire</th>'+['11011110','11001110','11000110','01101110','01001110','01000111','01000110'].map(function(b){return '<td>'+b+'</td>'}).join('')+'</tr>'+
+   '<tr><th>valeur de P en décimal</th>'+[222,206,198,110,78,71,70].map(function(b){return '<td>'+b+'</td>'}).join('')+'</tr></tbody></table>';
+  return doc('Document 4 – détection d’une anomalie par comparaison d’images',
+   '<p>Pour détecter un départ de feu, le système compare deux prises de vue consécutives de la même zone (image A au cycle 1, image B au cycle 2, 19 × 16 pixels). L’image numérique est composée de pixels dont la couleur est codée en binaire sur un octet (huit bits). <b>Si la valeur décimale d’un pixel varie de plus de 50, une anomalie est détectée</b> et une alerte est transmise au centre de supervision.</p>'+
+   '<p class="note">Les deux images servent seulement à repérer le pixel P. Tout se joue sur son codage ci-dessous.</p>'+
+   '<div class="wrow"><div class="pxw"><span class="px" style="background:#E6E6E6"></span>pixel P<br>cycle 1</div><div class="scroll">'+wave('11000110',true)+'</div></div>'+
+   '<div class="wrow"><div class="pxw"><span class="px" style="background:#9A9A9A"></span>pixel P<br>cycle 2</div><div class="scroll">'+wave('01101110',false)+'</div></div>')+
+   doc('Document 5 – tableau de correspondance','<div class="scroll">'+t+'</div>');
+}
+function doc5(){
+  return doc('Rappel du document 2','<p>L’appareil photo part de l’état initial (angle 0°), pivote de 10° à chaque prise de vue, jusqu’à la prise de vue 18 (180°), puis retourne à l’état initial et recommence un cycle. Une alerte est envoyée quand la valeur d’un pixel varie de plus de 50 entre deux prises de vue (document 4).</p>');
+}
+
+/* ---------- Parties ---------- */
+var SLOTS=[
+ {id:'e1',ex:'E1',accept:[7]},
+ {id:'e3a',ex:'E3',accept:[3,6],pair:'e3b'},{id:'e3b',ex:'E3',accept:[3,6],pair:'e3a',second:true},
+ {id:'e4a',ex:'E4',accept:[2,5],pair:'e4b'},{id:'e4b',ex:'E4',accept:[2,5],pair:'e4a',second:true},
+ {id:'e5',ex:'E5',accept:[4]}
+];
+var SOLN={1:'volets pliants',2:'appareil photo 1',3:'isolation laine de bois',4:'panneau photovoltaïque et batterie',5:'appareil photo 2',6:'ventilation',7:'structure métallique acier'};
+function selectHtml(id){
+  return '<select data-slot="'+id+'" aria-label="Solution technique"><option value="">— choisir —</option>'+Object.keys(SOLN).map(function(k){return '<option value="'+k+'">'+k+' · '+SOLN[k]+'</option>'}).join('')+'</select>';
+}
+
+var P1A={id:'1a',tag:'1.a',title:'<b>Identifier</b> le besoin auquel répond la vigie.',points:2,
+ aides:[{cost:.2,text:'Relis l’introduction : à quoi servent les vigies ? Regarde aussi le bloc central du diagramme d’exigences, « assurer la bonne activité du guet ».'},
+        {cost:.3,text:'Le guet, c’est l’action de surveiller. Cherche la proposition qui parle de repérer, pas d’éteindre ni de produire.'}],
+ body:function(){return choices('q1a',[['A','Surveiller les forêts pour repérer les départs de feu et lutter contre les incendies'],['B','Éteindre les incendies de forêt'],['C','Produire de l’électricité à partir du soleil'],['D','Protéger les pompiers du vent et de la chaleur']])},
+ check:function(r){return sel(r,'q1a')?null:'Choisis une proposition avant de valider.'},
+ grade:function(r){
+  var v=choiceMark(r,'q1a','A');
+  return {raw:v==='A'?2:0,explain:ex('Surveiller les forêts pour repérer les départs de feu (c’est le « guet »).',
+   '<p>Un besoin dit <b>à quoi sert</b> l’objet. Le sujet explique que les forêts sont surveillées depuis des vigies pour lutter contre les incendies : la vigie sert à repérer et localiser un départ de feu le plus tôt possible.</p>'+
+   '<p>La vigie n’éteint pas le feu (B) : elle permet aux pompiers de le localiser. L’énergie solaire (C) et la protection contre la chaleur ou le vent (D) sont des <b>exigences</b>, c’est-à-dire des moyens pour que la vigie remplisse bien son rôle, pas le besoin lui-même.</p>',
+   v&&v!=='A'?'Tu as choisi une autre proposition. Pour un besoin, pose-toi la question : « à quoi sert la vigie ? ».':'')};
+ }};
+
+var P1B={id:'1b',tag:'1.b',title:'À l’aide du document 1, <b>associer</b> les solutions techniques aux fonctions techniques en choisissant le numéro dans chaque case (six réponses attendues).',points:3,
+ aides:[{cost:.2,text:'Pour chaque exigence, lis la phrase en dessous du titre : elle dit ce que la solution doit faire. Cherche ensuite sur le document 1 l’élément qui le fait.'},
+        {cost:.3,text:'E3 a deux cases : une solution qui garde la chaleur dehors (isoler) et une qui évacue l’air chaud. E4 a aussi deux cases : le système compte deux appareils photo.'},
+        {cost:.3,text:'E1 : l’élément placé sous la cabine. E5 : ce qui est posé sur le toit pour produire l’électricité, plus la batterie. Le 1 est déjà utilisé en E2.'}],
+ body:function(){return '<div class="exgrid">'+
+  '<div class="ex"><h4><span>E1</span>surélever le bâtiment tout en résistant aux vents</h4><p>procurer une meilleure visibilité</p>'+selectHtml('e1')+'</div>'+
+  '<div class="ex given"><h4><span>E2</span>éviter les intrusions</h4><p>protéger des dégradations</p><div class="given-v">Exemple donné : 1 · volets pliants</div></div>'+
+  '<div class="ex"><h4><span>E3</span>assurer le confort des pompiers malgré les contraintes climatiques</h4><p>se protéger de la surchauffe</p>'+selectHtml('e3a')+selectHtml('e3b')+'</div>'+
+  '<div class="ex"><h4><span>E4</span>permettre une surveillance automatique</h4><p>surveiller à 360°</p>'+selectHtml('e4a')+selectHtml('e4b')+'</div>'+
+  '<div class="ex"><h4><span>E5</span>être autonome en énergie</h4><p>assurer une autonomie énergétique du système pendant 12 h, sans apport solaire</p>'+selectHtml('e5')+'</div>'+
+  '<div class="ex off"><h4><span>E6</span>s’intégrer dans le paysage</h4><p>limiter la hauteur du bâtiment à 4,50 m</p><div class="given-v">Pas de case à remplir</div></div>'+
+  '</div>'},
+ check:function(r){return $$('select',r).some(function(s){return s.value})?null:'Choisis au moins une solution avant de valider.'},
+ grade:function(r){
+  var ok=0,st={},val={};
+  SLOTS.forEach(function(s){
+    var el=$('select[data-slot="'+s.id+'"]',r),v=parseInt(el.value,10)||0;val[s.id]=v;
+    var good=s.accept.indexOf(v)>-1;
+    if(s.second&&good){var other=parseInt($('select[data-slot="'+s.pair+'"]',r).value,10)||0;if(other===v)good=false}
+    st[s.id]=good;mk(el,good);if(good)ok++;
+  });
+  var tag=function(ids){var n=ids.filter(function(i){return st[i]}).length;return n===ids.length?'<span class="m ok">✓</span>':n===0?'<span class="m ko">✕</span>':'<span class="m pa">≈</span>'};
+  var mine=function(ids){var t=ids.map(function(i){return val[i]||'rien'}).join(' et ');return ' <i>Ta réponse : '+t+'.</i>'};
+  var good=function(ids){return ids.every(function(i){return st[i]})};
+  var li=function(ids,html){return '<li>'+tag(ids)+'<div>'+html+(good(ids)?'':mine(ids))+'</div></li>'};
+  var why='<ul class="xl">'+
+   li(['e1'],'<b>E1 → 7 · structure métallique acier.</b> Les poteaux en acier surélèvent la cabine : les pompiers voient au-dessus des arbres. L’acier est solide et tient face au vent.')+
+   '<li><span class="m ok">✓</span><div><b>E2 → 1 · volets pliants</b> (donné). Fermés, ils protègent les vitres et empêchent de s’introduire dans la vigie en l’absence des pompiers.</div></li>'+
+   li(['e3a','e3b'],'<b>E3 → 3 · isolation laine de bois et 6 · ventilation</b> (dans n’importe quel ordre). Murs et toiture isolés : la chaleur du soleil entre moins. La ventilation évacue l’air chaud. Les deux limitent la surchauffe.')+
+   li(['e4a','e4b'],'<b>E4 → 2 · appareil photo 1 et 5 · appareil photo 2</b> (dans n’importe quel ordre). L’appareil photo 1 balaie 180° (document 2) : à deux, les appareils couvrent les 360° autour de la vigie.')+
+   li(['e5'],'<b>E5 → 4 · panneau photovoltaïque et batterie.</b> Le panneau transforme la lumière du soleil en électricité et la batterie la stocke : le système fonctionne sans réseau électrique, même sans soleil.')+
+   '<li><span class="m ok">i</span><div><b>E6</b> n’a pas de case : c’est une contrainte de dimension. Elle est respectée ici : 0,9 m + 3,6 m = 4,5 m.</div></li></ul>';
+  return {raw:3*ok/6,explain:ex('E1 → 7 · E2 → 1 · E3 → 3 et 6 · E4 → 2 et 5 · E5 → 4',why,ok<6?ok+' case'+(ok>1?'s':'')+' correcte'+(ok>1?'s':'')+' sur 6. Chaque case juste vaut 0,5 point.':'')};
+ }};
+
+var P2A={id:'2a',tag:'2.a',title:'À l’aide du document 2, <b>indiquer</b> la nature du mouvement de l’appareil photo 1.',points:2,
+ aides:[{cost:.2,text:'L’appareil reste au même endroit sur son support. Ce qui change, c’est la direction vers laquelle il regarde, de 10° en 10°.'},
+        {cost:.3,text:'Le texte du document 2 emploie le verbe « pivoter ». Un objet qui pivote autour d’un axe sans changer de place fait quel mouvement ?'}],
+ body:function(){return choices('q2a',[['rot','Une rotation'],['tr','Une translation rectiligne'],['trc','Une translation circulaire'],['no','Aucun mouvement : l’appareil reste fixe']])},
+ check:function(r){return sel(r,'q2a')?null:'Choisis une proposition avant de valider.'},
+ grade:function(r){
+  var v=choiceMark(r,'q2a','rot');
+  return {raw:v==='rot'?2:0,explain:ex('Une rotation.',
+   '<p>L’appareil photo ne se déplace pas : il pivote autour d’un axe, sur son support motorisé. À chaque prise de vue il tourne de 10°, de 0° jusqu’à 180° (18 prises de vue), puis revient à 0° et recommence.</p>'+
+   '<p>Dans une translation, tous les points de l’objet se déplacent dans la même direction et l’objet change de place sans tourner. Ce n’est pas le cas ici. L’appareil bouge bien : ce n’est donc pas « aucun mouvement ».</p>',
+   v&&v!=='rot'?'Ce n’est pas la bonne nature de mouvement. Regarde ce qui change : la direction de l’appareil, pas sa position.':'')};
+ }};
+
+var P2B={id:'2b',tag:'2.b',title:'À l’aide du document 2, <b>déterminer</b> pour la position 6 (60°) le temps écoulé entre deux prises de vue.',points:2,
+ aides:[{cost:.2,text:'Position 6 = 60°, donc la position juste avant est la 5, à 50°. Lis sur le graphique à quel instant l’appareil est à 50°, puis à 60°.'},
+        {cost:.3,text:'50° est atteint à 10 s et 60° à 12 s. Fais la différence entre ces deux instants.'}],
+ body:function(){return '<div class="field"><label for="v2b">Temps écoulé entre deux prises de vue :</label><input id="v2b" type="text" inputmode="decimal" autocomplete="off"><span class="u">s</span></div>'},
+ check:function(r){return $('input',r).value.trim()?null:'Écris ta réponse avant de valider.'},
+ grade:function(r){
+  var i=$('input',r),v=num(i.value),ok=eq(v,2);mk(i,ok);
+  var note='';
+  if(!ok){
+   if(eq(v,12))note='12 s est l’instant où l’appareil atteint 60°, pas la durée entre deux prises de vue. Il faut soustraire l’instant de la position 5.';
+   else if(eq(v,6))note='6 s correspond à 30° depuis le départ. Cherche plutôt la différence entre deux prises de vue consécutives.';
+   else if(eq(v,10))note='10 s est l’instant de la position 5 (50°). La durée cherchée est la différence entre deux instants.';
+   else note='Ce n’est pas la bonne durée. Compare l’instant de la position 5 et celui de la position 6.';
+  }
+  return {raw:ok?2:0,explain:ex('2 s',
+   '<p>Position 5 (50°) à 10 s, position 6 (60°) à 12 s : 12 − 10 = <b>2 s</b>. Le graphique est une droite : l’appareil tourne à vitesse régulière, 10° toutes les 2 s (30° en 6 s, 60° en 12 s, 90° en 18 s…). La durée est donc la même entre deux prises de vue consécutives, quelle que soit la position. Le texte du document 2 donne la même valeur.</p>'+
+   '<p>Le graphique est maintenant surligné au-dessus avec les deux points utilisés.</p>',note)};
+ },
+ after:function(){var c=$('#chart2');if(c)c.classList.add('show-hl')}};
+
+var P3A={id:'3a',tag:'3.a',title:'À l’aide du document 3, <b>calculer</b> l’intensité moyenne I consommée par le système en fonctionnement normal.',points:2,
+ aides:[{cost:.2,text:'Regarde le schéma du document 3 : combien d’appareils photo et combien de moteurs sont branchés sur la batterie ? Compte chaque élément.'},
+        {cost:.3,text:'Il y a 2 appareils photo à 0,7 A et 2 moteurs à 0,5 A, qui fonctionnent en même temps. Additionne toutes les intensités.'}],
+ body:function(){return '<div class="field"><label for="v3a">I =</label><input id="v3a" type="text" inputmode="decimal" autocomplete="off"><span class="u">A</span></div>'},
+ check:function(r){return $('input',r).value.trim()?null:'Écris ta réponse avant de valider.'},
+ grade:function(r){
+  var i=$('input',r),v=num(i.value),ok=eq(v,2.4);mk(i,ok);
+  var notes={'1.2':'Tu as compté un seul appareil photo et un seul moteur : le système en a deux de chaque.','1.4':'Tu as compté les deux appareils photo mais pas les deux moteurs.','1':'Tu as compté les deux moteurs mais pas les deux appareils photo.','0.7':'Il manque les moteurs et le second appareil photo.'};
+  var note=ok?'':(notes[String(v)]||'Ce n’est pas la bonne intensité. Additionne l’intensité de chacun des quatre éléments du schéma.');
+  return {raw:ok?2:0,explain:ex('I = 2 × 0,7 + 2 × 0,5 = 1,4 + 1,0 = 2,4 A',
+   '<p>Le schéma du document 3 montre quatre éléments alimentés par la batterie : appareil photo 1 (0,7 A), motorisation 1 (0,5 A), appareil photo 2 (0,7 A), motorisation 2 (0,5 A). Ils fonctionnent en même temps, donc leurs intensités <b>s’additionnent</b>.</p><p>Le piège classique est d’oublier qu’il y a deux appareils photo et deux moteurs.</p>',note)};
+ }};
+
+var P3B={id:'3b',tag:'3.b',title:'À l’aide de l’exigence de l’énoncé, <b>relever</b> la durée t d’utilisation à prendre dans la formule.',points:1,
+ aides:[{cost:.3,text:'Relis l’exigence : « assurer une autonomie énergétique du système pendant … heures, sans apport solaire ». La formule veut t en heures.'}],
+ body:function(){return '<div class="field"><label for="v3b">t =</label><input id="v3b" type="text" inputmode="decimal" autocomplete="off"><span class="u">h</span></div>'},
+ check:function(r){return $('input',r).value.trim()?null:'Écris ta réponse avant de valider.'},
+ grade:function(r){
+  var i=$('input',r),v=num(i.value),ok=eq(v,12);mk(i,ok);
+  return {raw:ok?1:0,explain:ex('t = 12 h',
+   '<p>L’exigence demande une autonomie de 12 heures <b>sans apport solaire</b> : la batterie doit alimenter seule le système pendant 12 h. Pour obtenir une capacité en A·h, t s’exprime en heures dans la formule.</p>',
+   ok?'':'Reprends l’exigence E5 : la durée demandée est écrite dans son texte, en heures.')};
+ }};
+
+var P3C={id:'3c',tag:'3.c',title:'À l’aide du document 3, <b>calculer</b> la capacité Q de la batterie.',points:3,
+ aides:[{cost:.2,text:'Formule du document 3 : Q = I × t. Remplace I par ta valeur de la question 3.a et t par celle de 3.b.'},
+        {cost:.3,text:'Calcule 2,4 × 12 en deux temps : 2 × 12, puis 0,4 × 12, et additionne les deux résultats.'}],
+ body:function(){return '<div class="field"><label for="v3c">Q =</label><input id="v3c" type="text" inputmode="decimal" autocomplete="off"><span class="u">A·h</span></div>'},
+ check:function(r){return $('input',r).value.trim()?null:'Écris ta réponse avant de valider.'},
+ grade:function(r){
+  var i=$('input',r),v=num(i.value),Iel=$('#p-3a input'),I=Iel?num(Iel.value):NaN;
+  var raw=0,note='';
+  if(eq(v,28.8)){raw=3}
+  else if(!isNaN(I)&&!eq(I,2.4)&&eq(v,I*12)){raw=1.5;note='Ton calcul '+fmt(I)+' × 12 = '+fmt(v)+' est correct, mais il part d’une intensité fausse (question 3.a). La démarche est prise en compte : la moitié des points.'}
+  else if(eq(v,14.4)){note='Tu as additionné 2,4 et 12. La formule demande de multiplier : Q = I × t.'}
+  else {note='Ce n’est pas la bonne capacité. Vérifie la multiplication I × t.'}
+  mk(i,raw===3);
+  if(raw===1.5){i.classList.remove('is-ko');i.classList.add('is-ko')}
+  return {raw:raw,explain:ex('Q = I × t = 2,4 × 12 = 28,8 A·h',
+   '<p>On remplace I et t dans la formule : 2,4 × 12 = 24 + 4,8 = <b>28,8</b>. L’unité A·h vient de ampère × heure. Une batterie d’au moins 28,8 A·h permet donc 12 h d’autonomie sans panneau solaire.</p>',note)};
+ }};
+
+var BITS_C2='01101110';
+function bitsValue(r){return $$('.bit',r).map(function(b){return b.dataset.v}).join('')}
+var P4A={id:'4a',tag:'4.a',title:'À l’aide du document 4, <b>exprimer</b> la valeur en écriture binaire du pixel P pour le cycle 2.',points:1.5,
+ aides:[{cost:.2,text:'Niveau logique haut = 1, niveau bas = 0. Lis le signal du cycle 2 case par case, de b8 (à gauche) à b1 (à droite), comme le cycle 1 où les valeurs sont écrites au-dessus.'},
+        {cost:.3,text:'Pour le cycle 2 : b8 = 0, b7 = 1, b6 = 1. À toi de lire b5 à b1.'},
+        {cost:.3,text:'Le code du cycle 2 contient cinq « 1 » et trois « 0 ».'}],
+ body:function(){return '<div class="bits" data-touched="0">'+[8,7,6,5,4,3,2,1].map(function(b){return '<button type="button" class="bit" data-v="0" aria-label="bit b'+b+', valeur 0"><span class="bn">b'+b+'</span><span class="bv">0</span></button>'}).join('')+'</div><p class="note">Touche un bit pour passer de 0 à 1 et inversement.</p>'},
+ bind:function(r){
+  var box=$('.bits',r);
+  $$('.bit',r).forEach(function(b,idx){b.addEventListener('click',function(){
+    var v=b.dataset.v==='1'?'0':'1';b.dataset.v=v;$('.bv',b).textContent=v;
+    b.setAttribute('aria-label','bit b'+(8-idx)+', valeur '+v);box.dataset.touched='1';
+  })});
+ },
+ check:function(r){return $('.bits',r).dataset.touched==='1'?null:'Touche les bits pour écrire ton code avant de valider.'},
+ grade:function(r){
+  var s=bitsValue(r),n=0,wrong=[];
+  $$('.bit',r).forEach(function(b,i){var g=s.charAt(i)===BITS_C2.charAt(i);mk(b,g);if(g)n++;else wrong.push('b'+(8-i))});
+  var raw=n===8?1.5:(n>=6?0.75:0);
+  var note=n===8?'':'Ton code : '+s+'. Bits à corriger : '+wrong.join(', ')+'.'+(n>=6?' Tu es tout proche : la moitié des points est accordée.':'');
+  return {raw:raw,explain:ex('01101110',
+   '<p>On lit le signal de gauche (b8) à droite (b1) : niveau haut = 1, niveau bas = 0. Cycle 2 : b8 = 0, b7 = 1, b6 = 1, b5 = 0, b4 = 1, b3 = 1, b2 = 1, b1 = 0. Le même raisonnement sur le cycle 1 donne 11000110, déjà écrit au-dessus du signal.</p>',note)};
+ }};
+
+var P4B={id:'4b',tag:'4.b',title:'À l’aide du document 5, <b>rechercher</b> la valeur en écriture décimale du pixel P pour le cycle 1 et pour le cycle 2.',points:1.5,
+ aides:[{cost:.2,text:'Dans le document 5, repère ton code binaire sur la ligne du haut, puis lis le nombre juste en dessous.'},
+        {cost:.3,text:'Autre méthode : additionne les poids des bits égaux à 1. Poids de b8 à b1 : 128, 64, 32, 16, 8, 4, 2, 1. Si le cycle 2 ne se trouve pas dans le tableau, revérifie ton code de la question 4.a.'}],
+ body:function(){return '<div class="pair"><div class="field"><label for="v4b1">Cycle 1 : 11000110 →</label><input id="v4b1" data-k="c1" type="text" inputmode="numeric" autocomplete="off"></div><div class="field"><label for="v4b2">Cycle 2 : ton code →</label><input id="v4b2" data-k="c2" type="text" inputmode="numeric" autocomplete="off"></div></div>'},
+ check:function(r){return $$('input',r).some(function(i){return i.value.trim()})?null:'Écris au moins une valeur avant de valider.'},
+ grade:function(r){
+  var a=$('[data-k=c1]',r),b=$('[data-k=c2]',r),va=num(a.value),vb=num(b.value),raw=0,note='';
+  var oa=eq(va,198),ob=eq(vb,110);
+  mk(a,oa);if(oa)raw+=.75;
+  var bb=$('#p-4a .bits');var mine=bb?parseInt(bitsValue($('#p-4a')),2):NaN;
+  if(ob){raw+=.75;mk(b,true)}
+  else if(!isNaN(mine)&&eq(vb,mine)&&$('#p-4a .bits').dataset.touched==='1'){raw+=.375;mk(b,false);note='Ta valeur du cycle 2 correspond bien à ton code binaire de la question 4.a, mais ce code était faux : la moitié des points de cette ligne est accordée.'}
+  else mk(b,false);
+  if(!oa&&!note)note='Une valeur est fausse. Retrouve ton code binaire dans le tableau du document 5.';
+  return {raw:raw,explain:ex('Cycle 1 : 198 · Cycle 2 : 110',
+   '<p>Le document 5 est un tableau de correspondance : on repère le code binaire sur la ligne du haut et on lit la valeur décimale dessous. 11000110 → 198 et 01101110 → 110.</p>'+
+   '<p>On peut le vérifier en additionnant les poids des bits à 1 : 198 = 128 + 64 + 4 + 2 et 110 = 64 + 32 + 8 + 4 + 2.</p>',note)};
+ }};
+
+var P4C={id:'4c',tag:'4.c',title:'À l’aide des documents 4 et 5, <b>déduire</b> si une alerte est donnée suite à la comparaison des images A et B, en argumentant.',points:2,
+ aides:[{cost:.2,text:'Le critère du document 4 : une anomalie est détectée si la valeur du pixel varie de plus de 50. Calcule d’abord la variation entre les deux cycles.'},
+        {cost:.3,text:'Calcule 198 − 110, puis compare le résultat au seuil de 50.'}],
+ body:function(){return '<div class="field"><label for="v4c">Variation de la valeur de P entre les deux cycles :</label><input id="v4c" type="text" inputmode="numeric" autocomplete="off"></div><div><p style="margin-bottom:6px">Une alerte est-elle donnée ?</p>'+choices('q4c',[['oui','Oui'],['non','Non']],true,true)+'</div>'},
+ check:function(r){return(!$('input[type=text]',r).value.trim()||!sel(r,'q4c'))?'Indique la variation et choisis oui ou non avant de valider.':null},
+ grade:function(r){
+  var i=$('input[type=text]',r),v=Math.abs(num(i.value)),c=sel(r,'q4c'),raw=0,note='';
+  var okv=eq(v,88);mk(i,okv);if(okv)raw+=1;
+  var consistent=!isNaN(v)&&((v>50&&c==='oui')||(v<=50&&c==='non'));
+  if(c==='oui')raw+=1;
+  else if(consistent){raw+=.5;note='Ta conclusion est cohérente avec la variation que tu as calculée, mais ce calcul est faux : un demi-point est accordé pour la démarche.'}
+  choiceMark(r,'q4c','oui');
+  if(!okv&&!note)note='La variation attendue est la différence entre 198 et 110.';
+  return {raw:raw,explain:ex('|198 − 110| = 88 et 88 > 50, donc oui : une alerte est transmise au centre de supervision.',
+   '<p>Le critère du document 4 : si la valeur décimale d’un pixel varie de <b>plus de 50</b>, une anomalie est détectée. Entre les deux cycles, le pixel P passe de 198 à 110, soit une variation de 88. Il s’est nettement assombri : quelque chose est apparu dans l’image B, ce qui peut correspondre à de la fumée.</p>'+
+   '<p>88 est supérieur à 50 : l’anomalie est détectée, donc l’alerte est envoyée. Une bonne argumentation cite toujours les valeurs, le seuil et la comparaison.</p>',note)};
+ }};
+
+var P5={id:'5',tag:'5',title:'À l’aide du document 2, <b>compléter</b> le programme en écrivant les cinq valeurs manquantes.',points:5,
+ aides:[{cost:.2,text:'Relis le document 2 : à quel angle l’appareil part-il ? De combien tourne-t-il à chaque prise de vue ? À quel angle s’arrête le cycle ?'},
+        {cost:.3,text:'La variable « détection anomalie » vaut 0 quand tout est normal. Elle passe à 1 quand une anomalie est détectée (question 4).'},
+        {cost:.3,text:'Les cinq valeurs, dans le désordre : 0, 0, 180, 10 et 1.'}],
+ body:function(){
+  var f=function(k,l){return '<input type="text" data-k="'+k+'" inputmode="numeric" autocomplete="off" aria-label="'+l+'">'};
+  return '<div class="prog">'+
+   '<div class="blk ev">Quand surveillance automatique lancée</div>'+
+   '<div class="cwrap"><div class="blk ctrl">Répéter indéfiniment</div><div class="inner">'+
+    '<div class="blk var">Mettre <span class="chip">angle app. photo</span> à '+f('a0','valeur initiale de l’angle')+'</div>'+
+    '<div class="blk var">Mettre <span class="chip">détection anomalie</span> à '+f('d0','valeur initiale de la détection')+'</div>'+
+    '<div class="cwrap"><div class="blk ctrl">Répéter jusqu’à ce que <span class="chip">angle app. photo</span> = '+f('aend','angle d’arrêt')+'</div><div class="inner">'+
+      '<div class="blk var">Ajouter '+f('step','pas de rotation')+' à <span class="chip">angle app. photo</span></div>'+
+      '<div class="blk act">Faire prise de vue</div>'+
+      '<div class="cwrap"><div class="blk ctrl">Si <span class="chip">détection anomalie</span> = '+f('dt','valeur qui déclenche l’alerte')+' alors</div><div class="inner"><div class="blk act">Transmettre ALERTE au centre de supervision</div></div></div>'+
+    '</div></div>'+
+   '</div></div></div>'},
+ check:function(r){return $$('input',r).some(function(i){return i.value.trim()})?null:'Remplis au moins un blanc avant de valider.'},
+ grade:function(r){
+  var exp={a0:0,d0:0,aend:180,step:10,dt:1},n=0;
+  Object.keys(exp).forEach(function(k){
+    var i=$('[data-k='+k+']',r),ok=eq(num(i.value),exp[k]);mk(i,ok);if(ok)n++;
+    else i.insertAdjacentHTML('afterend','<span class="fix">→ '+exp[k]+'</span>');
+  });
+  var why='<ul class="xl">'+
+   '<li><span class="m ok">1</span><div><b>angle app. photo = 0.</b> Au départ de chaque cycle, l’appareil est à l’état initial, angle 0°.</div></li>'+
+   '<li><span class="m ok">2</span><div><b>détection anomalie = 0.</b> Au début d’un cycle, aucune anomalie n’a encore été détectée : 0 veut dire « rien à signaler ».</div></li>'+
+   '<li><span class="m ok">3</span><div><b>répéter jusqu’à ce que angle = 180.</b> 18 prises de vue de 10° font 180°. Quand l’angle atteint 180, la boucle s’arrête, et la boucle « indéfiniment » repart avec un nouveau cycle.</div></li>'+
+   '<li><span class="m ok">4</span><div><b>ajouter 10 à angle.</b> À chaque tour, l’appareil pivote de 10° avant de faire la prise de vue.</div></li>'+
+   '<li><span class="m ok">5</span><div><b>si détection anomalie = 1 alors transmettre ALERTE.</b> La valeur 1 signifie qu’une anomalie a été détectée (variation de plus de 50, question 4) : on prévient alors le centre de supervision.</div></li></ul>';
+  return {raw:n,explain:ex('0 · 0 · 180 · 10 · 1',why,n<5?n+' blanc'+(n>1?'s':'')+' correct'+(n>1?'s':'')+' sur 5. Les bonnes valeurs sont affichées en vert à côté des blancs à corriger.':'')};
+ }};
+
+var QS=[
+ {id:'q1',title:'Besoin et solutions techniques',pts:5,intro:'En 2022, les feux de forêt ont détruit 62 000 hectares en France. Pour lutter contre les incendies, les forêts sont surveillées depuis des postes appelés vigies. Depuis une vigie, les pompiers ont une vue dégagée à 360 degrés et peuvent localiser des départs de feu à plus de 20 km. Le système automatisé de surveillance, installé sur le toit, est constitué de deux appareils photo.',docs:doc1,parts:[P1A,P1B],keep:'Un besoin dit à quoi sert l’objet (ici surveiller pour détecter les feux). Chaque exigence du diagramme est remplie par une ou plusieurs solutions techniques : on lit l’exigence, puis on cherche l’élément qui la réalise.'},
+ {id:'q2',title:'Le mouvement de l’appareil photo',pts:4,intro:'',docs:doc2,parts:[P2A,P2B],keep:'Un objet qui pivote sur place fait une rotation. Pour une durée entre deux événements, on lit deux instants sur le graphique et on les soustrait.'},
+ {id:'q3',title:'L’énergie de la batterie',pts:6,intro:'',docs:doc3,parts:[P3A,P3B,P3C],keep:'Q = I × t : on additionne d’abord les intensités de tous les éléments (2 × 0,7 + 2 × 0,5 = 2,4 A), puis on multiplie par la durée en heures (12 h) pour obtenir 28,8 A·h.'},
+ {id:'q4',title:'Détecter une anomalie',pts:5,intro:'',docs:doc4,parts:[P4A,P4B,P4C],keep:'Un pixel est codé sur un octet (8 bits). On lit un signal logique (haut = 1, bas = 0), on convertit en décimal avec le tableau ou les poids 128 à 1, puis on compare la variation au seuil de 50.'},
+ {id:'q5',title:'Compléter le programme',pts:5,intro:'Le programme pilote l’appareil photo 1 pendant un cycle, puis recommence.',docs:doc5,parts:[P5],keep:'Dans un programme : on initialise les variables avant la boucle, on répète jusqu’à une condition d’arrêt, on incrémente à chaque tour, et on teste avec « si … alors ».'}
+];
+
+/* ---------- Application ---------- */
+var results={},active=0,nav=$('#nav'),stage=$('#stage'),scoreVal=$('#scoreVal');
+var partIndex={};QS.forEach(function(q,qi){q.parts.forEach(function(p){p.q=qi;partIndex[p.id]=p})});
+
+function total(){return Object.keys(results).reduce(function(s,k){return s+results[k].earned},0)}
+function updatePills(){
+  QS.forEach(function(q,i){
+    var done=q.parts.filter(function(p){return results[p.id]}).length,p=nav.children[i];
+    p.classList.toggle('complete',done===q.parts.length);
+    $('.ps',p).textContent=done===q.parts.length?fmt(q.parts.reduce(function(s,x){return s+results[x.id].earned},0))+'/'+q.pts:(done?done+'/'+q.parts.length:'—');
+  });
+}
+function updateScore(){scoreVal.textContent=fmt(total());updatePills()}
+
+function mountPart(def){
+  var sec=document.createElement('section');sec.className='part';sec.id='p-'+def.id;
+  sec.innerHTML='<div class="part-head"><span class="tag">'+def.tag+'</span><h3>'+def.title+'</h3><span class="pts">'+fmt(def.points)+' '+pl(def.points)+'</span></div>'+
+   '<div class="part-body">'+def.body()+'</div><div class="aid-list" aria-live="polite"></div>'+
+   '<div class="actions"><button type="button" class="btn aid-btn"></button><button type="button" class="btn primary val">Valider ma réponse</button><span class="max"></span></div>'+
+   '<p class="warnmsg" role="alert" hidden></p><div class="result" hidden></div>';
+  var used=0,list=$('.aid-list',sec),ab=$('.aid-btn',sec),vb=$('.val',sec),mx=$('.max',sec),wm=$('.warnmsg',sec),res=$('.result',sec);
+  var cum=function(){return def.aides.slice(0,used).reduce(function(s,a){return s+a.cost},0)};
+  function refresh(){
+    var nx=def.aides[used];ab.hidden=!nx;
+    if(nx)ab.textContent='Aide '+(used+1)+' · −'+Math.round(nx.cost*100)+' % des points';
+    mx.textContent='Maximum possible : '+fmt(def.points*(1-cum()))+' / '+fmt(def.points);
+  }
+  ab.addEventListener('click',function(){
+    var a=def.aides[used];used++;
+    list.insertAdjacentHTML('beforeend','<div class="aid"><b>Aide '+used+' · −'+Math.round(a.cost*100)+' %</b><p>'+a.text+'</p></div>');
+    refresh();
+  });
+  if(def.bind)def.bind(sec);
+  vb.addEventListener('click',function(){
+    var err=def.check?def.check(sec):null;
+    if(err){wm.textContent=err;wm.hidden=false;return}
+    wm.hidden=true;
+    var g=def.grade(sec),c=cum(),raw=Math.max(0,Math.min(def.points,g.raw)),earned=r2(raw*(1-c)),lost=r2(raw*c);
+    results[def.id]={raw:raw,earned:earned,lost:lost,aides:used,points:def.points};
+    $$('input,select,button.bit',$('.part-body',sec)).forEach(function(e){e.disabled=true});
+    sec.classList.add('done');
+    var ratio=raw/def.points,cls=ratio>=.999?'ok':(ratio<=.001?'ko':'partial');
+    var label=cls==='ok'?'✓ Bonne réponse':(cls==='ko'?'✕ Pas cette fois':'≈ En partie juste');
+    var pen='';
+    if(raw>0&&used>0)pen='Avec '+used+' aide'+(used>1?'s':'')+' (−'+Math.round(c*100)+' %), tes '+fmt(raw)+' '+pl(raw)+' deviennent '+fmt(earned)+' '+pl(earned)+'.';
+    else if(raw>0)pen='Aucune aide utilisée : tu gardes tous les points gagnés.';
+    else if(used>0)pen='Tu as utilisé '+used+' aide'+(used>1?'s':'')+', mais la réponse ne rapporte pas de point ici.';
+    res.className='result '+cls;
+    res.innerHTML='<div class="verdict"><span class="badge">'+label+'</span><span class="sline">'+fmt(earned)+' / '+fmt(def.points)+' '+pl(def.points)+'</span></div>'+(pen?'<p class="pen">'+pen+'</p>':'')+'<div class="explain">'+g.explain+'</div>';
+    res.hidden=false;
+    if(def.after)def.after(sec);
+    updateScore();
+    res.scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
+  refresh();
+  return sec;
+}
+
+function show(i){
+  active=i;
+  $$('.qsec').forEach(function(s,k){s.hidden=k!==i});
+  $$('.pill').forEach(function(p,k){p.setAttribute('aria-current',k===i?'page':'false')});
+  if(i===QS.length)renderBilan();
+  window.scrollTo(0,0);
+}
+
+function pill(label,i){
+  var b=document.createElement('button');b.type='button';b.className='pill';
+  b.innerHTML='<span class="pl">'+label+'</span><span class="ps">—</span>';
+  b.addEventListener('click',function(){show(i)});nav.appendChild(b);
+}
+
+var HOWTO='<div class="how"><b>Comment ça marche</b><span>Réponds, puis valide : l’explication s’affiche toujours, même quand ta réponse est juste. Tu peux demander des aides avant de valider. Elles font avancer mais retirent des points sur la partie : par exemple −20 %, puis −30 %, puis −30 %. Le score en haut se met à jour à chaque validation.</span></div>';
+
+function build(){
+  Object.keys(results).forEach(function(k){delete results[k]});
+  nav.innerHTML='';stage.innerHTML='';
+  QS.forEach(function(q,i){
+    var sec=document.createElement('section');sec.className='qsec';sec.hidden=true;
+    sec.innerHTML='<div class="q-head"><p class="eyebrow">Question '+(i+1)+' · '+q.pts+' points</p><h2 class="q-title">'+q.title+'</h2></div>'+(i===0?HOWTO:'')+(q.intro?'<p class="intro">'+q.intro+'</p>':'')+'<div class="docs">'+q.docs()+'</div><div class="parts"></div><div class="qfoot"></div>';
+    var parts=$('.parts',sec);q.parts.forEach(function(p){parts.appendChild(mountPart(p))});
+    var foot=$('.qfoot',sec);
+    var prev=document.createElement('button');prev.type='button';prev.className='btn';prev.textContent=i===0?'':'← Question '+i;prev.hidden=i===0;
+    prev.addEventListener('click',function(){show(i-1)});
+    var next=document.createElement('button');next.type='button';next.className='btn primary';next.textContent=i===QS.length-1?'Voir mon bilan →':'Question '+(i+2)+' →';
+    next.addEventListener('click',function(){show(i+1)});
+    foot.appendChild(prev);foot.appendChild(next);
+    stage.appendChild(sec);pill('Q'+(i+1),i);
+  });
+  var b=document.createElement('section');b.className='qsec';b.hidden=true;b.id='bilan';stage.appendChild(b);pill('Bilan',QS.length);
+  show(0);updateScore();
+}
+
+function renderBilan(){
+  var b=$('#bilan'),tot=total(),all=Object.keys(partIndex),done=all.filter(function(k){return results[k]}).length;
+  var lost=all.reduce(function(s,k){return s+(results[k]?results[k].lost:0)},0);
+  var aides=all.reduce(function(s,k){return s+(results[k]?results[k].aides:0)},0);
+  var msg=tot>=22?'Excellent : tu maîtrises presque tout le sujet.':tot>=18?'Très bien : il ne reste que quelques détails à consolider.':tot>=13?'Bon travail : les bases sont là, relis les explications des parties manquées.':tot>=8?'À consolider : reprends les explications et refais les parties où tu as perdu des points.':'À reprendre : relis les explications question par question, puis recommence.';
+  var html='<div class="q-head"><p class="eyebrow">Bilan</p><h2 class="q-title">Ton résultat</h2></div>'+
+   '<div class="big"><b>'+fmt(tot)+'</b><span>/ 25 · soit '+fmt(tot/25*20)+' / 20</span></div><p>'+(done<all.length?'Il reste '+(all.length-done)+' partie'+(all.length-done>1?'s':'')+' à traiter. ':'')+msg+'</p>'+
+   '<div class="stats"><div class="stat"><b>'+done+' / '+all.length+'</b><span>parties validées</span></div><div class="stat"><b>'+aides+'</b><span>aide'+(aides>1?'s':'')+' utilisée'+(aides>1?'s':'')+'</span></div><div class="stat"><b>−'+fmt(lost)+'</b><span>point'+(lost>1?'s':'')+' retiré'+(lost>1?'s':'')+' par les aides</span></div></div>'+
+   '<div class="block"><h3 class="sec-h">Détail par question</h3>';
+  QS.forEach(function(q,i){
+    var e=0,l=0;q.parts.forEach(function(p){if(results[p.id]){e+=results[p.id].earned;l+=results[p.id].lost}});
+    html+='<div class="brow"><div class="brow-h"><span>Question '+(i+1)+' · '+q.title+'</span><span>'+fmt(e)+' / '+q.pts+'</span></div><div class="bar" role="img" aria-label="'+fmt(e)+' points gagnés, '+fmt(l)+' perdus par les aides, sur '+q.pts+'"><i class="e" style="width:'+(e/q.pts*100)+'%"></i><i class="l" style="width:'+(l/q.pts*100)+'%"></i></div></div>';
+  });
+  html+='<div class="legend"><span><i style="background:var(--ok)"></i>points gagnés</span><span><i style="background:var(--warn)"></i>points retirés par les aides</span><span><i style="background:var(--line)"></i>points non obtenus</span></div></div>';
+  var rev=all.filter(function(k){return !results[k]||results[k].raw<results[k].points-.001});
+  html+='<div class="block"><h3 class="sec-h">À revoir</h3>';
+  if(!rev.length)html+='<p>Toutes les parties sont réussies sans erreur. Les aides ont seulement coûté des points.</p>';
+  else{html+='<ul class="rev">'+rev.map(function(k){var p=partIndex[k];return '<li><span><b>'+p.tag+'</b> · '+(results[k]?fmt(results[k].raw)+' / '+fmt(p.points)+' avant aides':'pas encore traitée')+'</span><button type="button" class="btn" data-go="'+k+'">Revoir</button></li>'}).join('')+'</ul>'}
+  html+='</div><div class="block"><h3 class="sec-h">À retenir</h3><ol class="keep">'+QS.map(function(q){return '<li>'+q.keep+'</li>'}).join('')+'</ol></div>'+
+   '<div class="qfoot"><button type="button" class="btn" id="back">← Question 5</button><button type="button" class="btn primary" id="reset">Tout recommencer</button></div>';
+  b.innerHTML=html;
+  $$('[data-go]',b).forEach(function(btn){btn.addEventListener('click',function(){var p=partIndex[btn.dataset.go];show(p.q);var t=document.getElementById('p-'+p.id);if(t)t.scrollIntoView({block:'start'})})});
+  $('#back',b).addEventListener('click',function(){show(QS.length-1)});
+  var rs=$('#reset',b),armed=false;
+  rs.addEventListener('click',function(){
+    if(!armed){armed=true;rs.textContent='Confirmer : effacer mes réponses';return}
+    build();
+  });
+}
+
+build();
+})();
+</script>
+
+</body>
+</html>
