@@ -289,6 +289,7 @@ footer{font-size:.8rem;color:var(--muted)}
 
         <details class="sec" id="accSec"><summary>Accessoires</summary><div class="secbody">
           <label class="tg"><input type="checkbox" id="refl"> Réflecteur conique sur la face avant</label>
+          <label class="tg" id="postsL"><input type="checkbox" id="posts"> Mini poteaux à casser dans les grandes ouvertures des parois (pour que le haut ne s’affaisse pas à l’impression)</label>
           <label class="tg" id="lugL"><input type="checkbox" id="lug"> Patte pour anneau porte-clé (à l’arrière)</label>
           <label class="tg" id="reflSnapL"><input type="checkbox" id="reflSnap"> S’emboîte dans la face avant (tenon)</label>
           <div class="field"><label for="reflH">Hauteur du réflecteur (mm)</label><input type="number" id="reflH" min="8" max="40" step="1"></div>
@@ -387,7 +388,7 @@ const RECO={
 };
 
 /* ================= État ================= */
-const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,lidShow:true,sel:-1,txt:{text:'',panel:'',font:'sans',size:8,fu:.5,fv:.5,depth:0.6,place:false},screws:true,screw:'auto',reflSnap:true,lug:false,clip:false,cw:10,cl:45,ch:3,cj:0.4};
+const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,posts:false,lidShow:true,sel:-1,txt:{text:'',panel:'',font:'sans',size:8,fu:.5,fv:.5,depth:0.6,place:false},screws:true,screw:'auto',reflSnap:true,lug:false,clip:false,cw:10,cl:45,ch:3,cj:0.4};
 function loadPreset(id){
   const p=PRESETS[id];state.obj=id;state.mode=p.reco;state.screws=!p.noScrews&&!p.chess&&!p.sm;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.lug=!!p.lug;state.clip=!!p.clip;state.sel=-1;
   state.holes=p.holes.map(([type,face,fu,fv])=>{const t=HT[type];return {type,label:t.label,face,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu,fv};});
@@ -525,7 +526,23 @@ function buildModelBase(){
     panels.push({part:'corps',name:'Rail de pince',noLabel:true,frame:fr,outline:rect(0,b-K.rw,K.Lg+K.rw,b),holes:[],depth:t,ex:[0,0,-30]});
     panels.push({part:'corps',name:'Butée de pince',noLabel:true,frame:fr,outline:rect(K.Lg,b,K.Lg+K.rw,a),holes:[],depth:t,ex:[0,0,-30]});}
   const extra3d=(S&&!S.laser?bossGeos(d,S):[]).concat(state.mode==='3d'&&state.lug?[lugGeo(d)]:[]).concat(K&&!K.laser?clipGeos(d,K):[]);
-  return {d,panels,res,abs,screws:S,bosses:extra3d,clip:K};
+  const posts=state.mode==='3d'&&state.posts?postGeos(panels,t):[];
+  return {d,panels,res,abs,screws:S,bosses:extra3d,clip:K,posts};
+}
+/* Mini poteaux à casser : soutiennent le haut des ouvertures larges des parois verticales pendant l'impression */
+const POST_MIN=8;
+function postGeos(panels,t){
+  const out=[],walls=['Côté gauche','Côté droit','Face avant','Face arrière'];
+  const box=(u0,u1,v0,v1,z0,z1)=>{const g=new THREE.BoxGeometry(u1-u0,v1-v0,z1-z0);g.translate((u0+u1)/2,(v0+v1)/2,(z0+z1)/2);return g;};
+  panels.filter(p=>p.part==='corps'&&walls.includes(p.name)).forEach(p=>{const M=frameMatrix(p.frame);
+    p.holes.forEach(h=>{if(h.shape==='poly')return;const w=h.shape==='rond'?h.d:ext(h)[0]*2;if(w<POST_MIN)return;
+      const n=Math.max(1,Math.floor(w/10));
+      for(let i=0;i<n;i++){const dx=-w/2+w*(i+.5)/n;let lo,hi;
+        if(h.shape==='rond'){const r=h.d/2,c=Math.sqrt(Math.max(0,r*r-dx*dx));if(c<2)continue;lo=h.v-c;hi=h.v+c;}else{const b=ext(h)[1];lo=h.v-b;hi=h.v+b;}
+        if(hi-lo<3)continue;const u=h.u+dx,nk=0.6,z0=t*0.15,z1=t*0.85,zn0=t*0.3,zn1=t*0.7;
+        [box(u-0.6,u+0.6,lo+nk-0.05,hi-nk+0.05,z0,z1),box(u-0.3,u+0.3,lo-0.05,lo+nk,zn0,zn1),box(u-0.3,u+0.3,hi-nk,hi+0.05,zn0,zn1)].forEach(g=>out.push(place(g,M)));}
+    });});
+  return out;
 }
 
 /* ================= Géométrie Three.js ================= */
@@ -618,6 +635,7 @@ function rebuild3D(m){
     let off=null;if(state.explode){off=p.part==='couvercle'?[0,0,Math.max(25,m.d.H*0.6)]:(p.ex||null);}
     add(panelGeo(p),p.part==='couvercle'?cLid:cBody,off);});
   (m.bosses||[]).forEach(g=>add(g,cBody,null));
+  (m.posts||[]).forEach(g=>add(g,new THREE.Color(css('--mark')),null));
   if(!laser&&state.reflector){const r=reflectorLocal(m.d),M=new THREE.Matrix4().set(0,1,0,m.d.L, 1,0,0,r.center[0], 0,0,1,r.center[1], 0,0,0,1);
     add(place(r.g,M),new THREE.Color(css('--metal')),state.explode?[25,0,0]:null);}
   if(state.sel>=0&&state.holes[state.sel]){const h=absHole(state.holes[state.sel],m.d),F=frames(m.d)[h.face],[a,b]=ext(h),R=Math.max(a,b)+2.5;
@@ -681,7 +699,7 @@ function stlOf(geos,name){
 }
 function printParts(m){
   const d=m.d,parts=[];
-  const body=m.panels.filter(p=>p.part==='corps').map(panelGeo).concat((m.bosses||[]).map(g=>g.clone()));parts.push({file:'corps.stl',label:'Corps',geos:body});
+  const body=m.panels.filter(p=>p.part==='corps').map(panelGeo).concat((m.bosses||[]).map(g=>g.clone())).concat((m.posts||[]).map(g=>g.clone()));parts.push({file:'corps.stl',label:'Corps',geos:body});
   const lidM=new THREE.Matrix4().set(1,0,0,0, 0,-1,0,d.W, 0,0,-1,d.H+d.t, 0,0,0,1);
   const lid=m.panels.filter(p=>p.part==='couvercle').map(p=>place(panelGeo(p),lidM));parts.push({file:'couvercle.stl',label:'Couvercle',geos:lid});
   if(state.reflector){const r=reflectorLocal(d),M=r.snap?new THREE.Matrix4().makeTranslation(0,0,state.reflH).multiply(new THREE.Matrix4().makeRotationX(-Math.PI/2)):new THREE.Matrix4().makeRotationX(Math.PI/2);
@@ -710,7 +728,7 @@ function notice(m,kind){
   const K=m.clip,kTxt=!K?'':`\nRAINURE POUR PINCE À LINGE (sous le fond)\n- Rainure de ${fmt(K.g)} mm de large (pince de ${fmt(state.cw)} mm + jeu de ${fmt(state.cj)} mm), ${fmt(K.Lg)} mm de long, ${fmt(K.h)} mm de profondeur. Elle est ouverte à l’arrière (côté opposé à la face avant) et fermée par une butée.\n`+
     (K.laser?`- 2 rails et 1 butée de ${fmt(K.rw)} mm de large sont dans le plan : colle-les sous le fond, les rails le long de la longueur, la butée en travers au bout. Utilise une pince à linge comme gabarit pendant le collage (sans colle sur elle).\n`:`- Les rails et la butée font partie de corps.stl : le boîtier s’imprime posé sur eux (le fond fait un petit pont au-dessus de la rainure, c’est prévu).\n`)+
     `- Colle une branche de la pince à linge au fond de la rainure (colle chaude ou colle à bois), la pince poussée contre la butée : ses mâchoires dépassent à l’arrière et pincent la couverture du livre.\n- Mesure d’abord ta pince au pied à coulisse : règle « Largeur de la pince » dans le modeleur si elle ne fait pas ${fmt(state.cw)} mm.\n`;
-  if(kind==='3d')return head+`IMPRESSION 3D\n- Parois : ${fmt(d.t)} mm ; jeu du couvercle : ${fmt(state.jeu)} mm\n- PLA, couche 0,2 mm, remplissage 20 %, sans support\n- corps.stl : ouverture vers le haut ; couvercle.stl : déjà posé à plat, rebord vers le haut${state.reflector?(state.reflSnap?' ; reflecteur.stl : grande ouverture sur le plateau, tenon vers le haut':' ; reflecteur.stl : fond percé sur le plateau'):''}\n- Un trou dans une paroi verticale fait un « pont » en haut : au-delà de 15 mm, il peut légèrement s’affaisser, c’est normal.\n${kTxt}${state.lug?`\nPATTE PORTE-CLÉ\n- Une patte de ${LUG.t} mm d’épaisseur dépasse de ${LUG.L} mm à l’arrière, au ras du fond, percée à Ø ${LUG.d} mm pour l’anneau. Elle fait partie de corps.stl et s’imprime à plat, sans support.\n- Ouvre l’anneau avec l’ongle ou une lame de tournevis plat et fais-le tourner pour l’enfiler.\n`:''}${state.reflector&&state.reflSnap?(()=>{const r=reflectorLocal(d);return `\nRÉFLECTEUR EMBOÎTÉ\n- Le réflecteur porte un tenon creux de ${fmt(r.sp)} mm (Ø extérieur ${fmt(r.hole-2*REFL.fit)} mm) avec 3 petites nervures. Il s’enfonce dans le trou de ${fmt(r.hole)} mm de la face avant ; l’ampoule passe dans le tenon.\n- Emboîte-le en appuyant fort, bien droit : les nervures s’écrasent un peu et le serrent. S’il est trop dur, gratte les nervures au cutter ; s’il tient mal, une goutte de colle suffit.\n- Tapisse l’intérieur de papier aluminium avant de l’emboîter.\n`;})():''}${sTxt}\nMesure tes composants avant de lancer une série.\n`;
+  if(kind==='3d')return head+`IMPRESSION 3D\n- Parois : ${fmt(d.t)} mm ; jeu du couvercle : ${fmt(state.jeu)} mm\n- PLA, couche 0,2 mm, remplissage 20 %, sans support\n- corps.stl : ouverture vers le haut ; couvercle.stl : déjà posé à plat, rebord vers le haut${state.reflector?(state.reflSnap?' ; reflecteur.stl : grande ouverture sur le plateau, tenon vers le haut':' ; reflecteur.stl : fond percé sur le plateau'):''}\n${m.posts&&m.posts.length?`- Mini poteaux : ${m.posts.length/3} petit${m.posts.length>3?'s':''} poteau${m.posts.length>3?'x':''} tien${m.posts.length>3?'nent':'t'} le haut des grandes ouvertures des parois pendant l’impression, pour qu’il ne s’affaisse pas. Une fois le boîtier refroidi, casse-les à la pince plate (ou coupe-les à la pince coupante) au ras du bord, puis ébavure au cutter ou à la lime.\n`:'- Un trou dans une paroi verticale fait un « pont » en haut : au-delà de 15 mm, il peut légèrement s’affaisser. Coche « Mini poteaux » pour l’éviter.\n'}${kTxt}${state.lug?`\nPATTE PORTE-CLÉ\n- Une patte de ${LUG.t} mm d’épaisseur dépasse de ${LUG.L} mm à l’arrière, au ras du fond, percée à Ø ${LUG.d} mm pour l’anneau. Elle fait partie de corps.stl et s’imprime à plat, sans support.\n- Ouvre l’anneau avec l’ongle ou une lame de tournevis plat et fais-le tourner pour l’enfiler.\n`:''}${state.reflector&&state.reflSnap?(()=>{const r=reflectorLocal(d);return `\nRÉFLECTEUR EMBOÎTÉ\n- Le réflecteur porte un tenon creux de ${fmt(r.sp)} mm (Ø extérieur ${fmt(r.hole-2*REFL.fit)} mm) avec 3 petites nervures. Il s’enfonce dans le trou de ${fmt(r.hole)} mm de la face avant ; l’ampoule passe dans le tenon.\n- Emboîte-le en appuyant fort, bien droit : les nervures s’écrasent un peu et le serrent. S’il est trop dur, gratte les nervures au cutter ; s’il tient mal, une goutte de colle suffit.\n- Tapisse l’intérieur de papier aluminium avant de l’emboîter.\n`;})():''}${sTxt}\nMesure tes composants avant de lancer une série.\n`;
   return head+`DÉCOUPE LASER\n- Plaque de ${fmt(d.t)} mm (contreplaqué, MDF, carton gris rigide ou acrylique)\n- Trait rouge = découpe ; texte bleu = gravure (facultatif)\n- Créneaux d’environ ${fmt(state.fw)} mm ; largeur du trait laser compensée : ${fmt(state.kerf)} mm\n- Assemblage : fond + 4 côtés collés à la colle à bois (vinylique). Le couvercle ne se colle pas :\n  colle seulement le « cadre sous le couvercle » dessous, bien centré${S?' (ses 2 trous en face de ceux du couvercle)':''}, pour qu’il reste en place.\n${sTxt}${kTxt}- Fais d’abord un essai d’emboîtement sur une chute et ajuste la largeur du trait si c’est trop lâche ou trop serré.\n`;
 }
 async function export3D(){const m=buildModel(),parts=printParts(m),z=new JSZip();parts.forEach(p=>z.file(p.file,stlOf(p.geos,p.label).buf));z.file('LISEZ-MOI.txt',notice(m,'3d'));
@@ -1217,7 +1235,7 @@ function renderControls(){
   $('clipSec').hidden=isC||isS;$('clip').checked=state.clip;$('clipF').hidden=!state.clip;['cw','cl','ch','cj'].forEach(k=>$(k).value=state[k]);$('chF').hidden=state.mode==='laser';
   $('scrSec').hidden=isC||isS;$('scr').checked=state.screws;$('scrTypeF').hidden=!state.screws;
   if($('scrType').options.length<2)$('scrType').insertAdjacentHTML('beforeend',Object.entries(SCREWS).map(([k,v])=>`<option value="${k}">${v.nom}</option>`).join(''));$('scrType').value=state.screw;
-  $('refl').checked=state.reflector;$('reflSnap').checked=state.reflSnap;$('lug').checked=state.lug;$('reflSnapL').hidden=!state.reflector;$('reflH').value=state.reflH;$('accSec').hidden=state.mode!=='3d'||isC||isS;
+  $('refl').checked=state.reflector;$('reflSnap').checked=state.reflSnap;$('lug').checked=state.lug;$('posts').checked=state.posts;$('reflSnapL').hidden=!state.reflector;$('reflH').value=state.reflH;$('accSec').hidden=state.mode!=='3d'||isC||isS;
   $('planTab').hidden=state.mode!=='laser'&&!isC&&!isS;if(state.mode!=='laser'&&!isC&&!isS&&state.view==='plan')state.view='3d';
   document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===state.view)));
   $('view3d').hidden=state.view!=='3d';$('viewPlan').hidden=state.view!=='plan';
@@ -1273,6 +1291,7 @@ function renderWarns(m){
   if(m.clip&&state.cl<25)W.push(['info','Rainure courte : la pince à linge sera peu tenue. 35 à 50 mm est conseillé.']);
   if(p.lug&&state.mode==='laser')W.push(['info','En découpe laser, le boîtier n’a pas de patte pour l’anneau : ajoute deux ouvertures « Passage de fils » près d’un coin de la face arrière et passe une cordelette, ou choisis l’impression 3D.']);
   if(state.mode==='3d'&&state.reflector&&!state.holes.some(h=>h.face==='avant'&&h.shape==='rond'))W.push(['info','Le réflecteur est centré sur la face avant, mais aucune ouverture ronde n’y est prévue pour l’ampoule.']);
+  if(state.mode==='3d'&&state.posts&&!(m.posts||[]).length)W.push(['info',`Aucune ouverture d’au moins ${POST_MIN} mm de large dans les parois : les mini poteaux ne sont pas nécessaires.`]);
   if(!W.length)W.push(['ok','Tout est en ordre : les ouvertures sont bien placées et le contenu prévu rentre.'+(S?` Couvercle fixé par 2 vis ${S.sc.nom}.`:'')]);
   $('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');
 }
@@ -1318,6 +1337,7 @@ $('kerf').addEventListener('input',e=>{const v=+e.target.value;if(v>=0&&v<=0.5){
 $('engrave').addEventListener('change',e=>{state.engrave=e.target.checked;});
 $('refl').addEventListener('change',e=>{state.reflector=e.target.checked;$('reflSnapL').hidden=!state.reflector;update(false);});
 $('lug').addEventListener('change',e=>{state.lug=e.target.checked;update(false);resetView();});
+$('posts').addEventListener('change',e=>{state.posts=e.target.checked;update(false);});
 $('clip').addEventListener('change',e=>{state.clip=e.target.checked;$('clipF').hidden=!state.clip;update(false);});
 ['cw','cl','ch','cj'].forEach(k=>$(k).addEventListener('input',e=>{const el=e.target,v=+el.value.replace(',','.'),ok=el.value!==''&&v>=+el.min&&v<=+el.max;el.classList.toggle('bad',!ok);if(ok){state[k]=v;update(false);}}));
 $('reflSnap').addEventListener('change',e=>{state.reflSnap=e.target.checked;update(false);});
