@@ -284,6 +284,7 @@ footer{font-size:.8rem;color:var(--muted)}
             <div class="field"><label for="cl">Longueur de la rainure (mm)</label><input type="number" id="cl" min="15" max="200" step="1"></div>
             <div class="field" id="chF"><label for="ch">Profondeur de la rainure (mm)</label><input type="number" id="ch" min="1.5" max="8" step="0.5"></div>
             <div class="field"><label for="cj">Jeu (mm)</label><input type="number" id="cj" min="0" max="1.5" step="0.05"></div>
+            <label class="tg"><input type="checkbox" id="tie"> Fentes pour colliers de serrage (Rilsan) qui tiennent la pince</label>
             <p class="tip" id="clipTip"></p>
           </div>
         </div></details>
@@ -389,7 +390,7 @@ const RECO={
 };
 
 /* ================= État ================= */
-const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,posts:false,lidShow:true,sel:-1,txt:{text:'',panel:'',font:'sans',size:8,fu:.5,fv:.5,depth:0.6,place:false},screws:true,screw:'auto',reflSnap:true,lug:false,clip:false,cw:10,cl:45,ch:3,cj:0.4,slide:true};
+const state={sm:{paper:'A4',pw:297,pd:210,dev:'t10',tw:250,td:174,ca:15,cb:15,win:30,winShape:'rond',fov:65,hc:252,cable:'droite',stops:true},chess:{make:{pieces:true,plateau:true,tiroir:true},c:32,b:14,Hw:40,marks:true,jt:0.5,K:60,soc:'rond',D:28,layers:2,tb3:4,hs3:8,jp3:0.4,jpL:0.2,kn:0},obj:null,mode:'3d',Li:100,Wi:36,Hi:30,t3:2,jeu:0.25,tl:3,fw:9,kerf:0.1,engrave:false,holes:[],reflector:false,reflH:16,view:'3d',explode:false,posts:false,lidShow:true,sel:-1,txt:{text:'',panel:'',font:'sans',size:8,fu:.5,fv:.5,depth:0.6,place:false},screws:true,screw:'auto',reflSnap:true,lug:false,clip:false,cw:10,cl:45,ch:3,cj:0.4,slide:true,tie:true};
 function loadPreset(id){
   const p=PRESETS[id];state.obj=id;state.mode=p.reco;state.screws=!p.noScrews&&!p.chess&&!p.sm;[state.Li,state.Wi,state.Hi]=p.inner;state.reflector=!!p.reflector;state.lug=!!p.lug;state.clip=!!p.clip;state.sel=-1;
   state.holes=p.holes.map(([type,face,fu,fv])=>{const t=HT[type];return {type,label:t.label,face,shape:t.shape,d:t.d||10,w:t.w||t.d||10,h:t.h||t.w||t.d||10,fu,fv};});
@@ -455,7 +456,12 @@ function screwKey(){ // « auto » : la plus courte qui mord d'au moins 4,5 mm
 function clipData(d){
   if(!state.clip)return null;const laser=state.mode==='laser',{L,W,t}=d;
   const rw=laser?Math.max(4,Math.round(1.5*t*2)/2):3,h=laser?t:state.ch,g=state.cw+state.cj,Lg=Math.min(state.cl,L-rw),yc=W/2;
-  return {laser,rw,h,g,Lg,yc,ok:g+2*rw<=W&&state.cl<=L-rw};
+  const K={laser,rw,h,g,Lg,yc,ok:g+2*rw<=W&&state.cl<=L-rw};
+  if(state.tie){ // fentes pour colliers de serrage : côté poignées de la pince (près de la butée), là où ses 2 branches sont écartées
+    const sw=5.5,sh=2,off=g/2+rw+1+sh/2,xs=[Lg-8,Lg-22].filter(x=>x>=t+sw/2+1);
+    K.ties=xs.flatMap((x,i)=>[[x,yc-off-0.3*i],[x,yc+off+0.3*i]]) /* décalage de 0,3 mm : évite des bords alignés qui gênent la triangulation */.map(([u,v])=>({shape:'rect',u,v,w:sw,h:sh,tie:true}));
+    K.tieOk=K.ties.every(h=>h.v-sh/2>t+0.5&&h.v+sh/2<W-t-0.5);K.nTie=xs.length;}
+  return K;
 }
 function clipGeos(d,K){ // 2 rails + butée, sous le fond ; l'arrière (x = 0) reste ouvert pour les mâchoires
   const e=0.05,box=(x0,x1,y0,y1)=>{const g=new THREE.BoxGeometry(x1-x0,y1-y0,K.h+e);g.translate((x0+x1)/2,(y0+y1)/2,(-K.h+e)/2);return g;};
@@ -581,6 +587,7 @@ function buildModelBase(){
     if(false)S.pos.forEach(([u,v])=>{for(let k=0;k<S.n;k++)panels.push({part:'corps',name:'Cale de vissage',noLabel:true,frame:{U:[1,0,0],V:[0,1,0],N:[0,0,1],O:[0,0,H-t-(k+1)*t]},outline:rect(u-S.c/2,v-S.c/2,u+S.c/2,v+S.c/2),holes:[{shape:'rond',u,v,d:S.pilot}],depth:t});});
   }
   const K=clipData(d);
+  if(K&&K.ties){const f=panels.find(q=>q.name==='Fond');if(f)f.holes=f.holes.concat(K.ties);}
   if(K&&K.laser){const a=K.yc+K.g/2,b=K.yc-K.g/2,fr={U:[1,0,0],V:[0,1,0],N:[0,0,1],O:[0,0,-t]};
     panels.push({part:'corps',name:'Rail de pince',noLabel:true,frame:fr,outline:rect(0,a,K.Lg+K.rw,a+K.rw),holes:[],depth:t,ex:[0,0,-30]});
     panels.push({part:'corps',name:'Rail de pince',noLabel:true,frame:fr,outline:rect(0,b-K.rw,K.Lg+K.rw,b),holes:[],depth:t,ex:[0,0,-30]});
@@ -787,7 +794,8 @@ function notice(m,kind){
     :`\nFIXATION DU COUVERCLE (2 vis M3 et écrous prisonniers)\n- 2 vis ${S.sc.nom}. Pas de colle ni de cale.\n- Le haut du côté gauche et du côté droit porte une encoche en T : la fente reçoit la vis, la barre du T reçoit l’écrou.\n- Glisse un écrou M3 à plat dans la barre de chaque T (par l’intérieur ou l’extérieur de la paroi). Il dépasse un peu de la paroi : c’est normal, il est bloqué et ne peut pas tourner.\n- Pose le couvercle (il déborde de ${fmt(S.o)} mm tout autour pour que ses trous de Ø ${fmt(S.sc.pass)} mm tombent au-dessus des parois), puis visse : la vis descend dans la fente et se serre dans l’écrou.\n- Ne serre pas trop fort : le bois pourrait s’écraser sous la tête de vis.\n`;
   const K=m.clip,kTxt=!K?'':`\nRAINURE POUR PINCE À LINGE (sous le fond)\n- Rainure de ${fmt(K.g)} mm de large (pince de ${fmt(state.cw)} mm + jeu de ${fmt(state.cj)} mm), ${fmt(K.Lg)} mm de long, ${fmt(K.h)} mm de profondeur. Elle est ouverte à l’arrière (côté opposé à la face avant) et fermée par une butée.\n`+
     (K.laser?`- 2 rails et 1 butée de ${fmt(K.rw)} mm de large sont dans le plan : colle-les sous le fond, les rails le long de la longueur, la butée en travers au bout. Utilise une pince à linge comme gabarit pendant le collage (sans colle sur elle).\n`:`- Les rails et la butée font partie de corps.stl : le boîtier s’imprime posé sur eux (le fond fait un petit pont au-dessus de la rainure, c’est prévu).\n`)+
-    `- Colle une branche de la pince à linge au fond de la rainure (colle chaude ou colle à bois), la pince poussée contre la butée : ses mâchoires dépassent à l’arrière et pincent la couverture du livre.\n- Mesure d’abord ta pince au pied à coulisse : règle « Largeur de la pince » dans le modeleur si elle ne fait pas ${fmt(state.cw)} mm.\n`;
+    (K.ties?`- Pose la pince à linge dans la rainure, poussée contre la butée : ses mâchoires dépassent à l’arrière et pincent la couverture du livre.\n- Fixe-la avec ${K.nTie} collier${K.nTie>1?'s':''} de serrage (Rilsan, 2,5 à 4,8 mm de large) : chaque collier entre par une fente du fond, passe ENTRE les deux branches de la pince (autour de la branche du haut seulement, sinon elle ne pourrait plus s’ouvrir), ressort par la fente d’en face et se ferme à l’intérieur de la boîte. Serre fort, puis coupe le bout qui dépasse.\n- Une goutte de colle dans la rainure en plus rend l’ensemble encore plus solide.\n`
+    :`- Colle une branche de la pince à linge au fond de la rainure (colle chaude ou colle à bois), la pince poussée contre la butée : ses mâchoires dépassent à l’arrière et pincent la couverture du livre.\n`)+`- Mesure d’abord ta pince au pied à coulisse : règle « Largeur de la pince » dans le modeleur si elle ne fait pas ${fmt(state.cw)} mm.\n`;
   if(kind==='3d')return head+`IMPRESSION 3D\n- Parois : ${fmt(d.t)} mm ; jeu du couvercle : ${fmt(state.jeu)} mm\n- PLA, couche 0,2 mm, remplissage 20 %, sans support\n- corps.stl : ouverture vers le haut ; couvercle.stl : déjà posé à plat, rebord vers le haut${state.reflector?(state.reflSnap?' ; reflecteur.stl : grande ouverture sur le plateau, tenon vers le haut':' ; reflecteur.stl : fond percé sur le plateau'):''}\n${m.posts&&m.posts.length?`- Mini poteaux : ${m.posts.length/3} petit${m.posts.length>3?'s':''} poteau${m.posts.length>3?'x':''} tien${m.posts.length>3?'nent':'t'} le haut des grandes ouvertures des parois pendant l’impression, pour qu’il ne s’affaisse pas. Une fois le boîtier refroidi, casse-les à la pince plate (ou coupe-les à la pince coupante) au ras du bord, puis ébavure au cutter ou à la lime.\n`:'- Un trou dans une paroi verticale fait un « pont » en haut : au-delà de 15 mm, il peut légèrement s’affaisser. Coche « Mini poteaux » pour l’éviter.\n'}${kTxt}${state.lug?`\nPATTE PORTE-CLÉ\n- Une patte de ${LUG.t} mm d’épaisseur dépasse de ${LUG.L} mm à l’arrière, au ras du fond, percée à Ø ${LUG.d} mm pour l’anneau. Elle fait partie de corps.stl et s’imprime à plat, sans support.\n- Ouvre l’anneau avec l’ongle ou une lame de tournevis plat et fais-le tourner pour l’enfiler.\n`:''}${state.reflector&&state.reflSnap?(()=>{const r=reflectorLocal(d);return `\nRÉFLECTEUR EMBOÎTÉ\n- Le réflecteur porte un tenon creux de ${fmt(r.sp)} mm (Ø extérieur ${fmt(r.hole-2*REFL.fit)} mm) avec 3 petites nervures. Il s’enfonce dans le trou de ${fmt(r.hole)} mm de la face avant ; l’ampoule passe dans le tenon.\n- Emboîte-le en appuyant fort, bien droit : les nervures s’écrasent un peu et le serrent. S’il est trop dur, gratte les nervures au cutter ; s’il tient mal, une goutte de colle suffit.\n- Tapisse l’intérieur de papier aluminium avant de l’emboîter.\n`;})():''}${sTxt}\nMesure tes composants avant de lancer une série.\n`;
   return head+`DÉCOUPE LASER\n- Plaque de ${fmt(d.t)} mm (contreplaqué, MDF, carton gris rigide ou acrylique)\n- Trait rouge = découpe ; texte bleu = gravure (facultatif)\n- Créneaux d’environ ${fmt(state.fw)} mm ; largeur du trait laser compensée : ${fmt(state.kerf)} mm\n${state.slide?`- Assemblage : fond + 4 côtés collés à la colle à bois (vinylique). La face arrière est plus basse d’une épaisseur : c’est par là que sort le couvercle.\n\nCOUVERCLE COULISSANT\n1. Les 2 « rails de glissière » ont des tenons sur leur bord extérieur : enfonce-les dans les mortaises des côtés gauche et droit, juste sous le haut des parois (avant de coller les côtés au fond, c’est plus facile). Une goutte de colle dans chaque mortaise.\n2. Le haut des côtés et de la face avant porte des tenons : pose le « cadre de glissière » (en U) dessus, ouverture du U côté arrière, les tenons dans ses mortaises. Il dépasse de ${fmt(SLIDE.over)} mm autour de la boîte et recouvre les bords du couvercle de ${fmt(SLIDE.ov)} mm. Colle-le.\n3. Ne mets pas de colle sur le couvercle : glisse-le entre les rails et le cadre, par l’arrière. Le trou de Ø 12 mm sert à le tirer avec le doigt.\n4. S’il frotte, ponce légèrement ses bords ; une bougie frottée sur les rails le fait mieux glisser.\n`:`- Assemblage : fond + 4 côtés collés à la colle à bois (vinylique). Le couvercle ne se colle pas :\n  colle seulement le « cadre sous le couvercle » dessous, bien centré, pour qu’il reste en place.\n`}${kTxt}- Fais d’abord un essai d’emboîtement sur une chute et ajuste la largeur du trait si c’est trop lâche ou trop serré.\n`;
 }
@@ -1292,7 +1300,7 @@ function renderControls(){
   sync('Li',state.Li);sync('Wi',state.Wi);sync('Hi',state.Hi);
   $('t3').value=state.t3;$('jeu').value=state.jeu;$('tl').value=state.tl;$('tl_r').value=state.tl;$('fw').value=state.fw;$('kerf').value=state.kerf;$('engrave').checked=state.engrave;
   $('mat3d').hidden=state.mode!=='3d'||isC||isS;$('matLaser').hidden=state.mode!=='laser'&&!isC&&!isS;
-  $('clipSec').hidden=isC||isS;$('clip').checked=state.clip;$('clipF').hidden=!state.clip;['cw','cl','ch','cj'].forEach(k=>$(k).value=state[k]);$('chF').hidden=state.mode==='laser';
+  $('clipSec').hidden=isC||isS;$('clip').checked=state.clip;$('clipF').hidden=!state.clip;['cw','cl','ch','cj'].forEach(k=>$(k).value=state[k]);$('tie').checked=state.tie;$('chF').hidden=state.mode==='laser';
   $('scrSec').hidden=isC||isS;$('scr').checked=state.screws;$('scrTypeF').hidden=!state.screws||state.mode==='laser';
   $('scrL').hidden=state.mode==='laser';$('slideL').hidden=state.mode!=='laser';$('slide').checked=state.slide;
   if($('scrType').options.length<2)$('scrType').insertAdjacentHTML('beforeend',Object.entries(SCREWS).map(([k,v])=>`<option value="${k}">${v.nom}</option>`).join(''));$('scrType').value=state.screw;
@@ -1363,6 +1371,8 @@ function renderWarns(m){
       if(hit)W.push(['bad',`« ${h.label} » (${FL[h.face].toLowerCase()}) touche un ${S.laser?'coin de vissage':'support de vis'} : éloigne-la du coin.`]);});
   }
   if(m.clip&&!m.clip.ok)W.push(['bad',`La rainure pour la pince (${fmt(m.clip.g+2*m.clip.rw)} mm de large avec ses rails, ${fmt(state.cl+m.clip.rw)} mm de long avec la butée) ne tient pas sous le fond : réduis sa longueur ou agrandis le boîtier.`]);
+  if(m.clip&&m.clip.ties&&!m.clip.tieOk)W.push(['bad','Les fentes des colliers tombent sous les parois : la rainure est trop large pour ce boîtier. Réduis la largeur de la pince ou agrandis la largeur du boîtier.']);
+  if(m.clip&&state.tie&&!(m.clip.ties||[]).length)W.push(['info','Rainure trop courte pour placer les fentes des colliers : allonge-la (35 mm ou plus).']);
   if(m.clip&&state.cl<25)W.push(['info','Rainure courte : la pince à linge sera peu tenue. 35 à 50 mm est conseillé.']);
   if(p.lug&&state.mode==='laser')W.push(['info','En découpe laser, le boîtier n’a pas de patte pour l’anneau : ajoute deux ouvertures « Passage de fils » près d’un coin de la face arrière et passe une cordelette, ou choisis l’impression 3D.']);
   if(state.mode==='3d'&&state.reflector&&!state.holes.some(h=>h.face==='avant'&&h.shape==='rond'))W.push(['info','Le réflecteur est centré sur la face avant, mais aucune ouverture ronde n’y est prévue pour l’ampoule.']);
@@ -1371,7 +1381,7 @@ function renderWarns(m){
   $('warns').innerHTML=W.map(([c,t])=>`<div class="w ${c==='bad'?'':c}">${t}</div>`).join('');
 }
 function renderClipTip(m){const el=$('clipTip'),K=m.clip;if(!el||!K)return;
-  el.textContent=`Mesure la largeur d’une branche de ta pince au pied à coulisse (souvent 10 mm pour une pince en bois). Rainure obtenue : ${fmt(K.g)} mm de large, ${fmt(K.Lg)} mm de long, ${fmt(K.h)} mm de profondeur${K.laser?' (épaisseur de la plaque)':''}. Ouverte à l’arrière, fermée par une butée côté face avant. Le jeu laisse la place à la colle : 0,3 à 0,5 mm.`;}
+  el.textContent=`Mesure la largeur d’une branche de ta pince au pied à coulisse (souvent 10 mm pour une pince en bois). Rainure obtenue : ${fmt(K.g)} mm de large, ${fmt(K.Lg)} mm de long, ${fmt(K.h)} mm de profondeur${K.laser?' (épaisseur de la plaque)':''}. Ouverte à l’arrière, fermée par une butée côté face avant. Le jeu laisse la place à la colle : 0,3 à 0,5 mm.`+(K.ties&&K.ties.length?` ${K.nTie} paire${K.nTie>1?'s':''} de fentes de 5,5 × 2 mm dans le fond, de part et d’autre de la rainure, côté poignées de la pince : un collier de serrage passe entre les 2 branches et serre la pince contre le boîtier.`:'');}
 function renderScrTip(m){const S=m.screws,el=$('scrTip');if(!el)return;
   if(state.mode==='laser'){el.textContent=state.slide?`Le couvercle glisse entre 2 rails et un cadre en U, qui s’emboîtent dans le boîtier par tenons et mortaises (rails dans les côtés, cadre sur les tenons du haut des parois). Il sort par l’arrière (face arrière abaissée de ${fmt(T())} mm) et se tire avec le doigt grâce à un trou de Ø 12 mm. Ni vis ni aimant.`:'Couvercle posé, maintenu par le cadre collé dessous (emboîtement).';return;}
   if(!S){el.textContent='Sans vis, le couvercle tient par emboîtement'+(state.mode==='laser'?' (cadre collé dessous).':' (rebord).')+(PRESETS[state.obj].noScrews?' Ce boîtier est très bas : les supports de vis gêneraient la pile. Si tu coches les vis, rehausse-le.':'');return;}
@@ -1414,6 +1424,7 @@ $('engrave').addEventListener('change',e=>{state.engrave=e.target.checked;});
 $('refl').addEventListener('change',e=>{state.reflector=e.target.checked;$('reflSnapL').hidden=!state.reflector;update(false);});
 $('lug').addEventListener('change',e=>{state.lug=e.target.checked;update(false);resetView();});
 $('posts').addEventListener('change',e=>{state.posts=e.target.checked;update(false);});
+$('tie').addEventListener('change',e=>{state.tie=e.target.checked;update(false);});
 $('clip').addEventListener('change',e=>{state.clip=e.target.checked;$('clipF').hidden=!state.clip;update(false);});
 ['cw','cl','ch','cj'].forEach(k=>$(k).addEventListener('input',e=>{const el=e.target,v=+el.value.replace(',','.'),ok=el.value!==''&&v>=+el.min&&v<=+el.max;el.classList.toggle('bad',!ok);if(ok){state[k]=v;update(false);}}));
 $('reflSnap').addEventListener('change',e=>{state.reflSnap=e.target.checked;update(false);});
