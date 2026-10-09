@@ -31,7 +31,7 @@
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
 .wrap{max-width:1220px;margin:0 auto;padding-inline:20px;padding-block:24px 48px;display:flex;flex-direction:column;gap:20px}
 h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
 h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;line-height:1.05}
@@ -351,7 +351,7 @@ td.chk input{width:18px;height:18px;accent-color:var(--ok)}
         <tbody id="bomBody"></tbody>
       </table></div>
       <p class="status" id="recvCount"></p>
-      <p class="tip">L'outillage de soudure (fer, étain, pinces, lunettes) reste au poste de soudure : pas besoin de le demander.</p>
+      <p class="tip">L'outillage de soudure (fer, étain, pinces) reste au poste de soudure : pas besoin de le demander.</p>
       <label class="field" for="groupName">Nom(s) ou numéro du groupe
         <input id="groupName" type="text" placeholder="Ex. : groupe 3, Léa et Yanis" autocomplete="off">
       </label>
@@ -511,6 +511,7 @@ const ICONS={
   questions:'<rect x="6" y="6" width="36" height="36" rx="3"/><circle cx="14" cy="16" r="2"/><circle cx="14" cy="28" r="2"/><circle cx="34" cy="16" r="2"/><circle cx="34" cy="28" r="2"/><path d="M16 17l16 10" stroke-dasharray="3 3"/>',
   frontale:'<ellipse cx="24" cy="26" rx="18" ry="11"/><rect x="17" y="10" width="14" height="10" rx="3"/><path d="M20 6l-2-3M24 5V1M28 6l2-3"/>',
   lecture:'<path d="M8 44h22"/><path d="M19 44V28l11-13"/><path d="M25 11l14-5 3 15z"/><path d="M36 25l2 7M42 23l5 5"/>',
+  porteclef:'<circle cx="14" cy="11" r="7"/><path d="M19 16l4 4"/><rect x="20" y="18" width="18" height="24" rx="6"/><circle cx="29" cy="27" r="3.5"/><path d="M29 44v3M23 43l-2 3M35 43l2 3"/>',
   variateur:'<circle cx="24" cy="24" r="11"/><path d="M24 24l5-7"/><path d="M9 38A20 20 0 1 1 39 38"/>',
   bicolore:'<ellipse cx="24" cy="28" rx="18" ry="11"/><rect x="13" y="10" width="22" height="11" rx="3"/><circle cx="19" cy="15.5" r="2.2"/><circle cx="29" cy="15.5" r="2.2"/>'
 };
@@ -660,6 +661,15 @@ const OBJ=[
    extraQ:{q:'Pourquoi la résistance ne fait-elle que 10 Ω ?',a:'La DEL blanche utilise déjà presque tous les 3 V des piles',d:['Pour que la DEL chauffe davantage','Parce que les résistances de 100 Ω n’existent pas'],e:'Il reste très peu de tension pour la résistance : une grosse valeur empêcherait presque tout le courant de passer.'},
    hot:[DEL_HOT],test:'Ferme l’interrupteur : la DEL blanche doit s’allumer.',
    learn:'La lumière baisse vite quand les piles s’usent, car la DEL blanche a besoin de presque toute leur tension.'},
+  {id:'porteclef',name:'Porte-clé lumineux',lvl:3,
+   story:'Fabrique un porte-clé lumineux pour trouver la serrure dans le noir. Il éclaire avec une DEL blanche, qui a besoin d’environ 3 V, et seulement tant qu’on appuie : dans la poche, il ne doit pas rester allumé.',
+   need:[{ok:['pile2'],hint:'Il manque une source d’énergie d’environ 3 V.'},{ok:['bp'],hint:'Il manque ce sur quoi on appuie, et qui revient tout seul quand on le relâche.'},{ok:['res10'],hint:'Il manque une petite résistance de protection. Compare les deux valeurs du tiroir.'},{ok:['delb'],hint:'Il manque la source de lumière blanche.'}],
+   ctrl:['push'],pushLabel:'Maintenir appuyé pour éclairer',out:'la DEL blanche éclaire',
+   wrong:{pile1:'Une DEL blanche a besoin d’environ 3 V : avec une seule pile de 1,5 V, elle reste éteinte.',inter:'Avec un interrupteur, la lumière risquerait de rester allumée dans ta poche et de vider les piles. Ici, elle ne doit éclairer que tant que tu appuies.',res100:'Avec 100 Ω, la DEL blanche brillerait à peine. Les piles donnent 3 V et la DEL en utilise déjà environ 3 V : il ne reste presque rien pour pousser le courant à travers une grosse résistance.',delr:'Pour voir la serrure et la couleur des clés, on veut une lumière blanche.',lampe:'Une ampoule consomme beaucoup plus qu’une DEL : les piles seraient vite vides.',buzzer:'Un buzzer fait du bruit, mais il n’éclaire pas.'},
+   extra:[['1','Anneau porte-clé (Ø 20 à 25 mm)','à passer dans la patte du boîtier']],
+   extraQ:{q:'Pourquoi ce porte-clé utilise-t-il un bouton poussoir plutôt qu’un interrupteur ?',a:'La lumière s’éteint dès qu’on relâche : les piles ne se vident pas dans la poche',d:['Le bouton poussoir laisse passer plus de courant','Un interrupteur ne fonctionne pas avec une DEL'],e:'Le bouton poussoir ne ferme le circuit que pendant l’appui. Même s’il reste dans une poche, le porte-clé ne s’allume que si quelque chose appuie dessus.'},
+   hot:[DEL_HOT],test:'Appuie sur le bouton : la DEL blanche doit s’allumer, puis s’éteindre dès que tu relâches.',
+   learn:'Les porte-clés lumineux du commerce utilisent une pile bouton de 3 V (CR2032), plus petite que nos 2 piles AA mais qui donne la même tension.'},
   {id:'variateur',name:'Lampe à variateur',lvl:3,
    story:'Fabrique une veilleuse dont on peut régler la lumière en tournant un bouton. Elle utilise une DEL rouge, sa résistance de protection et une résistance réglable.',
    need:[{ok:['pile2'],hint:'Il manque une source d’énergie de plus de 2 V.'},{ok:['inter'],hint:'Il manque la commande marche/arrêt.'},{ok:['pot'],hint:'Il manque la résistance réglable qu’on tourne pour changer la lumière.'},{ok:['res100'],hint:'Il manque la protection de la DEL quand le bouton est tourné à fond.'},{ok:['delr'],hint:'Il manque la lumière rouge.'}],
@@ -1277,5 +1287,6 @@ restore();{const n=state.placed.torche.indexOf(null);state.sel=state.success?nul
 renderParts();render();
 })();
 </script>
+
 </body>
 </html>
