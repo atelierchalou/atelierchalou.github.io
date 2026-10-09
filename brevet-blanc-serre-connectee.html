@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Serre Connectée DNB Techno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+
+/* Concept : fiche d'épreuve. Panneaux « Document » encadrés comme dans le sujet, bandeau de score collant, une question visible à la fois. */
+:root{
+  --bg:#EBEFE8; --surface:#F7F9F4; --ink:#14221C; --muted:#52625A; --line:#C6D0C3;
+  --accent:#0B6B78; --accent-ink:#FFFFFF;
+  --ok:#1F6B40; --ok-bg:#DCEFE2;
+  --warn:#8F4408; --warn-bg:#F8E5D0;
+  --ko:#A12A22; --ko-bg:#F6DAD6;
+  --pill-bg:#FFFFFF; --pill-ink:#14221C;
+  --blk-ev:#8F4A0A; --blk-ctrl:#A5590E; --blk-var:#74451A; --blk-act:#5B4894;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1713; --surface:#16231D; --ink:#E4ECE6; --muted:#9DB0A5; --line:#2B3C33;
+    --accent:#6FD3E3; --accent-ink:#0E1713;
+    --ok:#7FD3A0; --ok-bg:#163A27; --warn:#F0A868; --warn-bg:#3F290F; --ko:#F29B94; --ko-bg:#47201C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1713; --surface:#16231D; --ink:#E4ECE6; --muted:#9DB0A5; --line:#2B3C33;
+  --accent:#6FD3E3; --accent-ink:#0E1713;
+  --ok:#7FD3A0; --ok-bg:#163A27; --warn:#F0A868; --warn-bg:#3F290F; --ko:#F29B94; --ko-bg:#47201C;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--body);margin:0}
+h1,h2,h3,h4,p{margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:840px;margin-inline:auto;padding-inline:16px}
+
+/* En-tête collant */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1.5px solid var(--ink)}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px 6px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{width:30px;height:30px;flex:none;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.brand b{display:block;font:700 1.5rem/1 var(--display);text-transform:uppercase;letter-spacing:.03em}
+.brand small{display:block;color:var(--muted);font-size:.8rem;line-height:1.2}
+.score{display:flex;align-items:baseline;gap:4px;font-family:var(--mono);white-space:nowrap}
+.score b{font-size:1.7rem;font-weight:600}
+.score span{color:var(--muted)}
+.nav{display:flex;gap:6px;overflow-x:auto;padding-block:4px 10px;scrollbar-width:thin}
+.pill{flex:1 0 auto;min-width:64px;min-height:44px;display:grid;justify-items:center;align-content:center;gap:1px;padding:4px 12px;border:1.5px solid var(--ink);border-radius:4px;background:transparent;cursor:pointer}
+.pill .pl{font:700 1.05rem/1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.pill .ps{font:500 .72rem/1 var(--mono);color:var(--muted)}
+.pill[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.pill[aria-current="page"] .ps{color:inherit}
+.pill.complete .ps{color:var(--ok);font-weight:600}
+.pill.complete[aria-current="page"] .ps{color:inherit}
+
+main{padding-block:22px 64px}
+.qsec{display:grid;gap:18px}
+.q-head{display:grid;gap:6px}
+.eyebrow{font:500 .8rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.q-title{font:700 clamp(2rem,6vw,3rem)/.95 var(--display);text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.intro{max-width:65ch}
+.how{border:1.5px dashed var(--line);border-radius:6px;padding:12px 14px;font-size:.95rem;display:grid;gap:4px;max-width:70ch}
+.how b{font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+
+/* Documents */
+.docs{display:grid;gap:14px}
+.doc{border:1.5px solid var(--ink);background:var(--surface);min-width:0}
+.doc>header{background:var(--ink);color:var(--bg);padding:6px 12px;font-weight:600;font-size:.95rem}
+.doc-body{padding:12px 14px;display:grid;gap:10px;min-width:0}
+.doc-body p{max-width:70ch}
+.note{font-size:.85rem;color:var(--muted)}
+.scroll{overflow-x:auto}
+.scroll>svg{display:block;min-width:560px;width:100%;height:auto}
+.sk text{fill:var(--ink);font:500 12px var(--body)}
+.sk .ln{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round}
+.sk .thin{fill:none;stroke:var(--ink);stroke-width:1.2}
+.sk .bld{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.sk .ink{fill:var(--ink)}
+.sk .win{fill:var(--line);stroke:var(--ink);stroke-width:1.5}
+.sk .strip{fill:var(--muted);stroke:var(--ink);stroke-width:1.2}
+.sk .mesh{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:2 3}
+.sk .lead{fill:none;stroke:var(--muted);stroke-width:1}
+.sk .dim{fill:none;stroke:var(--muted);stroke-width:1}
+.sk .dimt{font:500 12px var(--mono)}
+.sols{display:flex;flex-wrap:wrap;gap:6px}
+.sol{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:var(--bg);padding:3px 8px;border-radius:4px;font-size:.9rem}
+.sol b{font:600 .85rem var(--mono);background:var(--ink);color:var(--bg);min-width:1.4em;text-align:center;border-radius:3px}
+.ch text{fill:var(--muted);font:11px var(--mono)}
+.ch .ax{stroke:var(--ink);stroke-width:1.5;fill:none}
+.ch .gr{stroke:var(--line);stroke-width:1}
+.ch .pl{fill:none;stroke:var(--accent);stroke-width:2}
+.ch .dot{fill:var(--accent)}
+.ch .cy{fill:var(--ink);font:600 12px var(--mono)}
+.ch .hl{display:none}
+.ch.show-hl .hl{display:inline}
+.ch .hl line{stroke:var(--warn);stroke-width:1.5;stroke-dasharray:4 3}
+.ch .hl circle{fill:none;stroke:var(--warn);stroke-width:2.5}
+.ch .hl text{fill:var(--warn);font-weight:600;font-size:12px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.node{border:1.5px solid var(--ink);background:var(--bg);padding:6px 10px;border-radius:4px;font-size:.92rem;text-align:center}
+.node.sun{border-radius:999px}
+.arrow{font-family:var(--mono);color:var(--muted)}
+.loads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.loads .node b{display:block;font:600 1rem var(--mono);color:var(--accent)}
+.formula{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;border:1.5px solid var(--ink);padding:10px 12px;background:var(--bg)}
+.formula strong{font:600 1.6rem var(--mono)}
+.formula ul{margin:0;padding:0;list-style:none;font-size:.9rem;display:grid;gap:2px}
+.wrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.wrow .scroll{flex:1 1 320px;min-width:0}
+.pxw{display:grid;gap:4px;justify-items:center;font:500 .8rem var(--mono);color:var(--muted);width:92px}
+.px{width:56px;height:56px;border:4px solid #14221C;display:block}
+.wv text{fill:var(--ink);font:500 12px var(--mono)}
+.wv .g{stroke:var(--line);stroke-width:1}
+.wv .w{fill:none;stroke:var(--accent);stroke-width:3.5}
+.wv .d{font-weight:600;font-size:14px}
+table.t{border-collapse:collapse;min-width:520px;width:100%;font-family:var(--mono);font-size:.85rem}
+table.t th,table.t td{border:1px solid var(--ink);padding:5px 8px;text-align:center}
+table.t th{text-align:left;font-family:var(--body);font-weight:600;background:var(--bg)}
+
+/* Parties */
+.parts{display:grid;gap:16px}
+.part{background:var(--surface);border:1.5px solid var(--ink);border-radius:6px;padding:16px;display:grid;gap:14px;min-width:0}
+.part-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.tag{font:600 .85rem var(--mono);background:var(--ink);color:var(--bg);padding:2px 8px;border-radius:3px}
+.part-head h3{flex:1 1 220px;min-width:0;font:400 1.02rem/1.45 var(--body)}
+.part-head h3 b{font-weight:600}
+.pts{font:500 .85rem var(--mono);color:var(--muted);white-space:nowrap}
+.part-body{display:grid;gap:12px;min-width:0}
+.field{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--mono)}
+.field label{font-family:var(--body)}
+.field .u{color:var(--muted)}
+input[type=text],select{font:500 1.05rem var(--mono);padding:9px 10px;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:4px;min-height:44px}
+input[type=text]{width:8rem}
+select{width:100%;font-family:var(--body);font-size:1rem}
+input:disabled,select:disabled{opacity:1;-webkit-text-fill-color:currentColor;cursor:default}
+.is-ok{border-color:var(--ok)!important;background:var(--ok-bg)!important}
+.is-ko{border-color:var(--ko)!important;background:var(--ko-bg)!important}
+.fix{font:600 .85rem var(--mono);color:var(--ok);background:var(--ok-bg);padding:2px 6px;border-radius:3px}
+
+.choices{display:grid;gap:8px}
+.choices.inline{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.choice{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);background:var(--bg);padding:10px 12px;border-radius:4px;cursor:pointer;min-height:44px}
+.choice input{margin-top:.28em;accent-color:var(--accent);width:18px;height:18px;flex:none}
+.choice:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.choice.is-right{border-color:var(--ok);background:var(--ok-bg);box-shadow:none}
+.choice.is-ok{box-shadow:none}
+.choice.is-ko{box-shadow:none}
+
+.exgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.ex{border:1.5px solid var(--line);background:var(--bg);border-radius:4px;padding:10px 12px;display:grid;gap:8px;align-content:start;min-width:0}
+.ex h4{font:600 .98rem/1.3 var(--body)}
+.ex h4 span{font-family:var(--mono);background:var(--ink);color:var(--bg);padding:1px 6px;border-radius:3px;margin-right:6px;font-size:.85rem}
+.ex p{font-size:.88rem;color:var(--muted)}
+.ex.given{border-style:dashed}
+.ex.off{opacity:.8}
+.ex .given-v{font:600 .95rem var(--mono)}
+
+.bits{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;max-width:480px}
+.bit{display:grid;gap:2px;justify-items:center;padding:6px 0;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font:600 1.5rem/1.1 var(--mono);border-radius:4px;cursor:pointer;min-height:64px}
+.bit .bn{font:500 .7rem var(--mono);color:var(--muted)}
+.bit[data-v="1"]{background:var(--accent);color:var(--accent-ink)}
+.bit[data-v="1"] .bn{color:inherit}
+.bit:disabled{opacity:1;cursor:default}
+.bit.is-ok{outline:3px solid var(--ok);outline-offset:1px}
+.bit.is-ko{outline:3px solid var(--ko);outline-offset:1px}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+
+/* Programme */
+.prog{display:grid;gap:3px;font-size:.95rem;max-width:620px}
+.blk{color:#fff;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:600}
+.blk.ev{background:var(--blk-ev)}.blk.ctrl{background:var(--blk-ctrl)}.blk.var{background:var(--blk-var)}.blk.act{background:var(--blk-act)}
+.cwrap{display:grid;gap:3px}
+.cwrap>.blk{border-bottom-left-radius:0}
+.inner{margin-left:20px;display:grid;gap:3px;border-left:6px solid var(--blk-ctrl);padding-left:6px}
+.chip{background:var(--blk-var);border:1px solid rgba(255,255,255,.55);padding:1px 8px;border-radius:4px;font-weight:600}
+.blk.var .chip{background:#5A3512}
+.blk input{width:5.2rem;min-height:36px;padding:3px 10px;background:var(--pill-bg);color:var(--pill-ink);border:2px solid var(--pill-bg);border-radius:999px;text-align:center;font-size:1rem}
+.blk input.is-ok{background:#DCEFE2!important;border-color:#1F6B40!important;color:#14221C}
+.blk input.is-ko{background:#F6DAD6!important;border-color:#A12A22!important;color:#14221C}
+.blk .fix{background:#fff;color:#1F6B40}
+
+/* Aides + actions */
+.aid-list{display:grid;gap:8px}
+.aid{background:var(--warn-bg);color:var(--ink);padding:10px 12px;border-radius:4px;display:grid;gap:2px;font-size:.95rem}
+.aid b{font:600 .78rem var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--warn)}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.btn{min-height:44px;padding:8px 16px;border-radius:4px;border:1.5px solid var(--ink);background:transparent;cursor:pointer;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.aid-btn{border-color:var(--warn);color:var(--warn)}
+.btn:hover{filter:brightness(1.06)}
+.max{font:500 .82rem var(--mono);color:var(--muted);margin-left:auto}
+.warnmsg{color:var(--ko);font-weight:600}
+.part.done .actions{display:none}
+
+/* Résultat */
+.result{border-radius:6px;padding:14px;display:grid;gap:10px}
+.result.ok{background:var(--ok-bg)}.result.partial{background:var(--warn-bg)}.result.ko{background:var(--ko-bg)}
+.verdict{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font:700 1.25rem/1 var(--display);text-transform:uppercase;letter-spacing:.05em}
+.result.ok .badge{color:var(--ok)}.result.partial .badge{color:var(--warn)}.result.ko .badge{color:var(--ko)}
+.sline{font:600 1.05rem var(--mono)}
+.pen{font-size:.92rem}
+.explain{display:grid;gap:6px;min-width:0}
+.explain h4{font:600 .78rem var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:6px}
+.explain p{max-width:68ch}
+.answer{font:500 .98rem/1.5 var(--mono);background:var(--surface);border:1px solid var(--line);padding:8px 10px;border-radius:4px;overflow-wrap:anywhere}
+.errnote{font-weight:600}
+.xl{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.xl li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.m{font:700 .95rem var(--mono);width:1.7em;height:1.7em;display:grid;place-items:center;border-radius:3px;background:var(--surface)}
+.m.ok{color:var(--ok)}.m.ko{color:var(--ko)}.m.pa{color:var(--warn)}
+.qfoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* Bilan */
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.big b{font:600 clamp(3rem,12vw,5rem)/1 var(--mono)}
+.big span{font:500 1.2rem var(--mono);color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.stat{border:1.5px solid var(--ink);padding:10px 12px;background:var(--surface);display:grid;gap:2px}
+.stat b{font:600 1.5rem var(--mono)}
+.stat span{font-size:.85rem;color:var(--muted)}
+.brow{display:grid;gap:4px}
+.brow-h{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.brow-h span:last-child{font-family:var(--mono)}
+.bar{display:flex;height:14px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%}
+.bar .e{background:var(--ok)}
+.bar .l{background:var(--warn)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.rev{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.rev li{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);background:var(--surface);padding:8px 12px;border-radius:4px;flex-wrap:wrap}
+.rev button{min-height:36px;padding:4px 12px}
+.keep{margin:0;padding-left:1.2em;display:grid;gap:8px;max-width:68ch}
+.sec-h{font:700 1.5rem/1 var(--display);text-transform:uppercase;letter-spacing:.03em;margin-top:6px}
+.block{display:grid;gap:10px}
+@media (max-width:480px){
+  .formula{grid-template-columns:1fr}
+  .part{padding:12px}
+  .max{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.sensor{display:grid;place-items:center;text-align:center;border:1.5px solid var(--ink);padding:8px;font:600 .8rem/1.2 var(--mono);width:92px;min-height:56px;background:var(--bg);flex:none}
+
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <svg id="brandIcon" viewBox="0 0 24 24" aria-hidden="true"></svg>
+        <div><b id="brandName"></b><small id="brandSub"></small></div>
+      </div>
+      <div class="score" aria-live="polite"><b id="scoreVal">0</b><span id="maxVal">/ 25</span></div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Questions"></nav>
+  </div>
+</header>
+<main class="wrap" id="stage"></main>
+<script>
+(function(){
+'use strict';
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const fmt=n=>String(Math.round(n*100)/100).replace('.',',');
+const r2=n=>Math.round(n*100)/100;
+const num=s=>{const t=String(s==null?'':s).replace(',','.').replace(/[^0-9.\-]/g,'');if(t===''||t==='.'||t==='-')return NaN;return parseFloat(t)};
+const eq=(a,b)=>Math.abs(a-b)<1e-6;
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t}return a};
+const mk=(el,ok)=>{el.classList.add(ok?'is-ok':'is-ko')};
+const pl=n=>n>1?'pts':'pt';
+const val=id=>{const e=$('#p-'+id+' input[type=text]');return e?num(e.value):NaN};
+
+function choices(name,opts,inline,keep){
+  const list=keep?opts:shuffle(opts);
+  return '<div class="choices'+(inline?' inline':'')+'" role="radiogroup">'+list.map(o=>'<label class="choice"><input type="radio" name="'+name+'" value="'+o[0]+'"><span>'+o[1]+'</span></label>').join('')+'</div>';
+}
+function sel(root,name){const c=$('input[name="'+name+'"]:checked',root);return c?c.value:null}
+function choiceMark(root,name,correct){
+  const chosen=sel(root,name);
+  $$('.choice',root).forEach(l=>{
+    const i=$('input',l);if(i.name!==name)return;
+    if(i.value===correct){l.classList.add(chosen===correct?'is-ok':'is-right')}
+    else if(i.checked){l.classList.add('is-ko')}
+  });
+  return chosen;
+}
+function ex(answer,why,note){
+  return (note?'<p class="errnote">'+note+'</p>':'')+'<h4>Réponse attendue</h4><div class="answer">'+answer+'</div><h4>Pourquoi</h4>'+why;
+}
+function doc(title,body){return '<section class="doc"><header>'+title+'</header><div class="doc-body">'+body+'</div></section>'}
+function table(rows){return '<div class="scroll"><table class="t"><tbody>'+rows.map(r=>'<tr>'+r.map((c,i)=>i===0?'<th>'+c+'</th>':'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'}
+function sols(obj){return '<div><p class="note" style="margin-bottom:6px">Solutions techniques à placer :</p><div class="sols">'+Object.keys(obj).map(k=>'<span class="sol"><b>'+k+'</b>'+obj[k]+'</span>').join('')+'</div></div>'}
+function formula(title,items){return '<div class="formula"><strong>'+title+'</strong><ul>'+items.map(i=>'<li>'+i+'</li>').join('')+'</ul></div>'}
+function loads(items){return '<div class="loads">'+items.map(i=>'<span class="node">'+i[0]+'<b>'+i[1]+'</b></span>').join('')+'</div>'}
+const MVT=ok=>[['rot','Une rotation'],['tr','Une translation rectiligne'],['trc','Une translation circulaire'],['no','Aucun mouvement : l’élément reste fixe']].map(o=>[o[0],o[1],o[0]===ok?1:0]);
+
+function wave(bits,show){
+  const W=56,x0=46,yH=24,yL=80;
+  let s='<svg class="wv" viewBox="0 0 '+(x0+8*W+10)+' 116" role="img" aria-label="Signal logique sur huit bits">';
+  const Y=i=>bits.charAt(i)==='1'?yH:yL;
+  for(let i=0;i<=8;i++){s+='<line class="g" x1="'+(x0+i*W)+'" x2="'+(x0+i*W)+'" y1="12" y2="92"/>'}
+  s+='<line class="g" x1="'+x0+'" x2="'+(x0+8*W)+'" y1="'+yH+'" y2="'+yH+'"/><line class="g" x1="'+x0+'" x2="'+(x0+8*W)+'" y1="'+yL+'" y2="'+yL+'"/>';
+  s+='<text x="'+(x0-16)+'" y="'+(yH+4)+'">1</text><text x="'+(x0-16)+'" y="'+(yL+4)+'">0</text>';
+  let d='M'+x0+' '+Y(0)+' H'+(x0+W);
+  for(let k=1;k<8;k++){d+=' V'+Y(k)+' H'+(x0+(k+1)*W)}
+  s+='<path class="w" d="'+d+'"/>';
+  for(let j=0;j<8;j++){
+    s+='<text x="'+(x0+j*W+W/2)+'" y="110" text-anchor="middle">b'+(8-j)+'</text>';
+    if(show){s+='<text class="d" x="'+(x0+j*W+W/2)+'" y="9" text-anchor="middle">'+bits.charAt(j)+'</text>'}
+  }
+  return s+'</svg>';
+}
+function waveRow(label,bits,show){return '<div class="wrow"><div class="sensor">'+label+'</div><div class="scroll">'+wave(bits,show)+'</div></div>'}
+
+function chart(s){
+  const x0=58,x1=620,yb=216,yt=26,ymin=s.ymin||0;
+  const X=t=>x0+t*(x1-x0)/s.xmax, Y=a=>yb-(a-ymin)*(yb-yt)/(s.ymax-ymin);
+  let o='<svg class="ch" id="'+s.id+'" viewBox="0 0 640 276" role="img" aria-label="'+s.aria+'">';
+  for(let a=ymin;a<=s.ymax+1e-9;a+=s.ystep){o+='<line class="gr" x1="'+X(0)+'" x2="'+X(s.xmax)+'" y1="'+Y(a)+'" y2="'+Y(a)+'"/><text x="'+(x0-6)+'" y="'+(Y(a)+4)+'" text-anchor="end">'+fmt(a)+'</text>'}
+  for(let t=0;t<=s.xmax+1e-9;t+=s.xstep){o+='<text x="'+X(t)+'" y="236" text-anchor="middle">'+fmt(t)+'</text>'}
+  o+='<path class="ax" d="M'+X(0)+' '+(yt-10)+' V'+Y(ymin)+' H'+(X(s.xmax)+14)+'"/>';
+  (s.series||[]).forEach(se=>{
+    o+='<path class="pl" d="'+se.pts.map((p,i)=>(i?'L':'M')+X(p[0])+' '+Y(p[1])).join(' ')+'"/>';
+    if(se.dots)se.pts.forEach(p=>{o+='<circle class="dot" cx="'+X(p[0])+'" cy="'+Y(p[1])+'" r="2.8"/>'});
+  });
+  (s.labels||[]).forEach(l=>{o+='<text class="cy" x="'+X(l.x)+'" y="'+Y(l.y)+'">'+l.t+'</text>'});
+  Object.keys(s.hl||{}).forEach(k=>{
+    const h=s.hl[k];o+='<g class="hl hl-'+k+'">';
+    h.pts.forEach(p=>{o+='<line x1="'+X(p[0])+'" x2="'+X(p[0])+'" y1="'+Y(p[1])+'" y2="'+Y(ymin)+'"/><line x1="'+X(0)+'" x2="'+X(p[0])+'" y1="'+Y(p[1])+'" y2="'+Y(p[1])+'"/><circle cx="'+X(p[0])+'" cy="'+Y(p[1])+'" r="6"/>'});
+    (h.texts||[]).forEach(t=>{o+='<text x="'+(X(t.x)+(t.dx||0))+'" y="'+(Y(t.y)+(t.dy||0))+'"'+(t.a?' text-anchor="'+t.a+'"':'')+'>'+t.t+'</text>'});
+    o+='</g>';
+  });
+  o+='<text x="'+((x0+x1)/2)+'" y="266" text-anchor="middle">'+s.xlabel+'</text><text transform="translate(12 121) rotate(-90)" text-anchor="middle">'+s.ylabel+'</text></svg>';
+  return o;
+}
+function showHl(id,k){$$('#'+id+' .hl-'+k).forEach(g=>{g.style.display='inline'})}
+
+/* ---------- Fabriques de parties ---------- */
+function mcqPart(o){
+  const name='c'+o.id,best=o.options.filter(x=>x[2]===1)[0][0];
+  return {id:o.id,tag:o.tag,title:o.title,points:o.points,aides:o.aides,
+    body:()=>choices(name,o.options.map(x=>[x[0],x[1]]),o.inline,o.keep),
+    check:r=>sel(r,name)?null:'Choisis une proposition avant de valider.',
+    grade:r=>{
+      const v=choiceMark(r,name,best),opt=o.options.filter(x=>x[0]===v)[0],f=opt?(opt[2]||0):0;
+      const note=f<1?((o.wrong&&o.wrong[v])||o.defaultNote||''):'';
+      return {raw:o.points*f,explain:ex(o.answer,o.why,note)};
+    },
+    solve:r=>{$('input[value="'+best+'"]',r).checked=true}};
+}
+function numPart(o){
+  const iid='in'+o.id;
+  return {id:o.id,tag:o.tag,title:o.title,points:o.points,aides:o.aides,after:o.after,
+    body:()=>'<div class="field"><label for="'+iid+'">'+o.label+'</label><input id="'+iid+'" type="text" inputmode="decimal" autocomplete="off"><span class="u">'+(o.unit||'')+'</span></div>',
+    check:r=>$('input',r).value.trim()?null:'Écris ta réponse avant de valider.',
+    grade:r=>{
+      const i=$('input',r),v=num(i.value),acc=[].concat(o.answer),ok=acc.some(a=>eq(v,a));
+      let raw=ok?o.points:0,note='';
+      if(!ok){
+        const f=o.follow?o.follow(v):null;
+        if(f&&f.raw>0){raw=f.raw;note=f.note}else note=(o.notes&&o.notes[String(v)])||o.defaultNote||'';
+      }
+      mk(i,ok);
+      return {raw:raw,explain:ex(o.answerText,o.why,note)};
+    },
+    solve:r=>{$('input',r).value=String([].concat(o.answer)[0])}};
+}
+function multiNumPart(o){
+  return {id:o.id,tag:o.tag,title:o.title,points:o.points,aides:o.aides,after:o.after,
+    body:()=>'<div class="pair">'+o.fields.map(f=>'<div class="field"><label for="in'+o.id+f.k+'">'+f.label+'</label><input id="in'+o.id+f.k+'" data-k="'+f.k+'" type="text" inputmode="decimal" autocomplete="off"><span class="u">'+(f.unit||'')+'</span></div>').join('')+'</div>',
+    check:r=>$$('input',r).some(i=>i.value.trim())?null:'Écris au moins une valeur avant de valider.',
+    grade:r=>{
+      let raw=0;const notes=[];
+      o.fields.forEach(f=>{
+        const i=$('[data-k="'+f.k+'"]',r),v=num(i.value),ok=eq(v,f.answer);
+        if(ok){raw+=f.pts;mk(i,true)}
+        else{
+          const fo=f.follow?f.follow(v):null;mk(i,false);
+          if(fo&&fo.frac>0){raw+=f.pts*fo.frac;notes.push(fo.note)}
+          else notes.push((f.notes&&f.notes[String(v)])||f.defaultNote||'');
+        }
+      });
+      return {raw:raw,explain:ex(o.answerText,o.why,notes.filter(Boolean).join(' '))};
+    },
+    solve:r=>{o.fields.forEach(f=>{$('[data-k="'+f.k+'"]',r).value=String(f.answer)})}};
+}
+function assocPart(o){
+  const opts='<option value="">— choisir —</option>'+Object.keys(o.solutions).map(k=>'<option value="'+k+'">'+k+' · '+o.solutions[k]+'</option>').join('');
+  const sels=id=>'<select data-slot="'+id+'" aria-label="Solution technique">'+opts+'</select>';
+  return {id:o.id,tag:o.tag,title:o.title,points:o.points,aides:o.aides,
+    body:()=>'<div class="exgrid">'+o.cards.map((c,ci)=>{
+      let inner='';
+      if(c.given)inner+='<div class="given-v">'+c.given+'</div>';
+      if(c.slots)inner+=c.slots.map((s,j)=>sels(ci+'-'+j)).join('');
+      if(c.off)inner+='<div class="given-v">Pas de case à remplir</div>';
+      return '<div class="ex'+(!c.slots&&c.given?' given':'')+(c.off?' off':'')+'"><h4><span>'+c.ex+'</span>'+c.title+'</h4><p>'+c.sub+'</p>'+inner+'</div>';
+    }).join('')+'</div>',
+    check:r=>$$('select',r).some(s=>s.value)?null:'Choisis au moins une solution avant de valider.',
+    grade:r=>{
+      let ok=0,total=0;const st={};
+      o.cards.forEach((c,ci)=>{
+        if(!c.slots)return;
+        const chosen=[],flags=[];
+        c.slots.forEach((s,j)=>{
+          const el=$('select[data-slot="'+ci+'-'+j+'"]',r),v=parseInt(el.value,10)||0;
+          const good=s.accept.indexOf(v)>-1&&chosen.indexOf(v)===-1;
+          chosen.push(v);flags.push(good);mk(el,good);total++;if(good)ok++;
+        });
+        st[ci]={chosen:chosen,flags:flags};
+      });
+      const why='<ul class="xl">'+o.cards.map((c,ci)=>{
+        if(!c.slots){return '<li><span class="m ok">'+(c.off?'i':'✓')+'</span><div><b>'+c.label+'</b> '+c.why+'</div></li>'}
+        const s=st[ci],n=s.flags.filter(Boolean).length;
+        const cls=n===s.flags.length?'ok':(n===0?'ko':'pa'),sym=cls==='ok'?'✓':(cls==='ko'?'✕':'≈');
+        const mine=cls==='ok'?'':' <i>Ta réponse : '+s.chosen.map(v=>v||'rien').join(' et ')+'.</i>';
+        return '<li><span class="m '+cls+'">'+sym+'</span><div><b>'+c.label+'</b> '+c.why+mine+'</div></li>';
+      }).join('')+'</ul>';
+      return {raw:o.points*ok/total,explain:ex(o.answerText,why,ok<total?ok+' case'+(ok>1?'s':'')+' correcte'+(ok>1?'s':'')+' sur '+total+'. Chaque case juste vaut '+fmt(o.points/total)+' point.':'')};
+    },
+    solve:r=>{o.cards.forEach((c,ci)=>{(c.slots||[]).forEach((s,j)=>{$('select[data-slot="'+ci+'-'+j+'"]',r).value=String(s.accept[Math.min(j,s.accept.length-1)])})})}};
+}
+function bitsValue(r){return $$('.bit',r).map(b=>b.dataset.v).join('')}
+function bitsOf(id){const sec=$('#p-'+id);return sec&&$('.bits',sec).dataset.touched==='1'?bitsValue(sec):null}
+function bitsPart(o){
+  return {id:o.id,tag:o.tag,title:o.title,points:o.points,aides:o.aides,
+    body:()=>'<div class="bits" data-touched="0">'+[8,7,6,5,4,3,2,1].map(b=>'<button type="button" class="bit" data-v="0" aria-label="bit b'+b+', valeur 0"><span class="bn">b'+b+'</span><span class="bv">0</span></button>').join('')+'</div><p class="note">Touche un bit pour passer de 0 à 1 et inversement.</p>',
+    bind:r=>{const box=$('.bits',r);$$('.bit',r).forEach((b,idx)=>b.addEventListener('click',()=>{const v=b.dataset.v==='1'?'0':'1';b.dataset.v=v;$('.bv',b).textContent=v;b.setAttribute('aria-label','bit b'+(8-idx)+', valeur '+v);box.dataset.touched='1'}))},
+    check:r=>$('.bits',r).dataset.touched==='1'?null:'Touche les bits pour écrire ton code avant de valider.',
+    grade:r=>{
+      const s=bitsValue(r),wrong=[];let n=0;
+      $$('.bit',r).forEach((b,i)=>{const g=s.charAt(i)===o.expected.charAt(i);mk(b,g);if(g)n++;else wrong.push('b'+(8-i))});
+      const raw=n===8?o.points:(n>=6?o.points/2:0);
+      const note=n===8?'':'Ton code : '+s+'. Bits à corriger : '+wrong.join(', ')+'.'+(n>=6?' Tu es tout proche : la moitié des points est accordée.':'');
+      return {raw:raw,explain:ex(o.expected,o.why,note)};
+    },
+    solve:r=>{$$('.bit',r).forEach((b,i)=>{if(b.dataset.v!==o.expected.charAt(i))b.click()})}};
+}
+function progPart(o){
+  const keys=Object.keys(o.expected);
+  const seg=s=>typeof s==='string'?s:(s.chip?'<span class="chip">'+s.chip+'</span>':'<input type="text" data-k="'+s.in+'" inputmode="numeric" autocomplete="off" aria-label="'+(s.label||'valeur')+'">');
+  const render=n=>{const head='<div class="blk '+n.c+'">'+n.s.map(seg).join(' ')+'</div>';if(!n.kids)return head;return '<div class="cwrap">'+head+'<div class="inner">'+n.kids.map(render).join('')+'</div></div>'};
+  return {id:o.id,tag:o.tag,title:o.title,points:o.points,aides:o.aides,
+    body:()=>'<div class="prog">'+o.tree.map(render).join('')+'</div>',
+    check:r=>$$('input',r).some(i=>i.value.trim())?null:'Remplis au moins un blanc avant de valider.',
+    grade:r=>{
+      let n=0;
+      keys.forEach(k=>{
+        const i=$('[data-k="'+k+'"]',r),ok=eq(num(i.value),o.expected[k]);mk(i,ok);
+        if(ok)n++;else i.insertAdjacentHTML('afterend','<span class="fix">→ '+fmt(o.expected[k])+'</span>');
+      });
+      const why='<ul class="xl">'+o.lines.map((l,i)=>'<li><span class="m ok">'+(i+1)+'</span><div>'+l+'</div></li>').join('')+'</ul>';
+      return {raw:o.points*n/keys.length,explain:ex(o.answerText,why,n<keys.length?n+' blanc'+(n>1?'s':'')+' correct'+(n>1?'s':'')+' sur '+keys.length+'. Les bonnes valeurs sont affichées en vert à côté des blancs à corriger.':'')};
+    },
+    solve:r=>{keys.forEach(k=>{$('[data-k="'+k+'"]',r).value=String(o.expected[k])})}};
+}
+const assocAides=(a2,a3)=>[
+  {cost:.2,text:'Pour chaque exigence, lis la phrase sous le titre : elle dit ce que la solution doit faire. Cherche ensuite sur le document 1 l’élément qui le fait.'},
+  {cost:.3,text:a2},{cost:.3,text:a3}];
+const followIt=(a,b)=>v=>{const x=val(a),y=val(b);return(!isNaN(x)&&!isNaN(y)&&eq(v,x*y))?{raw:null,note:''}:null};
+
+const SOLS1={1:'paroi en polycarbonate',2:'vérin électrique',3:'capteur de température',4:'capteur d’humidité du sol',5:'électrovanne',6:'cuve d’eau de pluie',7:'panneau solaire et batterie'};
+const SVG1='<svg class="sk" viewBox="0 0 640 330" role="img" aria-label="Schéma d’une serre : parois en polycarbonate, fenêtre de toit ouverte par un vérin, capteur de température sous le toit, capteur d’humidité planté dans le sol, électrovanne sur le tuyau relié à une cuve d’eau de pluie, panneau solaire sur le toit.">'+
+ '<line class="ln" x1="20" y1="290" x2="620" y2="290" style="stroke-width:3"/>'+
+ '<rect class="bld" x="150" y="160" width="300" height="130"/><polygon class="bld" points="150,160 300,90 450,160"/>'+
+ '<path class="thin" d="M180 162 V290 M210 162 V290 M390 162 V290 M420 162 V290" style="opacity:.55"/>'+
+ '<path class="ln" d="M165 152 L262 107" style="stroke-width:7"/>'+
+ '<path class="ln" d="M340 110 L400 138" style="stroke-width:5"/><path class="ln" d="M345 165 L372 124" style="stroke-width:4"/>'+
+ '<rect class="bld" x="222" y="128" width="12" height="16"/>'+
+ '<circle class="win" cx="190" cy="268" r="8"/><path class="ln" d="M190 276 V290"/><circle class="win" cx="250" cy="268" r="8"/><path class="ln" d="M250 276 V290"/><circle class="win" cx="410" cy="268" r="8"/><path class="ln" d="M410 276 V290"/>'+
+ '<rect class="bld" x="318" y="252" width="10" height="18"/><path class="ln" d="M323 270 V294"/>'+
+ '<path class="ln" d="M490 272 H300" style="stroke-width:3"/><rect class="bld" x="458" y="262" width="20" height="20"/>'+
+ '<rect class="bld" x="490" y="200" width="70" height="90"/><rect class="win" x="490" y="240" width="70" height="50"/>'+
+ '<text x="10" y="224">paroi en</text><text x="10" y="240">polycarbonate</text><path class="lead" d="M82 232 H150"/>'+
+ '<text x="10" y="86">panneau solaire</text><text x="10" y="102">et batterie</text><path class="lead" d="M100 98 L190 139"/>'+
+ '<text x="10" y="150">capteur de température</text><path class="lead" d="M146 146 H222"/>'+
+ '<text x="440" y="96">vérin électrique</text><path class="lead" d="M436 100 L374 130"/>'+
+ '<text x="490" y="190">cuve d’eau de pluie</text>'+
+ '<text x="440" y="246">électrovanne</text><path class="lead" d="M470 250 V262"/>'+
+ '<text x="240" y="318">capteur d’humidité du sol</text><path class="lead" d="M335 306 L325 292"/>'+
+ '</svg>';
+
+const P1A=mcqPart({id:'1a',tag:'1.a',title:'<b>Identifier</b> le besoin auquel répond la serre connectée.',points:2,
+ aides:[{cost:.2,text:'Relis l’introduction : que fait le système tout seul, sans que le maraîcher intervienne ?'},{cost:.3,text:'Le besoin dit à quoi sert la serre. Cherche la proposition qui parle de bonnes conditions pour les plantes et de peu d’intervention humaine.'}],
+ options:[['A','Faire pousser des plantes dans de bonnes conditions, avec peu d’intervention humaine',1],['B','Produire de l’électricité pour le village',0],['C','Stocker des récoltes au frais après la cueillette',0],['D','Éloigner les insectes avec des pesticides',0]],
+ answer:'Faire pousser des plantes dans de bonnes conditions, avec peu d’intervention humaine.',
+ why:'<p>Un besoin dit <b>à quoi sert</b> l’objet. La serre ouvre sa fenêtre quand il fait chaud, arrose quand le sol est sec et fonctionne seule : elle sert à cultiver des plantes dans de bonnes conditions sans que le maraîcher soit présent en permanence.</p><p>Produire de l’électricité (B) correspond au panneau solaire, qui est une solution pour l’autonomie en énergie. Stocker des récoltes (C) et éloigner les insectes (D) ne sont pas décrits dans l’énoncé.</p>',
+ defaultNote:'Pour un besoin, pose-toi la question : « à quoi sert la serre ? ». Relis l’introduction.'});
+
+const P1B=assocPart({id:'1b',tag:'1.b',title:'À l’aide du document 1, <b>associer</b> les solutions techniques aux fonctions techniques en choisissant le numéro dans chaque case (six réponses attendues).',points:3,
+ aides:assocAides('E2 : une solution qui mesure, une qui agit sur la fenêtre. E3 : même logique, un capteur qui mesure l’humidité du sol et un élément qui laisse passer l’eau dans le tuyau.','E4 : le réservoir qui récupère la pluie. E5 : ce qui produit et stocke l’électricité. Le 1 est déjà utilisé en E1.'),
+ solutions:SOLS1,answerText:'E1 → 1 (donné) · E2 → 2 et 3 · E3 → 4 et 5 · E4 → 6 · E5 → 7',
+ cards:[
+  {ex:'E1',title:'laisser passer la lumière tout en protégeant du froid',sub:'isoler sans cacher le soleil aux plantes',given:'Exemple donné : 1 · paroi en polycarbonate',label:'E1 → 1 · paroi en polycarbonate (donné).',why:'Ce plastique transparent laisse passer la lumière et isole mieux qu’une simple vitre, tout en étant léger et résistant aux chocs.'},
+  {ex:'E2',title:'réguler la température',sub:'ouvrir la serre quand la température est trop élevée',slots:[{accept:[2,3]},{accept:[2,3]}],label:'E2 → 2 · vérin électrique et 3 · capteur de température (dans n’importe quel ordre).',why:'Le capteur mesure la température. Quand elle dépasse le seuil, le vérin pousse la fenêtre de toit et aère la serre.'},
+  {ex:'E3',title:'arroser automatiquement',sub:'arroser quand le sol est sec',slots:[{accept:[4,5]},{accept:[4,5]}],label:'E3 → 4 · capteur d’humidité du sol et 5 · électrovanne (dans n’importe quel ordre).',why:'Le capteur planté dans la terre mesure l’humidité. Si le sol est sec, l’électrovanne s’ouvre et laisse passer l’eau dans le tuyau.'},
+  {ex:'E4',title:'économiser l’eau',sub:'utiliser l’eau de pluie',slots:[{accept:[6]}],label:'E4 → 6 · cuve d’eau de pluie.',why:'La cuve récupère l’eau de pluie : on arrose sans puiser dans le réseau d’eau potable.'},
+  {ex:'E5',title:'être autonome en énergie',sub:'produire autant d’énergie que la serre en consomme',slots:[{accept:[7]}],label:'E5 → 7 · panneau solaire et batterie.',why:'Le panneau transforme la lumière en électricité et la batterie la stocke : la serre fonctionne sans être raccordée au réseau électrique.'},
+  {ex:'E6',title:'résister au vent',sub:'tenir face à un vent de 100 km/h',off:true,label:'E6 n’a pas de case.',why:'C’est une contrainte de résistance, qu’on vérifie sur la structure et non avec un élément à associer ici.'}
+ ]});
+
+const P2A=mcqPart({id:'2a',tag:'2.a',title:'<b>Indiquer</b> la nature du mouvement de la tige du vérin qui ouvre la fenêtre.',points:2,
+ aides:[{cost:.2,text:'La tige sort du corps du vérin en suivant une direction fixe. Suit-elle une ligne droite ou un cercle ?'},{cost:.3,text:'Un objet qui se déplace le long d’une ligne droite, sans tourner : quel mouvement ?'}],
+ options:MVT('tr'),answer:'Une translation rectiligne.',
+ why:'<p>La tige du vérin sort et rentre en ligne droite, dans la direction de l’axe du vérin : tous ses points se déplacent de la même manière le long d’une droite. C’est une <b>translation rectiligne</b>.</p><p>La fenêtre, elle, pivote autour de sa charnière : c’est le vérin qui la pousse en translation.</p>',
+ defaultNote:'Regarde la tige seule : elle avance en ligne droite, elle ne tourne pas autour d’un axe.'});
+
+const P2B=numPart({id:'2b',tag:'2.b',title:'À l’aide du document 2, <b>déterminer</b> la vitesse de sortie de la tige du vérin, en centimètre par seconde.',points:2,label:'v =',unit:'cm/s',answer:2,answerText:'v = d ÷ t = 12 ÷ 6 = 2 cm/s',
+ aides:[{cost:.2,text:'Choisis un point du graphique, par exemple à 6 s. Lis la longueur de tige sortie, puis applique v = d ÷ t.'},{cost:.3,text:'À 6 s, la tige est sortie de 12 cm. Calcule 12 ÷ 6.'}],
+ why:'<p>La vitesse est la distance parcourue divisée par la durée : v = d ÷ t. À 6 s, la tige est sortie de 12 cm, donc v = 12 ÷ 6 = <b>2 cm/s</b>. Le graphique est une droite : la vitesse est constante. On retrouve la même valeur sur le point final : 30 cm en 15 s.</p>',
+ notes:{'12':'12 cm est la distance lue sur le graphique, pas la vitesse. Il faut la diviser par la durée.','0.5':'Tu as divisé la durée par la distance. La formule est v = d ÷ t.','30':'30 cm est la course totale du vérin, pas la vitesse. Divise-la par 15 s.'},
+ defaultNote:'Ce n’est pas la bonne vitesse. Lis la distance et la durée d’un même point, puis calcule d ÷ t.',
+ after:()=>showHl('chart2','a')});
+
+const P3A=numPart({id:'3a',tag:'3.a',title:'À l’aide du document 3, <b>calculer</b> l’énergie E consommée chaque jour par l’électrovanne et la pompe.',points:2,label:'E =',unit:'Wh',answer:20,answerText:'E = P × t = 40 × 0,5 = 20 Wh',
+ aides:[{cost:.2,text:'Formule : E = P × t, avec t en heures. Convertis d’abord 30 minutes en heures.'},{cost:.3,text:'30 min = 0,5 h. Calcule 40 × 0,5, c’est la moitié de 40.'}],
+ why:'<p>On applique E = P × t avec P = 40 W et t en heures : 30 min = 0,5 h. Donc E = 40 × 0,5 = <b>20 Wh</b>.</p><p>Piège classique : oublier de convertir les minutes en heures.</p>',
+ follow:v=>eq(v,1200)?{raw:1,note:'Tu as multiplié 40 par 30 : la démarche P × t est juste, mais les 30 minutes doivent être converties en heures (0,5 h). La moitié des points est accordée.'}:null,
+ defaultNote:'Ce n’est pas la bonne énergie. Utilise E = P × t avec t en heures.'});
+
+const P3B=numPart({id:'3b',tag:'3.b',title:'À l’aide du document 3, <b>calculer</b> l’énergie totale consommée chaque jour par la serre (pompe et vérin).',points:2,label:'E totale =',unit:'Wh',answer:50,answerText:'E totale = 20 + 30 = 50 Wh',
+ aides:[{cost:.2,text:'L’énergie totale est la somme des énergies consommées par chaque élément : pompe (question 3.a) et vérin (donné dans le tableau).'},{cost:.3,text:'Additionne 20 Wh pour la pompe et 30 Wh pour le vérin.'}],
+ why:'<p>Les deux éléments consomment chacun leur énergie dans la journée : on additionne. Pompe 20 Wh + vérin 30 Wh = <b>50 Wh</b> par jour.</p>',
+ follow:v=>{const a=val('3a');return(!isNaN(a)&&eq(v,a+30))?{raw:1,note:'Ton addition avec ta valeur de la question 3.a est correcte, mais cette valeur est fausse : la moitié des points est accordée.'}:null},
+ notes:{'30':'Tu n’as compté que le vérin : il faut aussi la pompe.','20':'Tu n’as compté que la pompe : il faut aussi le vérin.'},
+ defaultNote:'Ce n’est pas la bonne énergie totale. Additionne l’énergie de la pompe et celle du vérin.'});
+
+const P3C=numPart({id:'3c',tag:'3.c',title:'À l’aide du document 3, <b>calculer</b> l’énergie produite chaque jour par le panneau solaire, puis la comparer à l’énergie consommée.',points:2,label:'E produite =',unit:'Wh',answer:100,answerText:'E produite = 25 × 4 = 100 Wh, supérieure à 50 Wh : E5 est respectée',
+ aides:[{cost:.2,text:'Même formule : E = P × t, avec P = 25 W et t = 4 h d’ensoleillement.'},{cost:.3,text:'Calcule 25 × 4.'}],
+ why:'<p>On applique E = P × t avec P = 25 W et t = 4 h : E = 25 × 4 = <b>100 Wh</b>.</p><p>La serre consomme 50 Wh par jour. Comme 100 Wh est supérieur à 50 Wh, le panneau produit deux fois plus d’énergie que nécessaire : l’exigence E5 est respectée, et le surplus charge la batterie pour les jours moins ensoleillés.</p>',
+ notes:{'29':'Tu as additionné 25 et 4. La formule demande de multiplier : E = P × t.'},
+ defaultNote:'Ce n’est pas la bonne énergie. Vérifie la multiplication P × t.'});
+
+const P4A=bitsPart({id:'4a',tag:'4.a',title:'À l’aide du document 4, <b>exprimer</b> la valeur en écriture binaire de la mesure de 14 h.',points:1.5,expected:'01001011',
+ aides:[{cost:.2,text:'Niveau haut = 1, niveau bas = 0. Lis le signal de 14 h case par case, de b8 (à gauche) à b1 (à droite), comme pour 8 h où les valeurs sont écrites au-dessus.'},{cost:.3,text:'Mesure de 14 h : b8 = 0, b7 = 1, b6 = 0. À toi de lire b5 à b1.'},{cost:.3,text:'Le code de 14 h contient quatre « 1 » et quatre « 0 ».'}],
+ why:'<p>On lit le signal de gauche (b8) à droite (b1) : niveau haut = 1, niveau bas = 0. Mesure de 14 h : b8 = 0, b7 = 1, b6 = 0, b5 = 0, b4 = 1, b3 = 0, b2 = 1, b1 = 1. Pour 8 h, le même raisonnement donne 10010110, déjà écrit au-dessus du signal.</p>'});
+
+const P4B=multiNumPart({id:'4b',tag:'4.b',title:'À l’aide du document 5, <b>rechercher</b> la valeur en écriture décimale de la mesure de 8 h et de celle de 14 h.',points:1.5,
+ aides:[{cost:.2,text:'Dans le document 5, repère ton code binaire sur la ligne du haut, puis lis le nombre juste en dessous.'},{cost:.3,text:'Autre méthode : additionne les poids des bits égaux à 1. Poids de b8 à b1 : 128, 64, 32, 16, 8, 4, 2, 1. Si la mesure de 14 h n’est pas dans le tableau, revérifie le code de 4.a.'}],
+ answerText:'8 h : 150 · 14 h : 75',
+ fields:[{k:'m1',label:'8 h : 10010110 →',answer:150,pts:.75,defaultNote:'La mesure de 8 h se lit dans le tableau du document 5 : 10010110.'},
+  {k:'m2',label:'14 h : ton code →',answer:75,pts:.75,follow:v=>{const b=bitsOf('4a');return(b&&eq(v,parseInt(b,2)))?{frac:.5,note:'Ta valeur de 14 h correspond bien à ton code de la question 4.a, mais ce code était faux : la moitié des points de cette ligne est accordée.'}:null},defaultNote:'Retrouve ton code binaire de 14 h dans le tableau du document 5.'}],
+ why:'<p>Le document 5 est un tableau de correspondance : on repère le code binaire sur la ligne du haut et on lit la valeur décimale dessous. 10010110 → 150 et 01001011 → 75.</p><p>On peut le vérifier en additionnant les poids des bits à 1 : 150 = 128 + 16 + 4 + 2 et 75 = 64 + 8 + 2 + 1.</p>'});
+
+const P4C=mcqPart({id:'4c',tag:'4.c',title:'À l’aide des documents 4 et 5, <b>déduire</b> si l’arrosage démarre à 14 h, en argumentant.',points:2,
+ aides:[{cost:.2,text:'Le critère du document 4 : le sol est considéré comme sec si la valeur est inférieure à 90. Compare la mesure de 14 h à ce seuil.'},{cost:.3,text:'La mesure de 14 h vaut 75. Est-ce plus petit ou plus grand que 90 ?'}],
+ options:[['A','Oui : 75 est inférieur à 90, le sol est sec, l’arrosage démarre',1],['B','Oui : la valeur a diminué depuis 8 h',.5],['C','Non : 75 est inférieur à 90, donc le sol est assez humide',0],['D','Non : 150 est supérieur à 90',0]],
+ answer:'Oui : 75 < 90, le sol est sec, l’arrosage démarre.',
+ why:'<p>Le critère du document 4 : le sol est considéré comme sec si la valeur est <b>inférieure à 90</b>. À 8 h, la valeur est 150 : le sol est humide. À 14 h, elle est de 75, et 75 est inférieur à 90 : le sol a séché, l’électrovanne s’ouvre et l’arrosage démarre.</p><p>Une bonne argumentation cite la valeur, le seuil et la comparaison.</p>',
+ wrong:{B:'La conclusion est juste, mais une baisse ne suffit pas à justifier : il faut comparer 75 au seuil de 90. Un demi-point est accordé.',C:'75 est inférieur à 90 : c’est justement ce qui signifie que le sol est sec, pas humide.',D:'150 est la mesure de 8 h. C’est la mesure de 14 h (75) qu’il faut comparer au seuil.'}});
+
+const P5=progPart({id:'5',tag:'5',title:'À l’aide du cahier des charges, <b>compléter</b> le programme en écrivant les cinq valeurs manquantes.',points:5,
+ aides:[{cost:.2,text:'Relis le cahier des charges : à quelle température la fenêtre s’ouvre-t-elle, à quelle température se ferme-t-elle ?'},{cost:.3,text:'Le seuil d’humidité est dans le document 4, la durée d’arrosage dans le document 3. La fréquence des mesures est dans le cahier des charges.'},{cost:.3,text:'Les cinq valeurs, dans le désordre : 28, 20, 90, 30 et 10.'}],
+ tree:[
+  {c:'ev',s:['Quand serre activée']},
+  {c:'ctrl',s:['Répéter indéfiniment'],kids:[
+   {c:'ctrl',s:['Si',{chip:'température'},'>',{in:'tmax',label:'température d’ouverture'},'°C alors'],kids:[{c:'act',s:['Ouvrir la fenêtre avec le vérin']}]},
+   {c:'ctrl',s:['Si',{chip:'température'},'<',{in:'tmin',label:'température de fermeture'},'°C alors'],kids:[{c:'act',s:['Fermer la fenêtre avec le vérin']}]},
+   {c:'ctrl',s:['Si',{chip:'humidité du sol'},'<',{in:'hum',label:'seuil d’humidité'},'alors'],kids:[
+     {c:'act',s:['Ouvrir l’électrovanne']},
+     {c:'act',s:['Attendre',{in:'arro',label:'durée d’arrosage en minutes'},'minutes']},
+     {c:'act',s:['Fermer l’électrovanne']}]},
+   {c:'act',s:['Attendre',{in:'mes',label:'durée entre deux mesures en minutes'},'minutes']}]}],
+ expected:{tmax:28,tmin:20,hum:90,arro:30,mes:10},answerText:'28 · 20 · 90 · 30 · 10',
+ lines:['<b>si température &gt; 28 °C.</b> Au-dessus de 28 °C, le vérin ouvre la fenêtre pour faire baisser la chaleur.','<b>si température &lt; 20 °C.</b> En dessous de 20 °C, on referme la fenêtre pour garder la chaleur.','<b>si humidité du sol &lt; 90.</b> C’est le seuil du document 4 : en dessous, le sol est sec et l’arrosage démarre.','<b>attendre 30 minutes</b> pendant que l’électrovanne est ouverte. C’est la durée d’arrosage du document 3 (0,5 h).','<b>attendre 10 minutes.</b> Le programme répète ses mesures toutes les 10 minutes, comme le demande le cahier des charges.']});
+
+const S={brand:'Serre',sub:'Serre connectée · Technologie · 30 min · 25 points',
+ icon:'<path d="M3 19V11l9-6 9 6v8zM12 5v14M3 11h18"/>',
+ QS:[
+ {id:'q1',title:'Besoin et solutions techniques',pts:5,
+  intro:'Un maraîcher équipe sa serre d’un système connecté. La serre ouvre sa fenêtre quand il fait trop chaud, arrose seule quand le sol est sec et fonctionne grâce à l’énergie du soleil.',
+  docs:()=>doc('Document 1 – serre connectée et ses solutions techniques','<div class="scroll">'+SVG1+'</div><p class="note">Schéma simplifié de la serre, vue de face.</p>'+sols(SOLS1)),
+  parts:[P1A,P1B],keep:'Un besoin dit à quoi sert l’objet (ici cultiver avec peu d’intervention). Chaque exigence est remplie par une ou plusieurs solutions techniques : un capteur mesure, un actionneur agit.'},
+ {id:'q2',title:'Le vérin de la fenêtre',pts:4,intro:'',
+  docs:()=>doc('Document 2 – ouverture de la fenêtre de toit','<p>La fenêtre de toit est ouverte par un vérin électrique. Sa tige sort en ligne droite, sur une course totale de 30 cm. Le graphique donne la longueur de tige sortie en fonction du temps.</p><div class="scroll">'+chart({id:'chart2',aria:'Longueur de tige sortie en fonction du temps : une droite qui passe par 12 centimètres à 6 secondes et 30 centimètres à 15 secondes.',xmax:15,xstep:3,ymax:30,ystep:5,xlabel:'temps (seconde)',ylabel:'tige sortie (cm)',series:[{pts:[[0,0],[3,6],[6,12],[9,18],[12,24],[15,30]],dots:true}],hl:{a:{pts:[[6,12]],texts:[{x:6,y:12,dx:12,dy:24,t:'12 cm en 6 s'}]}}})+'</div><p class="note">Rappel : vitesse v = distance d ÷ durée t.</p>'),
+  parts:[P2A,P2B],keep:'Un élément qui se déplace en ligne droite fait une translation rectiligne. La vitesse se calcule avec v = d ÷ t, en lisant la distance et la durée d’un même point du graphique.'},
+ {id:'q3',title:'L’énergie du panneau solaire',pts:6,intro:'',
+  docs:()=>doc('Document 3 – énergie consommée et produite en une journée','<p>La serre consomme de l’énergie électrique pour arroser et pour ouvrir la fenêtre. Le panneau solaire en produit.</p>'+table([['élément','puissance','durée par jour','énergie par jour'],['électrovanne et pompe','40 W','30 min','à calculer'],['vérin de la fenêtre','30 W','1 h','30 Wh'],['panneau solaire (production)','25 W','4 h','à calculer']])+formula('E = P × t',['E : énergie en Wh (wattheure)','P : puissance en W (watt)','t : durée en h (heure)'])+'<p class="note">Exigence E5 : produire au moins autant d’énergie que la serre en consomme.</p>'),
+  parts:[P3A,P3B,P3C],keep:'E = P × t : on convertit la durée en heures (30 min = 0,5 h) avant de multiplier. On additionne les énergies consommées (20 + 30 = 50 Wh), puis on compare à l’énergie produite (100 Wh).'},
+ {id:'q4',title:'Détecter un sol sec',pts:5,intro:'',
+  docs:()=>doc('Document 4 – mesure de l’humidité du sol','<p>Le capteur d’humidité envoie une valeur de 0 (sol très sec) à 255 (sol détrempé), codée en binaire sur un octet (huit bits). <b>Si la valeur est inférieure à 90, le sol est considéré comme sec</b> et l’arrosage démarre.</p>'+waveRow('mesure de 8 h','10010110',true)+waveRow('mesure de 14 h','01001011',false))+doc('Document 5 – tableau de correspondance',table([['valeur en binaire','10010110','01111000','01100100','01001011','01000000','00110010','00101000'],['valeur en décimal','150','120','100','75','64','50','40']])),
+  parts:[P4A,P4B,P4C],keep:'Une mesure est codée sur un octet (8 bits). On lit un signal logique (haut = 1, bas = 0), on convertit en décimal avec le tableau ou les poids 128 à 1, puis on compare la valeur au seuil.'},
+ {id:'q5',title:'Compléter le programme',pts:5,intro:'Le programme surveille la température et l’humidité du sol, en boucle.',
+  docs:()=>doc('Cahier des charges du programme','<p>1. Toutes les 10 minutes, le programme mesure la température et l’humidité du sol.</p><p>2. La fenêtre s’ouvre si la température dépasse 28 °C. Elle se ferme si la température passe sous 20 °C.</p><p>3. L’arrosage démarre si l’humidité est inférieure au seuil du document 4. Il dure le temps indiqué dans le document 3.</p>'),
+  parts:[P5],keep:'Dans un programme : on répète indéfiniment, on teste chaque capteur avec « si … alors » et un seuil, puis on attend avant la mesure suivante.'}
+ ]};
+
+/* ---------- Application ---------- */
+const QS=S.QS,MAX=QS.reduce((s,q)=>s+q.pts,0);
+const results={},nav=$('#nav'),stage=$('#stage'),scoreVal=$('#scoreVal');
+const partIndex={};QS.forEach((q,qi)=>{q.parts.forEach(p=>{p.q=qi;partIndex[p.id]=p})});
+$('#brandName').textContent=S.brand;$('#brandSub').textContent=S.sub;$('#brandIcon').innerHTML=S.icon;
+$('#maxVal').textContent='/ '+MAX;
+
+const total=()=>Object.keys(results).reduce((s,k)=>s+results[k].earned,0);
+function updatePills(){
+  QS.forEach((q,i)=>{
+    const done=q.parts.filter(p=>results[p.id]).length,p=nav.children[i];
+    p.classList.toggle('complete',done===q.parts.length);
+    $('.ps',p).textContent=done===q.parts.length?fmt(q.parts.reduce((s,x)=>s+results[x.id].earned,0))+'/'+q.pts:(done?done+'/'+q.parts.length:'—');
+  });
+}
+function updateScore(){scoreVal.textContent=fmt(total());updatePills()}
+
+function mountPart(def){
+  const sec=document.createElement('section');sec.className='part';sec.id='p-'+def.id;
+  sec.innerHTML='<div class="part-head"><span class="tag">'+def.tag+'</span><h3>'+def.title+'</h3><span class="pts">'+fmt(def.points)+' '+pl(def.points)+'</span></div>'+
+   '<div class="part-body">'+def.body()+'</div><div class="aid-list" aria-live="polite"></div>'+
+   '<div class="actions"><button type="button" class="btn aid-btn"></button><button type="button" class="btn primary val">Valider ma réponse</button><span class="max"></span></div>'+
+   '<p class="warnmsg" role="alert" hidden></p><div class="result" hidden></div>';
+  let used=0;
+  const list=$('.aid-list',sec),ab=$('.aid-btn',sec),vb=$('.val',sec),mx=$('.max',sec),wm=$('.warnmsg',sec),res=$('.result',sec);
+  const cum=()=>def.aides.slice(0,used).reduce((s,a)=>s+a.cost,0);
+  function refresh(){
+    const nx=def.aides[used];ab.hidden=!nx;
+    if(nx)ab.textContent='Aide '+(used+1)+' · −'+Math.round(nx.cost*100)+' % des points';
+    mx.textContent='Maximum possible : '+fmt(def.points*(1-cum()))+' / '+fmt(def.points);
+  }
+  ab.addEventListener('click',()=>{
+    const a=def.aides[used];used++;
+    list.insertAdjacentHTML('beforeend','<div class="aid"><b>Aide '+used+' · −'+Math.round(a.cost*100)+' %</b><p>'+a.text+'</p></div>');
+    refresh();
+  });
+  if(def.bind)def.bind(sec);
+  vb.addEventListener('click',()=>{
+    const err=def.check?def.check(sec):null;
+    if(err){wm.textContent=err;wm.hidden=false;return}
+    wm.hidden=true;
+    const g=def.grade(sec),c=cum(),raw=Math.max(0,Math.min(def.points,g.raw)),earned=r2(raw*(1-c)),lost=r2(raw*c);
+    results[def.id]={raw:raw,earned:earned,lost:lost,aides:used,points:def.points};
+    $$('input,select,button.bit',$('.part-body',sec)).forEach(e=>{e.disabled=true});
+    sec.classList.add('done');
+    const ratio=raw/def.points,cls=ratio>=.999?'ok':(ratio<=.001?'ko':'partial');
+    const label=cls==='ok'?'✓ Bonne réponse':(cls==='ko'?'✕ Pas cette fois':'≈ En partie juste');
+    let pen='';
+    if(raw>0&&used>0)pen='Avec '+used+' aide'+(used>1?'s':'')+' (−'+Math.round(c*100)+' %), tes '+fmt(raw)+' '+pl(raw)+' deviennent '+fmt(earned)+' '+pl(earned)+'.';
+    else if(raw>0)pen='Aucune aide utilisée : tu gardes tous les points gagnés.';
+    else if(used>0)pen='Tu as utilisé '+used+' aide'+(used>1?'s':'')+', mais la réponse ne rapporte pas de point ici.';
+    res.className='result '+cls;
+    res.innerHTML='<div class="verdict"><span class="badge">'+label+'</span><span class="sline">'+fmt(earned)+' / '+fmt(def.points)+' '+pl(def.points)+'</span></div>'+(pen?'<p class="pen">'+pen+'</p>':'')+'<div class="explain">'+g.explain+'</div>';
+    res.hidden=false;
+    if(def.after)def.after(sec);
+    updateScore();
+    res.scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
+  refresh();
+  return sec;
+}
+
+function show(i){
+  $$('.qsec').forEach((s,k)=>{s.hidden=k!==i});
+  $$('.pill').forEach((p,k)=>{p.setAttribute('aria-current',k===i?'page':'false')});
+  if(i===QS.length)renderBilan();
+  window.scrollTo(0,0);
+}
+function pill(label,i){
+  const b=document.createElement('button');b.type='button';b.className='pill';
+  b.innerHTML='<span class="pl">'+label+'</span><span class="ps">—</span>';
+  b.addEventListener('click',()=>show(i));nav.appendChild(b);
+}
+const HOWTO='<div class="how"><b>Comment ça marche</b><span>Réponds, puis valide : l’explication s’affiche toujours, même quand ta réponse est juste. Tu peux demander des aides avant de valider. Elles font avancer mais retirent des points sur la partie : par exemple −20 %, puis −30 %, puis −30 %. Le score en haut se met à jour à chaque validation.</span></div>';
+
+function build(){
+  Object.keys(results).forEach(k=>{delete results[k]});
+  nav.innerHTML='';stage.innerHTML='';
+  QS.forEach((q,i)=>{
+    const sec=document.createElement('section');sec.className='qsec';sec.hidden=true;
+    sec.innerHTML='<div class="q-head"><p class="eyebrow">Question '+(i+1)+' · '+q.pts+' points</p><h2 class="q-title">'+q.title+'</h2></div>'+(i===0?HOWTO:'')+(q.intro?'<p class="intro">'+q.intro+'</p>':'')+'<div class="docs">'+q.docs()+'</div><div class="parts"></div><div class="qfoot"></div>';
+    const parts=$('.parts',sec);q.parts.forEach(p=>{parts.appendChild(mountPart(p))});
+    const foot=$('.qfoot',sec);
+    const prev=document.createElement('button');prev.type='button';prev.className='btn';prev.textContent=i===0?'':'← Question '+i;prev.hidden=i===0;
+    prev.addEventListener('click',()=>show(i-1));
+    const next=document.createElement('button');next.type='button';next.className='btn primary';next.textContent=i===QS.length-1?'Voir mon bilan →':'Question '+(i+2)+' →';
+    next.addEventListener('click',()=>show(i+1));
+    foot.appendChild(prev);foot.appendChild(next);
+    stage.appendChild(sec);pill('Q'+(i+1),i);
+  });
+  const b=document.createElement('section');b.className='qsec';b.hidden=true;b.id='bilan';stage.appendChild(b);pill('Bilan',QS.length);
+  show(0);updateScore();
+}
+
+function renderBilan(){
+  const b=$('#bilan'),tot=total(),all=Object.keys(partIndex),done=all.filter(k=>results[k]).length;
+  const lost=all.reduce((s,k)=>s+(results[k]?results[k].lost:0),0);
+  const aides=all.reduce((s,k)=>s+(results[k]?results[k].aides:0),0);
+  const r=tot/MAX;
+  const msg=r>=.88?'Excellent : tu maîtrises presque tout le sujet.':r>=.72?'Très bien : il ne reste que quelques détails à consolider.':r>=.52?'Bon travail : les bases sont là, relis les explications des parties manquées.':r>=.32?'À consolider : reprends les explications et refais les parties où tu as perdu des points.':'À reprendre : relis les explications question par question, puis recommence.';
+  let html='<div class="q-head"><p class="eyebrow">Bilan</p><h2 class="q-title">Ton résultat</h2></div>'+
+   '<div class="big"><b>'+fmt(tot)+'</b><span>/ '+MAX+' · soit '+fmt(tot/MAX*20)+' / 20</span></div><p>'+(done<all.length?'Il reste '+(all.length-done)+' partie'+(all.length-done>1?'s':'')+' à traiter. ':'')+msg+'</p>'+
+   '<div class="stats"><div class="stat"><b>'+done+' / '+all.length+'</b><span>parties validées</span></div><div class="stat"><b>'+aides+'</b><span>aide'+(aides>1?'s':'')+' utilisée'+(aides>1?'s':'')+'</span></div><div class="stat"><b>−'+fmt(lost)+'</b><span>point'+(lost>1?'s':'')+' retiré'+(lost>1?'s':'')+' par les aides</span></div></div>'+
+   '<div class="block"><h3 class="sec-h">Détail par question</h3>';
+  QS.forEach((q,i)=>{
+    let e=0,l=0;q.parts.forEach(p=>{if(results[p.id]){e+=results[p.id].earned;l+=results[p.id].lost}});
+    html+='<div class="brow"><div class="brow-h"><span>Question '+(i+1)+' · '+q.title+'</span><span>'+fmt(e)+' / '+q.pts+'</span></div><div class="bar" role="img" aria-label="'+fmt(e)+' points gagnés, '+fmt(l)+' perdus par les aides, sur '+q.pts+'"><i class="e" style="width:'+(e/q.pts*100)+'%"></i><i class="l" style="width:'+(l/q.pts*100)+'%"></i></div></div>';
+  });
+  html+='<div class="legend"><span><i style="background:var(--ok)"></i>points gagnés</span><span><i style="background:var(--warn)"></i>points retirés par les aides</span><span><i style="background:var(--line)"></i>points non obtenus</span></div></div>';
+  const rev=all.filter(k=>!results[k]||results[k].raw<results[k].points-.001);
+  html+='<div class="block"><h3 class="sec-h">À revoir</h3>';
+  if(!rev.length)html+='<p>Toutes les parties sont réussies sans erreur. Les aides ont seulement coûté des points.</p>';
+  else html+='<ul class="rev">'+rev.map(k=>{const p=partIndex[k];return '<li><span><b>'+p.tag+'</b> · '+(results[k]?fmt(results[k].raw)+' / '+fmt(p.points)+' avant aides':'pas encore traitée')+'</span><button type="button" class="btn" data-go="'+k+'">Revoir</button></li>'}).join('')+'</ul>';
+  html+='</div><div class="block"><h3 class="sec-h">À retenir</h3><ol class="keep">'+QS.map(q=>'<li>'+q.keep+'</li>').join('')+'</ol></div>'+
+   '<div class="qfoot"><button type="button" class="btn" id="back">← Question '+QS.length+'</button><button type="button" class="btn primary" id="reset">Tout recommencer</button></div>';
+  b.innerHTML=html;
+  $$('[data-go]',b).forEach(btn=>{btn.addEventListener('click',()=>{const p=partIndex[btn.dataset.go];show(p.q);const t=document.getElementById('p-'+p.id);if(t)t.scrollIntoView({block:'start'})})});
+  $('#back',b).addEventListener('click',()=>show(QS.length-1));
+  const rs=$('#reset',b);let armed=false;
+  rs.addEventListener('click',()=>{if(!armed){armed=true;rs.textContent='Confirmer : effacer mes réponses';return}build()});
+}
+
+window.__solveAll=()=>{QS.forEach(q=>q.parts.forEach(p=>{const sec=$('#p-'+p.id);p.solve(sec);$('.val',sec).click()}));return total()};
+build();
+
+})();
+</script>
+</body>
+</html>
