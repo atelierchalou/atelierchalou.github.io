@@ -93,7 +93,6 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 <header>
   <h1>🔎 Qui a saboté l'IA ?<small>ENQUÊTE · COLLÈGE DES TILLEULS · MARDI 8H40</small></h1>
   <label class="who">Inspecteur·rice <input id="nameIn" placeholder="Ton nom" maxlength="30"></label>
-  <button class="btn" data-action="teacher">👩‍🏫 Enseignant</button>
 </header>
 <nav id="tabs"></nav>
 <div class="layout"><div class="main" id="main"></div><aside class="side" id="side"></aside></div>
@@ -206,7 +205,7 @@ const PROOFS=[
 const METHODS=[{id:'A',t:"A — Quelqu'un a inversé des étiquettes dans le dossier"},{id:'B',t:"B — Quelqu'un a retiré des photos : trop peu d'exemples"},{id:'C',t:"C — Quelqu'un a modifié un poids dans le cerveau de Pixel"}];
 
 /* ---------- État ---------- */
-const S={name:'',tab:'brief',piece:null,solved:{},q:{p1:0,p2:0,p3:0,p4:0},qOrder:{},qFb:{},hintShown:{},hints:0,flagged:[],p2fb:'',p2checked:false,p3w:'old',p3seen:{old:false,new:false},p3photo:0,p4time:390,p4scrubbed:false,confront:{},mark:{},acc:{s:null,m:null,pr:[]},accFb:'',wrongAcc:0,done:false,showTeacher:false};
+const S={name:'',tab:'brief',piece:null,solved:{},q:{p1:0,p2:0,p3:0,p4:0},qOrder:{},qFb:{},hintShown:{},hints:0,flagged:[],p2fb:'',p2checked:false,p3w:'old',p3seen:{old:false,new:false},p3photo:0,p4time:390,p4scrubbed:false,confront:{},mark:{},acc:{s:null,m:null,pr:[]},accFb:'',wrongAcc:0,done:false};
 const $=id=>document.getElementById(id);
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const allSolved=()=>PIECES.every(p=>S.solved[p.id]);
@@ -226,8 +225,10 @@ function qHTML(pid){
 }
 function doneBanner(pid){
   if(!S.solved[pid])return '';
-  const last=QS[pid][QS[pid].length-1];
-  return `<div class="fb good">✅ Pièce analysée ! ${QS[pid].map(q=>q.constat).join(' ')}<br><span class="muted">Ajouté à ton carnet d'enquête.</span></div>`;
+  const idx=PIECES.findIndex(p=>p.id===pid), nxt=PIECES[idx+1];
+  const btn=nxt?`<button class="btn pri" data-action="piece" data-p="${nxt.id}">Pièce suivante : ${nxt.icon} ${nxt.title} →</button>`
+    :`<button class="btn pri" data-action="tab" data-t="sus">Toutes les pièces sont analysées : interroger les suspects →</button>`;
+  return `<div class="fb good">✅ Pièce analysée ! ${QS[pid].map(q=>q.constat).join(' ')}<br><span class="muted">Ajouté à ton carnet d'enquête.</span></div><div style="margin:14px 0 4px;text-align:right">${btn}</div>`;
 }
 function hintBtn(pid){
   if(S.solved[pid])return '';
@@ -367,19 +368,6 @@ function render(){
   $('side').innerHTML=side();
   const r=$('p4range');if(r)r.oninput=()=>{S.p4time=+r.value;S.p4scrubbed=true;$('p4dyn').innerHTML=p4dyn();if(!S.solved.p4&&!$('p4q')){const had=document.querySelector('.card h3');}};
   if(r)r.onchange=()=>render();
-  $('modal').innerHTML=S.showTeacher?teacher():'';
-}
-function teacher(){
-  return `<div class="modal"><div><h2>👩‍🏫 Corrigé enseignant</h2>
-  <div class="card"><b>Solution :</b> Sam a modifié le poids des « oreilles pointues » (+3,00 → −4,00) à 7h52 avec le compte partagé « club-info » (mot de passe sur le post-it de M. Roux). Méthode : <b>C</b>. Preuves attendues : le changement de poids <b>+</b> (Sam seul présent à 7h52 <i>ou</i> son mensonge sur l'heure d'arrivée).</div>
-  <div class="card"><b>Fausses pistes :</b> Léo (arrive 8h05), Mme Garcia (8h12), M. Roux (sorti à 7h40) ont tous un alibi par badge. Hypothèses A et B réfutées par la pièce 2.</div>
-  <h3>Questions de débriefing</h3><ol>
-  <li>Si quelqu'un avait <b>inversé les étiquettes</b> du dossier, quelles erreurs aurait-on vues ? <i>Des erreurs sur les chats ET sur les chiens.</i></li>
-  <li>Si on n'avait gardé que <b>4 photos</b> d'entraînement ? <i>Pixel se tromperait sur les animaux atypiques (chat aux oreilles tombantes, husky…).</i></li>
-  <li>Pourquoi un poids négatif sur les oreilles casse les chats mais pas les chiens ? <i>Les chats ont les oreilles pointues : le poids négatif les pousse vers « chien » ; les chiens (oreilles tombantes) ont un indice faible, donc peu d'effet.</i></li>
-  <li>Pixel affichait 99 % : peut-on lui faire confiance ? <i>Non : la confiance mesure la certitude de l'IA, pas la vérité.</i></li></ol>
-  <p class="muted">Durée conseillée : 30 à 40 min, en binômes. Le jeu ne stocke rien : la page recharge, l'enquête recommence.</p>
-  <button class="btn pri" data-action="closeT">Fermer</button></div></div>`;
 }
 function certPrint(){
   const el=$('certPrint');
@@ -409,8 +397,6 @@ document.addEventListener('click',e=>{
   else if(a==='accM'){S.acc.m=el.dataset.v;S.accFb=''}
   else if(a==='accP'){const v=el.dataset.v;if(S.acc.pr.includes(v))S.acc.pr=S.acc.pr.filter(x=>x!==v);else if(S.acc.pr.length<2)S.acc.pr=[...S.acc.pr,v];else{e.preventDefault();S.accFb="Tu ne peux garder que 2 preuves : décoche-en une d'abord."}}
   else if(a==='accuse')accuse();
-  else if(a==='teacher')S.showTeacher=true;
-  else if(a==='closeT')S.showTeacher=false;
   else if(a==='cert'){certPrint();return}
   else if(a==='replay'){const nm=S.name;Object.assign(S,{tab:'brief',piece:null,solved:{},q:{p1:0,p2:0,p3:0,p4:0},qOrder:{},qFb:{},hintShown:{},hints:0,flagged:[],p2fb:'',p2checked:false,p3w:'old',p3seen:{old:false,new:false},p3photo:0,p4time:390,p4scrubbed:false,confront:{},mark:{},acc:{s:null,m:null,pr:[]},accFb:'',wrongAcc:0,done:false,name:nm})}
   render();
@@ -426,7 +412,6 @@ function accuse(){
   if(fb){S.accFb=fb;S.wrongAcc++}else{S.done=true;S.accFb=''}
 }
 $('nameIn').addEventListener('input',e=>{S.name=e.target.value});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.showTeacher){S.showTeacher=false;render()}});
 render();
 </script>
 </body>
