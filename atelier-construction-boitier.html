@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Modeleur de boîtiers</title>
+<title>Modeleur assisté</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@500&display=swap">
@@ -142,7 +142,7 @@ footer{font-size:.8rem;color:var(--muted)}
 <div class="wrap">
   <header><div class="intro">
     <span class="eyebrow">Atelier construction électronique · outil du professeur et des élèves</span>
-    <h1>Modeleur de boîtiers</h1>
+    <h1>Modeleur assisté</h1>
     <p>Choisis l'objet à habiller. Le boîtier arrive déjà dimensionné pour ses composants : règle ses cotes et ses ouvertures, puis récupère les fichiers pour l'imprimante 3D ou la découpeuse laser.</p>
   </div></header>
 
@@ -721,7 +721,7 @@ function holesText(m){return state.holes.map((h,i)=>{const a=absHole(h,m.d),sz=h
   return `- ${h.label} : ${FL[h.face].toLowerCase()}, ${sz} mm, centre à ${fmt(a.u)} mm du bord gauche et ${fmt(a.v)} mm du bas${m.res[i].ok?'':' (NON DÉCOUPÉE : mal placée)'}`;}).join('\n')||'- aucune';}
 function notice(m,kind){
   const d=m.d,name=(OBJS.find(o=>o[0]===state.obj)||['','Boîtier'])[1];
-  const head=`BOÎTIER – ${name.toUpperCase()}\nAtelier construction électronique – Modeleur de boîtiers\n\nDimensions intérieures : ${fmt(state.Li)} × ${fmt(state.Wi)} × ${fmt(state.Hi)} mm\nDimensions extérieures : ${fmt(d.L)} × ${fmt(d.W)} × ${fmt(d.H+d.t)} mm (couvercle compris)\n\nOuvertures :\n${holesText(m)}\n${txtNotice(m)}\n`;
+  const head=`BOÎTIER – ${name.toUpperCase()}\nAtelier construction électronique – Modeleur assisté\n\nDimensions intérieures : ${fmt(state.Li)} × ${fmt(state.Wi)} × ${fmt(state.Hi)} mm\nDimensions extérieures : ${fmt(d.L)} × ${fmt(d.W)} × ${fmt(d.H+d.t)} mm (couvercle compris)\n\nOuvertures :\n${holesText(m)}\n${txtNotice(m)}\n`;
   const S=m.screws,sTxt=!S?'':kind==='3d'
     ?`\nFIXATION DU COUVERCLE (2 vis)\n- 2 vis autotaraudeuses ${S.sc.nom} (tête cylindrique ou bombée).\n- Les 2 supports de vis sont dans deux coins opposés du corps, juste sous le couvercle (avant-trou Ø ${fmt(S.pilot)} mm, ${fmt(S.hs)} mm de profondeur) ; leur dessous en pente à 45° s’imprime sans support.\n- Le couvercle est percé à Ø ${fmt(S.sc.pass)} mm au-dessus. Visse doucement à la main : dans le plastique, un tournevis électrique arrache le filetage.\n`
     :`\nFIXATION DU COUVERCLE (2 vis)\n- 2 vis autotaraudeuses ${S.sc.nom}.\n- ${S.n*2} cales de vissage carrées de ${fmt(S.c)} mm (${S.n} par coin) : empile-les et colle-les dans deux coins opposés, contre les parois, juste sous le cadre du couvercle (pose le couvercle avec son cadre pour les caler pendant le séchage).\n- Le couvercle et le cadre sont percés à Ø ${fmt(S.sc.pass)} mm, les cales à Ø ${fmt(S.pilot)} mm (avant-trou). La vis traverse le couvercle et le cadre, puis mord ${fmt(S.bite)} mm dans les cales.\n`;
@@ -904,7 +904,7 @@ function testGeos(cd){ // gabarit + 1 pion couché à côté, dans le même fich
 }
 function testNotice(cd){
   const J=GAUGE_J[cd.laserP?'laser':'3d'];
-  return `ESSAI D'EMBOÎTEMENT – JEU D'ÉCHECS\nAtelier construction électronique – Modeleur de boîtiers\n\n`+
+  return `ESSAI D'EMBOÎTEMENT – JEU D'ÉCHECS\nAtelier construction électronique – Modeleur assisté\n\n`+
   (cd.laserP?`Fichier : essai-gabarit-et-pion.svg (ou .dxf), plaque de ${fmt(cd.t)} mm, trait laser compensé ${fmt(state.kerf)} mm.\nRouge = découpe ; bleu = gravure des valeurs (facultatif). Utilise la même plaque que pour les vraies pièces.\n`
   :`Fichier : essai-gabarit-et-pion.stl (la barrette et un pion couché à côté). Imprime avec les mêmes réglages que les vraies pièces : PLA, couche 0,2 mm, sans support.\n`)+
   `\nLa barrette a ${J.length} fentes repérées par des encoches sur le bord avant${cd.laserP?' (la valeur est aussi gravée sous chaque fente)':''} :\n${J.map((j,i)=>`  ${i+1} encoche${i?'s':''} = jeu ${fmtJ(j)} mm`).join('\n')}\n\nJeu 0 = fente exactement à la taille de la languette. Jeu négatif = fente plus étroite que la languette : la pièce entre en force et tient sans colle.\n\n`+
@@ -932,7 +932,7 @@ function chessSheets(m){
 function chessNotice(m){
   const cd=m.cd,C=state.chess,M=m.make,parts=[M.pieces&&'pièces',M.plateau&&'plateau',M.tiroir&&'tiroir et coffret'].filter(Boolean);
   const files=chessSheets(m).board.map((g,i)=>`${i+1}-${g.key}`).join(', ');
-  let s=`JEU D'ÉCHECS – ${parts.join(', ').toUpperCase()}\nAtelier construction électronique – Modeleur de boîtiers (projet sans électronique)\n\nCases de ${fmt(cd.c)} mm ; plaque de ${fmt(cd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n`+txtNotice(m);
+  let s=`JEU D'ÉCHECS – ${parts.join(', ').toUpperCase()}\nAtelier construction électronique – Modeleur assisté (projet sans électronique)\n\nCases de ${fmt(cd.c)} mm ; plaque de ${fmt(cd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n`+txtNotice(m);
   if(M.plateau||M.tiroir)s+=`\n${M.plateau&&M.tiroir?'PLATEAU, COFFRET ET TIROIR':M.plateau?'PLATEAU':'COFFRET ET TIROIR'} (découpe laser : ${files}, en .svg et .dxf)\n- Rouge = découpe ; bleu = gravure.\n`;
   if(M.plateau)s+=`- Plateau de ${fmt(cd.S)} × ${fmt(cd.S)} mm : grave les cases foncées${C.marks?', les lettres a à h et les chiffres 1 à 8':''} avant de le découper.\n`;
   if(M.tiroir)s+=`- Coffret de ${fmt(cd.S)} × ${fmt(cd.S)} × ${fmt(cd.Hw)} mm : colle le fond, l'arrière et les deux côtés (créneaux). L'avant reste ouvert pour le tiroir.\n- Tiroir de ${fmt(cd.Wd)} × ${fmt(cd.Dd)} × ${fmt(cd.Hd)} mm (jeu ${fmt(C.jt)} mm) : colle le fond et les 4 côtés, puis la façade devant, centrée et à fleur du bas. Le trou sert de poignée.\n- Laisse sécher avant d'essayer le tiroir. S'il frotte, ponce légèrement ses côtés.\n`;
@@ -1077,7 +1077,7 @@ function renderCamDiagram(){
 }
 function smNotice(m){
   const sd=m.sd,S=state.sm;
-  return `BANC DE STOP MOTION\nAtelier construction électronique – Modeleur de boîtiers (projet sans électronique)\n\nDécor : ${S.paper==='perso'?fmt(sd.sw)+' × '+fmt(sd.sd)+' mm':S.paper+' à l’horizontale ('+sd.sw+' × '+sd.sd+' mm)'}\nTablette : ${fmt(sd.TW)} × ${fmt(sd.TD)} mm ; objectif mesuré au dos à ${fmt(S.ca)} mm du bord gauche et ${fmt(S.cb)} mm du bord haut\nObjectif à ${fmt(sd.hc)} mm au-dessus du décor ; champ estimé ≈ ${Math.round(sd.Wc)} × ${Math.round(sd.Hc)} mm (angle de vue ${S.fov}°)\nPlaque : ${fmt(sd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n\nFICHIERS (rouge = découpe, bleu = gravure)\n- 1-socle : le socle (le contour du décor est gravé)${S.stops?' et 4 butées d’angle':''}\n- 2-structure : les 2 montants et la traverse arrière\n- 3-plateau : le plateau percé pour l’objectif et le cadre qui retient la tablette\n\nMONTAGE\n1. Enfonce les languettes du bas des deux montants dans les fentes du socle.\n2. Glisse la traverse arrière : ses languettes latérales entrent dans les fentes des montants, celles du bas dans le socle.\n3. Pose le plateau sur les languettes du haut des montants.\n4. Si tout s’emboîte bien, démonte, mets une goutte de colle à bois dans chaque fente et remonte.\n5. Colle le cadre sur le plateau : son ouverture doit entourer l’emplacement de la tablette${S.cable!=='aucune'?' (l’encoche laisse passer le câble de charge)':''}.\n${S.stops?'6. Colle les 4 butées d’angle sur le socle, aux coins du rectangle gravé.\n':''}\nUTILISATION\n- Pose la feuille de décor dans le rectangle gravé, puis les personnages en papier.\n- Pose la tablette écran vers le haut dans le cadre : l’objectif arrière se place au-dessus du trou.\n- Ouvre une application d’animation image par image. Déplace un peu les personnages entre deux photos.\n- Pour éviter les images floues ou décalées : ne touche pas la tablette pendant la photo (retardateur ou déclencheur Bluetooth), garde la même lumière pendant toute la prise de vue, fixe le socle à la table.\n- Si la traverse arrière apparaît sur le bord de l’image, recadre dans l’application ou réduis la hauteur.\n\nL’angle de vue varie selon les appareils : vérifie le cadrage avec la vraie tablette avant de coller.\n`;
+  return `BANC DE STOP MOTION\nAtelier construction électronique – Modeleur assisté (projet sans électronique)\n\nDécor : ${S.paper==='perso'?fmt(sd.sw)+' × '+fmt(sd.sd)+' mm':S.paper+' à l’horizontale ('+sd.sw+' × '+sd.sd+' mm)'}\nTablette : ${fmt(sd.TW)} × ${fmt(sd.TD)} mm ; objectif mesuré au dos à ${fmt(S.ca)} mm du bord gauche et ${fmt(S.cb)} mm du bord haut\nObjectif à ${fmt(sd.hc)} mm au-dessus du décor ; champ estimé ≈ ${Math.round(sd.Wc)} × ${Math.round(sd.Hc)} mm (angle de vue ${S.fov}°)\nPlaque : ${fmt(sd.t)} mm ; trait laser compensé : ${fmt(state.kerf)} mm\n\nFICHIERS (rouge = découpe, bleu = gravure)\n- 1-socle : le socle (le contour du décor est gravé)${S.stops?' et 4 butées d’angle':''}\n- 2-structure : les 2 montants et la traverse arrière\n- 3-plateau : le plateau percé pour l’objectif et le cadre qui retient la tablette\n\nMONTAGE\n1. Enfonce les languettes du bas des deux montants dans les fentes du socle.\n2. Glisse la traverse arrière : ses languettes latérales entrent dans les fentes des montants, celles du bas dans le socle.\n3. Pose le plateau sur les languettes du haut des montants.\n4. Si tout s’emboîte bien, démonte, mets une goutte de colle à bois dans chaque fente et remonte.\n5. Colle le cadre sur le plateau : son ouverture doit entourer l’emplacement de la tablette${S.cable!=='aucune'?' (l’encoche laisse passer le câble de charge)':''}.\n${S.stops?'6. Colle les 4 butées d’angle sur le socle, aux coins du rectangle gravé.\n':''}\nUTILISATION\n- Pose la feuille de décor dans le rectangle gravé, puis les personnages en papier.\n- Pose la tablette écran vers le haut dans le cadre : l’objectif arrière se place au-dessus du trou.\n- Ouvre une application d’animation image par image. Déplace un peu les personnages entre deux photos.\n- Pour éviter les images floues ou décalées : ne touche pas la tablette pendant la photo (retardateur ou déclencheur Bluetooth), garde la même lumière pendant toute la prise de vue, fixe le socle à la table.\n- Si la traverse arrière apparaît sur le bord de l’image, recadre dans l’application ou réduis la hauteur.\n\nL’angle de vue varie selon les appareils : vérifie le cadrage avec la vraie tablette avant de coller.\n`;
 }
 async function exportSM(){const m=buildModel(),z=new JSZip();smSheets(m).forEach((g,i)=>{z.file(`${i+1}-${g.key}.svg`,sheetSVG(g.sheet,true,state.engrave).svg);z.file(`${i+1}-${g.key}.dxf`,sheetDXF(g.sheet));});z.file('LISEZ-MOI.txt',smNotice(m)+txtNotice(m));
   await saveFile('banc-de-stop-motion.zip',await z.generateAsync({type:'blob'}),'application/zip');}
@@ -1205,10 +1205,12 @@ function renderTxt(m){
 }
 
 /* ================= Interface ================= */
+// projets qui ont leur propre appli : la carte ouvre l'appli dans un nouvel onglet
+const EXTRA_PICK=`<a class="obj" href="cadenas-3-chiffres.html" target="_blank" rel="noopener"><span class="top"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-6a9 9 0 0 1 18 0v6"/><rect x="9" y="21" width="30" height="22" rx="4"/><path d="M17 28v8M24 28v8M31 28v8"/></svg><b>Cadenas 3 chiffres</b></span><small>roues codées en contreplaqué · appli dédiée ↗</small><span class="badge laser">Découpe laser</span></a>`;
 function renderPick(){
   $('objects').innerHTML=LEVELS.map(([l,name])=>`<div class="lvlrow"><div class="lvlname">${l?'Niveau '+l:''}<b>${name}</b></div><div class="objects">`+
     OBJS.filter(o=>o[2]===l).map(([id,nm])=>{const p=PRESETS[id];return `<button class="obj" data-id="${id}"><span class="top"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[id]}</svg><b>${nm}</b></span>
-      <small>${p.sm?'support de tablette au-dessus du décor':p.chess?'plateau à tiroir + 32 pièces':p.inner.join(' × ')+' mm intérieur'}</small><span class="badge ${p.reco}">${p.reco==='3d'?'Impression 3D':'Découpe laser'}</span></button>`;}).join('')+'</div></div>').join('');
+      <small>${p.sm?'support de tablette au-dessus du décor':p.chess?'plateau à tiroir + 32 pièces':p.inner.join(' × ')+' mm intérieur'}</small><span class="badge ${p.reco}">${p.reco==='3d'?'Impression 3D':'Découpe laser'}</span></button>`;}).join('')+(l===9?EXTRA_PICK:'')+'</div></div>').join('');
 }
 function sync(id,v){$(id).value=v;if($(id+'_r'))$(id+'_r').value=v;}
 function renderControls(){
@@ -1321,7 +1323,7 @@ let raf=0;function update(full){cancelAnimationFrame(raf);raf=requestAnimationFr
 function open(id){loadPreset(id);state.txt.panel='';state.txt.auto=true;if(id==='stopmotion'){state.sm.hc=smAdvised();if(state.tl<4)state.tl=4;}$('pick').hidden=true;$('editor').hidden=false;renderControls();resetView();update(true);window.scrollTo(0,0);if(renderer)sizeGL();}
 
 /* ================= Évènements ================= */
-$('objects').addEventListener('click',e=>{const b=e.target.closest('.obj');if(b)open(b.dataset.id);});
+$('objects').addEventListener('click',e=>{const b=e.target.closest('.obj');if(b&&b.dataset.id)open(b.dataset.id);});
 $('back').addEventListener('click',()=>{$('editor').hidden=true;$('pick').hidden=false;window.scrollTo(0,0);});
 document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;renderControls();resetView();update(true);}));
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;renderControls();update(false);if(renderer)sizeGL();}));
