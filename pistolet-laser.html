@@ -601,7 +601,7 @@ table.vis small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px
 
           <section class="panel side-block" id="adjBlock">
             <h3>Réglage du laser</h3>
-            <label class="tog" id="adjRow"><input type="checkbox" id="optAdj"> Laser réglable (rotule + 2 vis)</label>
+            <label class="tog" id="adjRow"><input type="checkbox" id="optAdj"> Laser réglable gauche / droite (boulon + écrous)</label>
             <p class="small-note" id="adjNote"></p>
           </section>
 
@@ -4895,7 +4895,7 @@ function decorLines(side){
   const rr = (num(S.holes.rech) || S.comp.rech)/2 + 2;
   if (side < 0) { seg([2,92],[RECH[0] - rr,92]); seg([RECH[0] + rr,92],[193,92]); } else { const rs = (num(S.holes.sw) || S.comp.sw)/2 + 2; seg([2,92],[SW[0] - rs,92]); seg([SW[0] + rs,92],[193,92]); }   // glissière (interrompue autour des boutons)
   if (side > 0) for (let i = 0; i < 5; i++) seg([20 + i*3, 96], [20 + i*3, 107]);   // (côté droit : place des LED)                                     // stries arrière de la glissière
-  for (let i = 0; i < 4; i++) seg([155 + i*3, 96], [155 + i*3, 107]);                                   // stries avant
+  for (let i = 0; i < 4; i++) seg([145 + i*3, 96], [145 + i*3, 107]);                                   // stries avant
   const EJ = [[92,96],[116,96],[116,106],[92,106]]; EJ.forEach((p, i) => seg(p, EJ[(i+1) % 4]));         // fenêtre d'éjection
   seg([181,72],[181,108]);                                                                              // bouche du canon
   const PL = [[11.3,10],[44.4,10],[48.5,30],[48.5,58],[16.4,58]]; PL.forEach((p, i) => seg(p, PL[(i+1) % PL.length]));   // plaquette de crosse
@@ -5006,31 +5006,37 @@ function buildCover(){
   if (!laser) for (const s of [-1, 1]) rim = keep(rim.add(cylAxis(.5, 21, 40, 0, [0, s*(cy - .2), 4])));         // bourrelets d'encliquetage
   return laser ? {talon, rim, h} : {cover: keep(talon.add(rim))};
 }
-/* ================= Laser réglable : rotule + 2 vis de réglage + 2 ressorts =================
-   La tête du laser est tenue par un support imprimé : une boule (rotule) à l'avant, prise entre les 2 demi-coques
-   juste derrière la paroi du canon, et un tube à l'arrière. 2 vis M3 poussent l'arrière du tube (une par le dessus :
-   haut / bas, une par le côté gauche : gauche / droite) ; en face, 2 petits ressorts le repoussent. */
-const ADJ = {cx:FRONT - 8, r:7.5, seat:7.7, tube:6, x0:FRONT - 32, blk:FRONT - 17, sx:FRONT - 28, sz:89, spr:3.25};
+/* ================= Laser réglable gauche / droite : vis-mère (boulon M3 + écrous) =================
+   La tête du laser est tenue dans un support imprimé (chariot) qui pivote autour d'un axe vertical, juste derrière la
+   paroi du canon : 2 tourillons (dessus / dessous) tournent dans 2 guides de la coque, le chariot ne peut donc ni
+   monter ni descendre. À l'arrière, une tête plus haute porte un écrou M3 prisonnier. Un boulon M3 traverse le canon
+   de gauche à droite et passe dans cet écrou ; il est tenu par sa tête (côté gauche) et par un écrou frein (côté droit),
+   il tourne sans avancer. En le tournant, l'écrou du chariot avance le long du filetage (0,5 mm par tour) et l'arrière
+   du laser se déplace à gauche ou à droite. */
+const ADJ = {px:FRONT - 6, x0:FRONT - 30, x1:FRONT - 1, rb:9, sx:FRONT - 25.5, sz:99.5, top:103, pin:2.5, pinH:2.5, nutAF:5.6, nutT:2.6, bolt:35};
 const adjOn = () => S.proc !== 'laser' && S.adjLaser;
+const adjSize = () => { const d = num(S.holes.laser) || S.comp.laser; return {d, hw: Math.max(5, d/2 + 2), hz: Math.max(6, d/2 + 3)}; };
 function adjShell(res, g){                                      // modifications de la coque
-  const d = num(S.holes.laser) || S.comp.laser, A = ADJ;
-  res = keep(res.add(box(A.blk, -g.CY - .5, 76, FRONT + .1, g.CY + .5, 104)));                                   // bloc qui porte la rotule
-  res = keep(res.subtract(keep(Manifold.sphere(A.seat, 72)).translate([A.cx, 0, 90])));                             // logement de la boule
-  res = keep(res.subtract(cylAxis(A.tube + .6, A.blk - 1, A.cx, 0, [0, 0, 90])));                                  // passage du tube (il peut pencher)
-  res = keep(res.subtract(cylAxis(d/2 + 1, A.cx, FRONT + 7, 0, [0, 0, 90])));                                      // trou du faisceau dans la paroi, avec du jeu
-  res = keep(res.subtract(cylAxis(1.3, 90 + A.tube - 1, 112, 2, [A.sx, 0, 0])));                                   // vis de réglage haut / bas (par le dessus)
-  res = keep(res.subtract(cylAxis(1.3, 1, g.W2 + 1, 1, [A.sx, 0, A.sz])));                                         // vis de réglage gauche / droite (par le côté gauche)
-  res = keep(res.subtract(cylAxis(A.spr, 74, 77, 2, [A.sx, 0, 0])));                                               // logement du ressort du bas
-  res = keep(res.subtract(cylAxis(A.spr, -g.CY - 3, -g.CY + 1, 1, [A.sx, 0, A.sz])));                              // logement du ressort de droite
+  const A = ADJ, {d, hz} = adjSize(), z0 = 90 - hz, z1 = 90 + hz;
+  res = keep(res.add(box(A.x0 + A.rb + 2.5, -g.CY - .5, z1 + .3, FRONT + .1, g.CY + .5, 104.5)));             // guide du haut (devant la tête du chariot)
+  res = keep(res.add(box(A.x0 - 1, -g.CY - .5, 75.5, FRONT + .1, g.CY + .5, z0 - .3)));                       // guide du bas
+  res = keep(res.subtract(cylAxis(A.pin + .25, z1, z1 + .3 + A.pinH + .4, 2, [A.px, 0, 0])));                  // logement du tourillon du haut
+  res = keep(res.subtract(cylAxis(A.pin + .25, z0 - .3 - A.pinH - .4, z0, 2, [A.px, 0, 0])));                  // logement du tourillon du bas
+  const sw = d/2 + 1.8;                                                                                        // fente horizontale : le faisceau peut pivoter
+  res = keep(res.subtract(box(FRONT - .5, -sw, 90 - d/2 - 1, FRONT + 8, sw, 90 + d/2 + 1)));
+  res = keep(res.subtract(cylAxis(1.7, -g.W2 - 1, g.W2 + 1, 1, [A.sx, 0, A.sz])));                             // passage Ø3,4 du boulon, à gauche et à droite
   return res;
 }
-function buildAdjHolder(){                                      // support du laser (pièce à imprimer debout)
-  const d = num(S.holes.laser) || S.comp.laser, A = ADJ;
-  let h = keep(keep(Manifold.sphere(A.r, 72)).translate([A.cx, 0, 90]));
-  h = keep(h.add(cylAxis(A.tube, A.x0, A.cx, 0, [0, 0, 90])));
-  h = keep(h.subtract(cylAxis(d/2, A.x0 - 1, A.cx + A.r + 1, 0, [0, 0, 90])));                                       // alésage de la tête du laser (diamètre du trou choisi)
-  h = keep(h.subtract(cylAxis(A.spr, 90 - A.tube - 1, 90 - A.tube + 2, 2, [A.sx, 0, 0])));                          // logement du ressort du bas
-  h = keep(h.subtract(cylAxis(A.spr, -A.tube - 1, -A.tube + 2, 1, [A.sx, 0, A.sz])));                               // logement du ressort de droite
+function buildAdjHolder(){                                      // chariot du laser (à imprimer debout, arrière sur le plateau)
+  const A = ADJ, {d, hw, hz} = adjSize(), z0 = 90 - hz, z1 = 90 + hz;
+  let h = keep(box(A.x0, -hw, z0, A.x1, hw, z1));
+  h = keep(h.add(box(A.x0, -hw, z1 - .01, A.x0 + A.rb, hw, A.top)));                                          // tête de l'écrou
+  h = keep(h.add(cylAxis(A.pin, z1 - .01, z1 + A.pinH, 2, [A.px, 0, 0])));                                    // tourillons
+  h = keep(h.add(cylAxis(A.pin, z0 - A.pinH, z0 + .01, 2, [A.px, 0, 0])));
+  h = keep(h.subtract(cylAxis(d/2, A.x0 - 1, A.x1 - 1, 0, [0, 0, 90])));                                       // alésage de la tête du laser (entrée par l'arrière)
+  h = keep(h.subtract(cylAxis(Math.max(1.5, d/2 - .6), A.x1 - 1.1, A.x1 + 1, 0, [0, 0, 90])));                 // petite butée devant
+  h = keep(h.subtract(box(A.sx - A.nutAF/2 - .15, -A.nutT/2 - .15, A.sz - 3.3, A.sx + A.nutAF/2 + .15, A.nutT/2 + .15, A.top + 1)));   // fente de l'écrou (par le dessus)
+  h = keep(h.subtract(cylAxis(1.9, -hw - 1, hw + 1, 1, [A.sx, 0, A.sz])));                                    // passage du boulon (avec un peu de jeu)
   return h;
 }
 function renderAdj(){
@@ -5039,7 +5045,7 @@ function renderAdj(){
   $('adjNote').textContent = laser
     ? 'Disponible en impression 3D seulement. En découpe laser, le module se règle à la main puis se colle (colle chaude).'
     : S.adjLaser
-      ? `La tête du laser se monte dans un support imprimé (support_laser.stl) : une boule de Ø ${2*ADJ.r} mm prise entre les 2 demi-coques derrière la paroi du canon, et un tube à l’arrière. Une vis M3 par le dessus règle le haut / bas, une vis M3 par le côté gauche règle la gauche / droite ; 2 petits ressorts (ou de la mousse) les repoussent. Règle-le une fois à 10 m : vise le centre de la cible, tire, puis tourne les vis jusqu’à ce que le point arrive au centre. Le trou du laser que tu choisis devient l’alésage du support.`
+      ? `La tête du laser se monte dans un chariot imprimé (support_laser.stl) qui pivote sur 2 tourillons juste derrière la paroi du canon : il ne peut pas monter ni descendre, seulement tourner à gauche ou à droite. Un boulon M3 × 35 traverse le canon de gauche à droite et passe dans un écrou M3 prisonnier à l’arrière du chariot ; il est tenu par sa tête (côté gauche) et un écrou frein (côté droit). Tourne la tête du boulon : 1 tour = 0,5 mm, soit environ 25 cm à 10 m (un quart de tour ≈ 6 cm). Règle-le une fois à 10 m : vise le centre de la cible, tire, puis tourne le boulon jusqu’à ce que le point arrive au centre. Le trou du laser que tu choisis devient l’alésage du chariot.`
       : 'Laser fixe : la tête traverse la paroi du canon. Sans réglage, le point laser peut tomber à plusieurs centimètres du point visé à 10 m.';
 }
 function visserie(){
@@ -5051,8 +5057,7 @@ function visserie(){
   return [[6, 'vis M3 × 20 mm', '4 plots de la coque + 1 plot à l’avant du canon + 1 en bas de la crosse (tête dans le lamage, côté droit)'],
           [1, 'boulon M3 × 25 mm (tête cylindrique) + écrou frein M3 (Nylstop)', 'axe de la charnière, sous le canon : tête à droite, écrou dans son logement hexagonal à gauche ; serre juste assez pour que l’avant tourne sans jeu'],
           [1, 'vis M3 × 30 mm', 'fermeture de l’avant, en haut du canon'],
-          ...(adjOn() ? [[1, 'vis M3 × 16 mm', 'réglage haut / bas du laser, par le dessus du canon'], [1, 'vis M3 × 12 mm', 'réglage gauche / droite du laser, par le côté gauche'],
-                         [2, 'petits ressorts (ressort de stylo coupé, Ø 4 à 6 mm) ou morceaux de mousse', 'en face des 2 vis : ils repoussent le support du laser']] : [])];
+          ...(adjOn() ? [[1, 'boulon M3 × 35 mm + 1 écrou M3 + 1 écrou frein M3 (Nylstop)', 'réglage gauche / droite du laser : la tête à gauche, l’écrou dans le chariot, l’écrou frein à droite (serré au contact)']] : [])];
 }
 function renderExtra(){
   const g = G(), laser = S.proc === 'laser';
@@ -5115,7 +5120,7 @@ function buildPrint(){
     for (const s of [-1, 1]) res = keep(res.add(box(BAT.stop, s < 0 ? -g.CY - .5 : WIRE.hw, 75.5, BAT.stop + 2.5, s < 0 ? -WIRE.hw : g.CY + .5, 80)));   // petit rebord (2 morceaux, passage des fils au milieu)
     res = keep(res.subtract(box(WIRE.x0, -WIRE.hw, WIRE.z0, POCKET.x0 + 1, WIRE.hw, 76.5)));                     // rigole sous la pile vers la poignée
     for (const c of cutters()) res = keep(res.subtract(cylSolid(c, .5)));
-    if (adjOn()) res = adjShell(res, g);                                                                          // laser réglable : rotule + 2 vis
+    if (adjOn()) res = adjShell(res, g);                                                                          // laser réglable : chariot + vis-mère
     res = keep(res.subtract(decorCut(-1, DEC.d))); res = keep(res.subtract(decorCut(1, DEC.d)));             // décors en creux
     res = keep(res.add(sightSolids()));                 // hausse et guidon, intégrés aux coques
     for (const s of [-1, 1]) res = keep(res.subtract(box(19, s > 0 ? g.CY - .01 : -g.CY - .8, 3.4, 42, s > 0 ? g.CY + .8 : -g.CY + .01, 4.6)));   // rainures du couvercle
@@ -5244,8 +5249,14 @@ function buildComponents(){
   g.add(cyl(C.gach/2, 41, 55, 0, [0,0,52], grey)); g.add(cyl(C.gach*.38, 55, 60, 0, [0,0,52], m(0xe0304a)));
   g.add(cyl(C.sw/2, W2 - 12, W2, 1, [SW[0],0,SW[1]], grey)); g.add(cyl(C.sw*.4, W2, W2 + 3, 1, [SW[0],0,SW[1]], m(0x20262b)));   // bouton marche/arrêt (face gauche)
   g.add(cyl(C.rech/2, -W2, -W2 + 11, 1, [RECH[0],0,RECH[1]], grey)); g.add(cyl(C.rech*.37, -W2 - 4, -W2, 1, [RECH[0],0,RECH[1]], blue));
-  if (adjOn()) g.add(cyl(C.laser/2, ADJ.x0 + 2, ADJ.cx + ADJ.r - .5, 0, [0,0,90], brass)); else g.add(cyl(C.laser/2, FRONT - 1, 198, 0, [0,0,90], brass));
-  const board = new THREE.Mesh(new THREE.BoxGeometry(18, 1.6, 15), pcb); board.position.set(adjOn() ? ADJ.x0 - 9.5 : FRONT - 9.5, 0, 90); g.add(board);   // carte KY-008 derrière la paroi du canon
+  if (adjOn()) g.add(cyl(C.laser/2, ADJ.x0 + 1, ADJ.x1 - 1, 0, [0,0,90], brass)); else g.add(cyl(C.laser/2, FRONT - 1, 198, 0, [0,0,90], brass));
+  const board = new THREE.Mesh(new THREE.BoxGeometry(18, 1.6, 15), pcb); board.position.set(adjOn() ? ADJ.x0 - 10.5 : FRONT - 9.5, 0, 90); g.add(board);
+  if (adjOn()) {                                                                              // boulon de réglage M3 × 35 + écrou du chariot + écrou frein
+    const steel = new THREE.MeshStandardMaterial({color:0xaeb6bd, roughness:.3, metalness:.7}), at = [ADJ.sx, 0, ADJ.sz];
+    g.add(cyl(1.5, -W2 - 5, W2, 1, at, steel)); g.add(cyl(2.75, W2, W2 + 3, 1, at, steel));
+    const hex = (y0, y1) => { const n = new THREE.Mesh(new THREE.CylinderGeometry(ADJ.nutAF/Math.sqrt(3), ADJ.nutAF/Math.sqrt(3), y1 - y0, 6), steel); n.position.set(ADJ.sx, (y0 + y1)/2, ADJ.sz); g.add(n); };
+    hex(-ADJ.nutT/2, ADJ.nutT/2); hex(-W2 - 2.8, -W2); g.add(cyl(2.5, -W2 - 4, -W2 - 2.8, 1, at, m(0x2d6fd6)));
+  }   // carte KY-008 derrière la paroi du canon
 
   /* Carte Arduino Nano (18 × 43 mm) debout dans la crosse, prise USB vers le bas */
   const nano = new THREE.Group();
@@ -5501,7 +5512,7 @@ Fichiers :
   coque_droite_avant.stl   : demi-coque droite, partie avant avec la chape de la charniere (115 x 57 x 15 mm, viseur compris)
   coque_gauche_arriere.stl : demi-coque gauche, partie arriere avec la crosse
   coque_gauche_avant.stl   : demi-coque gauche, partie avant
-  couvercle_crosse.stl : couvercle a emboiter sous la poignee (talon 46 x 30 x 2 mm + cadre encliquetable)${adjOn() ? '\n  support_laser.stl : support reglable de la tete du laser (rotule + tube), a imprimer debout, tube sur le plateau' : ''}
+  couvercle_crosse.stl : couvercle a emboiter sous la poignee (talon 46 x 30 x 2 mm + cadre encliquetable)${adjOn() ? '\n  support_laser.stl : chariot reglable de la tete du laser (pivot + ecrou M3), a imprimer debout, arriere sur le plateau' : ''}
 Unites : millimetres. Plateau d'impression minimal : 120 x 120 mm.
 Decors en bas-relief : glissiere, stries, fenetre d'ejection, bouche du canon et plaquette
 de crosse striee, creuses de 0,8 mm dans les faces exterieures.
@@ -5545,7 +5556,7 @@ Montage :
   6. Les viseurs (hausse a l'arriere, guidon a l'avant) font partie des coques.
      La ligne de visee passe 2,6 cm au-dessus du laser : a 10 m, vise un peu au-dessus de la cible.
   7. Emboite le couvercle sous la poignee : le cadre entre dans l'ouverture et se clipse.
-     Pour l'ouvrir, glisse un tournevis plat dans l'encoche a l'arriere. Le cable USB passe par la fente.${adjOn() ? `\n\nLaser reglable :\n  - Avant de fermer la coque : enfonce la tete du laser dans le support (par l'arriere), pose la boule\n    dans son logement derriere la paroi du canon, et un petit ressort dans chacun des 2 logements\n    (sous le tube et sur la paroi droite). La carte du laser reste derriere le support.\n  - Visse la vis M3 x 16 par le dessus et la vis M3 x 12 par le cote gauche jusqu'a toucher le tube.\n  - Reglage : pose le pistolet sur un appui stable a 10 m d'une cible, vise le centre avec le viseur,\n    tire, puis tourne les vis : celle du dessus monte / descend le point, celle du cote le deplace\n    a gauche / a droite. Recommence jusqu'a ce que le point laser arrive au centre.` : ''}
+     Pour l'ouvrir, glisse un tournevis plat dans l'encoche a l'arriere. Le cable USB passe par la fente.${adjOn() ? `\n\nLaser reglable (gauche / droite) :\n  - Avant de fermer la coque : glisse un ecrou M3 dans la fente du chariot (par le dessus), enfonce la\n    tete du laser dans le chariot par l'arriere, puis pose le chariot : ses 2 tourillons entrent dans\n    les logements des guides (haut et bas), juste derriere la paroi du canon. La carte du laser reste derriere.\n  - Une fois la coque fermee : passe le boulon M3 x 35 par la gauche, a travers le canon et l'ecrou du\n    chariot, puis visse l'ecrou frein a droite, juste au contact (le boulon doit encore tourner).\n  - Reglage : pose le pistolet sur un appui stable a 10 m d'une cible, vise le centre avec le viseur, tire,\n    puis tourne la tete du boulon : 1 tour = 0,5 mm, soit environ 25 cm a 10 m. Recommence jusqu'a ce que\n    le point laser arrive au centre. La hauteur n'est pas reglable : vise un peu au-dessus (2,6 cm).` : ''}
 
 Cablage : D6 gachette, D5 recharger, ${NL === 5 ? 'D2 D3 D4 D7 D8' : 'D2 D3 D4'} LED, D9 laser.
 Securite : ne jamais viser les yeux avec le laser.
@@ -5577,7 +5588,7 @@ async function doExport(){
       {name:'coque_gauche_arriere.stl', data: stlBinary(P.lr, (x,y,z) => [x, z - minZ(P.lr), 15 - y])},
       {name:'coque_gauche_avant.stl', data: stlBinary(P.lf, (x,y,z) => [x - minX(P.lf), z - 70, 15 - y])},
       {name:'couvercle_crosse.stl', data: stlBinary(P.cover, (x,y,z) => [x - 4, y + G().W2, z + 2])},
-      ...(P.holder ? [{name:'support_laser.stl', data: stlBinary(P.holder, (x,y,z) => [y + ADJ.r, z - 90 + ADJ.r, x - ADJ.x0])}] : []),
+      ...(P.holder ? [{name:'support_laser.stl', data: stlBinary(P.holder, (x,y,z) => [y + adjSize().hw, z - (90 - adjSize().hz - ADJ.pinH), x - ADJ.x0])}] : []),
       {name:'LISEZ-MOI.txt', data:readme()}]));
   }
   btn.disabled = false;
@@ -5668,8 +5679,8 @@ function fmt(n){ return (Math.round(n*100)/100).toString().replace('.', ','); }
 /* Profondeur, façade et fond selon le procédé */
 function G(){
   if (S.proc === 'laser') {
-    const t = S.ply, n = Math.max(4, Math.round(46/t));
-    return {t, n, W2: n*t/2, front: t, back: t};
+    const t = S.ply;
+    return {t, n: 6, W2: 23, front: t, back: t};                     // 6 planches, boîte de 46 mm de profondeur
   }
   return {t:0, n:0, W2:23, front:3, back:0};
 }
@@ -5688,7 +5699,7 @@ function shade(){
 const FL_D = 34, FL_R = 14, FL_ANG = [1, 3, 5, 7].map(i => i*Math.PI/4);   // collerette des tubes : Ø extérieur, rayon des 4 trous
 const circS = (x, z, d) => ({type:'circ', x, z, r:d/2});
 const CORNERS = [[4,4],[BW-4,4],[4,BH-4],[BW-4,BH-4]];     // vis M3 du fond, dans les parois de 8 mm
-function capScrews(){ const w = G().W2 - 8; return PRINT() ? SPL.capX.flatMap(x => [[x, -w], [x, w]]) : [[25, -w], [BW-25, -w], [25, w], [BW-25, w]]; }   // vis M3 de la casquette (x, y), dans la paroi du dessus
+function capScrews(){ const w = S.proc === 'laser' ? G().W2 - G().t - 5 : G().W2 - 8; return PRINT() ? SPL.capX.flatMap(x => [[x, -w], [x, w]]) : [[25, -w], [BW-25, -w], [25, w], [BW-25, w]]; }   // vis M3 de la casquette (x, y), dans la paroi du dessus
 function tubeHoles(){ const out = []; for (const [x, z] of SENS) for (const a of FL_ANG) out.push(circS(x + FL_R*Math.cos(a), z + FL_R*Math.sin(a), 2.2)); return out; }
 function frontFix(){ return tubeHoles(); }                  // façade : vis du tube
 function backFix(){ return CORNERS.concat(fondScrews()).map(([x, z]) => circS(x, z, 3.2)); }   // fond : 4 vis M3
@@ -5932,6 +5943,84 @@ function buildLayers(){
   return out;
 }
 
+/* ================= Découpe laser : boîte en 6 planches à créneaux =================
+   Façade (F), fond (B), côtés gauche (L) et droit (R), dessous (D) et dessus (T). Chaque arête entre 2 planches est
+   découpée en créneaux alternés (nombre impair). La façade et le fond gardent les 4 coins ; entre les côtés et
+   le dessus / dessous, les créneaux occupent la longueur intérieure. Le fond n'est pas collé : il s'emboîte et se visse
+   (4 vis à bois dans 4 taquets collés dans les coins). */
+const cleat = t => { const k = Math.ceil(10/t), h = k*t; return {s:10, k, h, screw: [10, 12, 16, 20, 25].filter(v => v <= t + h - 1).pop()}; };   // taquet : carré de 10 mm, k plaques collées
+function fingers(L0, L1, t){
+  const len = L1 - L0, f = Math.max(10, 3*t), N = Math.max(3, 2*Math.floor(len/f/2) + 1), w = len/N;
+  return [...Array(N).keys()].map(i => [L0 + i*w, L0 + (i + 1)*w, i % 2 === 0]);   // true : créneau de la planche « A »
+}
+function panelHoles(id){
+  const g = G(), W2 = g.W2, out = [], c3 = (u, v, r) => out.push({u, v, r});
+  for (const c of cutters()) {
+    const [ai] = DIRS[c.dir], r = c.d/2;
+    if (ai === 1 && id === 'F') c3(c.p[0], c.p[2], r);
+    if (ai === 0 && id === (c.p[0] > BW/2 ? 'R' : 'L')) c3(c.p[1] + W2, c.p[2], r);
+    if (ai === 2 && id === (c.p[2] > BH/2 ? 'T' : 'D')) c3(c.p[0], c.p[1] + W2, r);
+  }
+  if (id === 'F') for (const s of frontFix()) c3(s.x, s.z, s.r);                 // vis des collerettes des tubes
+  if (id === 'T') for (const [x, y] of capScrews()) c3(x, y + W2, 1.7);          // vis de la casquette
+  return out;
+}
+function boxPanels(){
+  const g = G(), t = g.t, W2 = g.W2, D = 2*W2, ST = {};
+  for (const k of ['FL', 'FR', 'BL', 'BR']) ST[k] = [0, BH];
+  for (const k of ['FD', 'FT', 'BD', 'BT']) ST[k] = [0, BW];
+  for (const k of ['LD', 'LT', 'RD', 'RT']) ST[k] = [t, D - t];
+  const defs = {   // arêtes [bas, droite, haut, gauche] : [bande, cette planche est « A »]
+    F:{W:BW, H:BH, e:[['FD',1],['FR',1],['FT',1],['FL',1]], n:[0,-1,0], label:'FACADE',  M:[1,0,0,0, 0,0,1,-W2, 0,1,0,0, 0,0,0,1]},
+    B:{W:BW, H:BH, e:[['BD',1],['BR',1],['BT',1],['BL',1]], n:[0,1,0],  label:'FOND',    M:[1,0,0,0, 0,0,1,W2 - t, 0,1,0,0, 0,0,0,1]},
+    L:{W:D, H:BH, e:[['LD',0],['BL',0],['LT',0],['FL',0]], n:[-1,0,0],  label:'GAUCHE',  M:[0,0,1,0, 1,0,0,-W2, 0,1,0,0, 0,0,0,1]},
+    R:{W:D, H:BH, e:[['RD',0],['BR',0],['RT',0],['FR',0]], n:[1,0,0],   label:'DROITE',  M:[0,0,1,BW - t, 1,0,0,-W2, 0,1,0,0, 0,0,0,1]},
+    D:{W:BW, H:D, e:[['FD',0],['RD',1],['BD',0],['LD',1]], n:[0,0,-1],  label:'DESSOUS', M:[1,0,0,0, 0,1,0,-W2, 0,0,1,0, 0,0,0,1]},
+    T:{W:BW, H:D, e:[['FT',0],['RT',1],['BT',0],['LT',1]], n:[0,0,1],   label:'DESSUS',  M:[1,0,0,0, 0,1,0,-W2, 0,0,1,BH - t, 0,0,0,1]}
+  };
+  /* fond amovible : 4 vis à bois dans 4 taquets collés dans les coins, derrière le fond */
+  const C = cleat(t), backHoles = [[C.s/2 + t, C.s/2 + t], [BW - t - C.s/2, C.s/2 + t], [C.s/2 + t, BH - t - C.s/2], [BW - t - C.s/2, BH - t - C.s/2]].map(([u, v]) => ({u, v, r:1.7}));
+  return Object.entries(defs).map(([id, P]) => {
+    const pts = [];
+    P.e.forEach(([sk, isA], e) => {
+      const len = e % 2 ? P.H : P.W, [L0, L1] = ST[sk];
+      let segs = [];
+      if (L0 > 0) segs.push([0, L0, false]);
+      for (const [a, b, oa] of fingers(L0, L1, t)) segs.push([a, b, isA ? oa : !oa]);
+      if (L1 < len) segs.push([L1, len, false]);
+      segs = segs.reduce((m, s) => { const l = m[m.length - 1]; if (l && l[2] === s[2]) l[1] = s[1]; else m.push(s.slice()); return m; }, []);
+      if (!segs[0][2]) segs[0][0] = t;
+      const lst = segs[segs.length - 1]; if (!lst[2]) lst[1] = len - t;
+      const M = (s, d) => e === 0 ? [s, d] : e === 1 ? [P.W - d, s] : e === 2 ? [s, P.H - d] : [d, s];
+      const rev = e >= 2;
+      for (const [a, b, own] of rev ? segs.slice().reverse() : segs) {
+        const d = own ? 0 : t;
+        pts.push(M(rev ? b : a, d));
+        pts.push(M(rev ? a : b, d));
+      }
+    });
+    const outline = pts.filter((p, i) => { const q = pts[(i + pts.length - 1) % pts.length]; return Math.hypot(p[0] - q[0], p[1] - q[1]) > 1e-6; });
+    const holes = id === 'B' ? backHoles : panelHoles(id);
+    return {id, W:P.W, H:P.H, outline, holes, n:P.n, label:P.label, M:P.M, engr: id === 'F' ? FACE_ENGR() : []};
+  });
+}
+function panelGeometry(P){
+  const sh = new THREE.Shape(P.outline.map(([u, v]) => new THREE.Vector2(u, v)));
+  for (const h of P.holes) { const p = new THREE.Path(); p.absarc(h.u, h.v, h.r, 0, Math.PI*2, true); sh.holes.push(p); }
+  const geo = new THREE.ExtrudeGeometry(sh, {depth: G().t, bevelEnabled: false, curveSegments: 24});
+  geo.applyMatrix4(new THREE.Matrix4().set(...P.M));
+  return geo;
+}
+function panelSVG(P, ox, oy, cut, eng, txt){
+  const X = u => (ox + u).toFixed(3), Y = v => (oy + P.H - v).toFixed(3), t = G().t;
+  let s = `<g id="planche-${P.label.toLowerCase()}"><path ${cut} d="M${P.outline.map(([u, v]) => X(u) + ' ' + Y(v)).join(' L')} Z"/>`;
+  for (const h of P.holes) s += `<circle ${cut} cx="${X(h.u)}" cy="${Y(h.v)}" r="${h.r.toFixed(3)}"/>`;
+  for (const e of P.engr) s += `<circle ${eng} cx="${X(e.u)}" cy="${Y(e.v)}" r="${e.r}"/>`;
+  return s + txt(X(P.W/2 - P.label.length*1.2), Y(t + 2.5), P.label) + '</g>';
+}
+
+const FACE_ENGR = () => SENS.map(([x, z]) => ({u:x, v:z, r:TO/2}));   // gravure sur la façade
+
 /* ================= Scène ================= */
 let renderer, scene, camera, controls, modelGroup, compGroup, ready = false;
 const vp = $('vp');
@@ -6009,13 +6098,19 @@ function rebuild(){
   const t0 = performance.now();
   modelGroup.clear();
   if (S.proc === 'laser') {
-    const geos = buildLayers();
-    geos.forEach((geo, k) => {
-      const mesh = new THREE.Mesh(geo, k % 2 ? matWoodB : matWoodA);
+    const pans = boxPanels();
+    pans.forEach((P, k) => {
+      const geo = panelGeometry(P), mesh = new THREE.Mesh(geo, k % 2 ? matWoodB : matWoodA);
       mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMatWood));
-      mesh.userData.k = k; modelGroup.add(mesh);
+      mesh.userData.panel = P.id; mesh.userData.out = new THREE.Vector3(...P.n).multiplyScalar(18); modelGroup.add(mesh);
     });
-    lastParts = {layers: geos};
+    const C = cleat(G().t), W2 = G().W2;
+    for (const [u, v] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {                                 // taquets d'angle (derrière le fond)
+      const geo = new THREE.BoxGeometry(C.s, C.h, C.s); geo.translate(u ? BW - G().t - C.s/2 : G().t + C.s/2, W2 - G().t - C.h/2, v ? BH - G().t - C.s/2 : G().t + C.s/2);
+      const mesh = new THREE.Mesh(geo, matWoodB); mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMatWood));
+      mesh.userData.out = new THREE.Vector3(0, 8, 0); modelGroup.add(mesh);
+    }
+    lastParts = {panels: pans};
   } else {
     const parts = buildPrint();
     [...parts.boxes.map(geo => ['box', geo]), ...parts.backs.map(geo => ['back', geo])].forEach(([nm, geo]) => {
@@ -6048,9 +6143,10 @@ function applyExplode(){
     if (u.part === 'flap') m.rotation.z = S.flapOpen ? -Math.PI/2 : 0;
     if (!ex) return;
     if (u.spread) m.position.add(u.spread);
+    if (u.out) m.position.add(u.out);
     if (u.k !== undefined) m.position.y = (u.k - (n-1)/2) * 8;
     else if (u.part === 'back') m.position.y = 60;
-    else if (u.part === 'tubes') m.position.y = laser ? -(n-1)/2*8 - 22 : -30;
+    else if (u.part === 'tubes') m.position.y = laser ? -42 : -30;
     else if (u.part === 'cap' || u.part === 'flap') m.position.z += 30;
   });
   compGroup.children.forEach(m => { if (m.userData.servo) { m.position.copy(m.userData.base); if (ex) m.position.z += 30; } });
@@ -6107,26 +6203,26 @@ function renderPly(){
   $('plyBlock').hidden = S.proc !== 'laser';
   const g = G();
   ROOT.querySelectorAll('[data-ply]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.ply === S.ply)));
-  if (S.proc === 'laser') $('plyNote').textContent = `${g.n} couches de ${fmt(g.t)} mm : boîtier de ${fmt(g.n*g.t)} mm de profondeur. Couche 1 = façade, couche ${g.n} = fond, les autres sont des cadres.`;
+  if (S.proc === 'laser') $('plyNote').textContent = `6 planches de ${fmt(g.t)} mm assemblées par créneaux : façade, fond, 2 côtés, dessus et dessous (boîte de ${BW} × ${BH} × ${fmt(2*g.W2)} mm). Le fond s’emboîte sans colle et se visse (4 vis à bois dans 4 taquets collés dans les coins) pour garder l’accès à l’électronique.`;
 }
 function renderShade(){
   const s = shade(), laser = S.proc === 'laser', tw = NT > 1 ? `${NT} tubes` : 'Le tube';
   ROOT.querySelectorAll('[data-tube]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.tube === S.tube)));
-  const g = G(), vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((g.t + 8)/5)*5 : 12;
+  const g = G(), vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((2*g.t + 4)/5)*5 : 12;
   $('shadeNote').textContent = (laser
-    ? `${tw} de ${fmt(s.L)} mm : 1 collerette Ø ${FL_D} mm + ${s.n - 1} anneaux collés dessus, Ø ${TI} mm à l'intérieur. La collerette se visse sur la façade (4 vis M2 de ${vM2} mm + écrous). Casquette : plaque de ${BW} × ${fmt(s.D)} mm, vissée sur le dessus avec 4 vis à bois M3 de ${vM3} mm dans la tranche des couches ; elle dépasse de ${fmt(s.P)} mm devant la façade.`
+    ? `${tw} de ${fmt(s.L)} mm : 1 collerette Ø ${FL_D} mm + ${s.n - 1} anneaux collés dessus, Ø ${TI} mm à l'intérieur. La collerette se visse sur la façade (4 vis M2 de ${vM2} mm + écrous). Casquette : plaque de ${BW} × ${fmt(s.D)} mm, vissée sur le dessus avec 4 vis M3 de ${vM3} mm et des écrous sous le dessus ; elle dépasse de ${fmt(s.P)} mm devant la façade.`
     : `${tw} de ${fmt(s.L)} mm ${PRINT() ? `en cône (Ø ${TI} mm au fond, Ø ${fmt(2*mouthR() - 4.8)} mm à la bouche)` : `(Ø ${TI} mm à l'intérieur, Ø ${TO} mm à l'extérieur)`} avec une collerette Ø ${FL_D} mm : 4 vis M2 de ${vM2} mm + écrous dans la façade. Casquette : elle dépasse de ${fmt(s.P)} mm devant la façade et se visse sur le dessus avec ${capScrews().length} vis M3 de ${vM3} mm (avant-trous dans le boîtier). ${splitText(false)}`) + (typeof SVNOTE === 'string' ? SVNOTE : '');
 }
 function visserie(){
   const g = G(), laser = S.proc === 'laser', s = shade();
-  const vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((g.t + 8)/5)*5 : 12, vF = laser ? Math.ceil((g.t + 10)/5)*5 : 12;
+  const vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((2*g.t + 4)/5)*5 : 12, vF = laser ? Math.ceil((g.t + 10)/5)*5 : 12;
   const vSv = [6, 8, 10, 12, 16].find(v => v >= 2.5 + s.vt + 1.8) || 16, wood = laser ? 'à bois ' : '';
   return [
     [4*NT, `vis M2 × ${vM2} mm + ${4*NT} écrous M2`, NT > 1 ? `collerettes des ${NT} tubes sur la façade (4 par tube)` : 'collerette du tube sur la façade'],
     ...(true ? [[2*NT, `vis M2 × ${vSv} mm + ${2*NT} écrous M2`, `oreilles des ${NT} servos, sous la casquette`],
                    [2*NT, 'petites vis de palonnier (fournies avec les servos)', 'palonnier sur la tablette de chaque volet']] : []),
-    [capScrews().length, `vis ${wood}M3 × ${vM3} mm`, laser ? 'casquette, dans la paroi du dessus' : `casquette en ${pieceCount().cap} pièces (2 vis par pièce), dans la paroi du dessus`],
-    [backFix().length, `vis ${wood}M3 × ${vF} mm`, laser ? 'fond, dans les coins des cadres' : `fond en ${pieceCount().fond} pièces : 4 coins + 2 vis au milieu de chaque pièce`]
+    [capScrews().length, `vis M3 × ${vM3} mm${laser ? ` + ${capScrews().length} écrous M3` : ''}`, laser ? 'casquette, à travers le dessus (écrous à l’intérieur)' : `casquette en ${pieceCount().cap} pièces (2 vis par pièce), dans la paroi du dessus`],
+    [laser ? 4 : backFix().length, laser ? `vis à bois Ø 3 × ${cleat(g.t).screw} mm` : `vis M3 × ${vF} mm`, laser ? `fond, dans les 4 taquets d’angle (4 piles de ${cleat(g.t).k} carrés de 10 mm collés)` : `fond en ${pieceCount().fond} pièces : 4 coins + 2 vis au milieu de chaque pièce`]
   ];
 }
 function renderVis(){
@@ -6150,10 +6246,10 @@ function refresh(){
   btn.disabled = !st.ready;
   btn.textContent = S.proc === 'laser' ? 'Télécharger le plan de découpe (.svg)' : 'Télécharger les pièces à imprimer (.zip)';
   $('exportMsg').textContent = st.ready
-    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches, des anneaux des tubes et de la casquette, avec les trous de fixation.` : `Tous les trous sont corrects. Le fichier contient le boîtier, le fond et la casquette coupés en pièces qui s’emboîtent, les ${NC} tubes en cône et les volets (STL).`)
+    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des 6 planches à créneaux, des anneaux des tubes et de la casquette, avec les trous de fixation.` : `Tous les trous sont corrects. Le fichier contient le boîtier, le fond et la casquette coupés en pièces qui s’emboîtent, les ${NC} tubes en cône et les volets (STL).`)
     : `Le téléchargement se débloque quand les ${N} diamètres sont corrects (${st.n} / ${N}).`;
   $('exportNote').textContent = S.proc === 'laser'
-    ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Bleu : gravure (numéros et cercles des cibles). Colle les couches C1 à C${g.n - 1} ; le fond C${g.n} se visse (4 vis M3 dans les coins) pour garder l'accès à l'électronique. Colle les anneaux sur chaque collerette et visse les collerettes sur la façade (4 vis M2) ; visse la casquette sur le dessus (4 vis M3). Volets : colle chaque languette dans la fente de sa tablette, puis fixe le palonnier sur la tablette.`
+    ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Bleu : gravure (noms des planches et cercles des cibles). Emboîte et colle (colle à bois) la façade, les 2 côtés, le dessus et le dessous ; colle les 4 taquets (piles de ${cleat(g.t).k} carrés) dans les coins, contre le dessus ou le dessous et le côté, en les alignant sur l’arrière (pose le fond à sec pour les positionner) ; le fond s’emboîte sans colle et se visse dans les taquets (4 vis à bois Ø 3 × ${cleat(g.t).screw} mm), pour garder l’accès à l’électronique. Colle les anneaux sur chaque collerette et visse les collerettes sur la façade (4 vis M2) ; visse la casquette sur le dessus (4 vis M3 + écrous). Volets : colle chaque languette dans la fente de sa tablette, puis fixe le palonnier sur la tablette.`
     : 'Imprime le boîtier façade sur le plateau, sans supports, les tubes debout et la casquette à plat. Couche 0,2 mm, remplissage 20 %. Fond : 4 vis M3 dans les coins ; tube : 4 vis M2 ; casquette : 4 vis M3.';
   const prev = $('exportPreview');
   if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : `<div class="stlinfo">boitier.stl (${BW} × ${BH} × 46 mm), fond.stl (${BW} × ${BH} × 3 mm), ${pieceCount().box} pièces de boîtier (${SPL.row ? 'environ 70 × 60' : 'au plus ' + Math.round(Math.max(...colCenters(SPL.box).map((c, i, a) => [0, ...SPL.box, BW][i + 1] - [0, ...SPL.box, BW][i]))) + ' × ' + BH} mm), ${pieceCount().fond} pièces de fond, ${pieceCount().cap} pièces de casquette, ${NC} tubes en cône (bouche Ø ${2*mouthR()} mm) et ${NC} volets · PLA</div>`;
@@ -6163,24 +6259,16 @@ function refresh(){
 
 /* ================= Exports ================= */
 function laserSVG(preview){
-  const g = G(), s = shade(), CW = BW + 10, CH = BH + 10, cols = 2, rows = Math.ceil(g.n/cols);
-  const Wd = cols*CW + 5, y1 = rows*CH + 5;
+  const g = G(), s = shade(), pans = boxPanels(), D = 2*g.W2, Wd = 2*(BW + 10) + 5, y1 = 2*BH + D + 35;
   const cut = 'fill="none" stroke="#FF0000" stroke-width="0.1"', eng = 'fill="none" stroke="#0000FF" stroke-width="0.3"';
   const txt = (x, y, t) => `<text x="${x}" y="${y}" font-family="Arial, sans-serif" font-size="4" fill="#0000FF">${t}</text>`;
   let body = '';
-  for (let k = 0; k < g.n; k++) {
-    const L = layerPlan(k, 0), ox = 5 + (k % cols)*CW, oy = 5 + Math.floor(k/cols)*CH;
-    const X = x => (ox + x).toFixed(3), Y = z => (oy + BH - z).toFixed(3);
-    const path = poly => `M${poly.map(([x,z]) => X(x)+' '+Y(z)).join(' L')} Z`;
-    body += `<g id="couche-${k+1}"><path ${cut} d="${path(PROFILE)}${L.inner ? ' ' + path(CAVITY) : ''}"/>`;
-    for (const s of L.shapes) {
-      if (s.type === 'circ') body += `<circle ${cut} cx="${X(s.x)}" cy="${Y(s.z)}" r="${s.r.toFixed(3)}"/>`;
-      else body += `<rect ${cut} x="${X(s.x0)}" y="${Y(s.z1)}" width="${(s.x1-s.x0).toFixed(3)}" height="${(s.z1-s.z0).toFixed(3)}"/>`;
-    }
-    if (k === 0) for (const [x, z] of SENS) body += `<circle ${eng} cx="${X(x)}" cy="${Y(z)}" r="${TO/2}"/>`;
-    const lx = L.inner ? 4 : 190, lz = L.inner ? 2.4 : 4;
-    body += txt(X(lx), Y(lz), 'C' + (k+1)) + '</g>';
-  }
+  for (const [id, ox, oy] of [['F', 5, 5], ['B', BW + 15, 5], ['T', 5, BH + 15], ['D', BW + 15, BH + 15], ['L', 5, BH + D + 25], ['R', D + 15, BH + D + 25]])
+    body += panelSVG(pans.find(P => P.id === id), ox, oy, cut, eng, txt);
+  { const C = cleat(g.t), x0 = 2*D + 30, yc = BH + D + 25;                                  // taquets : 4 × k carrés de 10 mm
+    body += `<g id="taquets">${txt(x0, yc + 4, `Taquets : ${4*C.k} carres (4 piles de ${C.k}), a coller dans les coins, derriere le fond`)}`;
+    for (let i = 0; i < 4*C.k; i++) { const cx = x0 + (i % 8)*14, cy = yc + 8 + Math.floor(i/8)*14; body += `<rect ${cut} x="${cx}" y="${cy}" width="${C.s}" height="${C.s}"/><circle ${cut} cx="${cx + C.s/2}" cy="${cy + C.s/2}" r="1.25"/>`; }
+    body += '</g>'; }
   /* collerettes (vissées sur la façade) puis anneaux des tubes */
   const nPlain = NT*(s.n - 1), pitch = FL_D + 4, rc = Math.floor((Wd - 5)/pitch), yr = y1 + 8;
   body += `<g id="collerettes">${txt(5, y1 + 4, `Collerettes : ${NT} (a visser sur la facade, 4 vis M2) · anneaux : ${nPlain} (${NT} tube${NT > 1 ? 's' : ''} de ${s.n - 1}), a coller sur les collerettes`)}`;
@@ -6219,7 +6307,7 @@ function laserSVG(preview){
   body += '</g>';
   const Hd = y2 + s.D + 5;
   const size = preview ? 'width="100%"' : `width="${Wd}mm" height="${Hd.toFixed(3)}mm"`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" ${size} viewBox="0 0 ${Wd} ${Hd.toFixed(3)}"><title>Cibles laser : ${g.n} couches de ${fmt(g.t)} mm, anneaux et casquette</title>${body}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" ${size} viewBox="0 0 ${Wd} ${Hd.toFixed(3)}"><title>Cibles laser : 6 planches de ${fmt(g.t)} mm a creneaux, anneaux et casquette</title>${body}</svg>`;
 }
 
 function stlBinary(geo, map){
@@ -6349,7 +6437,7 @@ function syncSetup(){
 function showMain(){
   $('cadSetup').hidden = true; $('cadMain').hidden = false;
   $('barProc').textContent = PROC[S.proc].name;
-  $('explodeLbl').textContent = S.proc === 'laser' ? 'Écarter les couches' : 'Éclater les pièces';
+  $('explodeLbl').textContent = S.proc === 'laser' ? 'Écarter les planches' : 'Éclater les pièces';
   $('optExplode').checked = !!S.explode; $('optFlap').checked = !S.flapOpen;
   renderRows(); refresh();
   if (ready) { resize(); rebuild(); }
@@ -6417,8 +6505,8 @@ function fmt(n){ return (Math.round(n*100)/100).toString().replace('.', ','); }
 /* Profondeur, façade et fond selon le procédé */
 function G(){
   if (S.proc === 'laser') {
-    const t = S.ply, n = Math.max(4, Math.round(46/t));
-    return {t, n, W2: n*t/2, front: t, back: t};
+    const t = S.ply;
+    return {t, n: 6, W2: 23, front: t, back: t};                     // 6 planches, boîte de 46 mm de profondeur
   }
   return {t:0, n:0, W2:23, front:3, back:0};
 }
@@ -6437,7 +6525,7 @@ function shade(){
 const FL_D = 34, FL_R = 14, FL_ANG = [1, 3, 5, 7].map(i => i*Math.PI/4);   // collerette des tubes : Ø extérieur, rayon des 4 trous
 const circS = (x, z, d) => ({type:'circ', x, z, r:d/2});
 const CORNERS = [[4,4],[BW-4,4],[4,BH-4],[BW-4,BH-4]];     // vis M3 du fond, dans les parois de 8 mm
-function capScrews(){ const w = G().W2 - 8; return PRINT() ? SPL.capX.flatMap(x => [[x, -w], [x, w]]) : [[25, -w], [BW-25, -w], [25, w], [BW-25, w]]; }   // vis M3 de la casquette (x, y), dans la paroi du dessus
+function capScrews(){ const w = S.proc === 'laser' ? G().W2 - G().t - 5 : G().W2 - 8; return PRINT() ? SPL.capX.flatMap(x => [[x, -w], [x, w]]) : [[25, -w], [BW-25, -w], [25, w], [BW-25, w]]; }   // vis M3 de la casquette (x, y), dans la paroi du dessus
 function tubeHoles(){ const out = []; for (const [x, z] of SENS) for (const a of FL_ANG) out.push(circS(x + FL_R*Math.cos(a), z + FL_R*Math.sin(a), 2.2)); return out; }
 function frontFix(){ return tubeHoles(); }                  // façade : vis du tube
 function backFix(){ return CORNERS.concat(fondScrews()).map(([x, z]) => circS(x, z, 3.2)); }   // fond : 4 vis M3
@@ -6656,6 +6744,84 @@ function buildLayers(){
   return out;
 }
 
+/* ================= Découpe laser : boîte en 6 planches à créneaux =================
+   Façade (F), fond (B), côtés gauche (L) et droit (R), dessous (D) et dessus (T). Chaque arête entre 2 planches est
+   découpée en créneaux alternés (nombre impair). La façade et le fond gardent les 4 coins ; entre les côtés et
+   le dessus / dessous, les créneaux occupent la longueur intérieure. Le fond n'est pas collé : il s'emboîte et se visse
+   (4 vis à bois dans 4 taquets collés dans les coins). */
+const cleat = t => { const k = Math.ceil(10/t), h = k*t; return {s:10, k, h, screw: [10, 12, 16, 20, 25].filter(v => v <= t + h - 1).pop()}; };   // taquet : carré de 10 mm, k plaques collées
+function fingers(L0, L1, t){
+  const len = L1 - L0, f = Math.max(10, 3*t), N = Math.max(3, 2*Math.floor(len/f/2) + 1), w = len/N;
+  return [...Array(N).keys()].map(i => [L0 + i*w, L0 + (i + 1)*w, i % 2 === 0]);   // true : créneau de la planche « A »
+}
+function panelHoles(id){
+  const g = G(), W2 = g.W2, out = [], c3 = (u, v, r) => out.push({u, v, r});
+  for (const c of cutters()) {
+    const [ai] = DIRS[c.dir], r = c.d/2;
+    if (ai === 1 && id === 'F') c3(c.p[0], c.p[2], r);
+    if (ai === 0 && id === (c.p[0] > BW/2 ? 'R' : 'L')) c3(c.p[1] + W2, c.p[2], r);
+    if (ai === 2 && id === (c.p[2] > BH/2 ? 'T' : 'D')) c3(c.p[0], c.p[1] + W2, r);
+  }
+  if (id === 'F') for (const s of frontFix()) c3(s.x, s.z, s.r);                 // vis des collerettes des tubes
+  if (id === 'T') for (const [x, y] of capScrews()) c3(x, y + W2, 1.7);          // vis de la casquette
+  return out;
+}
+function boxPanels(){
+  const g = G(), t = g.t, W2 = g.W2, D = 2*W2, ST = {};
+  for (const k of ['FL', 'FR', 'BL', 'BR']) ST[k] = [0, BH];
+  for (const k of ['FD', 'FT', 'BD', 'BT']) ST[k] = [0, BW];
+  for (const k of ['LD', 'LT', 'RD', 'RT']) ST[k] = [t, D - t];
+  const defs = {   // arêtes [bas, droite, haut, gauche] : [bande, cette planche est « A »]
+    F:{W:BW, H:BH, e:[['FD',1],['FR',1],['FT',1],['FL',1]], n:[0,-1,0], label:'FACADE',  M:[1,0,0,0, 0,0,1,-W2, 0,1,0,0, 0,0,0,1]},
+    B:{W:BW, H:BH, e:[['BD',1],['BR',1],['BT',1],['BL',1]], n:[0,1,0],  label:'FOND',    M:[1,0,0,0, 0,0,1,W2 - t, 0,1,0,0, 0,0,0,1]},
+    L:{W:D, H:BH, e:[['LD',0],['BL',0],['LT',0],['FL',0]], n:[-1,0,0],  label:'GAUCHE',  M:[0,0,1,0, 1,0,0,-W2, 0,1,0,0, 0,0,0,1]},
+    R:{W:D, H:BH, e:[['RD',0],['BR',0],['RT',0],['FR',0]], n:[1,0,0],   label:'DROITE',  M:[0,0,1,BW - t, 1,0,0,-W2, 0,1,0,0, 0,0,0,1]},
+    D:{W:BW, H:D, e:[['FD',0],['RD',1],['BD',0],['LD',1]], n:[0,0,-1],  label:'DESSOUS', M:[1,0,0,0, 0,1,0,-W2, 0,0,1,0, 0,0,0,1]},
+    T:{W:BW, H:D, e:[['FT',0],['RT',1],['BT',0],['LT',1]], n:[0,0,1],   label:'DESSUS',  M:[1,0,0,0, 0,1,0,-W2, 0,0,1,BH - t, 0,0,0,1]}
+  };
+  /* fond amovible : 4 vis à bois dans 4 taquets collés dans les coins, derrière le fond */
+  const C = cleat(t), backHoles = [[C.s/2 + t, C.s/2 + t], [BW - t - C.s/2, C.s/2 + t], [C.s/2 + t, BH - t - C.s/2], [BW - t - C.s/2, BH - t - C.s/2]].map(([u, v]) => ({u, v, r:1.7}));
+  return Object.entries(defs).map(([id, P]) => {
+    const pts = [];
+    P.e.forEach(([sk, isA], e) => {
+      const len = e % 2 ? P.H : P.W, [L0, L1] = ST[sk];
+      let segs = [];
+      if (L0 > 0) segs.push([0, L0, false]);
+      for (const [a, b, oa] of fingers(L0, L1, t)) segs.push([a, b, isA ? oa : !oa]);
+      if (L1 < len) segs.push([L1, len, false]);
+      segs = segs.reduce((m, s) => { const l = m[m.length - 1]; if (l && l[2] === s[2]) l[1] = s[1]; else m.push(s.slice()); return m; }, []);
+      if (!segs[0][2]) segs[0][0] = t;
+      const lst = segs[segs.length - 1]; if (!lst[2]) lst[1] = len - t;
+      const M = (s, d) => e === 0 ? [s, d] : e === 1 ? [P.W - d, s] : e === 2 ? [s, P.H - d] : [d, s];
+      const rev = e >= 2;
+      for (const [a, b, own] of rev ? segs.slice().reverse() : segs) {
+        const d = own ? 0 : t;
+        pts.push(M(rev ? b : a, d));
+        pts.push(M(rev ? a : b, d));
+      }
+    });
+    const outline = pts.filter((p, i) => { const q = pts[(i + pts.length - 1) % pts.length]; return Math.hypot(p[0] - q[0], p[1] - q[1]) > 1e-6; });
+    const holes = id === 'B' ? backHoles : panelHoles(id);
+    return {id, W:P.W, H:P.H, outline, holes, n:P.n, label:P.label, M:P.M, engr: id === 'F' ? FACE_ENGR() : []};
+  });
+}
+function panelGeometry(P){
+  const sh = new THREE.Shape(P.outline.map(([u, v]) => new THREE.Vector2(u, v)));
+  for (const h of P.holes) { const p = new THREE.Path(); p.absarc(h.u, h.v, h.r, 0, Math.PI*2, true); sh.holes.push(p); }
+  const geo = new THREE.ExtrudeGeometry(sh, {depth: G().t, bevelEnabled: false, curveSegments: 24});
+  geo.applyMatrix4(new THREE.Matrix4().set(...P.M));
+  return geo;
+}
+function panelSVG(P, ox, oy, cut, eng, txt){
+  const X = u => (ox + u).toFixed(3), Y = v => (oy + P.H - v).toFixed(3), t = G().t;
+  let s = `<g id="planche-${P.label.toLowerCase()}"><path ${cut} d="M${P.outline.map(([u, v]) => X(u) + ' ' + Y(v)).join(' L')} Z"/>`;
+  for (const h of P.holes) s += `<circle ${cut} cx="${X(h.u)}" cy="${Y(h.v)}" r="${h.r.toFixed(3)}"/>`;
+  for (const e of P.engr) s += `<circle ${eng} cx="${X(e.u)}" cy="${Y(e.v)}" r="${e.r}"/>`;
+  return s + txt(X(P.W/2 - P.label.length*1.2), Y(t + 2.5), P.label) + '</g>';
+}
+
+const FACE_ENGR = () => [12, 20, 27].map(r => ({u:TCX, v:TCZ, r}));   // gravure sur la façade
+
 /* ================= Scène ================= */
 let renderer, scene, camera, controls, modelGroup, compGroup, ready = false;
 const vp = $('vp');
@@ -6731,13 +6897,19 @@ function rebuild(){
   const t0 = performance.now();
   modelGroup.clear();
   if (S.proc === 'laser') {
-    const geos = buildLayers();
-    geos.forEach((geo, k) => {
-      const mesh = new THREE.Mesh(geo, k % 2 ? matWoodB : matWoodA);
+    const pans = boxPanels();
+    pans.forEach((P, k) => {
+      const geo = panelGeometry(P), mesh = new THREE.Mesh(geo, k % 2 ? matWoodB : matWoodA);
       mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMatWood));
-      mesh.userData.k = k; modelGroup.add(mesh);
+      mesh.userData.panel = P.id; mesh.userData.out = new THREE.Vector3(...P.n).multiplyScalar(18); modelGroup.add(mesh);
     });
-    lastParts = {layers: geos};
+    const C = cleat(G().t), W2 = G().W2;
+    for (const [u, v] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {                                 // taquets d'angle (derrière le fond)
+      const geo = new THREE.BoxGeometry(C.s, C.h, C.s); geo.translate(u ? BW - G().t - C.s/2 : G().t + C.s/2, W2 - G().t - C.h/2, v ? BH - G().t - C.s/2 : G().t + C.s/2);
+      const mesh = new THREE.Mesh(geo, matWoodB); mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMatWood));
+      mesh.userData.out = new THREE.Vector3(0, 8, 0); modelGroup.add(mesh);
+    }
+    lastParts = {panels: pans};
   } else {
     const parts = buildPrint();
     [...parts.boxes.map(geo => ['box', geo]), ...parts.backs.map(geo => ['back', geo])].forEach(([nm, geo]) => {
@@ -6766,9 +6938,10 @@ function applyExplode(){
     if (u.part === 'flap') m.rotation.z = S.flapOpen ? -Math.PI/2 : 0;
     if (!ex) return;
     if (u.spread) m.position.add(u.spread);
+    if (u.out) m.position.add(u.out);
     if (u.k !== undefined) m.position.y = (u.k - (n-1)/2) * 8;
     else if (u.part === 'back') m.position.y = 60;
-    else if (u.part === 'tubes') m.position.y = laser ? -(n-1)/2*8 - 22 : -30;
+    else if (u.part === 'tubes') m.position.y = laser ? -42 : -30;
     else if (u.part === 'cap' || u.part === 'flap') m.position.z += 30;
   });
 
@@ -6825,26 +6998,26 @@ function renderPly(){
   $('plyBlock').hidden = S.proc !== 'laser';
   const g = G();
   ROOT.querySelectorAll('[data-ply]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.ply === S.ply)));
-  if (S.proc === 'laser') $('plyNote').textContent = `${g.n} couches de ${fmt(g.t)} mm : boîtier de ${fmt(g.n*g.t)} mm de profondeur. Couche 1 = façade, couche ${g.n} = fond, les autres sont des cadres.`;
+  if (S.proc === 'laser') $('plyNote').textContent = `6 planches de ${fmt(g.t)} mm assemblées par créneaux : façade, fond, 2 côtés, dessus et dessous (boîte de ${BW} × ${BH} × ${fmt(2*g.W2)} mm). Le fond s’emboîte sans colle et se visse (4 vis à bois dans 4 taquets collés dans les coins) pour pouvoir changer la pile.`;
 }
 function renderShade(){
   const s = shade(), laser = S.proc === 'laser', tw = NT > 1 ? `${NT} tubes` : 'Le tube';
   ROOT.querySelectorAll('[data-tube]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.tube === S.tube)));
-  const g = G(), vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((g.t + 8)/5)*5 : 12;
+  const g = G(), vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((2*g.t + 4)/5)*5 : 12;
   $('shadeNote').textContent = (laser
-    ? `${tw} de ${fmt(s.L)} mm : 1 collerette Ø ${FL_D} mm + ${s.n - 1} anneaux collés dessus, Ø ${TI} mm à l'intérieur. La collerette se visse sur la façade (4 vis M2 de ${vM2} mm + écrous). Casquette : plaque de ${BW} × ${fmt(s.D)} mm, vissée sur le dessus avec 4 vis à bois M3 de ${vM3} mm dans la tranche des couches ; elle dépasse de ${fmt(s.P)} mm devant la façade.`
+    ? `${tw} de ${fmt(s.L)} mm : 1 collerette Ø ${FL_D} mm + ${s.n - 1} anneaux collés dessus, Ø ${TI} mm à l'intérieur. La collerette se visse sur la façade (4 vis M2 de ${vM2} mm + écrous). Casquette : plaque de ${BW} × ${fmt(s.D)} mm, vissée sur le dessus avec 4 vis M3 de ${vM3} mm et des écrous sous le dessus ; elle dépasse de ${fmt(s.P)} mm devant la façade.`
     : `${tw} de ${fmt(s.L)} mm ${PRINT() ? `en cône (Ø ${TI} mm au fond, Ø ${fmt(2*mouthR() - 4.8)} mm à la bouche)` : `(Ø ${TI} mm à l'intérieur, Ø ${TO} mm à l'extérieur)`} avec une collerette Ø ${FL_D} mm : 4 vis M2 de ${vM2} mm + écrous dans la façade. Casquette : elle dépasse de ${fmt(s.P)} mm devant la façade et se visse sur le dessus avec ${capScrews().length} vis M3 de ${vM3} mm (avant-trous dans le boîtier). ${splitText(false)}`) + (typeof SVNOTE === 'string' ? SVNOTE : '');
 }
 function visserie(){
   const g = G(), laser = S.proc === 'laser', s = shade();
-  const vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((g.t + 8)/5)*5 : 12, vF = laser ? Math.ceil((g.t + 10)/5)*5 : 12;
+  const vM2 = laser ? Math.ceil((2*g.t + 2.5)/5)*5 : 10, vM3 = laser ? Math.ceil((2*g.t + 4)/5)*5 : 12, vF = laser ? Math.ceil((g.t + 10)/5)*5 : 12;
   const vSv = [6, 8, 10, 12, 16].find(v => v >= 2.5 + s.vt + 1.8) || 16, wood = laser ? 'à bois ' : '';
   return [
     [4*NT, `vis M2 × ${vM2} mm + ${4*NT} écrous M2`, NT > 1 ? `collerettes des ${NT} tubes sur la façade (4 par tube)` : 'collerette du tube sur la façade'],
     ...(false ? [[2*NT, `vis M2 × ${vSv} mm + ${2*NT} écrous M2`, `oreilles des ${NT} servos, sous la casquette`],
                    [2*NT, 'petites vis de palonnier (fournies avec les servos)', 'palonnier sur la tablette de chaque volet']] : []),
-    [capScrews().length, `vis ${wood}M3 × ${vM3} mm`, laser ? 'casquette, dans la paroi du dessus' : `casquette en ${pieceCount().cap} pièces (2 vis par pièce), dans la paroi du dessus`],
-    [backFix().length, `vis ${wood}M3 × ${vF} mm`, laser ? 'fond, dans les coins des cadres' : `fond en ${pieceCount().fond} pièces : 4 coins + 2 vis au milieu de chaque pièce`]
+    [capScrews().length, `vis M3 × ${vM3} mm${laser ? ` + ${capScrews().length} écrous M3` : ''}`, laser ? 'casquette, à travers le dessus (écrous à l’intérieur)' : `casquette en ${pieceCount().cap} pièces (2 vis par pièce), dans la paroi du dessus`],
+    [laser ? 4 : backFix().length, laser ? `vis à bois Ø 3 × ${cleat(g.t).screw} mm` : `vis M3 × ${vF} mm`, laser ? `fond, dans les 4 taquets d’angle (4 piles de ${cleat(g.t).k} carrés de 10 mm collés)` : `fond en ${pieceCount().fond} pièces : 4 coins + 2 vis au milieu de chaque pièce`]
   ];
 }
 function renderVis(){
@@ -6868,10 +7041,10 @@ function refresh(){
   btn.disabled = !st.ready;
   btn.textContent = S.proc === 'laser' ? 'Télécharger le plan de découpe (.svg)' : 'Télécharger les pièces à imprimer (.zip)';
   $('exportMsg').textContent = st.ready
-    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des ${g.n} couches, des anneaux du tube et de la casquette, avec les trous de fixation.` : 'Tous les trous sont corrects. Le fichier contient le boîtier, le fond et la casquette coupés en 3 pièces qui s’emboîtent, et le tube en cône (STL).')
+    ? (S.proc === 'laser' ? `Tous les trous sont corrects. Voici le plan de découpe des 6 planches à créneaux, des anneaux du tube et de la casquette, avec les trous de fixation.` : 'Tous les trous sont corrects. Le fichier contient le boîtier, le fond et la casquette coupés en 3 pièces qui s’emboîtent, et le tube en cône (STL).')
     : `Le téléchargement se débloque quand les ${N} diamètres sont corrects (${st.n} / ${N}).`;
   $('exportNote').textContent = S.proc === 'laser'
-    ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Bleu : gravure (numéros et cercles de la cible). Colle les couches C1 à C${g.n - 1} ; le fond C${g.n} se visse (4 vis M3 dans les coins) pour pouvoir changer la pile. Colle les anneaux sur la collerette et visse-la sur la façade (4 vis M2) ; visse la casquette sur le dessus (4 vis M3).`
+    ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Bleu : gravure (noms des planches et cercles de la cible). Emboîte et colle (colle à bois) la façade, les 2 côtés, le dessus et le dessous ; colle les 4 taquets (piles de ${cleat(g.t).k} carrés) dans les coins, contre le dessus ou le dessous et le côté, en les alignant sur l’arrière (pose le fond à sec pour les positionner) ; le fond s’emboîte sans colle et se visse dans les taquets (4 vis à bois Ø 3 × ${cleat(g.t).screw} mm), pour pouvoir changer la pile. Colle les anneaux sur la collerette et visse-la sur la façade (4 vis M2) ; visse la casquette sur le dessus (4 vis M3 + écrous).`
     : 'Imprime le boîtier façade sur le plateau, sans supports, le tube debout et la casquette à plat. Couche 0,2 mm, remplissage 20 %. Fond : 4 vis M3 dans les coins ; tube : 4 vis M2 ; casquette : 4 vis M3.';
   const prev = $('exportPreview');
   if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : `<div class="stlinfo">boitier.stl (${BW} × ${BH} × 46 mm), fond.stl (${BW} × ${BH} × 3 mm), ${pieceCount().box} pièces de boîtier (au plus 74 × ${BH} mm), ${pieceCount().fond} pièces de fond, ${pieceCount().cap} pièces de casquette et le tube en cône (bouche Ø ${2*mouthR()} mm) · PLA</div>`;
@@ -6881,24 +7054,16 @@ function refresh(){
 
 /* ================= Exports ================= */
 function laserSVG(preview){
-  const g = G(), s = shade(), CW = BW + 10, CH = BH + 10, cols = 3, rows = Math.ceil(g.n/cols);
-  const Wd = cols*CW + 5, y1 = rows*CH + 5;
+  const g = G(), s = shade(), pans = boxPanels(), D = 2*g.W2, Wd = 2*(BW + 10) + 5, y1 = 2*BH + D + 35;
   const cut = 'fill="none" stroke="#FF0000" stroke-width="0.1"', eng = 'fill="none" stroke="#0000FF" stroke-width="0.3"';
   const txt = (x, y, t) => `<text x="${x}" y="${y}" font-family="Arial, sans-serif" font-size="4" fill="#0000FF">${t}</text>`;
   let body = '';
-  for (let k = 0; k < g.n; k++) {
-    const L = layerPlan(k, 0), ox = 5 + (k % cols)*CW, oy = 5 + Math.floor(k/cols)*CH;
-    const X = x => (ox + x).toFixed(3), Y = z => (oy + BH - z).toFixed(3);
-    const path = poly => `M${poly.map(([x,z]) => X(x)+' '+Y(z)).join(' L')} Z`;
-    body += `<g id="couche-${k+1}"><path ${cut} d="${path(PROFILE)}${L.inner ? ' ' + path(CAVITY) : ''}"/>`;
-    for (const s of L.shapes) {
-      if (s.type === 'circ') body += `<circle ${cut} cx="${X(s.x)}" cy="${Y(s.z)}" r="${s.r.toFixed(3)}"/>`;
-      else body += `<rect ${cut} x="${X(s.x0)}" y="${Y(s.z1)}" width="${(s.x1-s.x0).toFixed(3)}" height="${(s.z1-s.z0).toFixed(3)}"/>`;
-    }
-    if (k === 0) for (const r of [12, 20, 27]) body += `<circle ${eng} cx="${X(TCX)}" cy="${Y(TCZ)}" r="${r}"/>`;
-    const lx = L.inner ? 4 : BW - 16, lz = L.inner ? 2.4 : 4;
-    body += txt(X(lx), Y(lz), 'C' + (k+1)) + '</g>';
-  }
+  for (const [id, ox, oy] of [['F', 5, 5], ['B', BW + 15, 5], ['T', 5, BH + 15], ['D', BW + 15, BH + 15], ['L', 5, BH + D + 25], ['R', D + 15, BH + D + 25]])
+    body += panelSVG(pans.find(P => P.id === id), ox, oy, cut, eng, txt);
+  { const C = cleat(g.t), x0 = 2*D + 30, yc = BH + D + 25;                                  // taquets : 4 × k carrés de 10 mm
+    body += `<g id="taquets">${txt(x0, yc + 4, `Taquets : ${4*C.k} carres (4 piles de ${C.k}), a coller dans les coins, derriere le fond`)}`;
+    for (let i = 0; i < 4*C.k; i++) { const cx = x0 + (i % 8)*14, cy = yc + 8 + Math.floor(i/8)*14; body += `<rect ${cut} x="${cx}" y="${cy}" width="${C.s}" height="${C.s}"/><circle ${cut} cx="${cx + C.s/2}" cy="${cy + C.s/2}" r="1.25"/>`; }
+    body += '</g>'; }
   /* collerettes (vissées sur la façade) puis anneaux des tubes */
   const nPlain = NT*(s.n - 1), pitch = FL_D + 4, rc = Math.floor((Wd - 5)/pitch), yr = y1 + 8;
   body += `<g id="collerettes">${txt(5, y1 + 4, `Collerettes : ${NT} (a visser sur la facade, 4 vis M2) · anneaux : ${nPlain} (${NT} tube${NT > 1 ? 's' : ''} de ${s.n - 1}), a coller sur les collerettes`)}`;
@@ -6923,7 +7088,7 @@ function laserSVG(preview){
   body += '</g>';
   const Hd = y2 + s.D + 5;
   const size = preview ? 'width="100%"' : `width="${Wd}mm" height="${Hd.toFixed(3)}mm"`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" ${size} viewBox="0 0 ${Wd} ${Hd.toFixed(3)}"><title>Cible ${NU} LED : ${g.n} couches de ${fmt(g.t)} mm, anneaux et casquette</title>${body}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" ${size} viewBox="0 0 ${Wd} ${Hd.toFixed(3)}"><title>Cible ${NU} LED : 6 planches de ${fmt(g.t)} mm a creneaux, anneaux et casquette</title>${body}</svg>`;
 }
 
 function stlBinary(geo, map){
@@ -7043,7 +7208,7 @@ function syncSetup(){
 function showMain(){
   $('cadSetup').hidden = true; $('cadMain').hidden = false;
   $('barProc').textContent = PROC[S.proc].name;
-  $('explodeLbl').textContent = S.proc === 'laser' ? 'Écarter les couches' : 'Éclater les pièces';
+  $('explodeLbl').textContent = S.proc === 'laser' ? 'Écarter les planches' : 'Éclater les pièces';
   $('optExplode').checked = !!S.explode;
   renderRows(); refresh();
   if (ready) { resize(); rebuild(); }
