@@ -9,16 +9,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Layout: une colonne d'atelier. Choix en 4 étapes (machine, matériau, épaisseur, opération), fiche de réglages modifiable, puis générateur de cercles et disques d'essai. */
+/* Layout: une seule colonne. Machines en grosses cartes colorées (vert xTool, violet Atomstack), trois menus (matériau, épaisseur, opération), une fiche de réglages illustrée. Le reste est replié. */
 :root {
-  --bg: #edf0ee;
+  --bg: #f1f3f1;
   --surface: #ffffff;
   --fg: #17211f;
-  --muted: #55635f;
-  --line: #cbd3d0;
+  --muted: #586763;
+  --line: #d3dad7;
   --accent: #0b6b5e;
   --accent-fg: #ffffff;
   --accent-soft: #dcefeb;
+  --m1: #0b6b5e;
+  --m1-soft: #dcefeb;
+  --m1-fg: #ffffff;
+  --a10: #6a3fc2;
+  --a10-soft: #e9e1f9;
+  --a10-fg: #ffffff;
   --warn: #8a4f00;
   --warn-bg: #fcefd8;
   --danger: #a3231b;
@@ -34,6 +40,8 @@
   :root:not([data-theme="light"]) {
     --bg: #101615; --surface: #18211f; --fg: #e7eeec; --muted: #9fb0ab; --line: #2e3c39;
     --accent: #4cc2ae; --accent-fg: #06201b; --accent-soft: #17302b;
+    --m1: #4cc2ae; --m1-soft: #17302b; --m1-fg: #06201b;
+    --a10: #b69cff; --a10-soft: #2a2046; --a10-fg: #190b3b;
     --warn: #f0b45a; --warn-bg: #33270f; --danger: #ff8e84; --danger-bg: #3a1714;
     --wood: #b8935f; --wood-line: #7d6139; --kerf: #0b0705;
     color-scheme: dark;
@@ -42,74 +50,102 @@
 :root[data-theme="dark"] {
   --bg: #101615; --surface: #18211f; --fg: #e7eeec; --muted: #9fb0ab; --line: #2e3c39;
   --accent: #4cc2ae; --accent-fg: #06201b; --accent-soft: #17302b;
+  --m1: #4cc2ae; --m1-soft: #17302b; --m1-fg: #06201b;
+  --a10: #b69cff; --a10-soft: #2a2046; --a10-fg: #190b3b;
   --warn: #f0b45a; --warn-bg: #33270f; --danger: #ff8e84; --danger-bg: #3a1714;
   --wood: #b8935f; --wood-line: #7d6139; --kerf: #0b0705;
   color-scheme: dark;
 }
+.wrap[data-machine="m1"] { --accent: var(--m1); --accent-soft: var(--m1-soft); --accent-fg: var(--m1-fg); }
+.wrap[data-machine="a10"] { --accent: var(--a10); --accent-soft: var(--a10-soft); --accent-fg: var(--a10-fg); }
+
 * { box-sizing: border-box; }
 body {
   background: var(--bg); color: var(--fg);
   font-family: var(--font-body); font-size: 16px; line-height: 1.5;
   padding-inline: 16px; padding-block: 20px 40px;
 }
-.wrap { max-width: 760px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+.wrap { max-width: 720px; margin-inline: auto; display: flex; flex-direction: column; gap: 18px; }
 .wrap > * { min-width: 0; }
 h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
-h1 { font-size: 2rem; line-height: 1.1; font-weight: 700; letter-spacing: .01em; }
-.sub { color: var(--muted); margin: 6px 0 0; max-width: 60ch; }
-.step-label {
-  font-family: var(--font-display); font-weight: 600; font-size: .85rem;
-  text-transform: uppercase; letter-spacing: .09em; color: var(--muted);
-  margin: 0 0 8px; display: block;
+h1 { font-size: 2rem; line-height: 1.05; font-weight: 700; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 46ch; }
+.hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.hero-art { flex: 0 0 auto; width: 150px; height: auto; }
+
+.machines { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mach { --c: var(--m1); --cs: var(--m1-soft); --cf: var(--m1-fg); }
+.mach[data-mach="a10"] { --c: var(--a10); --cs: var(--a10-soft); --cf: var(--a10-fg); }
+.mach {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 10px 12px;
+  background: var(--cs); color: var(--c); border: 2px solid var(--c); border-radius: 14px;
+  cursor: pointer; font: inherit; min-height: 44px; min-width: 0;
 }
-.group-title { font-size: .8rem; color: var(--muted); margin: 10px 0 6px; font-weight: 600; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip {
-  font: 500 .95rem var(--font-body); color: var(--fg);
-  background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px;
-  padding: 9px 13px; min-height: 44px; cursor: pointer;
+.mach svg { width: 84px; height: auto; }
+.mach-name { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; line-height: 1.1; color: var(--fg); text-align: center; }
+.mach-sub { font-size: .8rem; color: var(--muted); text-align: center; }
+.mach[aria-pressed="true"] { background: var(--c); color: var(--cf); }
+.mach[aria-pressed="true"] .mach-name, .mach[aria-pressed="true"] .mach-sub { color: var(--cf); }
+.machine-info { color: var(--muted); font-size: .88rem; margin: 8px 0 0; max-width: 62ch; }
+
+.picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; color: var(--muted); font-weight: 600; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+.sel { position: relative; display: block; }
+.sel::after {
+  content: ""; position: absolute; right: 16px; top: 50%; width: 9px; height: 9px; pointer-events: none;
+  border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: translateY(-70%) rotate(45deg);
 }
-.chip:hover { border-color: var(--accent); }
-.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 600; }
-.chip.star { border-width: 2px; }
-.chip:disabled { opacity: .4; cursor: not-allowed; }
-.chip:focus-visible, summary:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .pick:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.machine-info { color: var(--muted); font-size: .9rem; margin: 8px 0 0; max-width: 62ch; }
-.thick { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 8px; }
-.thick .chip { font-family: var(--font-mono); font-weight: 700; padding-inline: 4px; text-align: center; }
+.sel select { appearance: none; -webkit-appearance: none; padding-right: 40px; border: 2px solid var(--accent); background: var(--surface); font-family: var(--font-body); font-size: 1.05rem; font-weight: 600; min-height: 50px; }
+input, select, textarea {
+  font: 500 1rem var(--font-mono); color: var(--fg); background: var(--bg);
+  border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 12px; min-height: 44px; width: 100%; min-width: 0;
+}
+textarea { font-size: .82rem; min-height: 96px; resize: vertical; }
+input[type="file"] { font: 500 .9rem var(--font-body); padding: 8px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
 .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.modes .chip { text-align: center; padding-inline: 6px; }
-.panel {
-  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-  padding: 18px; display: flex; flex-direction: column; gap: 16px;
+.seg {
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 8px 6px;
+  font: 600 .98rem var(--font-body); color: var(--fg); background: var(--surface);
+  border: 2px solid var(--line); border-radius: 10px; cursor: pointer;
 }
+.seg svg { width: 22px; height: 22px; flex: 0 0 auto; }
+.seg:hover:not(:disabled) { border-color: var(--accent); }
+.seg[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.seg:disabled { opacity: .4; cursor: not-allowed; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
 .panel > * { min-width: 0; }
-.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.panel-head h2 { font-size: 1.35rem; font-weight: 700; }
-.tag { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.res-head { display: flex; align-items: center; gap: 16px; }
+.art { flex: 0 0 auto; }
+.art svg { width: 120px; height: auto; display: block; }
+.res-head h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+.tag { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); display: block; margin-top: 4px; }
 .readout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.read { background: var(--accent-soft); border-radius: 10px; padding: 12px 10px; min-width: 0; }
+.read { background: var(--accent-soft); border-radius: 12px; padding: 12px 10px; min-width: 0; }
 .read span { display: block; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; font-weight: 600; color: var(--muted); }
-.read b { display: block; font-family: var(--font-mono); font-size: clamp(1.6rem, 7vw, 2.4rem); line-height: 1.15; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.read b { display: block; font-family: var(--font-mono); font-size: clamp(1.7rem, 8vw, 2.6rem); line-height: 1.15; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
 .read em { font-style: normal; font-size: .8rem; color: var(--muted); }
-.src { font-size: .88rem; border-radius: 8px; padding: 8px 12px; margin: 0; }
+.src { font-size: .88rem; border-radius: 10px; padding: 8px 12px; margin: 0; }
 .src.ok { background: var(--accent-soft); color: var(--accent); }
 .src.est { background: var(--warn-bg); color: var(--warn); }
 .src b { font-weight: 700; }
 .section-fig { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-.section-fig svg { flex: 0 0 auto; max-width: 100%; }
+.section-fig svg { flex: 0 0 auto; max-width: 100%; height: auto; }
 .section-fig p { margin: 0; flex: 1 1 200px; min-width: 0; color: var(--muted); font-size: .9rem; }
 .notes { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px; }
-.alert { border-radius: 8px; padding: 10px 12px; font-size: .92rem; margin-bottom: 8px; }
+.alert { border-radius: 10px; padding: 10px 12px; font-size: .92rem; margin-bottom: 8px; }
 .alert:last-child { margin-bottom: 0; }
 .alert.warn { background: var(--warn-bg); color: var(--warn); }
 .alert.danger { background: var(--danger-bg); color: var(--danger); }
 .alert b { font-weight: 700; }
+
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn {
-  font: 600 .95rem var(--font-body); color: var(--accent);
-  background: transparent; border: 1.5px solid var(--accent); border-radius: 8px;
-  padding: 9px 14px; min-height: 44px; cursor: pointer;
+  font: 600 .95rem var(--font-body); color: var(--accent); background: transparent;
+  border: 2px solid var(--accent); border-radius: 10px; padding: 9px 14px; min-height: 44px; cursor: pointer;
 }
 .btn:hover { background: var(--accent-soft); }
 .btn.solid { background: var(--accent); color: var(--accent-fg); }
@@ -117,26 +153,28 @@ h1 { font-size: 2rem; line-height: 1.1; font-weight: 700; letter-spacing: .01em;
 .btn.quiet { color: var(--muted); border-color: var(--line); }
 .btn.danger { color: var(--danger); border-color: var(--danger); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
-form.fields, .fields {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;
-}
-.field { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: var(--muted); font-weight: 600; min-width: 0; }
-.field.wide { grid-column: 1 / -1; }
-input, select, textarea {
-  font: 500 1rem var(--font-mono); color: var(--fg); background: var(--bg);
-  border: 1.5px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 44px; width: 100%; min-width: 0;
-}
-textarea { font-size: .82rem; min-height: 96px; resize: vertical; }
-input[type="file"] { font: 500 .9rem var(--font-body); padding: 8px; }
-.edit-box { border: 1.5px solid var(--accent); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.edit-box { border: 2px solid var(--accent); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .edit-box h3 { font-size: 1.05rem; }
 .msg { margin: 0; font-size: .88rem; color: var(--warn); min-height: 1.3em; }
 .msg.good { color: var(--accent); }
-details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 18px; }
-details.inner { border-radius: 8px; padding: 0 12px; background: var(--bg); }
-summary { cursor: pointer; padding: 14px 0; font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; }
+
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 0 18px; }
+details.inner { border-radius: 10px; padding: 0 12px; background: var(--bg); }
+summary {
+  cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 15px 0; font-family: var(--font-display); font-weight: 600; font-size: 1.1rem;
+}
+summary::-webkit-details-marker { display: none; }
+summary::after {
+  content: ""; flex: 0 0 auto; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); margin-right: 4px;
+}
+details[open] > summary::after { transform: rotate(-135deg); }
 details.inner summary { font-size: 1rem; padding: 10px 0; }
-details[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+details[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+.body { display: flex; flex-direction: column; gap: 14px; padding-bottom: 16px; }
+.body > * { min-width: 0; }
 .table-scroll { overflow-x: auto; padding-bottom: 14px; }
 table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: .92rem; }
 th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -157,51 +195,66 @@ tr.lim td { color: var(--warn); }
 .mine-list li { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: .9rem; min-width: 0; }
 .mine-list li span { min-width: 0; overflow-wrap: anywhere; }
 .mine-list .btn { min-height: 36px; padding: 4px 10px; }
-.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
-.rules h3 { font-size: 1rem; margin-bottom: 6px; }
-.rules ul { margin: 0; padding-left: 1.1em; font-size: .92rem; display: flex; flex-direction: column; gap: 4px; }
-.rule-box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+.rule-box { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
 .rule-box.no { background: var(--danger-bg); border-color: transparent; }
-.rule-box.no h3 { color: var(--danger); }
-.sources ul { margin: 0; padding-left: 1.1em; font-size: .88rem; display: flex; flex-direction: column; gap: 4px; }
+.rule-box h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.rule-box.no h3 { color: var(--danger); display: flex; align-items: center; gap: 8px; }
+.rule-box ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: .92rem; }
+.rule-box li { display: flex; align-items: center; gap: 10px; }
+.rule-box.no li { display: list-item; list-style: disc; margin-left: 1.1em; }
+.ic { width: 22px; height: 22px; flex: 0 0 auto; color: var(--accent); }
+.rule-box.no .ic { color: var(--danger); }
+.sources ul { margin: 0; padding-left: 1.1em; font-size: .88rem; display: flex; flex-direction: column; gap: 6px; }
 .sources a { color: var(--accent); overflow-wrap: anywhere; }
 .foot { color: var(--muted); font-size: .85rem; margin: 0; }
+@media (max-width: 520px) {
+  .hero-art { width: 96px; }
+  h1 { font-size: 1.7rem; }
+  .art svg { width: 92px; }
+  .res-head h2 { font-size: 1.3rem; }
+}
 @media (prefers-reduced-motion: no-preference) {
-  .chip { transition: background .12s, border-color .12s; }
+  .mach, .seg, .btn { transition: background .12s, border-color .12s, color .12s; }
 }
 </style>
 
-<main class="wrap">
-  <header>
-    <h1>Réglages laser xTool et Atomstack</h1>
-    <p class="sub">Choisis ta machine, le matériau, l'épaisseur et l'opération. Tu obtiens la puissance, la vitesse et le nombre de passes. Après un essai, tu peux corriger la valeur et générer une plaque de test.</p>
+<main class="wrap" id="app" data-machine="m1">
+  <header class="hero">
+    <div>
+      <h1>Réglages laser</h1>
+      <p class="sub">Choisis ta machine et ton matériau : tu lis la puissance, la vitesse et le nombre de passes.</p>
+    </div>
+    <svg class="hero-art" viewBox="0 0 150 90" aria-hidden="true">
+      <rect x="8" y="48" width="134" height="32" rx="5" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1.5"/>
+      <path d="M20 58H130M20 66H130M20 74H130" stroke="var(--wood-line)" opacity=".5" fill="none"/>
+      <ellipse cx="75" cy="64" rx="31" ry="9" fill="none" stroke="var(--kerf)" stroke-width="2.6" stroke-dasharray="56 6" stroke-linecap="round"/>
+      <polygon points="67,21 83,21 76.5,64 73.5,64" fill="var(--accent)" opacity=".45"/>
+      <rect x="60" y="6" width="30" height="16" rx="5" fill="var(--accent)"/>
+      <circle cx="75" cy="64" r="3" fill="var(--accent)"/>
+      <path d="M84 59l6-6M66 59l-6-6M75 56v-8" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
   </header>
 
-  <section aria-labelledby="l-mach">
-    <span class="step-label" id="l-mach">1 · Machine</span>
-    <div class="chips" id="machines"></div>
+  <section aria-label="Machine">
+    <div class="machines" id="machines"></div>
     <p class="machine-info" id="m-info"></p>
   </section>
 
-  <section aria-labelledby="l-mat">
-    <span class="step-label" id="l-mat">2 · Matériau</span>
-    <div id="materials"></div>
-  </section>
-
-  <section id="thick-section" aria-labelledby="l-thick">
-    <span class="step-label" id="l-thick">3 · Épaisseur (mm)</span>
-    <div class="thick" id="thick"></div>
-  </section>
-
-  <section aria-labelledby="l-mode">
-    <span class="step-label" id="l-mode">4 · Opération</span>
-    <div class="modes" id="modes"></div>
+  <section class="picker" aria-label="Matériau, épaisseur et opération">
+    <label class="field" for="sel-mat">Matériau<span class="sel"><select id="sel-mat"></select></span></label>
+    <label class="field" id="f-thick" for="sel-t">Épaisseur<span class="sel"><select id="sel-t"></select></span></label>
+    <div class="field wide" role="group" aria-labelledby="l-mode"><span id="l-mode">Opération</span><div class="modes" id="modes"></div></div>
   </section>
 
   <section class="panel" aria-live="polite">
-    <div class="panel-head">
-      <h2 id="r-title">Contreplaqué tilleul</h2>
-      <span class="tag" id="r-tag">3 mm · Découpe</span>
+    <div class="res-head">
+      <div class="art" id="r-art"></div>
+      <div>
+        <h2 id="r-title">Contreplaqué tilleul</h2>
+        <span class="tag" id="r-tag"></span>
+      </div>
     </div>
     <div class="readout">
       <div class="read"><span>Puissance</span><b id="r-power">100</b><em>%</em></div>
@@ -211,7 +264,7 @@ tr.lim td { color: var(--warn); }
     <p class="src" id="r-src"></p>
     <div id="r-alerts"></div>
     <div class="section-fig" id="fig-box">
-      <svg id="fig" width="190" height="130" viewBox="0 0 190 130" role="img" aria-label="Coupe du matériau"></svg>
+      <svg id="fig" width="200" height="130" viewBox="0 0 200 130" role="img" aria-label="Coupe du matériau sous le faisceau laser"></svg>
       <p id="fig-cap"></p>
     </div>
     <ul class="notes" id="r-notes"></ul>
@@ -246,11 +299,33 @@ tr.lim td { color: var(--warn); }
     </div>
   </details>
 
-  <section class="panel" id="gen" aria-labelledby="g-h">
-    <div class="panel-head">
-      <h2 id="g-h">Tester d'autres valeurs</h2>
-      <span class="tag" id="g-tag"></span>
+  <section class="rules" aria-label="Consignes de sécurité">
+    <div class="rule-box">
+      <h3>À chaque découpe</h3>
+      <ul>
+        <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="9" rx="2"/><path d="M5 11l2-6h10l2 6"/></svg><span>Capot fermé, ou lunettes de protection si la machine est ouverte.</span></li>
+        <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12c0-4 2-6 4-6M12 12c4 0 6 2 6 4M12 12c0 4-2 6-4 6M12 12c-4 0-6-2-6-4"/></svg><span>Extraction de fumées allumée.</span></li>
+        <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10a3 3 0 1 0-3-3M3 13h14a3 3 0 1 1-3 3M3 18h7"/></svg><span>Jet d'air au maximum pour couper.</span></li>
+        <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Ne quitte jamais la machine pendant le travail.</span></li>
+        <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="9" width="8" height="12" rx="2"/><path d="M12 9V5h4M16 5l3 2M8 4h4"/></svg><span>Extincteur à portée. Laisse refroidir avant de toucher.</span></li>
+        <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.6"/><circle cx="15" cy="9" r="1.6"/><circle cx="9" cy="15" r="1.6"/><circle cx="15" cy="15" r="1.6"/></svg><span>Fais un test sur une chute avant la vraie pièce.</span></li>
+      </ul>
     </div>
+    <div class="rule-box no">
+      <h3><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg> Interdit au laser</h3>
+      <ul>
+        <li>PVC, vinyle, simili cuir (gaz de chlore, toxique).</li>
+        <li>Polycarbonate, ABS, polystyrène, mousses.</li>
+        <li>Fibre de verre, fibre de carbone.</li>
+        <li>Cuir à tannage chrome, matériau inconnu.</li>
+      </ul>
+    </div>
+  </section>
+
+  <details id="gen">
+    <summary>Tester d'autres valeurs (cercles et disques d'essai)</summary>
+    <div class="body">
+      <span class="tag" id="g-tag"></span>
     <ol class="steps">
       <li>Règle la grille ci-dessous (par défaut, elle encadre la valeur actuelle).</li>
       <li>Télécharge le fichier, pose une chute du même matériau et lance l'essai.</li>
@@ -306,11 +381,13 @@ tr.lim td { color: var(--warn); }
         </details>
       </div>
     </div>
-  </section>
+
+    </div>
+  </details>
 
   <details id="mine">
     <summary>Valeurs testées et partage</summary>
-    <div style="display:flex;flex-direction:column;gap:14px;padding-bottom:16px">
+    <div class="body">
       <p class="legend" id="mine-intro"></p>
       <ul class="mine-list" id="mine-list"></ul>
       <div class="actions">
@@ -328,34 +405,10 @@ tr.lim td { color: var(--warn); }
     </div>
   </details>
 
-  <section aria-labelledby="l-rules">
-    <span class="step-label" id="l-rules">Avant de lancer</span>
-    <div class="rules">
-      <div class="rule-box">
-        <h3>À chaque découpe</h3>
-        <ul>
-          <li>Couvercle fermé, extraction de fumées allumée.</li>
-          <li>Jet d'air au maximum pour couper.</li>
-          <li>Ne quitte jamais la machine pendant le travail.</li>
-          <li>Un extincteur à portée, la machine refroidie avant de rouvrir.</li>
-          <li>Fais un test sur une chute avant la vraie pièce.</li>
-        </ul>
-      </div>
-      <div class="rule-box no">
-        <h3>Interdit au laser</h3>
-        <ul>
-          <li>PVC, vinyle, simili cuir (gaz de chlore, toxique).</li>
-          <li>Polycarbonate, ABS, polystyrène, mousses.</li>
-          <li>Fibre de verre, fibre de carbone.</li>
-          <li>Cuir à tannage chrome, matériau inconnu.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="sources">
-    <span class="step-label">D'où viennent les valeurs</span>
-    <ul>
+  <details class="sources">
+    <summary>D'où viennent les valeurs</summary>
+    <div class="body">
+      <ul>
       <li>Valeurs « xTool » (machine xTool M1 uniquement) : contreplaqué tilleul 3 mm et 6 mm, acrylique noir 3 mm, d'après la bibliothèque de matériaux xTool reprise par <a href="https://www.machinesformakers.com/laser-settings/m1/1-8-3mm-basswood-plywood" target="_blank" rel="noopener">Machines for Makers</a> (<a href="https://www.machinesformakers.com/laser-settings/m1/1-4-6mm-basswood-plywood" target="_blank" rel="noopener">6 mm</a>, <a href="https://www.machinesformakers.com/laser-settings/m1/1-8-3mm-black-acrylic" target="_blank" rel="noopener">acrylique</a>).</li>
       <li>Épaisseur maximale : xTool indique 8 mm de tilleul pour la M1 10 W en laboratoire (<a href="https://support.xtool.com/article/1912" target="_blank" rel="noopener">support xTool</a>).</li>
       <li>Atomstack A10 Pro : la fiche <a href="https://atomstack.com/products/atomstack-a10-pro-v2-laser-engraver" target="_blank" rel="noopener">Atomstack</a> indique 10 W de puissance optique pour 50 W en entrée. Je n'ai pas trouvé de tableau de réglages fiable. Les valeurs reprennent celles de la M1 (même classe 10 W) et restent des estimations. Un utilisateur sur le <a href="https://forum.lightburnsoftware.com/t/atomstack-s10-pro-x7-pro-settings/59353" target="_blank" rel="noopener">forum LightBurn</a> rapporte 11 passes à 3 mm/s et 100 % pour un contreplaqué de feuillu d'environ 5 mm avec une diode 10 W : les épaisseurs fortes demanderont sans doute plus de passes que le tableau.</li>
@@ -363,7 +416,8 @@ tr.lim td { color: var(--warn); }
       <li>Les valeurs « testées » sont celles que vous avez enregistrées vous-mêmes avec le formulaire. Elles passent avant les autres.</li>
       <li>Bibliothèque officielle xTool complète : xTool Studio ou <a href="https://www.atomm.com/materials-lab/official" target="_blank" rel="noopener">le site xTool</a>.</li>
     </ul>
-  </section>
+    </div>
+  </details>
 
   <p class="foot">Valeurs pour une diode 10 W, point focal réglé et jet d'air actif. Elles varient selon le lot de bois, l'humidité, la colle du contreplaqué et l'état de la lentille.</p>
 </main>
@@ -378,9 +432,9 @@ tr.lim td { color: var(--warn); }
   const today = () => new Date().toISOString().slice(0, 10);
 
   const MACHINES = [
-    { id: 'm1', name: 'xTool M1 10 W', short: 'xTool M1', gcode: false,
+    { id: 'm1', name: 'xTool M1 10 W', short: 'xTool M1', sub: 'Fermée · xTool Studio', gcode: false,
       info: 'Diode 10 W, logiciel xTool Studio. Les vitesses sont en mm/s. Pour les essais, importe le SVG dans xTool Studio.' },
-    { id: 'a10', name: 'Atomstack A10 Pro', short: 'A10 Pro', gcode: true,
+    { id: 'a10', name: 'Atomstack A10 Pro', short: 'A10 Pro', sub: 'Cadre ouvert · LaserGRBL, LightBurn', gcode: true,
       info: 'Diode 10 W optique (50 W électrique), logiciels LaserGRBL, LightBurn ou AtomStack Studio. Les vitesses sont en mm/s ici ; LaserGRBL les compte en mm/min (multiplie par 60).' }
   ];
 
@@ -508,54 +562,104 @@ tr.lim td { color: var(--warn); }
     if (ts.length && !ts.includes(Number(state.thick))) state.thick = ts.includes(3) ? 3 : ts[0];
   }
 
+  const MACH_ART = {
+    m1: '<svg viewBox="0 0 96 56" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="24" width="80" height="28" rx="6"/><path d="M15 24l7-14h52l7 14"/><path d="M48 10v14" opacity=".5"/><path d="M26 36h30M26 43h18" opacity=".6"/><circle cx="76" cy="40" r="3.5"/></svg>',
+    a10: '<svg viewBox="0 0 96 56" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 52V6M84 52V6"/><path d="M5 52h86"/><rect x="12" y="14" width="72" height="7" rx="2"/><rect x="39" y="21" width="18" height="12" rx="3"/><path d="M48 33v12" stroke-dasharray="2.5 3.5"/><path d="M30 52v-4h36v4" opacity=".6"/></svg>'
+  };
   function renderMachines() {
     $('machines').innerHTML = MACHINES.map(x =>
-      `<button type="button" class="chip" data-mach="${x.id}" aria-pressed="${state.machine === x.id}">${esc(x.name)}</button>`).join('');
+      `<button type="button" class="mach" data-mach="${x.id}" aria-pressed="${state.machine === x.id}">${MACH_ART[x.id]}<span class="mach-name">${esc(x.name)}</span><span class="mach-sub">${esc(x.sub)}</span></button>`).join('');
+    $('app').dataset.machine = state.machine;
     $('m-info').textContent = machine().info;
   }
   function renderMaterials() {
     const groups = [];
     M.forEach(m => { if (!groups.includes(m.group)) groups.push(m.group); });
-    $('materials').innerHTML = groups.map(g =>
-      `<div class="group-title">${esc(g)}</div><div class="chips">` +
-      M.filter(m => m.group === g).map(m =>
-        `<button type="button" class="chip${m.star ? ' star' : ''}" data-mat="${m.id}" aria-pressed="${state.mat === m.id}">${esc(m.name)}</button>`).join('') +
-      '</div>').join('');
+    $('sel-mat').innerHTML = groups.map(g =>
+      `<optgroup label="${esc(g)}">` +
+      M.filter(m => m.group === g).map(m => `<option value="${m.id}"${state.mat === m.id ? ' selected' : ''}>${esc(m.name)}</option>`).join('') +
+      '</optgroup>').join('');
   }
   function renderThickness() {
     const m = byId(state.mat), ts = thicknesses(m);
     const show = ts.length > 0 && state.mode === 'cut';
-    $('thick-section').hidden = !show;
+    $('f-thick').hidden = !show;
     if (!show) return;
     const all = m.id === 'tilleul' ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] : ts;
-    $('thick').innerHTML = all.map(t =>
-      `<button type="button" class="chip" data-t="${t}" aria-pressed="${Number(state.thick) === t}">${fmt(t)}</button>`).join('');
+    $('sel-t').innerHTML = all.map(t => `<option value="${t}"${Number(state.thick) === t ? ' selected' : ''}>${fmt(t)} mm</option>`).join('');
   }
+  const MODE_ICON = {
+    cut: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7M14 8h7M3 16h7M14 16h7"/><path d="M12 3v18" stroke-dasharray="2.5 2.5"/></svg>',
+    engrave: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 12h8M8 15h8"/></svg>',
+    score: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M12 7v5" stroke-width="3"/></svg>'
+  };
   function renderModes() {
     const m = byId(state.mat);
     $('modes').innerHTML = MODES.map(md => {
       const off = md.id === 'cut' && m.onlyEngrave;
-      return `<button type="button" class="chip" data-mode="${md.id}" aria-pressed="${state.mode === md.id}"${off ? ' disabled' : ''}>${md.label}</button>`;
+      return `<button type="button" class="seg" data-mode="${md.id}" aria-pressed="${state.mode === md.id}"${off ? ' disabled' : ''}>${MODE_ICON[md.id]}<span>${md.label}</span></button>`;
     }).join('');
+  }
+
+  /* ---------- illustration du matériau ---------- */
+  const rnd = i => ((i * 9301 + 49297) % 233280) / 233280;
+  const dots = (n, color, rmin, rmax, op) => Array.from({ length: n }, (_, i) =>
+    `<circle cx="${(rnd(i + 1) * 120).toFixed(1)}" cy="${(rnd(i + 91) * 76).toFixed(1)}" r="${(rmin + rnd(i + 7) * (rmax - rmin)).toFixed(1)}" fill="${color}" opacity="${op}"/>`).join('');
+  const hlines = (n, y0, step, color, op, w) => Array.from({ length: n }, (_, i) =>
+    `<path d="M0 ${y0 + i * step}H120" stroke="${color}" stroke-width="${w}" opacity="${op}"/>`).join('');
+  const grain = (base, line, n) => `<rect width="120" height="76" fill="${base}"/>` + Array.from({ length: n }, (_, i) => {
+    const y = 6 + i * (66 / n);
+    return `<path d="M0 ${y.toFixed(1)}C30 ${(y - 6).toFixed(1)} 70 ${(y + 6).toFixed(1)} 120 ${y.toFixed(1)}" fill="none" stroke="${line}" stroke-width="1.1" opacity=".5"/>`;
+  }).join('');
+  function matArt(m) {
+    let b = '';
+    switch (m.id) {
+      case 'tilleul': b = grain('#e8d2a4', '#b8956a', 9) + '<ellipse cx="84" cy="40" rx="10" ry="5" fill="none" stroke="#b8956a" opacity=".5"/>'; break;
+      case 'bouleau': b = grain('#eddaaf', '#c4a174', 12); break;
+      case 'peuplier': b = grain('#dfc89b', '#a98a5e', 7) + '<ellipse cx="34" cy="48" rx="12" ry="6" fill="none" stroke="#a98a5e" opacity=".5"/>'; break;
+      case 'balsa': b = grain('#f2e5c0', '#d8c28f', 14); break;
+      case 'mdf': b = '<rect width="120" height="76" fill="#a98764"/>' + dots(170, '#8a6a49', .5, 1.2, .7) + dots(70, '#c4a37e', .4, 1, .6); break;
+      case 'liege': b = '<rect width="120" height="76" fill="#c99d66"/>' + dots(120, '#9c6f3b', 1, 2.6, .55) + dots(60, '#e0b883', .8, 1.8, .6); break;
+      case 'carton': b = '<rect width="120" height="76" fill="#cfa971"/><rect width="120" height="14" fill="#dcb987"/><rect y="62" width="120" height="14" fill="#dcb987"/><path d="M0 38q5 -16 10 0' + ' t10 0'.repeat(11) + '" fill="none" stroke="#a67c45" stroke-width="2.4"/><path d="M0 14H120M0 62H120" stroke="#a67c45" stroke-width="1.2"/>'; break;
+      case 'papier': b = '<rect width="120" height="76" fill="#f6f2e8"/>' + [0, 1, 2, 3, 4].map(i => `<path d="M14 ${20 + i * 11}H${86 - (i % 2) * 18}" stroke="#c9c3b2" stroke-width="2" stroke-linecap="round"/>`).join('') + '<path d="M120 0V30L90 0Z" fill="#e6e0cf"/><path d="M90 0L120 30" stroke="#cfc8b4"/>'; break;
+      case 'cuir': b = '<rect width="120" height="76" fill="#8b5a36"/>' + dots(90, '#6e4527', .5, 1.1, .5) + '<rect x="7" y="7" width="106" height="62" rx="6" fill="none" stroke="#e4c9a0" stroke-width="1.8" stroke-dasharray="5 4"/>'; break;
+      case 'feutre': b = '<rect width="120" height="76" fill="#8795a3"/>' + Array.from({ length: 240 }, (_, i) => {
+        const x = rnd(i + 3) * 120, y = rnd(i + 130) * 76, dx = (rnd(i + 11) - .5) * 6, dy = (rnd(i + 17) - .5) * 6;
+        return `<path d="M${x.toFixed(1)} ${y.toFixed(1)}l${dx.toFixed(1)} ${dy.toFixed(1)}" stroke="${i % 2 ? '#a9b5c0' : '#6d7b89'}" stroke-width="1" opacity=".55"/>`;
+      }).join(''); break;
+      case 'acrylique': b = '<rect width="120" height="76" fill="#1b1d22"/><polygon points="0,76 76,0 96,0 20,76" fill="#fff" opacity=".12"/><polygon points="50,76 120,6 120,22 66,76" fill="#fff" opacity=".07"/>'; break;
+      case 'ardoise': b = '<rect width="120" height="76" fill="#4b525a"/>' + hlines(7, 8, 10, '#6a727b', .55, 1.4) + hlines(7, 13, 10, '#3a4047', .5, 1); break;
+      case 'alu': b = '<rect width="120" height="76" fill="#9db0c7"/>' + hlines(26, 2, 3, '#ffffff', .22, 1) + '<circle cx="98" cy="22" r="6" fill="none" stroke="#5d7798" stroke-width="2" opacity=".7"/><path d="M14 52H70M14 60H48" stroke="#5d7798" stroke-width="3" stroke-linecap="round" opacity=".55"/>'; break;
+      case 'ceramique': b = '<rect width="120" height="76" fill="#f1f1ec"/><path d="M0 38H120M60 0V76" stroke="#d4d4cc" stroke-width="1.5"/><path d="M60 10L92 38L60 66L28 38Z" fill="none" stroke="#2f5fa8" stroke-width="2.6"/><path d="M60 24L78 38L60 52L42 38Z" fill="#2f5fa8" opacity=".85"/>'; break;
+      case 'acryl-dos': b = '<rect width="120" height="76" fill="url(#chk)"/><rect x="48" width="72" height="76" fill="#15171b"/><circle cx="84" cy="38" r="17" fill="url(#chk)"/><path d="M0 76L40 0H56L16 76Z" fill="#fff" opacity=".28"/>'; break;
+      default: b = '<rect width="120" height="76" fill="#d8dde2"/>';
+    }
+    return '<svg viewBox="0 0 120 76" role="img" aria-label="Aperçu : ' + esc(m.name) + '"><defs><clipPath id="ca"><rect width="120" height="76" rx="10"/></clipPath>' +
+      '<pattern id="chk" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#e9edf1"/><rect width="6" height="6" fill="#cdd5dc"/><rect x="6" y="6" width="6" height="6" fill="#cdd5dc"/></pattern></defs>' +
+      '<g clip-path="url(#ca)">' + b + '</g><rect width="120" height="76" rx="10" fill="none" stroke="var(--line)" stroke-width="1.5"/></svg>';
   }
 
   /* ---------- figure en coupe ---------- */
   function fig(m, passes, t, mode) {
-    const svg = $('fig'), h = Math.max(t * 10, 6), top = 14, left = 20, w = 150, W = 190, H = h + top + 16;
-    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    const svg = $('fig'), W = 200, left = 22, w = 156, top = 40, h = Math.max(t * 10, 8), H = top + h + 18, cx = left + w / 2;
+    const isWood = m.group === 'Bois';
+    const fill = isWood ? 'var(--wood)' : 'var(--line)', edge = isWood ? 'var(--wood-line)' : 'var(--muted)';
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width', W);
     svg.setAttribute('height', H);
-    let s = `<rect x="${left}" y="${top}" width="${w}" height="${h}" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1"/>`;
-    if (m.plies) for (let y = 1; y < t; y++) s += `<line x1="${left}" x2="${left + w}" y1="${top + y * 10}" y2="${top + y * 10}" stroke="var(--wood-line)" stroke-width=".6" opacity=".7"/>`;
-    const cx = left + w / 2;
+    let s = `<polygon points="${cx - 9},20 ${cx + 9},20 ${cx + 1.5},${top} ${cx - 1.5},${top}" fill="var(--accent)" opacity=".5"/>` +
+      `<rect x="${cx - 15}" y="3" width="30" height="14" rx="4" fill="var(--accent)"/><rect x="${cx - 5}" y="17" width="10" height="4" rx="1" fill="var(--accent)"/>`;
+    s += `<rect x="${left}" y="${top}" width="${w}" height="${h}" fill="${fill}" stroke="${edge}" stroke-width="1"/>`;
+    if (m.plies) for (let y = 1; y < t; y++) s += `<line x1="${left}" x2="${left + w}" y1="${top + y * 10}" y2="${top + y * 10}" stroke="${edge}" stroke-width=".6" opacity=".7"/>`;
     if (mode === 'cut') {
       for (let k = 0; k < passes; k++) {
         const y0 = top + h * k / passes, y1 = top + h * (k + 1) / passes;
         s += `<rect x="${cx - 3}" y="${y0}" width="6" height="${y1 - y0}" fill="var(--kerf)" opacity="${0.55 + 0.45 * (k + 1) / passes}"/>`;
       }
-      s += `<text x="${left + w + 4}" y="${top + 10}" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">0</text>`;
+      s += `<text x="${left + w + 4}" y="${top + 9}" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">0</text>`;
       s += `<text x="${left + w + 4}" y="${top + h}" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">${fmt(t)}</text>`;
     } else {
-      s += `<rect x="${cx - 30}" y="${top}" width="${mode === 'engrave' ? 60 : 3}" height="${mode === 'engrave' ? 3 : 1.5}" fill="var(--kerf)"/>`;
+      s += `<rect x="${cx - 30}" y="${top}" width="${mode === 'engrave' ? 60 : 3}" height="${mode === 'engrave' ? 3 : 1.6}" fill="var(--kerf)"/>`;
     }
     svg.innerHTML = s;
   }
@@ -598,6 +702,7 @@ tr.lim td { color: var(--warn); }
     if (m.mdf) alerts = '<div class="alert danger"><b>Extraction obligatoire.</b> Le MDF dégage des fumées de colle. Ne lance pas la machine sans aspiration.</div>' + alerts;
 
     $('r-title').textContent = m.name;
+    $('r-art').innerHTML = matArt(m);
     $('r-tag').textContent = machine().short + ' · ' + (mode === 'cut' ? fmt(t) + ' mm · ' : '') + modeLabel(mode);
     $('r-power').textContent = fmt(v.p);
     $('r-speed').textContent = fmt(v.s);
@@ -970,10 +1075,10 @@ tr.lim td { color: var(--warn); }
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     if (b.dataset.mach) { state.machine = b.dataset.mach; $('edit').hidden = true; renderAll(); }
-    else if (b.dataset.mat) { state.mat = b.dataset.mat; $('edit').hidden = true; renderAll(); }
-    else if (b.dataset.t) { state.thick = Number(b.dataset.t); $('edit').hidden = true; renderThickness(); render(); genDefaults(); genRender(); }
     else if (b.dataset.mode) { state.mode = b.dataset.mode; $('edit').hidden = true; renderAll(); }
   });
+  $('sel-mat').addEventListener('change', e => { state.mat = e.target.value; $('edit').hidden = true; renderAll(); });
+  $('sel-t').addEventListener('change', e => { state.thick = Number(e.target.value); $('edit').hidden = true; render(); genDefaults(); genRender(); });
 
   $('copy').addEventListener('click', () => {
     const m = byId(state.mat);
