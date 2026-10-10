@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qui a saboté l'IA ? — Enquête</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#12101E;--bg2:#0C0A16;--panel:#1C1830;--panel2:#241F3D;--text:#F1EDFB;--muted:#A79FC4;--mint:#6EE7B7;--coral:#FB7185;--amber:#FBBF24;--line:#352E57}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.5 Inter,system-ui,sans-serif;min-height:100vh}
+h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;margin:0}
+.tape{height:12px;background:repeating-linear-gradient(-45deg,var(--amber) 0 18px,#1a1626 18px 36px)}
+header{padding:14px 20px 8px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header h1{font-size:26px;flex:1;min-width:240px}
+header h1 small{display:block;font:500 13px Inter;color:var(--muted);letter-spacing:.04em}
+.who{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:14px}
+.who input{background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:6px 10px;font:inherit;width:150px}
+.btn{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font:600 14px Inter;cursor:pointer}
+.btn:hover{border-color:var(--amber)}
+.btn.pri{background:var(--amber);color:#1b1500;border-color:var(--amber)}
+.btn.pri:hover{filter:brightness(1.1)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+nav{display:flex;gap:6px;padding:0 20px;flex-wrap:wrap}
+nav button{background:transparent;border:1px solid var(--line);border-bottom:none;color:var(--muted);padding:9px 16px;border-radius:10px 10px 0 0;font:600 14px Inter;cursor:pointer}
+nav button.on{background:var(--panel);color:var(--amber);border-color:var(--amber)}
+.layout{display:grid;grid-template-columns:1fr 270px;gap:16px;padding:0 20px 30px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.main{background:var(--panel);border:1px solid var(--line);border-radius:0 14px 14px 14px;padding:18px 20px;min-height:460px}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;position:sticky;top:10px}
+.side h3{font-size:16px;color:var(--amber);margin-bottom:6px}
+.side h4{margin:12px 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.side ul{margin:0;padding-left:18px;font-size:13px}
+.side li{margin:3px 0}
+.hyp{font-size:13px;margin:3px 0}
+.ok{color:var(--mint)}.ko{color:var(--coral)}.warn{color:var(--amber)}.muted{color:var(--muted)}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+.story{border-left:4px solid var(--amber);background:var(--bg2);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.photo{background:#fff;padding:6px 6px 8px;border-radius:4px;box-shadow:0 6px 14px #0008;color:#222;text-align:center;font-size:12px;position:relative}
+.photo:nth-child(odd){transform:rotate(-1.5deg)}.photo:nth-child(even){transform:rotate(1.2deg)}
+.photo .im{background:linear-gradient(160deg,#cfe3f2,#f2e6d0);border-radius:2px;line-height:0}
+.photo svg{width:100%;height:auto}
+.photo b{display:block;margin-top:4px}
+.photo.bad{outline:3px solid var(--coral)}.photo.good{outline:3px solid var(--mint)}
+.photo.flag{outline:4px solid var(--amber)}
+.photo.click{cursor:pointer}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+td .mini{width:54px;display:inline-block;line-height:0;background:#e6edf5;border-radius:4px}
+.opts{display:grid;gap:8px;margin-top:8px}
+.opt{text-align:left;background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer}
+.opt:hover{border-color:var(--amber)}
+.fb{margin-top:8px;padding:8px 12px;border-radius:8px;background:#fb718522;border:1px solid var(--coral);font-size:14px}
+.fb.good{background:#6ee7b722;border-color:var(--mint)}
+.pieces{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.pc{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;text-align:left;color:var(--text);font:inherit}
+.pc:hover{border-color:var(--amber)}
+.pc.done{border-color:var(--mint)}
+.pc b{display:block;font-family:'Space Grotesk';font-size:16px}
+.sus{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.sus .card{margin:0}
+.sus .hd{display:flex;gap:10px;align-items:center}
+svg.av{width:60px;height:60px;border-radius:50%;background:var(--bg2);flex:none;display:block}
+.tag{display:inline-block;font-size:11px;border-radius:99px;padding:2px 8px;border:1px solid var(--line);color:var(--muted)}
+.seg{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.seg button{font-size:12px;padding:4px 8px}
+.seg button.on{background:var(--amber);color:#1b1500}
+.bar{height:22px;border-radius:5px;position:relative;background:var(--bg2);margin:3px 0;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0}
+.bar span{position:absolute;left:8px;top:1px;font:500 12px 'JetBrains Mono',monospace;color:#fff;mix-blend-mode:normal;text-shadow:0 0 3px #000}
+.mono{font-family:'JetBrains Mono',monospace;font-size:14px}
+.calc{background:var(--bg2);border-radius:10px;padding:10px 14px;margin-top:8px}
+input[type=range]{width:100%;accent-color:var(--amber)}
+.pr{display:block;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:6px 0;cursor:pointer}
+.pr.on{border-color:var(--amber);background:#fbbf2418}
+.pr input{margin-right:8px}
+.stamp{display:inline-block;border:5px solid var(--mint);color:var(--mint);padding:4px 18px;font:700 30px 'Space Grotesk';transform:rotate(-6deg);border-radius:10px;letter-spacing:.06em}
+.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow:auto;z-index:50}
+.modal>div{background:var(--panel);border:1px solid var(--amber);border-radius:14px;padding:20px;max-width:760px;width:100%}
+.cert{background:#fffdf5;color:#222;border:6px double #b8860b;padding:24px;text-align:center;border-radius:6px;margin:14px 0}
+.cert h2{color:#7a5a00;font-size:28px}
+#cert{display:none}
+@media print{body>*:not(#certPrint){display:none!important}#certPrint{display:block!important}body{background:#fff}}
+#certPrint{display:none}
+</style>
+</head>
+<body>
+<div class="tape"></div>
+<header>
+  <h1>🔎 Qui a saboté l'IA ?<small>ENQUÊTE · COLLÈGE DES TILLEULS · MARDI 8H40</small></h1>
+  <label class="who">Inspecteur·rice <input id="nameIn" placeholder="Ton nom" maxlength="30"></label>
+  <button class="btn" data-action="teacher">👩‍🏫 Enseignant</button>
+</header>
+<nav id="tabs"></nav>
+<div class="layout"><div class="main" id="main"></div><aside class="side" id="side"></aside></div>
+<div id="modal"></div>
+<div id="certPrint"></div>
+
+<script>
+/* ---------- Cerveau de Pixel ---------- */
+const W_OLD={ears:3.0,whisk:2.0,bias:-3.0}, W_NEW={ears:-4.0,whisk:2.0,bias:-3.0};
+const sig=x=>1/(1+Math.exp(-x));
+function predict(a,w){const s=w.ears*a.ears+w.whisk*a.whisk+w.bias;const p=sig(s);return{score:s,p,label:s>0?'chat':'chien',conf:Math.max(p,1-p)}}
+const pct=x=>Math.round(x*100)+' %';
+const fm=(x)=>(x>=0?'+':'−')+Math.abs(x).toFixed(2).replace('.',',');
+
+/* ---------- Dessins d'animaux ---------- */
+const FUR={orange:'#E8A25B',gris:'#A7B0C0',noir:'#34323F',blanc:'#F1EDFB',brun:'#8B5E3C',beige:'#D9BE8C',roux:'#C8703A',tigre:'#C9A06A',husky:'#C9D2E0'};
+function animalSVG(sp,fur,ears,whisk){
+  const c=FUR[fur]||fur, dark='#2b2433', pointy=ears>0.5;
+  let s='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">';
+  if(pointy){s+=`<polygon points="20,45 22,8 46,28" fill="${c}"/><polygon points="80,45 78,8 54,28" fill="${c}"/><polygon points="25,38 25,18 38,29" fill="#e9a8b0"/><polygon points="75,38 75,18 62,29" fill="#e9a8b0"/>`}
+  else{s+=`<ellipse cx="17" cy="48" rx="10" ry="22" fill="${c}" transform="rotate(12 17 48)" stroke="#0003"/><ellipse cx="83" cy="48" rx="10" ry="22" fill="${c}" transform="rotate(-12 83 48)" stroke="#0003"/>`}
+  s+=`<ellipse cx="50" cy="55" rx="33" ry="30" fill="${c}"/>`;
+  s+=`<ellipse cx="38" cy="48" rx="4.5" ry="5.5" fill="${dark}"/><ellipse cx="62" cy="48" rx="4.5" ry="5.5" fill="${dark}"/><circle cx="39.5" cy="46" r="1.5" fill="#fff"/><circle cx="63.5" cy="46" r="1.5" fill="#fff"/>`;
+  if(sp==='chat'){
+    s+=`<polygon points="46,59 54,59 50,64" fill="#d27a86"/><path d="M50 64 q-5 6 -10 3 M50 64 q5 6 10 3" stroke="${dark}" fill="none" stroke-width="1.6"/>`;
+    if(whisk>0.5)s+=`<g stroke="${dark}" stroke-width="1.2"><line x1="14" y1="58" x2="38" y2="62"/><line x1="14" y1="68" x2="38" y2="66"/><line x1="86" y1="58" x2="62" y2="62"/><line x1="86" y1="68" x2="62" y2="66"/></g>`;
+  }else{
+    s+=`<ellipse cx="50" cy="66" rx="16" ry="12" fill="#f3e6d3"/><ellipse cx="50" cy="60" rx="6" ry="4.5" fill="${dark}"/><path d="M50 64 v5 M50 69 q-6 5 -11 1 M50 69 q6 5 11 1" stroke="${dark}" fill="none" stroke-width="1.6"/><path d="M45 72 q5 10 10 0 z" fill="#f08090"/>`;
+  }
+  return s+'</svg>';
+}
+const photoHTML=(p,cls='',extra='',attr='')=>`<div class="photo ${cls}" ${attr}><div class="im">${animalSVG(p.sp,p.fur,p.ears,p.whisk)}</div>${extra}</div>`;
+
+/* ---------- Avatars ---------- */
+function avatar(id){
+  const sk={leo:'#e8b894',garcia:'#d9a07c',roux:'#c98f6b',sam:'#f0c5a4',ines:'#a8734f',pixel:''}[id];
+  let b='<svg class="av" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">';
+  if(id==='pixel'){return b+'<rect x="22" y="26" width="56" height="48" rx="10" fill="#6EE7B7"/><rect x="30" y="36" width="40" height="22" rx="6" fill="#12101E"/><circle cx="41" cy="47" r="5" fill="#FBBF24"/><circle cx="59" cy="47" r="5" fill="#FBBF24"/><rect x="38" y="64" width="24" height="4" rx="2" fill="#12101E"/><line x1="50" y1="26" x2="50" y2="14" stroke="#6EE7B7" stroke-width="3"/><circle cx="50" cy="12" r="4" fill="#FB7185"/></svg>'}
+  b+=`<rect y="72" width="100" height="40" fill="${{leo:'#3b6ea5',garcia:'#7a3b6e',roux:'#4d5b3a',sam:'#c4452d',ines:'#e0a72c'}[id]}"/><circle cx="50" cy="46" r="24" fill="${sk}"/>`;
+  b+='<circle cx="41" cy="46" r="2.6" fill="#222"/><circle cx="59" cy="46" r="2.6" fill="#222"/><path d="M42 58 q8 6 16 0" stroke="#222" fill="none" stroke-width="2"/>';
+  if(id==='leo')b+='<path d="M26 40 q24 -34 48 0 z" fill="#222"/><rect x="26" y="38" width="56" height="5" rx="2" fill="#222"/>';
+  if(id==='garcia')b+='<circle cx="50" cy="16" r="9" fill="#5a3320"/><path d="M27 44 q0 -28 23 -28 q23 0 23 28 q-8 -16 -23 -16 q-15 0 -23 16z" fill="#5a3320"/><g stroke="#222" fill="none" stroke-width="2"><circle cx="41" cy="46" r="7"/><circle cx="59" cy="46" r="7"/><line x1="48" y1="46" x2="52" y2="46"/></g>';
+  if(id==='roux')b+='<path d="M26 40 q24 -30 48 0 z" fill="#556b2f"/><rect x="24" y="38" width="52" height="5" rx="2" fill="#556b2f"/><path d="M38 56 q12 -6 24 0 q-12 6 -24 0" fill="#444"/>';
+  if(id==='sam')b+='<path d="M26 44 l-4 -16 l10 8 l6 -16 l8 12 l8 -14 l6 14 l10 -6 l-2 18 q-24 -20 -42 0z" fill="#3a2418"/>';
+  if(id==='ines')b+='<g fill="#2a1a12"><circle cx="30" cy="34" r="9"/><circle cx="42" cy="26" r="9"/><circle cx="58" cy="26" r="9"/><circle cx="70" cy="34" r="9"/><circle cx="50" cy="24" r="8"/></g>';
+  return b+'</svg>';
+}
+
+/* ---------- Données ---------- */
+const TESTS=[
+ {id:'T1',sp:'chat',fur:'orange',ears:.90,whisk:.90},{id:'T2',sp:'chien',fur:'brun',ears:.20,whisk:.20},
+ {id:'T3',sp:'chat',fur:'gris',ears:.85,whisk:.85},{id:'T4',sp:'chien',fur:'beige',ears:.10,whisk:.30},
+ {id:'T5',sp:'chat',fur:'noir',ears:.95,whisk:.80},{id:'T6',sp:'chien',fur:'roux',ears:.25,whisk:.10},
+ {id:'T7',sp:'chat',fur:'blanc',ears:.80,whisk:.95},{id:'T8',sp:'chien',fur:'noir',ears:.15,whisk:.25}];
+const TRAIN=[
+ {sp:'chat',fur:'tigre',ears:.9,whisk:.9},{sp:'chien',fur:'husky',ears:.8,whisk:.2},{sp:'chat',fur:'blanc',ears:.2,whisk:.9},
+ {sp:'chien',fur:'brun',ears:.1,whisk:.2},{sp:'chat',fur:'noir',ears:.9,whisk:.8},{sp:'chien',fur:'beige',ears:.2,whisk:.3},
+ {sp:'chat',fur:'orange',ears:.85,whisk:.9},{sp:'chien',fur:'noir',ears:.15,whisk:.1},{sp:'chat',fur:'gris',ears:.9,whisk:.85},
+ {sp:'chien',fur:'roux',ears:.2,whisk:.25},{sp:'chat',fur:'tigre',ears:.8,whisk:.8},{sp:'chien',fur:'blanc',ears:.1,whisk:.2}];
+
+const PIECES=[
+ {id:'p1',icon:'📄',title:'Rapport de test',sub:'Ce que Pixel a répondu ce matin'},
+ {id:'p2',icon:'🗂️',title:"Dossier d'entraînement",sub:'Les photos qui ont servi à apprendre'},
+ {id:'p3',icon:'🧠',title:'Les poids de Pixel',sub:'Son « cerveau » hier et ce matin'},
+ {id:'p4',icon:'🕵️',title:'Journal & badges',sub:"Qui était là, et quand ?"}];
+
+const QS={
+ p1:[
+  {q:"Quel est le point commun des erreurs de Pixel ?",constat:"Pixel ne se trompe que sur les CHATS (4 sur 4). Les chiens sont bien reconnus.",
+   o:[{t:"Toutes les photos de chats sont ratées",ok:1},{t:"Toutes les photos de chiens sont ratées",fb:"Regarde la colonne « Verdict » : les chiens sont tous corrects."},{t:"Les photos sombres sont ratées",fb:"Le chat noir et le chat blanc sont ratés tous les deux : ce n'est pas la lumière."},{t:"Les photos au hasard sont ratées",fb:"Ce n'est pas du hasard : il y a un motif très net."}]},
+  {q:"Pixel se trompe sur un chat en affichant « chien — 99 % ». Que peut-on en conclure ?",constat:"Une confiance de 99 % ne prouve pas que Pixel a raison : il peut se tromper avec aplomb.",
+   o:[{t:"Un % élevé ne garantit pas que la réponse soit juste",ok:1},{t:"À 99 %, Pixel a forcément raison",fb:"Faux : regarde, il est à 99 % et il se trompe !"},{t:"Le pourcentage est faux, il faut l'ignorer",fb:"Le pourcentage mesure la certitude de Pixel, pas la vérité. Il est juste… pour Pixel."},{t:"Les chats sont des chiens",fb:"Hmm… demande à un chat !"}]}],
+ p2:[
+  {q:"Le dossier d'entraînement peut-il expliquer la panne de ce matin ?",constat:"Le dossier est correct (étiquettes justes, photos variées) et n'a pas bougé depuis 3 semaines : ce n'est pas lui. Hypothèses A et B écartées.",
+   o:[{t:"Non : il est correct et identique à celui d'hier, quand Pixel marchait",ok:1},{t:"Oui : des étiquettes sont inversées",fb:"Tu as examiné les photos : toutes les étiquettes sont justes."},{t:"Oui : 40 photos, c'est trop peu",fb:"Avec ces mêmes 40 photos, Pixel a réussi 19/20 hier. Le dossier n'a pas changé depuis 3 semaines."},{t:"Oui : il y a trop de chiens",fb:"21 chats et 19 chiens : c'est bien équilibré."}]}],
+ p3:[
+  {q:"Qu'est-ce qui a changé dans le cerveau de Pixel entre hier et ce matin ?",constat:"Le poids des OREILLES POINTUES est passé de +3,00 à −4,00, modifié à 7h52 depuis le compte « club-info ».",
+   o:[{t:"Le poids des oreilles pointues : de +3,00 à −4,00",ok:1},{t:"Le poids des moustaches",fb:"Compare les barres : les moustaches sont à +2,00 les deux fois."},{t:"Le seuil de décision",fb:"Le seuil est resté à −3,00."},{t:"Rien n'a changé, Pixel a un coup de fatigue",fb:"Une IA ne se fatigue pas : si elle change de comportement, ses poids ont changé."}]}],
+ p4:[
+  {q:"Qui pouvait se trouver dans le collège à 7h52 et modifier le fichier ?",constat:"À 7h52, une seule personne avec badge dans le collège : Sam.",
+   o:[{t:"Seulement Sam",ok:1},{t:"M. Roux",fb:"Son badge de sortie indique 7h40 : il était déjà parti."},{t:"Léo",fb:"Léo a badgé à 8h05, après la modification."},{t:"Mme Garcia",fb:"Mme Garcia a badgé à 8h12, après la modification."}]}]};
+
+const HINTS={p1:"Regarde la colonne « Réel » et la colonne « Pixel » : quelles lignes sont en rouge ? Que sont ces animaux ?",
+ p2:"Une chatte aux oreilles tombantes reste une chatte, et un husky aux oreilles dressées reste un chien. Les étiquettes sont-elles vraiment fausses ?",
+ p3:"Fais glisser le bouton « Hier » / « Ce matin » et compare les barres, puis teste Pixel sur un chat.",
+ p4:"Fais glisser la barre du temps jusqu'à 7h52 et regarde le registre des badges."};
+
+const SUSP=[
+ {id:'leo',name:'Léo',role:'Stagiaire de 3ᵉ',desc:"Aide le club à étiqueter les photos. Arrive à 8h05.",say:"« J'ai juste classé les photos la semaine dernière, je n'ai touché à rien ce matin. »"},
+ {id:'garcia',name:'Mme Garcia',role:'Professeure, responsable du club',desc:"A lancé l'entraînement hier à 18h. Arrive à 8h12.",say:"« J'ai lancé l'entraînement hier soir, tout marchait. Ce matin, je suis arrivée à 8h12. »"},
+ {id:'roux',name:'M. Roux',role:'Technicien & agent de ménage',desc:"Fait le ménage tôt. A laissé un post-it avec le mot de passe du club sur un écran. Parti vers 7h40.",say:"« J'ai fini à 7h40 et je suis rentré chez moi. J'avoue pour le post-it… »"},
+ {id:'sam',name:'Sam',role:'Élève de 5ᵉ, bidouilleur',desc:"Passionné d'informatique. Dit être arrivé en bus à 8h25.",say:"« Moi ? Je suis arrivé à 8h25 avec le bus, comme tous les jours ! »"}];
+const CONF={
+ leo:{p1:["info","Ce rapport ne dit pas qui a agi."],p2:["info","Léo a étiqueté des photos, mais le dossier est correct : ce n'est pas la cause de la panne."],p3:["info","Les poids ont été modifiés à 7h52. Léo n'était pas encore là (8h05)."],p4:["alibi","Badge à 8h05 : il n'était pas là à 7h52. Alibi solide."]},
+ garcia:{p1:["info","Ce rapport ne dit pas qui a agi."],p2:["info","Elle a lancé l'entraînement hier, avec ce même dossier : tout marchait."],p3:["info","Modification à 7h52. Elle arrive à 8h12."],p4:["alibi","Badge à 8h12 : elle n'était pas là à 7h52. Alibi solide."]},
+ roux:{p1:["info","Ce rapport ne dit pas qui a agi."],p2:["info","Aucun rapport avec le dossier d'entraînement."],p3:["info","Le post-it pouvait donner accès au compte, mais encore faut-il être présent à 7h52."],p4:["alibi","Badge de sortie à 7h40 : parti 12 minutes avant la modification."]},
+ sam:{p1:["info","Ce rapport ne dit pas qui a agi."],p2:["info","Aucun rapport avec le dossier d'entraînement."],p3:["info","Modification à 7h52 depuis « club-info »… le compte au mot de passe sur le post-it."],p4:["contra","⚠ CONTRADICTION ! Sam affirme être arrivé à 8h25, mais son badge d'entrée indique 7h46. Il était là à 7h52."]}};
+const EVENTS=[
+ {t:390,x:"M. Roux badge entrée (ménage)"},{t:460,x:"M. Roux badge sortie"},{t:466,x:"Sam badge entrée"},
+ {t:472,x:"Connexion au compte « club-info » depuis la salle info ; fichier des poids modifié",hl:1},{t:478,x:"Déconnexion du compte « club-info »"},
+ {t:485,x:"Léo badge entrée"},{t:492,x:"Mme Garcia badge entrée"},{t:520,x:"Test de Pixel lancé : 10/20"}];
+// 472 min = 7h52
+const REG=[{n:'M. Roux',a:390,b:460},{n:'Sam',a:466,b:525},{n:'Léo',a:485,b:525},{n:'Mme Garcia',a:492,b:525}];
+const hm=t=>Math.floor(t/60)+'h'+String(t%60).padStart(2,'0');
+
+const PROOFS=[
+ {id:'pr1',t:"Pixel affichait 99 % de confiance sur ses erreurs"},{id:'pr2',t:"M. Roux a laissé un post-it avec le mot de passe"},
+ {id:'pr3',t:"Le poids des oreilles pointues est passé de +3,00 à −4,00 à 7h52"},{id:'pr4',t:"À 7h52, seul Sam était présent dans le collège"},
+ {id:'pr5',t:"Sam dit être arrivé à 8h25 mais son badge indique 7h46"},{id:'pr6',t:"Léo est stagiaire, donc moins sérieux"}];
+const METHODS=[{id:'A',t:"A — Quelqu'un a inversé des étiquettes dans le dossier"},{id:'B',t:"B — Quelqu'un a retiré des photos : trop peu d'exemples"},{id:'C',t:"C — Quelqu'un a modifié un poids dans le cerveau de Pixel"}];
+
+/* ---------- État ---------- */
+const S={name:'',tab:'brief',piece:null,solved:{},q:{p1:0,p2:0,p3:0,p4:0},qOrder:{},qFb:{},hintShown:{},hints:0,flagged:[],p2fb:'',p2checked:false,p3w:'old',p3seen:{old:false,new:false},p3photo:0,p4time:390,p4scrubbed:false,confront:{},mark:{},acc:{s:null,m:null,pr:[]},accFb:'',wrongAcc:0,done:false,showTeacher:false};
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const allSolved=()=>PIECES.every(p=>S.solved[p.id]);
+const nSolved=()=>PIECES.filter(p=>S.solved[p.id]).length;
+
+/* ---------- Questions ---------- */
+function qHTML(pid){
+  const list=QS[pid], i=S.q[pid];
+  if(i>=list.length)return '';
+  const Q=list[i], key=pid+i;
+  if(!S.qOrder[key])S.qOrder[key]=shuffle(Q.o.map((_,k)=>k));
+  let h=`<div class="card"><h3>❓ Question ${list.length>1?`${i+1}/${list.length}`:''}</h3><p><b>${Q.q}</b></p><div class="opts">`;
+  S.qOrder[key].forEach(k=>{h+=`<button class="opt" data-action="ans" data-p="${pid}" data-k="${k}">${Q.o[k].t}</button>`});
+  h+='</div>';
+  if(S.qFb[key])h+=`<div class="fb">${S.qFb[key]}</div>`;
+  return h+'</div>';
+}
+function doneBanner(pid){
+  if(!S.solved[pid])return '';
+  const last=QS[pid][QS[pid].length-1];
+  return `<div class="fb good">✅ Pièce analysée ! ${QS[pid].map(q=>q.constat).join(' ')}<br><span class="muted">Ajouté à ton carnet d'enquête.</span></div>`;
+}
+function hintBtn(pid){
+  if(S.solved[pid])return '';
+  return `<div style="margin-top:10px"><button class="btn" data-action="hint" data-p="${pid}">💡 Un indice</button>${S.hintShown[pid]?`<div class="story" style="margin-top:8px">${HINTS[pid]}</div>`:''}</div>`;
+}
+
+/* ---------- Onglets ---------- */
+function tabBrief(){
+  const o=TESTS[0], a=predict(o,W_OLD);
+  return `<h2>📁 Dossier n° 1 : le mystère de Pixel</h2>
+  <div class="story"><p>Mardi, <b>8h40</b>. Le club informatique du collège possède <b>Pixel</b> 🤖, une IA qui reconnaît les <b>chats</b> et les <b>chiens</b> sur des photos : elle aide le refuge voisin à classer ses animaux.</p>
+  <p><b>Hier, 18h30</b> : test réussi, <b>19 photos sur 20</b> (95 %).<br><b>Ce matin, 8h40</b> : seulement <b class="ko">10 sur 20</b> (50 %). Pixel ne reconnaît plus <b>aucun chat</b> !</p>
+  <p>Mme Garcia soupçonne un <b>sabotage</b>. Tu es l'inspecteur·rice chargé·e de l'enquête. Trouve <b>le coupable</b>, <b>comment il a fait</b>, et <b>apporte 2 preuves</b>.</p></div>
+  <div class="card"><h3>🧠 Rappel : comment Pixel décide</h3>
+  <p>Pixel regarde deux <b>indices</b> sur la photo : les <b>oreilles pointues</b> et les <b>moustaches</b> (chacun noté de 0 à 1). Chaque indice a un <b>poids</b> :</p>
+  <ul><li>poids <b class="ok">positif</b> → l'indice pousse vers « chat » ;</li><li>poids <b class="ko">négatif</b> → l'indice pousse vers « chien » ;</li><li>plus le poids est grand (en valeur), plus l'indice compte.</li></ul>
+  <p>Il calcule : <span class="mono">oreilles × poids + moustaches × poids + seuil</span>. Si le total est <b>positif</b> → « chat », sinon → « chien ». Le <b>pourcentage de confiance</b> dit à quel point Pixel est sûr de lui.</p>
+  <p class="muted">Exemple, hier, sur un chat (oreilles 0,90 ; moustaches 0,90) :<br>
+  <span class="mono">0,90 × (+3,00) + 0,90 × (+2,00) − 3,00 = <b>${a.score.toFixed(2).replace('.',',')}</b></span> → positif → <b class="ok">chat</b> à ${pct(a.conf)}.</p></div>
+  <div class="card"><h3>🔍 Trois hypothèses possibles</h3>
+  <p><b>A</b> — des étiquettes ont été inversées dans le dossier d'entraînement.<br><b>B</b> — on a retiré des photos : trop peu d'exemples.<br><b>C</b> — quelqu'un a modifié un poids dans le cerveau de Pixel.</p>
+  <p class="muted">Examine les 4 pièces à conviction, interroge les suspects, puis rends-toi à l'onglet « Accusation ».</p></div>
+  <button class="btn pri" data-action="tab" data-t="pieces">Commencer l'enquête →</button>`;
+}
+
+function tabPieces(){
+  if(!S.piece){
+    return `<h2>🗃️ Pièces à conviction</h2><p class="muted">Examine les 4 pièces. Chaque pièce se termine par une question : réponds-y pour l'ajouter à ton carnet.</p>
+    <div class="pieces">${PIECES.map(p=>`<button class="pc ${S.solved[p.id]?'done':''}" data-action="piece" data-p="${p.id}"><span style="font-size:28px">${p.icon}</span><b>${p.title}</b><span class="muted" style="font-size:13px">${p.sub}</span><br>${S.solved[p.id]?'<span class="ok">✅ Analysée</span>':'<span class="warn">À examiner</span>'}</button>`).join('')}</div>`;
+  }
+  const back=`<button class="btn" data-action="piece" data-p="">← Toutes les pièces</button>`;
+  const P=PIECES.find(p=>p.id===S.piece);
+  return back+`<h2 style="margin-top:10px">${P.icon} ${P.title}</h2>`+({p1:piece1,p2:piece2,p3:piece3,p4:piece4}[S.piece])();
+}
+function piece1(){
+  let ok=0;
+  const rows=TESTS.map(t=>{const r=predict(t,W_NEW);const g=r.label===t.sp;if(g)ok++;
+    return `<tr><td><span class="mini">${animalSVG(t.sp,t.fur,t.ears,t.whisk)}</span></td><td>${t.sp}</td><td><b>${r.label}</b></td><td class="mono">${pct(r.conf)}</td><td>${g?'<span class="ok">✔ juste</span>':'<span class="ko">✘ erreur</span>'}</td></tr>`}).join('');
+  return `<div class="story">Rapport automatique du test de 8h40 (extrait de 8 photos). Résultat global : <b class="ko">10/20</b>.</div>
+  <table><tr><th>Photo</th><th>Réel</th><th>Pixel dit</th><th>Confiance</th><th>Verdict</th></tr>${rows}</table>
+  <p class="muted">Sur cet extrait : ${ok}/8 réussites.</p>`+qHTML('p1')+doneBanner('p1')+hintBtn('p1');
+}
+function piece2(){
+  const grid=TRAIN.map((p,i)=>photoHTML(p,'click '+(S.flagged.includes(i)?'flag':''),`<b>${p.sp==='chat'?'🐱 chat':'🐶 chien'}</b>${S.flagged.includes(i)?'<span style="color:#b45309">🚩 signalée</span>':''}`,`data-action="flag" data-i="${i}"`)).join('');
+  return `<div class="story">Le dossier contient <b>40 photos</b> (21 chats, 19 chiens). On t'en montre <b>12</b>, avec l'étiquette écrite par les humains. Dernière modification du dossier : <b>il y a 3 semaines</b>.<br>👉 Clique sur les photos dont l'étiquette te paraît <b>fausse</b>, puis valide.</div>
+  <div class="grid">${grid}</div>
+  <p><button class="btn pri" data-action="p2check">Valider mon examen</button> <span class="muted">${S.flagged.length} photo(s) signalée(s)</span></p>
+  ${S.p2fb?`<div class="fb">${S.p2fb}</div>`:''}
+  ${S.p2checked?`<div class="fb good">Aucune étiquette fausse, et les photos sont variées (chats et chiens, oreilles dressées ou tombantes, poils de toutes les couleurs).</div>`+qHTML('p2')+doneBanner('p2'):''}`+hintBtn('p2');
+}
+function p3dyn(){
+  const w=S.p3w==='old'?W_OLD:W_NEW, ph=TESTS[S.p3photo], r=predict(ph,w);
+  const bar=(lbl,v,mx,col)=>{const half=50;const wd=Math.abs(v)/mx*half;const left=v>=0?50:50-wd;return `<div class="bar"><i style="left:${left}%;width:${wd}%;background:${col}"></i><i style="left:50%;width:1px;background:#fff6"></i><span>${lbl} ${fm(v)}</span></div>`};
+  const col=v=>v>=0?'#2f9e7a':'#c4485c';
+  return `<h4 class="muted">Poids de Pixel — ${S.p3w==='old'?'HIER 18h30':'CE MATIN 8h40'}</h4>
+  ${bar('Oreilles pointues',w.ears,5,col(w.ears))}${bar('Moustaches',w.whisk,5,col(w.whisk))}${bar('Seuil',w.bias,5,col(w.bias))}
+  <p class="muted" style="font-size:13px">Dernière modification du fichier : <b class="warn">7h52</b> — compte « club-info » (partagé par tout le club).</p>
+  <h4 class="muted">Machine à rejouer : choisis une photo</h4>
+  <div class="seg">${TESTS.map((t,i)=>`<button class="btn ${i===S.p3photo?'on':''}" data-action="p3photo" data-i="${i}">${t.sp==='chat'?'🐱':'🐶'} ${t.id}</button>`).join('')}</div>
+  <div style="display:flex;gap:14px;align-items:center;margin-top:8px;flex-wrap:wrap"><div style="width:110px">${photoHTML(ph,'', `<b>${ph.sp}</b>`)}</div>
+  <div class="calc mono" style="flex:1;min-width:230px">${ph.ears.toFixed(2).replace('.',',')} × (${fm(w.ears)}) + ${ph.whisk.toFixed(2).replace('.',',')} × (${fm(w.whisk)}) + (${fm(w.bias)})<br>= <b>${r.score.toFixed(2).replace('.',',')}</b> → ${r.score>0?'positif':'négatif'}<br>Pixel dit : <b class="${r.label===ph.sp?'ok':'ko'}">${r.label}</b> à ${pct(r.conf)} ${r.label===ph.sp?'✔':'✘'}</div></div>`;
+}
+function piece3(){
+  return `<div class="story">Voici le fichier des <b>poids</b> de Pixel. Bascule entre <b>Hier</b> et <b>Ce matin</b> : tu dois voir les deux pour comparer.</div>
+  <div class="seg"><button class="btn ${S.p3w==='old'?'on':''}" data-action="p3w" data-w="old">Hier</button><button class="btn ${S.p3w==='new'?'on':''}" data-action="p3w" data-w="new">Ce matin</button></div>
+  <div id="p3dyn">${p3dyn()}</div>`
+  +((S.p3seen.old&&S.p3seen.new)?qHTML('p3')+doneBanner('p3'):`<p class="warn">🔒 Consulte les poids d'hier ET de ce matin pour débloquer la question.</p>`)+hintBtn('p3');
+}
+function p4dyn(){
+  const t=S.p4time;
+  const present=REG.filter(r=>t>=r.a&&t<=r.b);
+  return `<div class="mono" style="font-size:22px;color:var(--amber)">${hm(t)}</div>
+  <p><b>Personnes dans le collège :</b> ${present.length?present.map(p=>`<span class="tag" style="color:var(--text)">${p.n}</span>`).join(' '):'<span class="muted">personne</span>'}</p>`;
+}
+function piece4(){
+  return `<div class="story">Journal du système et registre des badges, de 6h30 à 8h45. Fais glisser la barre du temps (ou clique sur un événement).</div>
+  <input type="range" id="p4range" min="390" max="525" step="1" value="${S.p4time}">
+  <div class="muted" style="display:flex;justify-content:space-between;font-size:12px"><span>6h30</span><span>7h30</span><span>8h45</span></div>
+  <div id="p4dyn">${p4dyn()}</div>
+  <h4 class="muted">Registre des badges</h4>
+  <table><tr><th>Personne</th><th>Entrée</th><th>Sortie</th></tr>${REG.map(r=>`<tr><td>${r.n}</td><td class="mono">${hm(r.a)}</td><td class="mono">${r.n==='M. Roux'?hm(r.b):'—'}</td></tr>`).join('')}</table>
+  <h4 class="muted">Journal du système</h4>
+  <table>${EVENTS.map(e=>`<tr style="cursor:pointer;${e.hl?'background:#fbbf2418':''}" data-action="p4jump" data-t="${e.t}"><td class="mono" style="width:70px">${hm(e.t)}</td><td>${e.x}</td></tr>`).join('')}</table>`
+  +(S.p4scrubbed?qHTML('p4')+doneBanner('p4'):`<p class="warn">🔒 Déplace la barre du temps pour débloquer la question.</p>`)+hintBtn('p4');
+}
+
+function tabSuspects(){
+  const names={p1:'Rapport',p2:'Dossier',p3:'Poids',p4:'Badges'};
+  return `<h2>👥 Les suspects</h2><p class="muted">Lis leur déclaration, puis <b>confronte-les</b> à une pièce pour tester leur version. Tu peux marquer tes impressions.</p>
+  <div class="sus">${SUSP.map(s=>{const c=S.confront[s.id];return `<div class="card"><div class="hd">${avatar(s.id)}<div><h3>${s.name}</h3><span class="tag">${s.role}</span></div></div>
+  <p style="font-size:14px">${s.desc}</p><p style="font-style:italic;font-size:14px">${s.say}</p>
+  ${s.id==='sam'?`<p style="font-size:13px" class="muted">🗣 <b>Témoin Inès (élève de 5ᵉ)</b> : « Vendredi, Sam disait qu'il voulait essayer de mettre un poids négatif à Pixel, pour rigoler. »</p>`:''}
+  <div class="seg"><span class="muted" style="font-size:12px;align-self:center">Confronter avec :</span>${PIECES.map(p=>`<button class="btn" data-action="conf" data-s="${s.id}" data-p="${p.id}">${names[p.id]}</button>`).join('')}</div>
+  ${c?`<div class="fb ${CONF[s.id][c][0]==='contra'?'':CONF[s.id][c][0]==='alibi'?'good':'good'}" style="${CONF[s.id][c][0]==='info'?'background:#a79fc422;border-color:var(--muted)':''}">${CONF[s.id][c][1]}</div>`:''}
+  <div class="seg"><span class="muted" style="font-size:12px;align-self:center">Mon avis :</span>${[['innocent','😇 Innocent'],['suspect','🤔 Suspect']].map(([k,l])=>`<button class="btn ${S.mark[s.id]===k?'on':''}" data-action="mark" data-s="${s.id}" data-m="${k}">${l}</button>`).join('')}</div></div>`}).join('')}</div>`;
+}
+
+function tabAcc(){
+  if(!allSolved())return `<h2>⚖️ Accusation</h2><div class="story">🔒 L'accusation est verrouillée. Il te reste <b>${4-nSolved()}</b> pièce(s) à analyser avant de pouvoir accuser quelqu'un.</div><button class="btn pri" data-action="tab" data-t="pieces">Retour aux pièces</button>`;
+  if(S.done)return verdict();
+  return `<h2>⚖️ Accusation</h2><p class="muted">Un bon rapport d'enquête donne : le coupable, la méthode, et <b>exactement 2 preuves</b>.</p>
+  <div class="card"><h3>1. Qui est le coupable ?</h3><div class="seg">${SUSP.map(s=>`<button class="btn ${S.acc.s===s.id?'on':''}" data-action="accS" data-v="${s.id}">${s.name}</button>`).join('')}</div></div>
+  <div class="card"><h3>2. Comment a-t-il saboté Pixel ?</h3>${METHODS.map(m=>`<label class="pr ${S.acc.m===m.id?'on':''}"><input type="radio" name="meth" data-action="accM" data-v="${m.id}" ${S.acc.m===m.id?'checked':''}>${m.t}</label>`).join('')}</div>
+  <div class="card"><h3>3. Choisis tes 2 preuves</h3>${PROOFS.map(p=>`<label class="pr ${S.acc.pr.includes(p.id)?'on':''}"><input type="checkbox" data-action="accP" data-v="${p.id}" ${S.acc.pr.includes(p.id)?'checked':''}>${p.t}</label>`).join('')}</div>
+  ${S.accFb?`<div class="fb">${S.accFb}</div>`:''}
+  <p><button class="btn pri" data-action="accuse" ${(S.acc.s&&S.acc.m&&S.acc.pr.length===2)?'':'disabled'}>⚖️ Accuser</button> <span class="muted">${S.acc.pr.length}/2 preuves</span></p>`;
+}
+function stars(){return Math.max(1,3-(S.hints>=3?1:0)-(S.wrongAcc>=2?1:0))}
+function rank(){const s=stars();return s===3?'Inspecteur·rice légendaire':s===2?'Inspecteur·rice confirmé·e':'Inspecteur·rice stagiaire'}
+function verdict(){
+  const st=stars();
+  return `<div style="text-align:center"><div class="stamp">AFFAIRE RÉSOLUE</div><h2 style="margin-top:12px">${'⭐'.repeat(st)}${'☆'.repeat(3-st)} ${rank()}</h2></div>
+  <div class="card" style="display:flex;gap:12px;align-items:center">${avatar('sam')}<div><b>Sam avoue :</b> « C'était juste pour voir ! Avec le mot de passe du post-it, j'ai mis −4 au poids des oreilles pointues. Je ne pensais pas que Pixel allait se tromper sur tous les chats… »</div></div>
+  <div class="card"><h3>🎓 Ce que l'enquête nous apprend</h3><ol>
+  <li><b>Les poids sont le « cerveau » de l'IA.</b> Changer un seul poids suffit à changer son comportement.</li>
+  <li><b>Un poids négatif</b> transforme un indice « pour le chat » en indice « contre le chat » : les oreilles pointues faisaient alors penser à un chien.</li>
+  <li><b>Face à une IA qui se trompe</b>, on vérifie trois choses : les <b>étiquettes</b>, la <b>quantité et la variété des exemples</b>, et les <b>poids</b>.</li>
+  <li><b>99 % de confiance ≠ 99 % de chances d'avoir raison.</b> Une IA peut se tromper avec beaucoup d'aplomb.</li></ol></div>
+  <p><button class="btn pri" data-action="cert">🖨️ Imprimer mon certificat</button> <button class="btn" data-action="replay">↺ Rejouer l'enquête</button></p>`;
+}
+
+/* ---------- Carnet ---------- */
+function side(){
+  const cons=[];PIECES.forEach(p=>QS[p.id].forEach((q,i)=>{if(S.q[p.id]>i)cons.push(q.constat)}));
+  const hyp=(k,t)=>{let st='?',c='warn';if(k==='C'){if(S.solved.p3){st='✔ confirmée';c='ok'}}else if(S.solved.p2){st='✘ écartée';c='ko'}return `<div class="hyp"><b>${k}</b> ${t} — <span class="${c}">${st}</span></div>`};
+  return `<h3>📓 Carnet d'enquête</h3><div class="muted" style="font-size:13px">${nSolved()}/4 pièces analysées</div>
+  <h4>Constats</h4>${cons.length?`<ul>${cons.map(c=>`<li>${c}</li>`).join('')}</ul>`:'<div class="muted" style="font-size:13px">Rien pour l\'instant.</div>'}
+  <h4>Hypothèses</h4>${hyp('A','Étiquettes inversées')}${hyp('B','Trop peu d\'exemples')}${hyp('C','Poids modifié')}
+  <h4>Suspects</h4>${SUSP.map(s=>`<div class="hyp">${s.name} : ${S.mark[s.id]==='innocent'?'<span class="ok">😇 innocent</span>':S.mark[s.id]==='suspect'?'<span class="warn">🤔 suspect</span>':'<span class="muted">—</span>'}</div>`).join('')}`;
+}
+
+/* ---------- Rendu ---------- */
+function render(){
+  const tabs=[['brief','📁 Briefing'],['pieces','🗃️ Pièces'],['sus','👥 Suspects'],['acc',allSolved()?'⚖️ Accusation':'🔒 Accusation']];
+  $('tabs').innerHTML=tabs.map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-action="tab" data-t="${k}">${l}</button>`).join('');
+  $('main').innerHTML={brief:tabBrief,pieces:tabPieces,sus:tabSuspects,acc:tabAcc}[S.tab]();
+  $('side').innerHTML=side();
+  const r=$('p4range');if(r)r.oninput=()=>{S.p4time=+r.value;S.p4scrubbed=true;$('p4dyn').innerHTML=p4dyn();if(!S.solved.p4&&!$('p4q')){const had=document.querySelector('.card h3');}};
+  if(r)r.onchange=()=>render();
+  $('modal').innerHTML=S.showTeacher?teacher():'';
+}
+function teacher(){
+  return `<div class="modal"><div><h2>👩‍🏫 Corrigé enseignant</h2>
+  <div class="card"><b>Solution :</b> Sam a modifié le poids des « oreilles pointues » (+3,00 → −4,00) à 7h52 avec le compte partagé « club-info » (mot de passe sur le post-it de M. Roux). Méthode : <b>C</b>. Preuves attendues : le changement de poids <b>+</b> (Sam seul présent à 7h52 <i>ou</i> son mensonge sur l'heure d'arrivée).</div>
+  <div class="card"><b>Fausses pistes :</b> Léo (arrive 8h05), Mme Garcia (8h12), M. Roux (sorti à 7h40) ont tous un alibi par badge. Hypothèses A et B réfutées par la pièce 2.</div>
+  <h3>Questions de débriefing</h3><ol>
+  <li>Si quelqu'un avait <b>inversé les étiquettes</b> du dossier, quelles erreurs aurait-on vues ? <i>Des erreurs sur les chats ET sur les chiens.</i></li>
+  <li>Si on n'avait gardé que <b>4 photos</b> d'entraînement ? <i>Pixel se tromperait sur les animaux atypiques (chat aux oreilles tombantes, husky…).</i></li>
+  <li>Pourquoi un poids négatif sur les oreilles casse les chats mais pas les chiens ? <i>Les chats ont les oreilles pointues : le poids négatif les pousse vers « chien » ; les chiens (oreilles tombantes) ont un indice faible, donc peu d'effet.</i></li>
+  <li>Pixel affichait 99 % : peut-on lui faire confiance ? <i>Non : la confiance mesure la certitude de l'IA, pas la vérité.</i></li></ol>
+  <p class="muted">Durée conseillée : 30 à 40 min, en binômes. Le jeu ne stocke rien : la page recharge, l'enquête recommence.</p>
+  <button class="btn pri" data-action="closeT">Fermer</button></div></div>`;
+}
+function certPrint(){
+  const el=$('certPrint');
+  el.innerHTML=`<div class="cert"><div style="font-size:50px">🔎</div><h2>CERTIFICAT D'INSPECTEUR·RICE</h2><p style="font-size:18px">décerné à</p><p style="font-size:30px;font-family:'Space Grotesk'"><b>${(S.name||'Inspecteur·rice anonyme').replace(/</g,'&lt;')}</b></p>
+  <p>pour avoir résolu l'affaire <b>« Qui a saboté l'IA ? »</b><br>en analysant les poids, les exemples et les étiquettes d'une intelligence artificielle.</p><p style="font-size:24px">${'⭐'.repeat(stars())}</p><p><b>${rank()}</b></p></div>`;
+  setTimeout(()=>window.print(),50);
+}
+
+/* ---------- Actions ---------- */
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-action]');if(!el)return;
+  const a=el.dataset.action;
+  if(el.tagName==='INPUT'&&el.type!=='radio'&&el.type!=='checkbox')return;
+  if(a==='tab'){S.tab=el.dataset.t;if(S.tab!=='pieces')S.piece=S.tab==='pieces'?S.piece:S.piece}
+  else if(a==='piece'){S.piece=el.dataset.p||null;S.tab='pieces'}
+  else if(a==='ans'){const pid=el.dataset.p,i=S.q[pid],Q=QS[pid][i],o=Q.o[+el.dataset.k],key=pid+i;
+    if(o.ok){S.q[pid]++;if(S.q[pid]>=QS[pid].length)S.solved[pid]=true}else S.qFb[key]=o.fb}
+  else if(a==='hint'){S.hintShown[el.dataset.p]=true;S.hints++;}
+  else if(a==='flag'){const i=+el.dataset.i;S.flagged=S.flagged.includes(i)?S.flagged.filter(x=>x!==i):[...S.flagged,i];S.p2fb=''}
+  else if(a==='p2check'){if(S.flagged.length){S.p2fb="Regarde mieux : les photos que tu as signalées sont bien étiquetées (un chat aux oreilles tombantes reste un chat, un husky aux oreilles dressées reste un chien). Réessaie.";S.flagged=[]}else{S.p2fb='';S.p2checked=true}}
+  else if(a==='p3w'){S.p3w=el.dataset.w;S.p3seen[el.dataset.w]=true}
+  else if(a==='p3photo'){S.p3photo=+el.dataset.i;S.p3seen[S.p3w]=true}
+  else if(a==='p4jump'){S.p4time=+el.dataset.t;S.p4scrubbed=true}
+  else if(a==='conf'){S.confront[el.dataset.s]=el.dataset.p}
+  else if(a==='mark'){S.mark[el.dataset.s]=S.mark[el.dataset.s]===el.dataset.m?null:el.dataset.m}
+  else if(a==='accS'){S.acc.s=el.dataset.v;S.accFb=''}
+  else if(a==='accM'){S.acc.m=el.dataset.v;S.accFb=''}
+  else if(a==='accP'){const v=el.dataset.v;if(S.acc.pr.includes(v))S.acc.pr=S.acc.pr.filter(x=>x!==v);else if(S.acc.pr.length<2)S.acc.pr=[...S.acc.pr,v];else{e.preventDefault();S.accFb="Tu ne peux garder que 2 preuves : décoche-en une d'abord."}}
+  else if(a==='accuse')accuse();
+  else if(a==='teacher')S.showTeacher=true;
+  else if(a==='closeT')S.showTeacher=false;
+  else if(a==='cert'){certPrint();return}
+  else if(a==='replay'){const nm=S.name;Object.assign(S,{tab:'brief',piece:null,solved:{},q:{p1:0,p2:0,p3:0,p4:0},qOrder:{},qFb:{},hintShown:{},hints:0,flagged:[],p2fb:'',p2checked:false,p3w:'old',p3seen:{old:false,new:false},p3photo:0,p4time:390,p4scrubbed:false,confront:{},mark:{},acc:{s:null,m:null,pr:[]},accFb:'',wrongAcc:0,done:false,name:nm})}
+  render();
+});
+function accuse(){
+  const {s,m,pr}=S.acc;let fb='';
+  const WHY={leo:"Léo a badgé à 8h05 : il n'était pas là à 7h52, quand les poids ont été modifiés.",garcia:"Mme Garcia a badgé à 8h12, après la modification de 7h52.",roux:"M. Roux est sorti à 7h40, avant la modification de 7h52."};
+  if(s!=='sam')fb=WHY[s]+" Ce n'est pas lui/elle : regarde le registre des badges.";
+  else if(m!=='C')fb=m==='A'?"Pas d'étiquettes inversées : le dossier est correct (pièce 2). Le coupable est le bon, mais pas la méthode.":"Le dossier est resté identique, il n'a pas été réduit (pièce 2). Le coupable est le bon, mais pas la méthode.";
+  else if(!pr.includes('pr3'))fb="Bon coupable, bonne méthode, mais il manque LA preuve technique : qu'est-ce qui a changé dans le cerveau de Pixel ?";
+  else if(!(pr.includes('pr4')||pr.includes('pr5')))fb="Le changement de poids ne suffit pas à désigner Sam. Il te faut une preuve qui le place sur les lieux à 7h52.";
+  else if(pr.includes('pr1')||pr.includes('pr2')||pr.includes('pr6'))fb="Une de tes preuves ne prouve rien contre Sam (confiance de Pixel, post-it ou réputation de quelqu'un). Choisis des faits.";
+  if(fb){S.accFb=fb;S.wrongAcc++}else{S.done=true;S.accFb=''}
+}
+$('nameIn').addEventListener('input',e=>{S.name=e.target.value});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.showTeacher){S.showTeacher=false;render()}});
+render();
+</script>
+</body>
+</html>
