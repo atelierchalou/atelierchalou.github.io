@@ -9,275 +9,206 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#12101E;
-    --bg-deep:#0C0A16;
-    --panel:#1C1830;
-    --panel-line: rgba(241,237,251,0.08);
-    --text:#F1EDFB;
-    --muted:#A79FC4;
-    --mint:#6EE7B7;
-    --coral:#FB7185;
-    --amber:#FBBF24;
+    --bg:#12101E; --bg-deep:#0C0A16; --panel:#1C1830; --panel-line: rgba(241,237,251,0.08);
+    --text:#F1EDFB; --muted:#A79FC4; --mint:#6EE7B7; --coral:#FB7185; --amber:#FBBF24;
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; height:100%; overflow:hidden; }
   body{
     background: radial-gradient(120% 140% at 50% -10%, #201A38 0%, var(--bg) 45%, var(--bg-deep) 100%);
-    color:var(--text);
-    font-family:'Inter', sans-serif;
-    min-height:100vh;
-    padding: 28px 16px 60px;
+    color:var(--text); font-family:'Inter', sans-serif;
   }
-  .wrap{ max-width: 960px; margin: 0 auto; }
 
-  header{ margin-bottom: 22px; }
-  .eyebrow{
-    font-family:'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--amber);
-    margin: 0 0 10px;
+  /* Cadre fixe 1280 x 720, mis à l'échelle pour toujours tenir dans la fenêtre */
+  #app{
+    position:absolute; left:50%; top:50%;
+    width:1280px; height:720px; padding:12px 16px 14px;
+    transform: translate(-50%,-50%) scale(var(--s,1)); transform-origin:center center;
+    display:flex; flex-direction:column; gap:8px;
   }
+
+  header.top{ flex:none; }
   h1{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight: 700;
-    font-size: clamp(26px, 5vw, 40px);
-    line-height: 1.08;
-    margin: 0 0 12px;
-    letter-spacing: -0.01em;
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:25px; line-height:1.15;
+    margin:0 0 4px; letter-spacing:-0.01em;
   }
   h1 span{ color: var(--mint); }
-  .intro{
-    color: var(--muted);
-    font-size: 15px;
-    line-height: 1.55;
-    max-width: 62ch;
-    margin: 0;
-  }
+  .intro{ color: var(--muted); font-size:13.5px; line-height:1.4; margin:0; }
 
   .stage{
-    margin-top: 26px;
-    background: var(--panel);
-    border: 1px solid var(--panel-line);
-    border-radius: 18px;
-    padding: 18px 18px 20px;
-    position: relative;
-    overflow: hidden;
+    flex:1; min-height:0;
+    background: var(--panel); border:1px solid var(--panel-line); border-radius:16px;
+    padding:10px 10px 10px; position:relative; overflow:hidden;
+    display:flex; flex-direction:column; gap:6px;
   }
   .stage::before{
-    content:"";
-    position:absolute; inset:0;
+    content:""; position:absolute; inset:0; pointer-events:none;
     background: radial-gradient(600px 300px at 15% 0%, rgba(110,231,183,0.06), transparent 60%);
-    pointer-events:none;
   }
 
-  .top-row{
-    display:flex; justify-content:space-between; align-items:flex-start;
-    gap: 12px; margin-bottom: 6px; flex-wrap: wrap;
+  /* Choix du domaine et de la carte, sur une seule ligne */
+  .pickers{ display:flex; align-items:center; gap:8px; flex:none; position:relative; }
+  .picker-label{ font-size:12.5px; color:var(--muted); margin-right:2px; }
+  .picker-sep{ width:1px; height:22px; background: var(--panel-line); margin:0 8px; }
+  .theme-btn, .animal-btn{
+    font-family:'Inter', sans-serif; font-size:13px; font-weight:600;
+    background:transparent; color:var(--muted);
+    border:1px solid var(--panel-line); border-radius:999px; padding:6px 13px;
+    cursor:pointer; transition: all .15s ease; white-space:nowrap;
   }
-  .example-card{
-    display:flex;
-    align-items:center;
-    gap: 12px;
-    font-family:'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-  .example-card .example-icon{ flex: none; }
-  .example-card .example-text{ flex: 1; }
-  .example-card b{ color: var(--text); font-weight:600; }
+  .theme-btn:hover, .animal-btn:hover{ color:var(--text); }
+  .theme-btn.active{ background:rgba(251,191,36,0.14); border-color:rgba(251,191,36,0.5); color:var(--text); }
+  .animal-btn.active{ background:rgba(110,231,183,0.14); border-color:rgba(110,231,183,0.5); color:var(--text); }
 
-  .animal-picker{
-    display:flex; align-items:center; gap: 10px; flex-wrap: wrap;
-    margin-bottom: 14px;
+  /* Zone centrale : caméra | réseau | écran */
+  .main{ flex:1; min-height:0; display:flex; align-items:stretch; gap:8px; position:relative; }
+  .side{ flex:none; display:flex; flex-direction:column; align-items:center; }
+  .side.left{ width:212px; }
+  .side.right{ width:256px; }
+  .panel-svg{ display:block; width:100%; height:auto; }
+  canvas#net{ flex:none; width:740px; height:530px; display:block; border-radius:12px; }
+
+  .example-text{
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--muted);
+    line-height:1.55; text-align:left; width:100%; margin-top:14px; padding:0 4px;
   }
-  .picker-label{
-    font-size: 12.5px; color: var(--muted);
-  }
-  .animal-btn{
-    font-family:'Inter', sans-serif;
-    font-size: 13.5px; font-weight:600;
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--panel-line);
-    border-radius: 999px;
-    padding: 6px 14px;
-    cursor: pointer;
-    transition: all .15s ease;
-  }
-  .animal-btn:hover{ color: var(--text); }
-  .animal-btn.active{
-    background: rgba(110,231,183,0.14);
-    border-color: rgba(110,231,183,0.5);
-    color: var(--text);
-  }
-  .theme-btn{
-    font-family:'Inter', sans-serif;
-    font-size: 13px; font-weight:600;
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--panel-line);
-    border-radius: 999px;
-    padding: 6px 13px;
-    cursor: pointer;
-    transition: all .15s ease;
-  }
-  .theme-btn:hover{ color: var(--text); }
-  .theme-btn.active{
-    background: rgba(251,191,36,0.14);
-    border-color: rgba(251,191,36,0.5);
-    color: var(--text);
-  }
-  .hidden{ display:none !important; }
-  .readouts{
-    display:flex; gap: 18px;
-    font-family:'JetBrains Mono', monospace;
-  }
-  .readout .label{ font-size:10.5px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase;}
-  .readout .value{ font-size:22px; font-weight:600; color:var(--amber); }
+  .example-text b{ color:var(--text); font-weight:600; }
+
+  .readouts{ display:flex; gap:26px; font-family:'JetBrains Mono', monospace; margin-top:22px; justify-content:center; }
+  .readout .label{ font-size:10.5px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; text-align:center; }
+  .readout .value{ font-size:26px; font-weight:600; color:var(--amber); text-align:center; }
   .readout .value.loss{ color: var(--coral); }
 
-  canvas#net{
-    width:100%; height:auto; display:block; margin-top: 6px;
-    border-radius: 12px;
-  }
-
-  .caption-box{
-    margin-top: 8px;
-    padding: 16px 18px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--panel-line);
-    border-radius: 12px;
-    min-height: 58px;
-    display:flex; align-items:center;
-  }
-  .caption-box p{ margin:0; font-size: 15px; line-height:1.6; }
-  .caption-box.flash-once{
-    animation: mistakeShake 0.5s ease, mistakeGlow 1.6s ease;
-    border-color: rgba(251,113,133,0.5);
-  }
-  @keyframes mistakeShake{
-    0%, 100% { transform: translateX(0); }
-    20% { transform: translateX(-6px); }
-    40% { transform: translateX(5px); }
-    60% { transform: translateX(-3px); }
-    80% { transform: translateX(2px); }
-  }
-  @keyframes mistakeGlow{
-    0% { box-shadow: 0 0 0 rgba(251,113,133,0); }
-    15% { box-shadow: 0 0 24px rgba(251,113,133,0.45); }
-    100% { box-shadow: 0 0 0 rgba(251,113,133,0); }
-  }
-  @media (prefers-reduced-motion: reduce){
-    .caption-box.flash-once{ animation: none; border-color: rgba(251,113,133,0.5); }
-  }
-  .caption-box .phase-tag{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:600; color: var(--mint); margin-right: 6px;
-  }
-
-  .phases{
-    display:flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;
-  }
-  .phase-dot{
-    font-family:'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    border: 1px solid var(--panel-line);
-    border-radius: 999px;
-    padding: 5px 11px;
-    display:flex; align-items:center; gap:6px;
-    opacity: 0.55;
-    transition: opacity .25s ease, border-color .25s ease, color .25s ease;
-  }
-  .phase-dot .n{
-    width:6px; height:6px; border-radius:50%;
-    background: var(--muted);
-  }
-  .phase-dot.active{
-    opacity: 1;
-    color: var(--text);
-    border-color: rgba(110,231,183,0.4);
-  }
-  .phase-dot.active .n{ background: var(--mint); }
-
-  .controls{
-    display:flex; align-items:center; gap: 10px; margin-top: 18px; flex-wrap: wrap;
-  }
+  /* Légende + Recommencer */
+  .controls{ display:flex; align-items:center; gap:12px; flex:none; position:relative; }
   button{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:600; font-size: 14px;
-    background: var(--mint);
-    color: #0C0A16;
-    border: none;
-    border-radius: 10px;
-    padding: 10px 18px;
-    cursor:pointer;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:14px;
+    background:var(--mint); color:#0C0A16; border:none; border-radius:10px; padding:9px 18px; cursor:pointer;
     transition: transform .12s ease, opacity .12s ease;
   }
   button:hover{ transform: translateY(-1px); }
   button:active{ transform: translateY(0); }
-  button.secondary{
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--panel-line);
-  }
-  button:focus-visible{ outline: 2px solid var(--amber); outline-offset: 2px; }
-
+  button.secondary{ background:transparent; color:var(--text); border:1px solid var(--panel-line); }
+  button:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
   .legend{
-    display:flex; gap: 16px; margin-left: auto;
-    font-family:'JetBrains Mono', monospace;
-    font-size: 11.5px; color: var(--muted);
-    align-items:center; flex-wrap: wrap;
+    display:flex; gap:18px; margin-left:auto; align-items:center;
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--muted);
   }
   .legend span{ display:flex; align-items:center; gap:6px; }
-  .swatch{ width:14px; height:3px; border-radius:2px; display:inline-block; }
+  .swatch{ width:16px; height:3px; border-radius:2px; display:inline-block; }
 
-  footer{
-    margin-top: 18px; color: var(--muted); font-size: 12.5px; line-height:1.6;
+  /* Scène : photo -> caméra -> réseau -> écran */
+  .scene-label{ fill:#A79FC4; font:600 11.5px 'Inter', sans-serif; text-anchor:middle; letter-spacing:.05em; text-transform:uppercase; }
+  .arr{ stroke:#6EE7B7; stroke-width:3; stroke-opacity:.4; stroke-linecap:round; fill:none; }
+  #app[data-state="seeing"] .arr1, #app[data-state="seeing"] .arr2,
+  #app[data-state="answer"] .arr3, #app[data-state="verdict"] .arr3{
+    stroke-opacity:1; stroke-dasharray:7 6; animation: sceneFlow .9s linear infinite;
   }
-
-  @media (max-width: 620px){
-    .readouts{ gap: 12px; }
-    .legend{ margin-left:0; }
-  }
-
+  @keyframes sceneFlow{ to{ stroke-dashoffset:-26; } }
+  .cam-flash{ opacity:.25; transform-box: fill-box; transform-origin:center; }
+  .cam-flash.go{ animation: camFlash 0.9s ease-out; }
+  @keyframes camFlash{ 0%{opacity:.25; transform:scale(1);} 25%{opacity:1; transform:scale(2.6);} 100%{opacity:.25; transform:scale(1);} }
+  .scr-l1{ font:700 16.5px 'Space Grotesk','Inter',sans-serif; text-anchor:middle; }
+  .scr-l2{ font:600 12.5px 'Inter',sans-serif; text-anchor:middle; }
+  .blink{ animation: sceneBlink 1.1s ease-in-out infinite; }
+  @keyframes sceneBlink{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+  #screenGroup{ transform-box: fill-box; transform-origin:center; }
+  #screenGroup.shake{ animation: screenShake .55s ease; }
+  @keyframes screenShake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-7px);} 40%{transform:translateX(6px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(3px);} }
   @media (prefers-reduced-motion: reduce){
+    .arr, .cam-flash.go, .blink, #screenGroup.shake{ animation:none !important; }
     button{ transition:none; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="app" data-state="wait">
 
-  <header>
-    <p class="eyebrow">Comment apprend une IA ?</p>
+  <header class="top">
     <h1>Un <span>réseau de neurones</span> qui apprend à <span id="themeTitle">reconnaître un chat</span></h1>
-    <p class="intro">
-      Au départ, l'IA ne connaît aucune règle : elle devine au hasard, comme un élève
-      qui débute. Regarde-la <span id="themeIntro">deviner « chat » ou « chien » à partir de deux indices</span>,
-      se faire corriger, et s'améliorer petit à petit — encore, et encore.
-    </p>
+    <p class="intro">Regarde l'IA <span id="themeIntro">deviner « chat » ou « chien » à partir de deux indices</span>, se faire corriger, puis s'améliorer — encore et encore.</p>
   </header>
 
   <div class="stage">
-    <div class="animal-picker">
-      <span class="picker-label">Choisis le domaine :</span>
+
+    <div class="pickers">
+      <span class="picker-label">Domaine :</span>
       <button class="theme-btn active" data-theme="chat">🐱 Chat vs Chien</button>
       <button class="theme-btn" data-theme="poumons">🫁 Radio des poumons</button>
       <button class="theme-btn" data-theme="peau">🔬 Grain de beauté</button>
       <button class="theme-btn" data-theme="os">🦴 Radio d'un os</button>
-    </div>
-    <div class="animal-picker">
-      <span class="picker-label">Choisis la carte à montrer :</span>
+      <span class="picker-sep"></span>
+      <span class="picker-label">Carte :</span>
       <button class="animal-btn active" id="btnPositif" data-case="positif">🐱 Chat</button>
       <button class="animal-btn" id="btnNormal" data-case="normal">🐶 Chien</button>
     </div>
-    <div class="top-row">
-      <div class="example-card">
-        <svg class="example-icon" id="iconCatPos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+
+    <div class="main">
+
+      <!-- À gauche : la photo et la caméra (entrée) -->
+      <aside class="side left">
+        <svg class="panel-svg" viewBox="0 0 214 285" role="img" aria-label="Une photo est prise par une caméra">
+          <defs>
+            <marker id="sceneArrHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" fill="#6EE7B7"/>
+            </marker>
+          </defs>
+          <rect x="47" y="2" width="120" height="120" rx="10" fill="rgba(241,237,251,0.06)" stroke="#A79FC4" stroke-opacity="0.55" stroke-width="1.5"/>
+          <svg id="sceneIcon" x="55" y="10" width="104" height="104" viewBox="0 0 100 100" fill="none"></svg>
+          <text class="scene-label" x="107" y="139">La photo</text>
+
+          <line class="arr arr1" x1="107" y1="146" x2="107" y2="170" marker-end="url(#sceneArrHead)"/>
+
+          <rect x="82" y="174" width="50" height="12" rx="4" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
+          <rect x="42" y="184" width="130" height="72" rx="12" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
+          <circle cx="107" cy="220" r="24" fill="#12101E" stroke="#6EE7B7" stroke-width="2.5"/>
+          <circle cx="107" cy="220" r="14" fill="rgba(110,231,183,0.18)" stroke="#6EE7B7" stroke-width="1.8"/>
+          <circle cx="101" cy="214" r="4" fill="#F1EDFB" opacity="0.75"/>
+          <circle id="camFlash" class="cam-flash" cx="154" cy="200" r="5" fill="#FBBF24"/>
+          <text class="scene-label" x="107" y="276">La caméra</text>
+
+          <line class="arr arr2" x1="178" y1="220" x2="210" y2="220" marker-end="url(#sceneArrHead)"/>
+        </svg>
+        <div class="example-text"></div>
+      </aside>
+
+      <canvas id="net" width="740" height="530" aria-label="Animation du réseau de neurones en cours d'apprentissage" role="img"></canvas>
+
+      <!-- À droite : l'écran (sortie) -->
+      <aside class="side right">
+        <svg class="panel-svg" viewBox="0 0 260 345" role="img" aria-label="Le résultat s'affiche sur un écran">
+          <line class="arr arr3" x1="2" y1="220" x2="34" y2="220" marker-end="url(#sceneArrHead)"/>
+          <g id="screenGroup">
+            <rect id="screenFrame" x="42" y="134" width="214" height="172" rx="12" fill="#0C0A16" stroke="#6EE7B7" stroke-width="2.5"/>
+            <rect x="50" y="142" width="198" height="156" rx="8" fill="rgba(110,231,183,0.05)"/>
+            <text id="scrL1" class="scr-l1" x="149" y="213" fill="#A79FC4">En attente…</text>
+            <text id="scrL2" class="scr-l2" x="149" y="241" fill="#A79FC4">d'une image</text>
+          </g>
+          <path d="M128 306 L170 306 L176 320 L122 320 Z" fill="rgba(110,231,183,0.12)" stroke="#6EE7B7" stroke-width="2" stroke-linejoin="round"/>
+          <line x1="108" y1="320" x2="190" y2="320" stroke="#6EE7B7" stroke-width="2.5" stroke-linecap="round"/>
+          <text class="scene-label" x="149" y="340">L'écran</text>
+        </svg>
+        <div class="readouts">
+          <div class="readout"><div class="label">Essai n°</div><div class="value" id="epochVal">0</div></div>
+          <div class="readout"><div class="label">Erreur</div><div class="value loss" id="lossVal">–</div></div>
+        </div>
+      </aside>
+
+    </div>
+
+    <div class="controls">
+      <button id="resetBtn" class="secondary">Recommencer</button>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--mint)"></i>« oui, cet indice compte »</span>
+        <span><i class="swatch" style="background:var(--coral)"></i>« non, pas important »</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Banque d'icônes : sources de la « photo » (jamais affichées telles quelles) -->
+  <div id="iconBank" style="display:none">
+    <svg class="example-icon" id="iconCatPos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M 22 38 L 14 10 L 42 30 Z" fill="rgba(110,231,183,0.12)" stroke="#6EE7B7" stroke-width="2.5" stroke-linejoin="round"/>
           <path d="M 78 38 L 86 10 L 58 30 Z" fill="rgba(110,231,183,0.12)" stroke="#6EE7B7" stroke-width="2.5" stroke-linejoin="round"/>
           <path d="M 24 32 L 20 18 L 34 28 Z" fill="none" stroke="#FB7185" stroke-width="1.6" stroke-linejoin="round" opacity="0.7"/>
@@ -297,7 +228,7 @@
             <path d="M80 62 L98 58"/><path d="M80 68 L98 68"/><path d="M80 74 L97 78"/>
           </g>
         </svg>
-        <svg class="example-icon hidden" id="iconCatNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg class="example-icon hidden" id="iconCatNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M20 40 Q4 56 13 80 Q22 84 31 70 Z" fill="rgba(110,231,183,0.12)" stroke="#6EE7B7" stroke-width="2.5" stroke-linejoin="round"/>
           <path d="M80 40 Q96 56 87 80 Q78 84 69 70 Z" fill="rgba(110,231,183,0.12)" stroke="#6EE7B7" stroke-width="2.5" stroke-linejoin="round"/>
           <ellipse cx="50" cy="54" rx="32" ry="28" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
@@ -310,7 +241,7 @@
           <path d="M50 72 L50 75 M50 75 Q43 79 39 76 M50 75 Q57 79 61 76" stroke="#6EE7B7" stroke-width="1.8" stroke-linecap="round" fill="none"/>
           <path d="M40 82 Q50 87 60 82" stroke="#A79FC4" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.7"/>
         </svg>
-        <svg class="example-icon hidden" id="iconLungsPos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg class="example-icon hidden" id="iconLungsPos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M50 10 L50 26" stroke="#6EE7B7" stroke-width="3" stroke-linecap="round"/>
           <path d="M50 22 L38 30 M50 22 L62 30" stroke="#6EE7B7" stroke-width="2.2" stroke-linecap="round" fill="none"/>
           <path d="M48 26 C 34 26, 14 38, 12 58 C 10 76, 22 92, 36 84 C 46 79, 45 58, 47 45 C 47.5 39, 48 32, 48 26 Z" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
@@ -319,22 +250,22 @@
           <circle cx="68" cy="63" r="10" fill="rgba(251,113,133,0.34)"/>
           <circle cx="65" cy="59" r="6" fill="rgba(251,113,133,0.42)"/>
         </svg>
-        <svg class="example-icon hidden" id="iconLungsNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg class="example-icon hidden" id="iconLungsNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M50 10 L50 26" stroke="#6EE7B7" stroke-width="3" stroke-linecap="round"/>
           <path d="M50 22 L38 30 M50 22 L62 30" stroke="#6EE7B7" stroke-width="2.2" stroke-linecap="round" fill="none"/>
           <path d="M48 26 C 34 26, 14 38, 12 58 C 10 76, 22 92, 36 84 C 46 79, 45 58, 47 45 C 47.5 39, 48 32, 48 26 Z" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
           <path d="M52 26 C 66 26, 86 38, 88 58 C 90 76, 78 92, 64 84 C 54 79, 55 58, 53 45 C 52.5 39, 52 32, 52 26 Z" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.5"/>
         </svg>
-        <svg class="example-icon hidden" id="iconMolePos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg class="example-icon hidden" id="iconMolePos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M50 20 C62 18, 75 28, 78 42 C82 55, 75 68, 62 75 C50 81, 35 78, 28 66 C20 54, 24 38, 34 28 C40 22, 45 21, 50 20 Z"
                 fill="rgba(251,113,133,0.22)" stroke="#FB7185" stroke-width="2.3" stroke-linejoin="round"/>
           <circle cx="46" cy="48" r="10" fill="rgba(18,16,30,0.55)"/>
           <circle cx="60" cy="56" r="7" fill="rgba(251,191,36,0.4)"/>
         </svg>
-        <svg class="example-icon hidden" id="iconMoleNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg class="example-icon hidden" id="iconMoleNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <circle cx="50" cy="50" r="27" fill="rgba(110,231,183,0.10)" stroke="#6EE7B7" stroke-width="2.3"/>
         </svg>
-        <svg class="example-icon hidden" id="iconBonePos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg class="example-icon hidden" id="iconBonePos" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="26" y="45" width="48" height="10" rx="5" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
           <circle cx="24" cy="42" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
           <circle cx="24" cy="58" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
@@ -342,54 +273,14 @@
           <circle cx="76" cy="58" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
           <path d="M46 42 L52 50 L45 50 L54 60" stroke="#FB7185" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
-        <svg class="example-icon hidden" id="iconBoneNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg class="example-icon hidden" id="iconBoneNeg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="26" y="45" width="48" height="10" rx="5" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
           <circle cx="24" cy="42" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
           <circle cx="24" cy="58" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
           <circle cx="76" cy="42" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
           <circle cx="76" cy="58" r="9" fill="rgba(110,231,183,0.08)" stroke="#6EE7B7" stroke-width="2.2"/>
         </svg>
-        <div class="example-text">
-          Carte montrée à l'IA : <b id="exampleTraits">oreilles pointues, poils courts</b><br>
-          Vraie réponse (donnée par le prof) : <b id="exampleTrueLabel" style="color:var(--mint)">Chat</b>
-        </div>
-      </div>
-      <div class="readouts">
-        <div class="readout">
-          <div class="label">Essai n°</div>
-          <div class="value" id="epochVal">0</div>
-        </div>
-        <div class="readout">
-          <div class="label">Erreur</div>
-          <div class="value loss" id="lossVal">–</div>
-        </div>
-      </div>
-    </div>
-
-    <canvas id="net" width="900" height="460" aria-label="Animation du réseau de neurones en cours d'apprentissage" role="img"></canvas>
-
-    <div class="caption-box">
-      <p><span class="phase-tag" id="phaseTag">00</span><span id="phaseText">Au tout début, le réseau n'a jamais vu d'exemple. Chaque connexion affiche déjà son poids (le petit chiffre sur chaque trait) : ce sont ces poids-là qui vont être ajustés au fil de l'entraînement. Le rôle de chaque neurone caché est indiqué juste en dessous de lui.</span></p>
-    </div>
-
-    <div class="phases" id="phaseDots"></div>
-
-    <div class="controls">
-      <button id="nextBtn">Étape suivante →</button>
-      <button id="resetBtn" class="secondary">Recommencer</button>
-      <div class="legend">
-        <span><i class="swatch" style="background:var(--mint)"></i>« oui, cet indice compte »</span>
-        <span><i class="swatch" style="background:var(--coral)"></i>« non, pas important »</span>
-      </div>
-    </div>
   </div>
-
-  <footer>
-    Version simplifiée : une vraie IA regarde des milliers d'exemples différents et compte
-    des milliards de « neurones », mais le principe est exactement celui-ci : deviner, se faire
-    corriger, s'ajuster — encore et encore.
-  </footer>
-
 </div>
 
 <script>
@@ -399,17 +290,29 @@
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ---------- Layout ----------
-  const LOGICAL_W = 900, LOGICAL_H = 460;
+  const LOGICAL_W = 740, LOGICAL_H = 530;
+  const NET_CY = 212;            // centre vertical du réseau (la bande du bas est réservée aux bulles)
+  const BUBBLE_TOP = 372;        // début de la bande des bulles
+  const TEMPO = 1;               // 1 = lent (par défaut) ; mettre 0.6 pour accélérer, 1.5 pour ralentir encore
   let scale = 1;
 
+  // Le cadre (1280 x 720) est mis à l'échelle pour tenir dans la fenêtre ;
+  // le canevas est redessiné à la bonne résolution pour rester net.
+  const appEl = document.getElementById('app');
+  let appScale = 1;
   function resize(){
-    const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = LOGICAL_W * dpr;
-    canvas.height = LOGICAL_H * dpr;
-    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const k = dpr * appScale;
+    canvas.width = Math.round(LOGICAL_W * k);
+    canvas.height = Math.round(LOGICAL_H * k);
+    ctx.setTransform(k,0,0,k,0,0);
   }
-  window.addEventListener('resize', resize);
+  function fit(){
+    appScale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    appEl.style.setProperty('--s', appScale);
+    resize();
+  }
+  window.addEventListener('resize', fit);
 
   const themes = {
     chat: {
@@ -422,6 +325,7 @@
         normal:  { inputs:[0.15,0.80], trueIdx:1, traitText:'oreilles tombantes, poils courts', icon:'iconCatNeg', label:'🐶 Chien' },
       },
       trueLabelWho: 'donnée par le prof',
+      answerTexts: ['C\u2019est un chat !', 'C\u2019est un chien !'],
     },
     poumons: {
       inputLabels: ['Opacité visible','Étendue de la zone'],
@@ -433,6 +337,7 @@
         normal:  { inputs:[0.10,0.15], trueIdx:1, traitText:'poumons clairs, pas d\u2019opacité', icon:'iconLungsNeg', label:'🫁 Sain' },
       },
       trueLabelWho: 'confirmée par le médecin',
+      answerTexts: ['Je vois une pneumonie', 'Poumons sains'],
     },
     peau: {
       inputLabels: ['Bord irrégulier','Couleur non uniforme'],
@@ -444,6 +349,7 @@
         normal:  { inputs:[0.10,0.12], trueIdx:1, traitText:'bords réguliers, couleur uniforme', icon:'iconMoleNeg', label:'🔬 Normal' },
       },
       trueLabelWho: 'confirmée par le dermatologue',
+      answerTexts: ['Grain à surveiller', 'Grain normal'],
     },
     os: {
       inputLabels: ['Ligne visible','Os déplacé'],
@@ -455,6 +361,7 @@
         normal:  { inputs:[0.08,0.05], trueIdx:1, traitText:'os intact, bien aligné', icon:'iconBoneNeg', label:'🦴 Normal' },
       },
       trueLabelWho: 'confirmée par le médecin',
+      answerTexts: ['Fracture détectée', 'Os normal'],
     },
   };
 
@@ -466,17 +373,17 @@
   let inputs = themes.chat.cases.positif.inputs;
 
   function verticalPositions(n, spread){
-    if(n<=1) return [LOGICAL_H/2];
+    if(n<=1) return [NET_CY];
     const arr = [];
-    for(let i=0;i<n;i++){ arr.push(LOGICAL_H/2 + (i-(n-1)/2) * spread); }
+    for(let i=0;i<n;i++){ arr.push(NET_CY + (i-(n-1)/2) * spread); }
     return arr;
   }
 
   function layout(){
-    const inX = 90, hidX = LOGICAL_W/2, outX = LOGICAL_W-90;
-    const inY = verticalPositions(inputLabels.length, 150);
-    const hidY = verticalPositions(3, 130);
-    const outY = verticalPositions(outputLabels.length, 140);
+    const inX = 185, outX = LOGICAL_W-110, hidX = (inX + outX)/2;
+    const inY = verticalPositions(inputLabels.length, 140);
+    const hidY = verticalPositions(3, 115);
+    const outY = verticalPositions(outputLabels.length, 120);
     const inputNodes = inputLabels.map((l,i)=>({ x: inX, y: inY[i], label:l }));
     const hiddenNodes = hidY.map((y)=>({ x: hidX, y }));
     const outputNodes = outputLabels.map((l,i)=>({ x: outX, y: outY[i], label:l }));
@@ -487,6 +394,7 @@
   // ---------- Model state ----------
   let w1, w2, w1Before, w2Before, hiddenAct, outputProbs, loss, dOut, dHidden, epoch;
   let firstMistakeShown = false;
+  let firstMistakeBanner = false;
   let currentMistake = false;
 
   function rand(){ return (Math.random()*2 - 1); }
@@ -578,63 +486,47 @@
 
   // ---------- Phase machine ----------
   const PHASES = [
-    { key:'init', tag:'00', label:'Au tout début, le réseau n\u2019a jamais vu d\u2019exemple. Chaque connexion affiche déjà son poids (le petit chiffre sur chaque trait) : ce sont ces poids-là qui vont être ajustés au fil de l\u2019entraînement. Le rôle de chaque neurone caché est indiqué juste en dessous de lui.', dur: 1800 },
-    { key:'forward', tag:'01', label:'Il regarde la carte choisie : chaque indice est multiplié par l\u2019importance que le neurone caché lui donne, additionné, puis transmis jusqu\u2019à la réponse finale.', dur: 1500 },
-    { key:'error', tag:'02', label:'Il annonce un pourcentage de chances pour chaque réponse possible. La vraie réponse est alors révélée : l\u2019écart entre les deux donne un chiffre, l\u2019erreur — plus il était sûr de lui et faux, plus l\u2019erreur est grande.', dur: 1300 },
-    { key:'backward', tag:'03', label:'Il remonte l\u2019enquête à l\u2019envers : pour chaque neurone caché, il se demande « est-ce toi qui m\u2019as fait me tromper, et à quel point ? ». Il refait ce calcul jusqu\u2019aux 2 indices de départ, pour savoir lequel a le plus pesé dans l\u2019erreur.', dur: 1500 },
-    { key:'update', tag:'04', label:'Il corrige ses réglages : si un indice l\u2019a bien aidé, il augmente son importance ; s\u2019il l\u2019a trompé, il la diminue. Ce petit ajustement, répété à chaque carte, rend le réseau un peu meilleur.', dur: 1000 },
+    { key:'init', tag:'00', label:'Au tout début, le réseau n\u2019a jamais vu d\u2019exemple. Chaque connexion affiche déjà son poids (le petit chiffre sur chaque trait) : ce sont ces poids-là qui vont être ajustés au fil de l\u2019entraînement. Le rôle de chaque neurone caché est indiqué juste en dessous de lui.', dur: 6500 },
+    { key:'forward', tag:'01', label:'Il regarde la carte choisie : chaque indice est multiplié par l\u2019importance que le neurone caché lui donne, additionné, puis transmis jusqu\u2019à la réponse finale.', dur: 10000 },
+    { key:'error', tag:'02', label:'Il annonce un pourcentage de chances pour chaque réponse possible. La vraie réponse est alors révélée : l\u2019écart entre les deux donne un chiffre, l\u2019erreur — plus il était sûr de lui et faux, plus l\u2019erreur est grande.', dur: 7000 },
+    { key:'backward', tag:'03', label:'Il remonte l\u2019enquête à l\u2019envers : pour chaque neurone caché, il se demande « est-ce toi qui m\u2019as fait me tromper, et à quel point ? ». Il refait ce calcul jusqu\u2019aux 2 indices de départ, pour savoir lequel a le plus pesé dans l\u2019erreur.', dur: 10000 },
+    { key:'update', tag:'04', label:'Il corrige ses réglages : si un indice l\u2019a bien aidé, il augmente son importance ; s\u2019il l\u2019a trompé, il la diminue. Ce petit ajustement, répété à chaque carte, rend le réseau un peu meilleur.', dur: 7500 },
   ];
-  const phaseDotsData = [
-    {tag:'00', short:'Elle devine'},
-    {tag:'01', short:'Elle regarde'},
-    {tag:'02', short:'On corrige'},
-    {tag:'03', short:'Elle cherche pourquoi'},
-    {tag:'04', short:'Elle s\u2019ajuste'},
-  ];
-
-  const dotsWrap = document.getElementById('phaseDots');
-  phaseDotsData.forEach((p)=>{
-    const d = document.createElement('div');
-    d.className = 'phase-dot';
-    d.id = 'dot-'+p.tag;
-    d.innerHTML = '<span class="n"></span>'+p.tag+' · '+p.short;
-    dotsWrap.appendChild(d);
-  });
-
   let phaseIdx = 0;
   let phaseStart = 0;
+  // Progression pilotée par l'élève : l'animation joue un segment, puis attend le clic sur l'icône « suite »
+  let phaseProg = 0;          // avancement de la phase (0 → 1)
+  let lastNow = 0;
+  let bubbleIdx = 0;          // numéro de la bulle affichée dans la phase
+  let bubbleChangedAt = 0;
+  let bubbleHit = null;       // zone cliquable de l'icône (coordonnées du canevas)
   let playing = true;
   let firstCycle = true;
 
   const epochVal = document.getElementById('epochVal');
   const lossVal = document.getElementById('lossVal');
-  const phaseTag = document.getElementById('phaseTag');
-  const phaseText = document.getElementById('phaseText');
-  const captionBox = document.querySelector('.caption-box');
-
-  function setActiveDot(tag){
-    document.querySelectorAll('.phase-dot').forEach(el=> el.classList.remove('active'));
-    const el = document.getElementById('dot-'+tag);
-    if(el) el.classList.add('active');
-  }
 
   function enterPhase(idx, now){
     phaseIdx = idx;
     phaseStart = now;
+    phaseProg = 0;
+    lastNow = now;
+    bubbleIdx = 0;
+    bubbleChangedAt = now;
     const ph = PHASES[idx];
-    setActiveDot(ph.tag);
 
     if(ph.key === 'forward'){
       forwardAndGrad();
     }
 
-    let showFirstMistakeBanner = false;
     if(ph.key === 'error'){
       const predicted = outputProbs[0] > outputProbs[1] ? 0 : 1;
       currentMistake = (predicted !== trueIdx);
+      // la toute première erreur est mise en scène (titre de la bulle, écran qui tremble)
+      firstMistakeBanner = false;
       if(currentMistake && !firstMistakeShown){
         firstMistakeShown = true;
-        showFirstMistakeBanner = true;
+        firstMistakeBanner = true;
       }
     }
 
@@ -644,24 +536,6 @@
       if(lossHistory.length>40) lossHistory.shift();
     }
 
-    phaseTag.textContent = ph.tag;
-    if(showFirstMistakeBanner){
-      phaseText.innerHTML = '<strong style="color:var(--coral)">❌ Première erreur : elle s\u2019est trompée !</strong> ' + ph.label;
-      captionBox.classList.remove('flash-once');
-      void captionBox.offsetWidth; // restart animation
-      captionBox.classList.add('flash-once');
-    } else {
-      phaseText.textContent = ph.label;
-    }
-
-    updateNextButtonLabel();
-  }
-
-  function updateNextButtonLabel(){
-    let next = phaseIdx + 1;
-    if(next >= PHASES.length) next = 1;
-    const nextData = phaseDotsData[next];
-    nextBtn.textContent = 'Étape suivante : ' + nextData.short + ' →';
   }
 
   function advancePhase(now){
@@ -743,8 +617,10 @@
 
       if(glowProgress !== null){
         const t = easeInOut(Math.max(0, Math.min(1, glowProgress)));
-        const px = from.x + (to.x-from.x)*t;
-        const py = from.y + (to.y-from.y)*t;
+        // aller : de gauche à droite ; erreur : de droite à gauche (elle remonte le réseau)
+        const a = direction==='fwd' ? from : to, b = direction==='fwd' ? to : from;
+        const px = a.x + (b.x-a.x)*t;
+        const py = a.y + (b.y-a.y)*t;
         const color = direction==='fwd' ? '110,231,183' : '251,113,133';
         ctx.beginPath();
         ctx.arc(px,py, 4.2, 0, Math.PI*2);
@@ -769,7 +645,7 @@
   }
 
   function drawSparkline(){
-    const x0 = LOGICAL_W-230, y0 = 34, w = 200, h = 46;
+    const x0 = LOGICAL_W-230, y0 = 54, w = 200, h = 44;
     ctx.save();
     ctx.font = '500 10.5px "JetBrains Mono", monospace';
     ctx.fillStyle = 'rgba(167,159,196,0.9)';
@@ -879,6 +755,349 @@
     });
   }
 
+  // ---------- Bulles explicatives ----------
+  // Chaque phase déroule une suite de bulles (s = début, e = fin, en part de la durée de la phase).
+  // La dernière bulle d'une phase reste affichée jusqu'au clic suivant (e > 1).
+  const fmt = (x)=> x.toFixed(2);
+  const pct = (p)=> Math.round(p*100) + ' %';
+  const predictedIdx = ()=> outputProbs[0] >= outputProbs[1] ? 0 : 1;
+  const edgePoint = (from, to, t)=> ({ x: from.x+(to.x-from.x)*t, y: from.y+(to.y-from.y)*t, r: 13 });
+  const nodePoint = (n, r)=> ({ x: n.x, y: n.y, r: r||24 });
+  const importancePoint = (n)=> ({ x: n.x, y: n.y + 30, r: 11, rect: { w: 150, h: 18 } });
+
+  function biggestChange(){
+    if(!w1Before || !w2Before) return null;
+    const cands = topDeltas(w1Before, w1, 'w1', 1).concat(topDeltas(w2Before, w2, 'w2', 1));
+    cands.sort((a,b)=> Math.abs(b.delta)-Math.abs(a.delta));
+    const c = cands[0];
+    if(!c) return null;
+    const from = c.tag==='w1' ? inputNodes[c.i] : hiddenNodes[c.i];
+    const to   = c.tag==='w1' ? hiddenNodes[c.j] : outputNodes[c.j];
+    const before = (c.tag==='w1' ? w1Before : w2Before)[c.i][c.j];
+    const after  = (c.tag==='w1' ? w1 : w2)[c.i][c.j];
+    return { from, to, before, after, delta: c.delta, t: c.tag==='w1' ? 0.44 : 0.70 };
+  }
+
+  const BUBBLES = {
+    init: [
+      { s:0, e:0.25, title:'Les indices de la carte',
+        anchors: ()=> inputNodes.map(n=> nodePoint(n,26)),
+        body: ()=> 'Voici ce que l\u2019IA « voit » : ' + inputLabels[0] + ' (' + fmt(inputs[0]) + ') et ' + inputLabels[1] + ' (' + fmt(inputs[1]) + '). Proche de 1 = l\u2019indice est très présent.' },
+      { s:0.25, e:0.5, title:'Deux nombres à ne pas confondre',
+        anchors: ()=> inputNodes.map(n=> nodePoint(n,26)).concat(inputNodes.map(n=> importancePoint(n))),
+        body: ()=> 'Dans le rond : ce que montre la carte. Il ne change jamais (c\u2019est la photo). Dessous, « Importance donnée » : la confiance que l\u2019IA accorde à cet indice. Elle, elle va évoluer en apprenant.' },
+      { s:0.5, e:0.75, title:'Les poids',
+        anchors: ()=> allInHiddenPairs().map(p=> edgePoint(p.from,p.to,0.44)).concat(allHiddenOutPairs().map(p=> edgePoint(p.from,p.to,0.70))),
+        body: ()=> 'Chaque trait porte un petit chiffre : le poids. C\u2019est l\u2019importance de cette connexion. L\u2019« Importance donnée » d\u2019un indice additionne les poids des traits qui partent de lui. Au départ, le réseau ne sait rien : ces chiffres sont à corriger.' },
+      { s:0.75, e:1.01, title:'Les neurones cachés',
+        anchors: ()=> hiddenNodes.map(n=> nodePoint(n,22)),
+        body: ()=> 'Ils se spécialisent : le rôle de chacun est écrit sous lui. Ils combinent les indices avant de donner la réponse.' },
+    ],
+    forward: [
+      { s:0, e:0.2, title:'1 · Le départ',
+        anchors: ()=> inputNodes.map(n=> nodePoint(n,26)),
+        body: ()=> 'Les indices de la carte entrent dans le réseau et partent le long des traits.' },
+      { s:0.2, e:0.5, title:'2 · Le calcul',
+        anchors: ()=> hiddenNodes.map(n=> nodePoint(n,22)),
+        body: ()=> {
+          const j = hiddenNodes.length-1;
+          const sum = inputs[0]*w1[0][j] + inputs[1]*w1[1][j];
+          return 'Chaque neurone multiplie chaque indice par le poids du trait, puis additionne. Exemple, neurone du bas : ' +
+            fmt(inputs[0]) + ' × ' + fmt(w1[0][j]) + ' + ' + fmt(inputs[1]) + ' × ' + fmt(w1[1][j]) + ' = ' + fmt(sum) +
+            ', ramené entre 0 et 1 : ' + fmt(hiddenAct[j]) + '.';
+        } },
+      { s:0.5, e:0.8, title:'3 · Les avis',
+        anchors: ()=> allHiddenOutPairs().map(p=> edgePoint(p.from,p.to,0.70)),
+        body: ()=> 'Les neurones cachés transmettent leur avis à la sortie, eux aussi multipliés par un poids.' },
+      { s:0.8, e:1.01, title:'4 · La réponse',
+        anchors: ()=> outputNodes.map(n=> nodePoint(n,28)),
+        body: ()=> { const k = predictedIdx(); return 'Le réseau conclut : ' + pct(outputProbs[k]) + ' de chances que ce soit « ' + outputLabels[k] + ' ».'; } },
+    ],
+    error: [
+      { s:0, e:0.5, title:'La réponse de l’IA',
+        anchors: ()=> [ nodePoint(outputNodes[predictedIdx()], 28) ],
+        body: ()=> { const k = predictedIdx(); return 'Elle pense à ' + pct(outputProbs[k]) + ' que c’est « ' + outputLabels[k] + ' ». Mais est-ce vrai ?'; } },
+      { s:0.5, e:1.01, title: ()=> (firstMistakeBanner ? '\u274C Première erreur : elle s\u2019est trompée !' : 'La vraie réponse'),
+        anchors: ()=> [ nodePoint(outputNodes[trueIdx], 28) ],
+        body: ()=> {
+          const wrong = predictedIdx() !== trueIdx;
+          return 'Le prof révèle : « ' + outputLabels[trueIdx] + ' ». ' +
+            (wrong ? 'L’IA s’est trompée ! ' : 'L’IA a vu juste, mais elle peut être plus sûre d’elle. ') +
+            'Erreur = ' + fmt(loss) + ' : plus elle est grande, plus il faut corriger.';
+        } },
+    ],
+    backward: [
+      { s:0, e:0.25, title:'1 · L’erreur repart',
+        anchors: ()=> outputNodes.map(n=> nodePoint(n,28)),
+        body: ()=> 'On part de la sortie, là où on a mesuré l’écart avec la bonne réponse. Les points rouges remontent le réseau.' },
+      { s:0.25, e:0.5, title:'2 · Qui est responsable ?',
+        anchors: ()=> hiddenNodes.map(n=> nodePoint(n,22)),
+        body: ()=> 'L’erreur arrive aux neurones cachés. Chacun calcule sa part de responsabilité : « ai-je poussé vers la mauvaise réponse ? »' },
+      { s:0.5, e:0.8, title:'3 · Jusqu’aux indices',
+        anchors: ()=> inputNodes.map(n=> nodePoint(n,26)),
+        body: ()=> 'Elle atteint les indices de départ : on regarde quels traits ont le plus contribué à l’erreur.' },
+      { s:0.8, e:1.01, title:'Fin de l’enquête',
+        anchors: ()=> [],
+        body: ()=> 'Chaque poids sait maintenant s’il doit augmenter ou diminuer, et de combien. Il reste à le corriger.' },
+    ],
+    update: [
+      { s:0, e:0.5, title:'Les poids bougent',
+        anchors: ()=> { const c = biggestChange(); return c ? [ edgePoint(c.from, c.to, c.t) ] : []; },
+        body: ()=> {
+          const c = biggestChange();
+          if(!c) return 'Chaque poids est corrigé pour réduire l\u2019erreur.';
+          return 'Chaque poids est corrigé pour réduire l\u2019erreur. Exemple : celui-ci passe de ' + fmt(c.before) + ' à ' + fmt(c.after) +
+            '. L’étiquette ' + (c.delta>=0?'+':'') + fmt(c.delta) + ' montre le changement.';
+        } },
+      { s:0.5, e:1.01, title:'On recommence !',
+        anchors: ()=> inputNodes.map(n=> importancePoint(n)),
+        body: ()=> 'Regarde « Importance donnée » sous les indices : elle a changé, car les poids ont été corrigés. L\u2019IA fera un peu moins d\u2019erreur au prochain essai. Répété des milliers de fois, c\u2019est comme ça qu\u2019elle apprend.' },
+    ],
+  };
+
+  function wrapText(text, maxW){
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    words.forEach(w=>{
+      const test = line ? line + ' ' + w : w;
+      if(ctx.measureText(test).width > maxW && line){ lines.push(line); line = w; }
+      else line = test;
+    });
+    if(line) lines.push(line);
+    return lines;
+  }
+
+  function roundRect(x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  function drawBubble(def, alpha, now, pos, total, isLast, ready){
+    const anchors = def.anchors();
+    const bodyFont = '500 13.5px "Inter", sans-serif';
+    const titleFont = '700 14px "Space Grotesk", sans-serif';
+    const smallFont = '600 10.5px "Inter", sans-serif';
+    const maxTextW = 380, padX = 16, padY = 12, lineH = 18.5;
+    const nextLabel = isLast ? 'Étape suivante' : 'Suite';
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // anneaux qui pulsent sur les éléments expliqués
+    const pulse = 0.5 + 0.5*Math.sin(now/260);
+    anchors.forEach(a=>{
+      if(a.rect){
+        roundRect(a.x - a.rect.w/2 - 4 - pulse*2, a.y - a.rect.h/2 - 4 - pulse*2, a.rect.w + 8 + pulse*4, a.rect.h + 8 + pulse*4, 9);
+      } else {
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, a.r + 2 + pulse*4, 0, Math.PI*2);
+      }
+      ctx.strokeStyle = 'rgba(251,191,36,' + (0.55 + 0.4*pulse) + ')';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+
+    // taille de la bulle (texte + colonne de l'icône « suite » à droite)
+    ctx.font = bodyFont;
+    const lines = wrapText(def.body(), maxTextW);
+    const textW = Math.max(...lines.map(l=> ctx.measureText(l).width));
+    ctx.font = titleFont;
+    const titleText = typeof def.title === 'function' ? def.title() : def.title;
+    const titleW = ctx.measureText(titleText).width + 34;   // + place pour le compteur « 2/4 »
+    ctx.font = smallFont;
+    const colW = Math.max(60, ctx.measureText(nextLabel).width + 18);
+    const textBlockW = Math.min(maxTextW, Math.max(textW, titleW));
+    const w = textBlockW + padX*2 + colW;
+    const h = Math.max(padY*2 + 22 + lines.length*lineH, 84);
+
+    // position : dans la bande du bas, sous les éléments concernés
+    const cx = anchors.length ? anchors.reduce((s,a)=> s+a.x, 0)/anchors.length : LOGICAL_W/2;
+    const bx = Math.max(10, Math.min(LOGICAL_W - w - 10, cx - w/2));
+    const by = BUBBLE_TOP + 8;
+
+    // traits pointillés jusqu'aux éléments expliqués
+    ctx.setLineDash([3,4]);
+    ctx.strokeStyle = 'rgba(251,191,36,0.5)';
+    ctx.lineWidth = 1.3;
+    // trait pointillé seulement si peu d'éléments sont désignés (sinon les anneaux suffisent)
+    (anchors.length <= 3 ? anchors : []).forEach(a=>{
+      const sx = Math.max(bx+16, Math.min(bx+w-colW-16, a.x));
+      ctx.beginPath();
+      ctx.moveTo(sx, by);
+      ctx.lineTo(a.x, a.y + a.r + 4);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // cadre de la bulle
+    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = 'rgba(14,12,26,0.97)';
+    roundRect(bx, by, w, h, 14);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(251,191,36,0.75)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // texte
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = titleFont;
+    ctx.fillStyle = '#FBBF24';
+    ctx.fillText(titleText, bx+padX, by+padY+14);
+    ctx.font = bodyFont;
+    ctx.fillStyle = 'rgba(241,237,251,0.96)';
+    lines.forEach((l,i)=> ctx.fillText(l, bx+padX, by+padY+22+14+i*lineH-2));
+
+    // compteur « 2/4 »
+    ctx.font = smallFont;
+    ctx.fillStyle = 'rgba(167,159,196,0.95)';
+    ctx.textAlign = 'right';
+    ctx.fillText((pos+1) + '/' + total, bx + w - colW - 6, by + padY + 13);
+
+    // séparateur + icône « suite » (zone cliquable = toute la colonne de droite)
+    const colX = bx + w - colW;
+    ctx.strokeStyle = 'rgba(251,191,36,0.22)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(colX, by+12);
+    ctx.lineTo(colX, by+h-12);
+    ctx.stroke();
+
+    const icx = colX + colW/2, icy = by + h/2 - 8, ir = 16;
+    const beat = ready ? (0.5 + 0.5*Math.sin(now/330)) : 0;       // bat quand la lecture peut continuer
+    ctx.globalAlpha = alpha * (ready ? 1 : 0.55);
+    if(ready){
+      ctx.beginPath();
+      ctx.arc(icx, icy, ir + 3 + beat*5, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(251,191,36,' + (0.5*(1-beat)) + ')';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(icx, icy, ir, 0, Math.PI*2);
+    ctx.fillStyle = ready ? '#FBBF24' : 'rgba(251,191,36,0.35)';
+    ctx.fill();
+    // flèche (chevron double pour « étape suivante », simple pour « suite »)
+    ctx.strokeStyle = '#12101E';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const chevron = (ox)=>{
+      ctx.beginPath();
+      ctx.moveTo(icx+ox-3, icy-6);
+      ctx.lineTo(icx+ox+3, icy);
+      ctx.lineTo(icx+ox-3, icy+6);
+      ctx.stroke();
+    };
+    if(isLast){ chevron(-3.5); chevron(3.5); } else { chevron(0); }
+    ctx.globalAlpha = alpha;
+    ctx.font = smallFont;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = ready ? '#FBBF24' : 'rgba(251,191,36,0.6)';
+    ctx.fillText(nextLabel, icx, icy + ir + 16);
+    ctx.restore();
+
+    bubbleHit = { x: colX, y: by, w: colW, h: h };
+  }
+
+  function drawBubbles(phKey, progress, now){
+    bubbleHit = null;
+    const list = BUBBLES[phKey];
+    if(!list) return;
+    const idx = Math.min(bubbleIdx, list.length-1);
+    const def = list[idx];
+    const alpha = Math.max(0, Math.min(1, (now - bubbleChangedAt) / 280));
+    const cap = Math.min(1, def.e);
+    const ready = reducedMotion || progress >= cap - 0.0001;
+    drawBubble(def, alpha, now, idx, list.length, idx === list.length-1, ready);
+  }
+
+  // Passer à la bulle suivante ; après la dernière, on passe à l'étape suivante.
+  function nextBubble(){
+    const ph = PHASES[phaseIdx];
+    const list = BUBBLES[ph.key] || [];
+    const now = performance.now();
+    if(bubbleIdx < list.length-1){
+      bubbleIdx += 1;
+      bubbleChangedAt = now;
+      phaseProg = Math.max(phaseProg, list[bubbleIdx].s);   // si l'élève a cliqué tôt, l'animation saute au bon endroit
+    } else {
+      advancePhase(now);
+    }
+  }
+
+  // ---------- Scène photo -> caméra -> réseau -> écran ----------
+  const sceneEl = document.getElementById('app');
+  const sceneIconEl = document.getElementById('sceneIcon');
+  const scrL1 = document.getElementById('scrL1');
+  const scrL2 = document.getElementById('scrL2');
+  const camFlashEl = document.getElementById('camFlash');
+  const screenFrame = document.getElementById('screenFrame');
+  const screenGroup = document.getElementById('screenGroup');
+  let sceneKey = '';
+
+  function setSceneIcon(iconId){
+    const src = document.getElementById(iconId);
+    if(src) sceneIconEl.innerHTML = src.innerHTML;
+  }
+
+  function setScreen(l1, c1, l2, c2, blink){
+    scrL1.textContent = l1; scrL1.setAttribute('fill', c1);
+    scrL2.textContent = l2; scrL2.setAttribute('fill', c2);
+    scrL1.classList.toggle('blink', !!blink);
+  }
+
+  function updateScene(phKey){
+    const theme = themes[currentTheme];
+    let state = 'wait';
+    if(phKey === 'forward')       state = bubbleIdx >= 3 ? 'answer' : 'seeing';
+    else if(phKey === 'error')    state = bubbleIdx >= 1 ? 'verdict' : 'answer';
+    else if(phKey === 'backward') state = 'searching';
+    else if(phKey === 'update')   state = 'learning';
+
+    const k = predictedIdx();
+    const wrong = k !== trueIdx;
+    const p = Math.round(outputProbs[k]*100);
+    const key = [state, currentTheme, currentCase, k, p, wrong].join('|');
+    if(key === sceneKey) return;
+    const prevState = sceneKey.split('|')[0];
+    sceneKey = key;
+    sceneEl.dataset.state = state;
+
+    const MINT = '#6EE7B7', AMBER = '#FBBF24', CORAL = '#FB7185', MUTED = '#A79FC4', TEXT = '#F1EDFB';
+    if(state === 'wait')            setScreen('En attente…', MUTED, 'd’une image', MUTED, false);
+    else if(state === 'seeing')     setScreen('Je regarde…', AMBER, 'analyse en cours', MUTED, true);
+    else if(state === 'answer')     setScreen(theme.answerTexts[k], MINT, p + ' % de confiance', TEXT, false);
+    else if(state === 'verdict')    setScreen(theme.answerTexts[k], MINT,
+                                        wrong ? '✘ Faux ! C’était : ' + outputLabels[trueIdx] : '✔ Bonne réponse !',
+                                        wrong ? CORAL : MINT, false);
+    else if(state === 'searching')  setScreen('Je cherche mon erreur…', CORAL, 'elle remonte le réseau', MUTED, true);
+    else if(state === 'learning')   setScreen('Je m’ajuste…', AMBER, 'les poids changent', MUTED, true);
+
+    // cadre de l'écran : rouge quand l'IA s'est trompée
+    screenFrame.setAttribute('stroke', (state === 'verdict' && wrong) ? CORAL : MINT);
+    if(state === 'verdict' && wrong && firstMistakeBanner && prevState !== 'verdict'){
+      screenGroup.classList.remove('shake');
+      void screenGroup.getBoundingClientRect();
+      screenGroup.classList.add('shake');
+    }
+
+    // petit flash de la caméra quand une nouvelle image entre dans le réseau
+    if(state === 'seeing' && prevState !== 'seeing'){
+      camFlashEl.classList.remove('go');
+      void camFlashEl.getBoundingClientRect();
+      camFlashEl.classList.add('go');
+    }
+  }
+
   function render(now){
     ctx.clearRect(0,0,LOGICAL_W,LOGICAL_H);
 
@@ -891,8 +1110,13 @@
     ctx.fillText('SORTIE', outputNodes[0].x, 20);
 
     const ph = PHASES[phaseIdx];
-    const elapsed = now - phaseStart;
-    const progress = reducedMotion ? 1 : Math.max(0, Math.min(1, elapsed / ph.dur));
+    // Le temps ne s'écoule que jusqu'à la fin du segment de la bulle affichée : ensuite, on attend l'élève.
+    const dt = Math.min(100, Math.max(0, now - lastNow));
+    lastNow = now;
+    const bubbleList = BUBBLES[ph.key] || [];
+    const cap = bubbleList.length ? Math.min(1, bubbleList[Math.min(bubbleIdx, bubbleList.length-1)].e) : 1;
+    if(!reducedMotion) phaseProg = Math.min(cap, phaseProg + dt / (ph.dur * TEMPO));
+    const progress = reducedMotion ? 1 : phaseProg;
 
     let fwdGlow = null, bwdGlow = null, phase1Half = null;
 
@@ -908,7 +1132,7 @@
     // Interpolate weights from their pre-update values so coefficients visibly move
     let w1Disp = w1, w2Disp = w2;
     if(ph.key === 'update' && w1Before && w2Before){
-      const updateT = easeInOut(progress);
+      const updateT = easeInOut(Math.min(1, progress/0.5));
       w1Disp = lerpMatrix(w1Before, w1, updateT);
       w2Disp = lerpMatrix(w2Before, w2, updateT);
     }
@@ -925,7 +1149,7 @@
     );
 
     // Always show the actual weight value on every connection, from the very first frame
-    allInHiddenPairs().forEach(edge=> drawWeightLabel(edge.from, edge.to, 0.30, w1Disp[edge.wi][edge.wj]));
+    allInHiddenPairs().forEach(edge=> drawWeightLabel(edge.from, edge.to, 0.44, w1Disp[edge.wi][edge.wj]));
     allHiddenOutPairs().forEach(edge=> drawWeightLabel(edge.from, edge.to, 0.70, w2Disp[edge.wi][edge.wj]));
 
     if(ph.key === 'update' && w1Before && w2Before){
@@ -983,7 +1207,7 @@
     // unlike the fixed 0,92 / 0,70 value shown on the node itself)
     inputNodes.forEach((n,i)=>{
       const importance = w1ForRoles[i].reduce((s,v)=> s + Math.abs(v), 0);
-      drawRoleLabel(n.x, n.y + 30, 'Force actuelle : ' + importance.toFixed(2));
+      drawRoleLabel(n.x, n.y + 30, 'Importance donnée : ' + importance.toFixed(2));
     });
 
     // true label marker
@@ -1004,6 +1228,10 @@
 
     drawSparkline();
 
+    // bulles explicatives (par-dessus le réseau, dans la bande du bas)
+    drawBubbles(ph.key, progress, now);
+    updateScene(ph.key);
+
     // HUD text updates
     lossVal.textContent = loss===null ? '–' : loss.toFixed(3);
   }
@@ -1015,7 +1243,7 @@
   }
 
   function start(){
-    resize();
+    fit();
     initModel();
     refreshCardUI();
     enterPhase(0, performance.now());
@@ -1023,7 +1251,6 @@
   }
 
   // ---------- Controls ----------
-  const nextBtn = document.getElementById('nextBtn');
   const resetBtn = document.getElementById('resetBtn');
   const themeTitleEl = document.getElementById('themeTitle');
   const themeIntroEl = document.getElementById('themeIntro');
@@ -1036,6 +1263,8 @@
     allIconIds.forEach(id=>{
       document.getElementById(id).classList.toggle('hidden', id !== c.icon);
     });
+    setSceneIcon(c.icon);
+    sceneKey = '';
     document.querySelector('.example-text').innerHTML =
       'Carte montrée à l\'IA : <b>' + c.traitText + '</b><br>' +
       'Vraie réponse (' + theme.trueLabelWho + ') : <b style="color:var(--mint)">' + outputLabels[trueIdx] + '</b>';
@@ -1084,8 +1313,20 @@
     b.addEventListener('click', ()=> setCase(b.dataset.case));
   });
 
-  nextBtn.addEventListener('click', ()=>{
-    advancePhase(performance.now());
+
+  // Icône « suite » dessinée dans la bulle : clic (ou toucher) sur la colonne de droite
+  function canvasPoint(e){
+    const r = canvas.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * LOGICAL_W / r.width, y: (e.clientY - r.top) * LOGICAL_H / r.height };
+  }
+  function overHit(pt){
+    return bubbleHit && pt.x >= bubbleHit.x && pt.x <= bubbleHit.x + bubbleHit.w && pt.y >= bubbleHit.y && pt.y <= bubbleHit.y + bubbleHit.h;
+  }
+  canvas.addEventListener('click', (e)=>{ if(overHit(canvasPoint(e))) nextBubble(); });
+  canvas.addEventListener('mousemove', (e)=>{ canvas.style.cursor = overHit(canvasPoint(e)) ? 'pointer' : 'default'; });
+  document.addEventListener('keydown', (e)=>{
+    // flèche droite = « suite » (pratique en classe, sans la souris)
+    if(e.key === 'ArrowRight' && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) nextBubble();
   });
 
   resetBtn.addEventListener('click', ()=>{
