@@ -256,10 +256,11 @@ function step5(){
 const STEPF=[step0,step1,step2,step3,step4,step5];
 
 /* ---------- Rendu ---------- */
+let lastStep=0;
 function render(){
   $('steps').innerHTML=STEPS.map((t,i)=>`<span class="${i===S.step?'on':i<S.step?'done':''}">${i<S.step?'✔ ':''}${t}</span>`).join('');
   $('main').innerHTML=STEPF[S.step]();
-  window.scrollTo({top:0,behavior:'smooth'});
+  if(S.step!==lastStep){window.scrollTo({top:0,behavior:'smooth'});lastStep=S.step;}
 }
 function act(el,e){
   const a=el.dataset.act;
