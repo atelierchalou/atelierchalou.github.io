@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>:root{color-scheme:light}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Réglages laser xTool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: une colonne d'atelier. Choix en 4 étapes (machine, matériau, épaisseur, opération), fiche de réglages modifiable, puis générateur de cercles et disques d'essai. */
+:root {
+  --bg: #edf0ee;
+  --surface: #ffffff;
+  --fg: #17211f;
+  --muted: #55635f;
+  --line: #cbd3d0;
+  --accent: #0b6b5e;
+  --accent-fg: #ffffff;
+  --accent-soft: #dcefeb;
+  --warn: #8a4f00;
+  --warn-bg: #fcefd8;
+  --danger: #a3231b;
+  --danger-bg: #fbe4e1;
+  --wood: #dcbc8c;
+  --wood-line: #b8956a;
+  --kerf: #2b1a10;
+  --font-display: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101615; --surface: #18211f; --fg: #e7eeec; --muted: #9fb0ab; --line: #2e3c39;
+    --accent: #4cc2ae; --accent-fg: #06201b; --accent-soft: #17302b;
+    --warn: #f0b45a; --warn-bg: #33270f; --danger: #ff8e84; --danger-bg: #3a1714;
+    --wood: #b8935f; --wood-line: #7d6139; --kerf: #0b0705;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101615; --surface: #18211f; --fg: #e7eeec; --muted: #9fb0ab; --line: #2e3c39;
+  --accent: #4cc2ae; --accent-fg: #06201b; --accent-soft: #17302b;
+  --warn: #f0b45a; --warn-bg: #33270f; --danger: #ff8e84; --danger-bg: #3a1714;
+  --wood: #b8935f; --wood-line: #7d6139; --kerf: #0b0705;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-inline: 16px; padding-block: 20px 40px;
+}
+.wrap { max-width: 760px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+.wrap > * { min-width: 0; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 2rem; line-height: 1.1; font-weight: 700; letter-spacing: .01em; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 60ch; }
+.step-label {
+  font-family: var(--font-display); font-weight: 600; font-size: .85rem;
+  text-transform: uppercase; letter-spacing: .09em; color: var(--muted);
+  margin: 0 0 8px; display: block;
+}
+.group-title { font-size: .8rem; color: var(--muted); margin: 10px 0 6px; font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font: 500 .95rem var(--font-body); color: var(--fg);
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px;
+  padding: 9px 13px; min-height: 44px; cursor: pointer;
+}
+.chip:hover { border-color: var(--accent); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.chip.star { border-width: 2px; }
+.chip:disabled { opacity: .4; cursor: not-allowed; }
+.chip:focus-visible, summary:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .pick:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.machine-info { color: var(--muted); font-size: .9rem; margin: 8px 0 0; max-width: 62ch; }
+.thick { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 8px; }
+.thick .chip { font-family: var(--font-mono); font-weight: 700; padding-inline: 4px; text-align: center; }
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.modes .chip { text-align: center; padding-inline: 6px; }
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px; display: flex; flex-direction: column; gap: 16px;
+}
+.panel > * { min-width: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.panel-head h2 { font-size: 1.35rem; font-weight: 700; }
+.tag { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.readout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.read { background: var(--accent-soft); border-radius: 10px; padding: 12px 10px; min-width: 0; }
+.read span { display: block; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; font-weight: 600; color: var(--muted); }
+.read b { display: block; font-family: var(--font-mono); font-size: clamp(1.6rem, 7vw, 2.4rem); line-height: 1.15; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.read em { font-style: normal; font-size: .8rem; color: var(--muted); }
+.src { font-size: .88rem; border-radius: 8px; padding: 8px 12px; margin: 0; }
+.src.ok { background: var(--accent-soft); color: var(--accent); }
+.src.est { background: var(--warn-bg); color: var(--warn); }
+.src b { font-weight: 700; }
+.section-fig { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.section-fig svg { flex: 0 0 auto; max-width: 100%; }
+.section-fig p { margin: 0; flex: 1 1 200px; min-width: 0; color: var(--muted); font-size: .9rem; }
+.notes { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px; }
+.alert { border-radius: 8px; padding: 10px 12px; font-size: .92rem; margin-bottom: 8px; }
+.alert:last-child { margin-bottom: 0; }
+.alert.warn { background: var(--warn-bg); color: var(--warn); }
+.alert.danger { background: var(--danger-bg); color: var(--danger); }
+.alert b { font-weight: 700; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  font: 600 .95rem var(--font-body); color: var(--accent);
+  background: transparent; border: 1.5px solid var(--accent); border-radius: 8px;
+  padding: 9px 14px; min-height: 44px; cursor: pointer;
+}
+.btn:hover { background: var(--accent-soft); }
+.btn.solid { background: var(--accent); color: var(--accent-fg); }
+.btn.solid:hover { filter: brightness(1.08); }
+.btn.quiet { color: var(--muted); border-color: var(--line); }
+.btn.danger { color: var(--danger); border-color: var(--danger); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+form.fields, .fields {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;
+}
+.field { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: var(--muted); font-weight: 600; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+input, select, textarea {
+  font: 500 1rem var(--font-mono); color: var(--fg); background: var(--bg);
+  border: 1.5px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 44px; width: 100%; min-width: 0;
+}
+textarea { font-size: .82rem; min-height: 96px; resize: vertical; }
+input[type="file"] { font: 500 .9rem var(--font-body); padding: 8px; }
+.edit-box { border: 1.5px solid var(--accent); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.edit-box h3 { font-size: 1.05rem; }
+.msg { margin: 0; font-size: .88rem; color: var(--warn); min-height: 1.3em; }
+.msg.good { color: var(--accent); }
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 18px; }
+details.inner { border-radius: 8px; padding: 0 12px; background: var(--bg); }
+summary { cursor: pointer; padding: 14px 0; font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; }
+details.inner summary { font-size: 1rem; padding: 10px 0; }
+details[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.table-scroll { overflow-x: auto; padding-bottom: 14px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: .92rem; }
+th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-family: var(--font-display); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+td { font-family: var(--font-mono); }
+td.s { font-family: var(--font-body); font-size: .8rem; }
+tr.sel td { background: var(--accent-soft); font-weight: 700; }
+tr.lim td { color: var(--warn); }
+.sw { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: middle; }
+.steps { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 4px; font-size: .93rem; }
+.preview { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); padding: 10px; }
+.preview svg { display: block; width: 100%; height: auto; max-width: 560px; margin-inline: auto; }
+.preview .pick { cursor: pointer; fill: transparent; }
+.preview .pick:hover { fill: var(--accent-soft); fill-opacity: .6; }
+.legend { margin: 0; font-size: .85rem; color: var(--muted); }
+.mine-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mine-list li { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: .9rem; min-width: 0; }
+.mine-list li span { min-width: 0; overflow-wrap: anywhere; }
+.mine-list .btn { min-height: 36px; padding: 4px 10px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.rules h3 { font-size: 1rem; margin-bottom: 6px; }
+.rules ul { margin: 0; padding-left: 1.1em; font-size: .92rem; display: flex; flex-direction: column; gap: 4px; }
+.rule-box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.rule-box.no { background: var(--danger-bg); border-color: transparent; }
+.rule-box.no h3 { color: var(--danger); }
+.sources ul { margin: 0; padding-left: 1.1em; font-size: .88rem; display: flex; flex-direction: column; gap: 4px; }
+.sources a { color: var(--accent); overflow-wrap: anywhere; }
+.foot { color: var(--muted); font-size: .85rem; margin: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .chip { transition: background .12s, border-color .12s; }
+}
+</style>
+
+<main class="wrap">
+  <header>
+    <h1>Réglages laser xTool et Atomstack</h1>
+    <p class="sub">Choisis ta machine, le matériau, l'épaisseur et l'opération. Tu obtiens la puissance, la vitesse et le nombre de passes. Après un essai, tu peux corriger la valeur et générer une plaque de test.</p>
+  </header>
+
+  <section aria-labelledby="l-mach">
+    <span class="step-label" id="l-mach">1 · Machine</span>
+    <div class="chips" id="machines"></div>
+    <p class="machine-info" id="m-info"></p>
+  </section>
+
+  <section aria-labelledby="l-mat">
+    <span class="step-label" id="l-mat">2 · Matériau</span>
+    <div id="materials"></div>
+  </section>
+
+  <section id="thick-section" aria-labelledby="l-thick">
+    <span class="step-label" id="l-thick">3 · Épaisseur (mm)</span>
+    <div class="thick" id="thick"></div>
+  </section>
+
+  <section aria-labelledby="l-mode">
+    <span class="step-label" id="l-mode">4 · Opération</span>
+    <div class="modes" id="modes"></div>
+  </section>
+
+  <section class="panel" aria-live="polite">
+    <div class="panel-head">
+      <h2 id="r-title">Contreplaqué tilleul</h2>
+      <span class="tag" id="r-tag">3 mm · Découpe</span>
+    </div>
+    <div class="readout">
+      <div class="read"><span>Puissance</span><b id="r-power">100</b><em>%</em></div>
+      <div class="read"><span>Vitesse</span><b id="r-speed">6</b><em id="r-speed-u">mm/s</em></div>
+      <div class="read"><span>Passes</span><b id="r-pass">1</b><em id="r-pass-u">passe</em></div>
+    </div>
+    <p class="src" id="r-src"></p>
+    <div id="r-alerts"></div>
+    <div class="section-fig" id="fig-box">
+      <svg id="fig" width="190" height="130" viewBox="0 0 190 130" role="img" aria-label="Coupe du matériau"></svg>
+      <p id="fig-cap"></p>
+    </div>
+    <ul class="notes" id="r-notes"></ul>
+    <div class="actions">
+      <button class="btn" id="copy" type="button">Copier les réglages</button>
+      <button class="btn solid" id="edit-open" type="button">Modifier après test</button>
+    </div>
+    <form class="edit-box" id="edit" hidden>
+      <h3 id="e-title">Valeurs retenues après test</h3>
+      <div class="fields">
+        <label class="field" for="e-p">Puissance (%)<input id="e-p" type="number" min="1" max="100" step="any" inputmode="decimal"></label>
+        <label class="field" for="e-s">Vitesse (mm/s)<input id="e-s" type="number" min="0.1" max="400" step="any" inputmode="decimal"></label>
+        <label class="field" id="e-n-wrap" for="e-n">Passes<input id="e-n" type="number" min="1" max="60" step="1" inputmode="numeric"></label>
+        <label class="field wide" for="e-note">Remarque (facultatif)<input id="e-note" type="text" maxlength="160" placeholder="Ex. coupe propre, bord légèrement noirci" style="font-family:var(--font-body)"></label>
+      </div>
+      <p class="msg" id="e-msg"></p>
+      <div class="actions">
+        <button class="btn solid" type="submit">Enregistrer</button>
+        <button class="btn quiet" type="button" id="e-reset">Revenir à la valeur d'origine</button>
+        <button class="btn quiet" type="button" id="e-cancel">Annuler</button>
+      </div>
+    </form>
+  </section>
+
+  <details id="table-box">
+    <summary id="table-title">Tableau complet : découpe du contreplaqué tilleul</summary>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Épaisseur</th><th>Puissance</th><th>Vitesse</th><th>Passes</th><th>Source</th></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </details>
+
+  <section class="panel" id="gen" aria-labelledby="g-h">
+    <div class="panel-head">
+      <h2 id="g-h">Tester d'autres valeurs</h2>
+      <span class="tag" id="g-tag"></span>
+    </div>
+    <ol class="steps">
+      <li>Règle la grille ci-dessous (par défaut, elle encadre la valeur actuelle).</li>
+      <li>Télécharge le fichier, pose une chute du même matériau et lance l'essai.</li>
+      <li>Clique sur la meilleure case dans l'aperçu : ses valeurs s'ouvrent dans « Modifier après test ».</li>
+    </ol>
+    <form class="fields" id="gen-form" onsubmit="return false">
+      <label class="field" for="g-shape">Forme
+        <select id="g-shape"><option value="circle">Cercles (contour : découpe, trait)</option><option value="disc">Disques pleins (gravure)</option></select>
+      </label>
+      <label class="field" for="g-rowvar">Les lignes varient en
+        <select id="g-rowvar"><option value="power">Puissance (%)</option><option value="passes">Nombre de passes</option></select>
+      </label>
+      <label class="field" for="g-d">Diamètre (mm)<input id="g-d" type="number" min="5" max="30" step="any"></label>
+      <label class="field" for="g-gap">Écart entre formes (mm)<input id="g-gap" type="number" min="2" max="20" step="any"></label>
+      <label class="field" for="g-sfrom">Vitesse mini (mm/s)<input id="g-sfrom" type="number" min="0.1" max="400" step="any"></label>
+      <label class="field" for="g-sto">Vitesse maxi (mm/s)<input id="g-sto" type="number" min="0.1" max="400" step="any"></label>
+      <label class="field" for="g-scount">Colonnes (1 à 8)<input id="g-scount" type="number" min="1" max="8" step="1"></label>
+      <label class="field" for="g-rfrom" id="g-rfrom-l">Ligne mini<input id="g-rfrom" type="number" min="1" max="100" step="any"></label>
+      <label class="field" for="g-rto" id="g-rto-l">Ligne maxi<input id="g-rto" type="number" min="1" max="100" step="any"></label>
+      <label class="field" for="g-rcount">Lignes (1 à 8)<input id="g-rcount" type="number" min="1" max="8" step="1"></label>
+      <label class="field" id="g-fp-w" for="g-fp">Puissance fixe (%)<input id="g-fp" type="number" min="1" max="100" step="any"></label>
+      <label class="field" id="g-fn-w" for="g-fn">Passes fixes<input id="g-fn" type="number" min="1" max="60" step="1"></label>
+      <label class="field" id="g-ls-w" for="g-ls">Interligne gravure (mm)<input id="g-ls" type="number" min="0.03" max="1" step="any"></label>
+      <label class="field" for="g-lp">Étiquettes : puissance (%)<input id="g-lp" type="number" min="1" max="100" step="any"></label>
+      <label class="field" for="g-lsp">Étiquettes : vitesse (mm/s)<input id="g-lsp" type="number" min="1" max="400" step="any"></label>
+      <label class="field gc" for="g-smax">G-code : S maximum<input id="g-smax" type="number" min="1" max="10000" step="1"></label>
+      <label class="field gc" for="g-laser">G-code : mode laser
+        <select id="g-laser"><option value="M4">M4 (dynamique, conseillé)</option><option value="M3">M3 (constant)</option></select>
+      </label>
+    </form>
+    <p class="msg" id="g-msg"></p>
+    <div id="g-out" hidden>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <p class="legend" id="g-info"></p>
+        <div class="preview" id="g-prev"></div>
+        <p class="legend" id="g-legend"></p>
+        <div class="actions">
+          <button class="btn solid" type="button" id="dl-svg">Télécharger le SVG</button>
+          <button class="btn" type="button" id="cp-svg">Copier le SVG</button>
+          <button class="btn solid gc" type="button" id="dl-gc">Télécharger le G-code</button>
+          <button class="btn gc" type="button" id="cp-gc">Copier le G-code</button>
+        </div>
+        <p class="msg good" id="g-dl-msg"></p>
+        <p class="legend" id="g-help"></p>
+        <details class="inner">
+          <summary>Réglages de chaque case (couleurs du SVG)</summary>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Couleur</th><th>Ligne</th><th>Colonne</th><th>Puissance</th><th>Vitesse</th><th>Passes</th></tr></thead>
+              <tbody id="g-table"></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <details id="mine">
+    <summary>Valeurs testées et partage</summary>
+    <div style="display:flex;flex-direction:column;gap:14px;padding-bottom:16px">
+      <p class="legend" id="mine-intro"></p>
+      <ul class="mine-list" id="mine-list"></ul>
+      <div class="actions">
+        <button class="btn solid" type="button" id="ex-dl">Télécharger reglages.json</button>
+        <button class="btn" type="button" id="ex-cp">Copier le JSON</button>
+      </div>
+      <label class="field" for="im-file">Importer un fichier reglages.json
+        <input id="im-file" type="file" accept=".json,application/json">
+      </label>
+      <label class="field" for="im-text">Ou colle le contenu ici
+        <textarea id="im-text" spellcheck="false" placeholder='{ "version": 1, "valeurs": { … } }'></textarea>
+      </label>
+      <div class="actions"><button class="btn" type="button" id="im-go">Importer le texte collé</button></div>
+      <p class="msg" id="mine-msg"></p>
+    </div>
+  </details>
+
+  <section aria-labelledby="l-rules">
+    <span class="step-label" id="l-rules">Avant de lancer</span>
+    <div class="rules">
+      <div class="rule-box">
+        <h3>À chaque découpe</h3>
+        <ul>
+          <li>Couvercle fermé, extraction de fumées allumée.</li>
+          <li>Jet d'air au maximum pour couper.</li>
+          <li>Ne quitte jamais la machine pendant le travail.</li>
+          <li>Un extincteur à portée, la machine refroidie avant de rouvrir.</li>
+          <li>Fais un test sur une chute avant la vraie pièce.</li>
+        </ul>
+      </div>
+      <div class="rule-box no">
+        <h3>Interdit au laser</h3>
+        <ul>
+          <li>PVC, vinyle, simili cuir (gaz de chlore, toxique).</li>
+          <li>Polycarbonate, ABS, polystyrène, mousses.</li>
+          <li>Fibre de verre, fibre de carbone.</li>
+          <li>Cuir à tannage chrome, matériau inconnu.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sources">
+    <span class="step-label">D'où viennent les valeurs</span>
+    <ul>
+      <li>Valeurs « xTool » (machine xTool M1 uniquement) : contreplaqué tilleul 3 mm et 6 mm, acrylique noir 3 mm, d'après la bibliothèque de matériaux xTool reprise par <a href="https://www.machinesformakers.com/laser-settings/m1/1-8-3mm-basswood-plywood" target="_blank" rel="noopener">Machines for Makers</a> (<a href="https://www.machinesformakers.com/laser-settings/m1/1-4-6mm-basswood-plywood" target="_blank" rel="noopener">6 mm</a>, <a href="https://www.machinesformakers.com/laser-settings/m1/1-8-3mm-black-acrylic" target="_blank" rel="noopener">acrylique</a>).</li>
+      <li>Épaisseur maximale : xTool indique 8 mm de tilleul pour la M1 10 W en laboratoire (<a href="https://support.xtool.com/article/1912" target="_blank" rel="noopener">support xTool</a>).</li>
+      <li>Atomstack A10 Pro : la fiche <a href="https://atomstack.com/products/atomstack-a10-pro-v2-laser-engraver" target="_blank" rel="noopener">Atomstack</a> indique 10 W de puissance optique pour 50 W en entrée. Je n'ai pas trouvé de tableau de réglages fiable. Les valeurs reprennent celles de la M1 (même classe 10 W) et restent des estimations. Un utilisateur sur le <a href="https://forum.lightburnsoftware.com/t/atomstack-s10-pro-x7-pro-settings/59353" target="_blank" rel="noopener">forum LightBurn</a> rapporte 11 passes à 3 mm/s et 100 % pour un contreplaqué de feuillu d'environ 5 mm avec une diode 10 W : les épaisseurs fortes demanderont sans doute plus de passes que le tableau.</li>
+      <li>Les autres tilleuls (1, 2, 4, 5, 7 à 10 mm) sont interpolés à partir des points xTool. Les autres matériaux sont mes estimations, sans source.</li>
+      <li>Les valeurs « testées » sont celles que vous avez enregistrées vous-mêmes avec le formulaire. Elles passent avant les autres.</li>
+      <li>Bibliothèque officielle xTool complète : xTool Studio ou <a href="https://www.atomm.com/materials-lab/official" target="_blank" rel="noopener">le site xTool</a>.</li>
+    </ul>
+  </section>
+
+  <p class="foot">Valeurs pour une diode 10 W, point focal réglé et jet d'air actif. Elles varient selon le lot de bois, l'humidité, la colle du contreplaqué et l'état de la lentille.</p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmt = n => String(n).replace('.', ',');
+  const r1 = v => +(+v).toFixed(1);
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  const MACHINES = [
+    { id: 'm1', name: 'xTool M1 10 W', short: 'xTool M1', gcode: false,
+      info: 'Diode 10 W, logiciel xTool Studio. Les vitesses sont en mm/s. Pour les essais, importe le SVG dans xTool Studio.' },
+    { id: 'a10', name: 'Atomstack A10 Pro', short: 'A10 Pro', gcode: true,
+      info: 'Diode 10 W optique (50 W électrique), logiciels LaserGRBL, LightBurn ou AtomStack Studio. Les vitesses sont en mm/s ici ; LaserGRBL les compte en mm/min (multiplie par 60).' }
+  ];
+
+  // Tilleul : 3 mm et 6 mm viennent de la bibliothèque de matériaux xTool (M1). Les autres épaisseurs sont interpolées.
+  const CUT_TILLEUL = {
+    1: [100, 20, 1], 2: [100, 10, 1], 3: [100, 6, 1], 4: [100, 3, 1], 5: [100, 4, 2],
+    6: [90, 3, 2], 7: [100, 3, 3], 8: [100, 3, 4], 9: [100, 3, 5], 10: [100, 3, 6]
+  };
+  // cut: épaisseur -> [puissance %, vitesse mm/s, passes]. engrave et score: [puissance %, vitesse mm/s].
+  const M = [
+    { id: 'tilleul', name: 'Contreplaqué tilleul', group: 'Bois', star: true, plies: true,
+      cut: CUT_TILLEUL, limit: 8, engrave: [40, 180], score: [20, 100], ver: { cut: [3, 6], engrave: true },
+      notes: ['Matériau de référence pour les élèves : propre, léger, coupe régulière.',
+              'Pose la plaque bien à plat. Un contreplaqué gondolé fait manquer la coupe.',
+              'Pour les épaisseurs fortes, laisse refroidir 20 secondes entre deux séries de passes si le bord noircit.'] },
+    { id: 'bouleau', name: 'Contreplaqué bouleau', group: 'Bois', plies: true,
+      cut: { 3: [100, 5, 2], 4: [100, 5, 3], 6: [100, 5, 5] }, limit: 4, engrave: [40, 180], score: [25, 100],
+      notes: ['Plus dense et plus collé que le tilleul : il coupe plus lentement.', 'Les couches de colle peuvent bloquer la coupe, vérifie le dos de la plaque.'] },
+    { id: 'peuplier', name: 'Contreplaqué peuplier', group: 'Bois', plies: true,
+      cut: { 3: [100, 6, 1], 5: [100, 4, 2], 6: [90, 3, 2] }, limit: 6, engrave: [35, 200], score: [20, 100],
+      notes: ['Coupe proche du tilleul, avec des veines plus irrégulières.'] },
+    { id: 'balsa', name: 'Balsa', group: 'Bois',
+      cut: { 1: [100, 40, 1], 2: [100, 25, 1], 3: [100, 15, 1], 5: [100, 8, 1] }, limit: 5, engrave: [25, 220], score: [12, 120],
+      notes: ['Très tendre : la gravure creuse vite, reste sur une faible puissance.'] },
+    { id: 'mdf', name: 'MDF', group: 'Bois', mdf: true,
+      cut: { 3: [100, 4, 3] }, limit: 3, engrave: [40, 180], score: [25, 100],
+      notes: ['Fumées denses et colle chauffée : extraction obligatoire.', 'Les bords sortent noirs et la coupe est lente. Préfère le tilleul quand tu peux.'] },
+    { id: 'liege', name: 'Liège', group: 'Bois',
+      cut: { 2: [100, 12, 1], 3: [100, 8, 1] }, limit: 3, engrave: [25, 200], score: [15, 100],
+      notes: ['Surveille la découpe, le liège peut se consumer.'] },
+    { id: 'carton', name: 'Carton', group: 'Papier et souple',
+      cut: { 1: [100, 30, 1], 2: [100, 18, 1], 3: [100, 12, 1] }, limit: 3, engrave: [20, 200], score: [10, 150],
+      notes: ['Risque d\'inflammation : reste devant la machine et garde le jet d\'air réglé fort.', 'Pose un poids léger ou un aimant pour bien plaquer le carton.'] },
+    { id: 'papier', name: 'Papier, carte', group: 'Papier et souple',
+      cut: { 0.3: [50, 60, 1] }, limit: 0.3, engrave: [10, 250], score: [8, 200],
+      notes: ['Fais un test : le papier brûle au moindre excès de puissance.'] },
+    { id: 'cuir', name: 'Cuir végétal', group: 'Papier et souple',
+      cut: { 2: [100, 10, 2] }, limit: 2, engrave: [35, 180], score: [20, 100],
+      notes: ['Uniquement du cuir à tannage végétal. Le cuir chrome dégage des fumées toxiques.', 'Odeur forte : ventile bien le local.'] },
+    { id: 'feutre', name: 'Feutre', group: 'Papier et souple',
+      cut: { 3: [100, 10, 1] }, limit: 3, engrave: [30, 200], score: [15, 120],
+      notes: ['Feutre en laine ou en coton. Évite le feutre synthétique qui fond.'] },
+    { id: 'acrylique', name: 'Acrylique noir opaque', group: 'Plastique',
+      cut: { 3: [100, 2, 1] }, limit: 3, engrave: [30, 230], score: [25, 100], ver: { cut: [3], engrave: true },
+      notes: ['Seul l\'acrylique coulé noir ou foncé opaque est accepté. Le transparent, le bleu et le vert laissent passer le faisceau.', 'Dégage une odeur forte : ventile bien.'] },
+    { id: 'ardoise', name: 'Ardoise', group: 'Gravure seule', onlyEngrave: true,
+      engrave: [70, 150], score: [50, 100], notes: ['Gravure uniquement, la découpe est impossible.', 'Le dessin ressort en gris clair. Essuie la poussière avec un chiffon sec.'] },
+    { id: 'alu', name: 'Aluminium anodisé', group: 'Gravure seule', onlyEngrave: true,
+      engrave: [80, 120], score: [60, 100], notes: ['Gravure uniquement, sur de l\'aluminium anodisé ou peint. L\'aluminium brut ne marque pas.', 'Surface réfléchissante : ne regarde jamais le point de gravure sans lunettes.'] },
+    { id: 'ceramique', name: 'Céramique émaillée', group: 'Gravure seule', onlyEngrave: true,
+      engrave: [70, 150], score: [50, 100], notes: ['Gravure uniquement, sur carrelage ou céramique émaillée foncée.', 'Test obligatoire : le rendu dépend de l\'émail.'] },
+    { id: 'acryl-dos', name: 'Acrylique transparent, dos peint', group: 'Gravure seule', onlyEngrave: true,
+      engrave: [30, 200], score: [20, 150],
+      notes: ['Le laser enlève la peinture, il ne grave pas l\'acrylique. La pièce doit être déjà découpée : une diode 10 W ne coupe pas l\'acrylique transparent.',
+              'Peins le dos en noir mat, une couche fine et régulière (bombe ou feutre posca). Laisse sécher complètement, au moins 1 heure.',
+              'Retourne le dessin en miroir dans le logiciel, puis pose la pièce face peinte vers le haut. Le motif se lit à travers l\'acrylique.',
+              'Si la peinture ne part pas, augmente la puissance de 5 % à la fois. Si l\'acrylique marque ou fond, baisse-la.',
+              'Retire le film de protection côté face avant seulement après la gravure, et nettoie les résidus avec un chiffon doux.',
+              'Peinture chauffée : extraction de fumées allumée, couvercle fermé.'] }
+  ];
+
+  const MODES = [{ id: 'cut', label: 'Découpe' }, { id: 'engrave', label: 'Gravure' }, { id: 'score', label: 'Trait' }];
+  const MODE_HELP = {
+    engrave: 'Remplissage d\'une zone. Intervalle de lignes conseillé : 0,1 mm.',
+    score: 'Marquage d\'un trait fin sans traverser le matériau.'
+  };
+
+  let state = { machine: 'm1', mat: 'tilleul', thick: 3, mode: 'cut' };
+  let local = {};   // valeurs testées dans ce navigateur
+  let repo = {};    // valeurs validées du fichier reglages.json
+  let G = null;     // réglages du générateur
+  let sel = null;   // case retenue dans l'aperçu
+  let last = null;  // dernier essai généré { lay, g }
+
+  const byId = id => M.find(m => m.id === id);
+  const machine = () => MACHINES.find(x => x.id === state.machine);
+  const modeLabel = id => MODES.find(x => x.id === id).label;
+
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  /* ---------- valeurs : base, reglages.json, valeurs locales ---------- */
+  const keyOf = (mc, mat, mode, t) => [mc, mat, mode, mode === 'cut' ? t : ''].join('|');
+  const curKey = () => keyOf(state.machine, state.mat, state.mode, state.thick);
+
+  function baseVal(mc, m, mode, t) {
+    const ver = m.ver || {};
+    if (mode === 'cut') {
+      const c = m.cut[t];
+      return { p: c[0], s: c[1], n: c[2], src: mc === 'm1' && (ver.cut || []).includes(Number(t)) ? 'xtool' : 'est' };
+    }
+    const a = mode === 'engrave' ? m.engrave : m.score;
+    return { p: a[0], s: a[1], n: 1, src: mc === 'm1' && mode === 'engrave' && ver.engrave ? 'xtool' : 'est' };
+  }
+  function getVal(mc, m, mode, t) {
+    const b = baseVal(mc, m, mode, t), k = keyOf(mc, m.id, mode, t);
+    const o = local[k] ? ['local', local[k]] : repo[k] ? ['repo', repo[k]] : null;
+    if (!o) return b;
+    return { p: o[1].p, s: o[1].s, n: mode === 'cut' ? o[1].n : 1, src: o[0], note: o[1].note || '', date: o[1].date || '' };
+  }
+  function sanitize(obj) {
+    const out = {};
+    if (!obj || typeof obj !== 'object') return out;
+    Object.keys(obj).forEach(k => {
+      const v = obj[k], parts = k.split('|');
+      if (parts.length !== 4 || !v || typeof v !== 'object') return;
+      if (!MACHINES.some(x => x.id === parts[0]) || !byId(parts[1]) || !MODES.some(x => x.id === parts[2])) return;
+      const p = +v.p, s = +v.s, n = Math.round(+v.n || 1);
+      if (!(p >= 1 && p <= 100) || !(s > 0 && s <= 400) || !(n >= 1 && n <= 60)) return;
+      out[k] = { p, s, n, note: String(v.note || '').slice(0, 160), date: String(v.date || '').slice(0, 10) };
+    });
+    return out;
+  }
+  function saveLocal() { lsSet('lz-ov', local); }
+  function saveState() { lsSet('lz-state', state); }
+
+  /* ---------- sélection ---------- */
+  const thicknesses = m => m.cut ? Object.keys(m.cut).map(Number).sort((a, b) => a - b) : [];
+  function normalize() {
+    if (!MACHINES.some(x => x.id === state.machine)) state.machine = 'm1';
+    if (!byId(state.mat)) state.mat = 'tilleul';
+    const m = byId(state.mat);
+    if (m.onlyEngrave && state.mode === 'cut') state.mode = 'engrave';
+    const ts = thicknesses(m);
+    if (ts.length && !ts.includes(Number(state.thick))) state.thick = ts.includes(3) ? 3 : ts[0];
+  }
+
+  function renderMachines() {
+    $('machines').innerHTML = MACHINES.map(x =>
+      `<button type="button" class="chip" data-mach="${x.id}" aria-pressed="${state.machine === x.id}">${esc(x.name)}</button>`).join('');
+    $('m-info').textContent = machine().info;
+  }
+  function renderMaterials() {
+    const groups = [];
+    M.forEach(m => { if (!groups.includes(m.group)) groups.push(m.group); });
+    $('materials').innerHTML = groups.map(g =>
+      `<div class="group-title">${esc(g)}</div><div class="chips">` +
+      M.filter(m => m.group === g).map(m =>
+        `<button type="button" class="chip${m.star ? ' star' : ''}" data-mat="${m.id}" aria-pressed="${state.mat === m.id}">${esc(m.name)}</button>`).join('') +
+      '</div>').join('');
+  }
+  function renderThickness() {
+    const m = byId(state.mat), ts = thicknesses(m);
+    const show = ts.length > 0 && state.mode === 'cut';
+    $('thick-section').hidden = !show;
+    if (!show) return;
+    const all = m.id === 'tilleul' ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] : ts;
+    $('thick').innerHTML = all.map(t =>
+      `<button type="button" class="chip" data-t="${t}" aria-pressed="${Number(state.thick) === t}">${fmt(t)}</button>`).join('');
+  }
+  function renderModes() {
+    const m = byId(state.mat);
+    $('modes').innerHTML = MODES.map(md => {
+      const off = md.id === 'cut' && m.onlyEngrave;
+      return `<button type="button" class="chip" data-mode="${md.id}" aria-pressed="${state.mode === md.id}"${off ? ' disabled' : ''}>${md.label}</button>`;
+    }).join('');
+  }
+
+  /* ---------- figure en coupe ---------- */
+  function fig(m, passes, t, mode) {
+    const svg = $('fig'), h = Math.max(t * 10, 6), top = 14, left = 20, w = 150, W = 190, H = h + top + 16;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('height', H);
+    let s = `<rect x="${left}" y="${top}" width="${w}" height="${h}" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1"/>`;
+    if (m.plies) for (let y = 1; y < t; y++) s += `<line x1="${left}" x2="${left + w}" y1="${top + y * 10}" y2="${top + y * 10}" stroke="var(--wood-line)" stroke-width=".6" opacity=".7"/>`;
+    const cx = left + w / 2;
+    if (mode === 'cut') {
+      for (let k = 0; k < passes; k++) {
+        const y0 = top + h * k / passes, y1 = top + h * (k + 1) / passes;
+        s += `<rect x="${cx - 3}" y="${y0}" width="6" height="${y1 - y0}" fill="var(--kerf)" opacity="${0.55 + 0.45 * (k + 1) / passes}"/>`;
+      }
+      s += `<text x="${left + w + 4}" y="${top + 10}" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">0</text>`;
+      s += `<text x="${left + w + 4}" y="${top + h}" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">${fmt(t)}</text>`;
+    } else {
+      s += `<rect x="${cx - 30}" y="${top}" width="${mode === 'engrave' ? 60 : 3}" height="${mode === 'engrave' ? 3 : 1.5}" fill="var(--kerf)"/>`;
+    }
+    svg.innerHTML = s;
+  }
+
+  /* ---------- fiche de réglages ---------- */
+  function srcInfo(v) {
+    if (v.src === 'local') return ['ok', '<b>Valeur testée.</b> Enregistrée dans ce navigateur' + (v.date ? ' le ' + esc(v.date) : '') + (v.note ? ' : ' + esc(v.note) : '') + '.'];
+    if (v.src === 'repo') return ['ok', '<b>Valeur testée et validée.</b> Issue du fichier reglages.json' + (v.date ? ' (' + esc(v.date) + ')' : '') + (v.note ? ' : ' + esc(v.note) : '') + '.'];
+    if (v.src === 'xtool') return ['ok', '<b>Valeur xTool.</b> Issue de la bibliothèque de matériaux xTool pour la M1. Teste quand même sur une chute.'];
+    return ['est', machine().id === 'a10'
+      ? '<b>Estimation.</b> Pas de tableau fiable trouvé pour l\'A10 Pro : valeur de la même classe 10 W que la M1. Teste sur une chute, puis enregistre ta valeur.'
+      : '<b>Estimation.</b> Je n\'ai pas trouvé de valeur xTool pour ce cas. Teste sur une chute et ajuste la vitesse.'];
+  }
+  const srcWord = s => ({ local: 'testé', repo: 'validé', xtool: 'xTool', est: 'estimation' }[s]);
+
+  function render() {
+    normalize();
+    const m = byId(state.mat), mc = state.machine, t = Number(state.thick), mode = state.mode;
+    const v = getVal(mc, m, mode, t);
+    let alerts = '';
+    const notes = m.notes.slice();
+
+    if (mode === 'cut') {
+      if (t > m.limit) {
+        alerts += '<div class="alert warn"><b>Coupe incertaine.</b> ' + (m.id === 'tilleul'
+          ? (mc === 'm1'
+            ? 'xTool annonce 8 mm de tilleul au maximum pour la M1 10 W, en laboratoire. Au-delà, aucune valeur n\'est publiée.'
+            : 'Atomstack annonce 12 mm de bois au maximum. Je n\'ai trouvé aucune valeur publiée au-delà de 8 mm pour une diode 10 W.')
+          : 'Au-delà de ' + fmt(m.limit) + ' mm, une diode 10 W traverse mal ce matériau.') + ' Teste sur une chute et ajoute une passe si la découpe reste attachée.</div>';
+      }
+      if (m.id === 'tilleul' && t >= 6) {
+        notes.unshift(mc === 'm1'
+          ? 'Au-delà de 5 mm, remonte ou règle le point focal toutes les 2 ou 3 passes pour garder un faisceau fin au fond de la saignée.'
+          : 'Le point focal de l\'A10 Pro est fixe : vérifie la distance de mise au point à chaque changement d\'épaisseur.');
+      }
+      if (m.id === 'tilleul' && t >= 9) {
+        notes.unshift('À ' + fmt(t) + ' mm, la face arrière sera noircie et la coupe peut rester collée. Préfère une scie ou une découpe en deux plaques fines assemblées.');
+      }
+    }
+    if (m.mdf) alerts = '<div class="alert danger"><b>Extraction obligatoire.</b> Le MDF dégage des fumées de colle. Ne lance pas la machine sans aspiration.</div>' + alerts;
+
+    $('r-title').textContent = m.name;
+    $('r-tag').textContent = machine().short + ' · ' + (mode === 'cut' ? fmt(t) + ' mm · ' : '') + modeLabel(mode);
+    $('r-power').textContent = fmt(v.p);
+    $('r-speed').textContent = fmt(v.s);
+    $('r-speed-u').textContent = 'mm/s (' + fmt(r1(v.s * 60)) + ' mm/min)';
+    $('r-pass').textContent = v.n;
+    $('r-pass-u').textContent = v.n > 1 ? 'passes' : 'passe';
+    const si = srcInfo(v), srcEl = $('r-src');
+    srcEl.className = 'src ' + si[0];
+    srcEl.innerHTML = si[1];
+    $('r-alerts').innerHTML = alerts;
+    $('r-notes').innerHTML = notes.map(x => '<li>' + esc(x) + '</li>').join('');
+
+    if (mode === 'cut') {
+      fig(m, v.n, t, 'cut');
+      $('fig-cap').textContent = v.n > 1
+        ? 'Coupe de ' + fmt(t) + ' mm. Chaque bande sombre représente la profondeur gagnée à chaque passe (' + v.n + ' passes).'
+        : 'Coupe de ' + fmt(t) + ' mm traversée en une seule passe.';
+    } else {
+      fig(m, 1, 3, mode);
+      $('fig-cap').textContent = MODE_HELP[mode];
+    }
+
+    $('table-box').hidden = !(m.cut && Object.keys(m.cut).length > 1);
+    $('table-title').textContent = 'Tableau complet : découpe, ' + m.name.toLowerCase();
+    if (m.cut) {
+      const ts = thicknesses(m);
+      $('table-body').innerHTML = ts.map(tt => {
+        const r = getVal(mc, m, 'cut', tt);
+        const cls = (tt === t && mode === 'cut' ? 'sel' : '') + (tt > m.limit ? ' lim' : '');
+        return `<tr class="${cls}"><td>${fmt(tt)} mm${tt > m.limit ? ' *' : ''}</td><td>${fmt(r.p)} %</td><td>${fmt(r.s)} mm/s</td><td>${r.n}</td><td class="s">${srcWord(r.src)}</td></tr>`;
+      }).join('') + (ts.some(x => x > m.limit) ? '<tr><td colspan="5" style="font-family:var(--font-body);text-align:left;color:var(--warn);white-space:normal">* Coupe incertaine avec une diode 10 W. Test obligatoire.</td></tr>' : '');
+    }
+    saveState();
+  }
+
+  /* ---------- modifier après test ---------- */
+  function openEdit(draft) {
+    const m = byId(state.mat), v = getVal(state.machine, m, state.mode, state.thick), d = draft || v;
+    $('e-p').value = d.p; $('e-s').value = d.s; $('e-n').value = d.n;
+    $('e-note').value = draft ? '' : (v.src === 'local' || v.src === 'repo' ? v.note : '');
+    $('e-n-wrap').hidden = state.mode !== 'cut';
+    $('e-title').textContent = 'Valeurs retenues après test : ' + m.name + (state.mode === 'cut' ? ' ' + fmt(state.thick) + ' mm' : '') + ' · ' + modeLabel(state.mode) + ' · ' + machine().short;
+    $('e-msg').textContent = '';
+    $('edit').hidden = false;
+    $('edit').scrollIntoView({ block: 'nearest' });
+  }
+  $('edit-open').addEventListener('click', () => openEdit(null));
+  $('e-cancel').addEventListener('click', () => { $('edit').hidden = true; });
+  $('e-reset').addEventListener('click', () => {
+    delete local[curKey()]; saveLocal(); $('edit').hidden = true; render(); renderMine(); genDefaults(); genRender();
+  });
+  $('edit').addEventListener('submit', e => {
+    e.preventDefault();
+    const p = parseFloat($('e-p').value), s = parseFloat($('e-s').value), n = Math.round(parseFloat($('e-n').value) || 1);
+    if (!(p >= 1 && p <= 100) || !(s > 0 && s <= 400) || !(n >= 1 && n <= 60)) {
+      $('e-msg').textContent = 'Puissance entre 1 et 100 %, vitesse entre 0,1 et 400 mm/s, passes entre 1 et 60.';
+      return;
+    }
+    local[curKey()] = { p: +p.toFixed(1), s: +s.toFixed(2), n: state.mode === 'cut' ? n : 1, note: $('e-note').value.slice(0, 160), date: today() };
+    saveLocal(); $('edit').hidden = true; render(); renderMine(); genDefaults(); genRender();
+  });
+
+  /* ---------- valeurs testées, export, import ---------- */
+  function keyLabel(k) {
+    const [mc, mt, mode, t] = k.split('|'), mach = MACHINES.find(x => x.id === mc), mat = byId(mt);
+    return (mach ? mach.short : mc) + ' · ' + (mat ? mat.name : mt) + (mode === 'cut' && t ? ' ' + fmt(t) + ' mm' : '') + ' · ' + modeLabel(mode);
+  }
+  function renderMine() {
+    const ks = Object.keys(local).sort();
+    $('mine-intro').textContent = ks.length
+      ? ks.length + ' valeur(s) enregistrée(s) dans ce navigateur. Pour les partager avec tous les élèves : télécharge reglages.json, puis dépose-le dans le dépôt GitHub à la place de l\'ancien.'
+      : 'Aucune valeur enregistrée dans ce navigateur. Après un essai, utilise « Modifier après test ». Le fichier reglages.json du dépôt, s\'il existe, est lu automatiquement.';
+    $('mine-list').innerHTML = ks.map(k => {
+      const v = local[k];
+      return `<li><span>${esc(keyLabel(k))} : ${fmt(v.p)} %, ${fmt(v.s)} mm/s${k.split('|')[2] === 'cut' ? ', ' + v.n + ' passe(s)' : ''}</span><button type="button" class="btn danger" data-del="${esc(k)}">Retirer</button></li>`;
+    }).join('');
+    $('ex-dl').disabled = $('ex-cp').disabled = !(Object.keys(local).length + Object.keys(repo).length);
+  }
+  function exportJson() {
+    return JSON.stringify({ version: 1, updated: today(), valeurs: Object.assign({}, repo, local) }, null, 2);
+  }
+  function importJson(text) {
+    let j;
+    try { j = JSON.parse(text); } catch (e) { return 'Ce texte n\'est pas du JSON lisible.'; }
+    const v = sanitize(j && j.valeurs), n = Object.keys(v).length;
+    if (!n) return 'Aucune valeur valide dans ce fichier.';
+    Object.assign(local, v); saveLocal(); render(); renderMine(); genDefaults(); genRender();
+    return n + ' valeur(s) importée(s).';
+  }
+  function download(name, text, type) {
+    try {
+      const u = URL.createObjectURL(new Blob([text], { type }));
+      const a = document.createElement('a');
+      a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 1500);
+    } catch (e) {}
+  }
+  function copyText(txt, cb) {
+    const fb = () => {
+      const ta = document.createElement('textarea');
+      ta.value = txt; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (er) {}
+      document.body.removeChild(ta);
+      cb(ok);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => cb(true), fb); else fb();
+  }
+  const FAILCOPY = 'Copie impossible ici. Ouvre le fichier HTML dans ton navigateur.';
+  $('ex-dl').addEventListener('click', () => { download('reglages.json', exportJson(), 'application/json'); $('mine-msg').className = 'msg good'; $('mine-msg').textContent = 'Si rien ne se télécharge dans l\'aperçu en ligne, utilise « Copier le JSON ».'; });
+  $('ex-cp').addEventListener('click', () => copyText(exportJson(), ok => { $('mine-msg').className = 'msg' + (ok ? ' good' : ''); $('mine-msg').textContent = ok ? 'JSON copié. Colle-le dans reglages.json sur GitHub.' : FAILCOPY; }));
+  $('im-go').addEventListener('click', () => { const r = importJson($('im-text').value); $('mine-msg').className = 'msg' + (/importée/.test(r) ? ' good' : ''); $('mine-msg').textContent = r; });
+  $('im-file').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { const r = importJson(String(rd.result)); $('mine-msg').className = 'msg' + (/importée/.test(r) ? ' good' : ''); $('mine-msg').textContent = r; };
+    rd.readAsText(f);
+  });
+  $('mine-list').addEventListener('click', e => {
+    const b = e.target.closest('[data-del]'); if (!b) return;
+    delete local[b.dataset.del]; saveLocal(); render(); renderMine(); genDefaults(); genRender();
+  });
+
+  /* ---------- générateur d'essais ---------- */
+  const SEGDEF = { 0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg', 5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
+  const DW = 1.6, DH = 2.6, DG = 1.0;
+  const SEGXY = { a: [0, 0, DW, 0], b: [DW, 0, DW, DH / 2], c: [DW, DH / 2, DW, DH], d: [0, DH, DW, DH], e: [0, DH / 2, 0, DH], f: [0, 0, 0, DH / 2], g: [0, DH / 2, DW, DH / 2] };
+
+  function textSegs(str, ax, cy, align) {
+    const ws = [...str].map(ch => ch === '.' ? 0.3 : DW);
+    const total = ws.reduce((a, b) => a + b, 0) + DG * (ws.length - 1);
+    let x = align === 'r' ? ax - total : ax - total / 2;
+    const y = cy - DH / 2, out = [];
+    [...str].forEach((ch, i) => {
+      if (ch === '.') out.push([x, y + DH, x + 0.3, y + DH]);
+      else if (SEGDEF[ch]) [...SEGDEF[ch]].forEach(k => { const s = SEGXY[k]; out.push([x + s[0], y + s[1], x + s[2], y + s[3]]); });
+      x += ws[i] + DG;
+    });
+    return out;
+  }
+  const numStr = v => String(+(+v).toFixed(1));
+
+  function lin(a, b, n, mode) {
+    if (n <= 1) return [mode === 'int' ? Math.round(a) : r1(a)];
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const v = a + (b - a) * i / (n - 1), q = mode === 'int' ? Math.round(v) : r1(v);
+      if (!out.includes(q)) out.push(q);
+    }
+    return out;
+  }
+  function hsl2hex(h, s, l) {
+    s /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+  }
+
+  function genDefaults() {
+    const m = byId(state.mat), v = getVal(state.machine, m, state.mode, state.thick), isCut = state.mode === 'cut';
+    const keep = G ? { smax: G.smax, laser: G.laser } : { smax: 1000, laser: 'M4' };
+    G = {
+      shape: state.mode === 'engrave' ? 'disc' : 'circle',
+      rowVar: isCut ? 'passes' : 'power',
+      sFrom: Math.max(0.5, r1(v.s * 0.5)), sTo: r1(v.s * 1.5), sCount: 5,
+      rFrom: isCut ? 1 : Math.max(5, Math.round(v.p - 20)), rTo: isCut ? 5 : Math.min(100, Math.round(v.p + 20)), rCount: 5,
+      fp: v.p, fn: 1, d: state.mode === 'engrave' ? 8 : 10, gap: 3, ls: 0.1,
+      lp: m.score[0], lsp: m.score[1], smax: keep.smax, laser: keep.laser
+    };
+    sel = null;
+    const map = { 'g-shape': 'shape', 'g-rowvar': 'rowVar', 'g-sfrom': 'sFrom', 'g-sto': 'sTo', 'g-scount': 'sCount', 'g-rfrom': 'rFrom', 'g-rto': 'rTo', 'g-rcount': 'rCount', 'g-fp': 'fp', 'g-fn': 'fn', 'g-d': 'd', 'g-gap': 'gap', 'g-ls': 'ls', 'g-lp': 'lp', 'g-lsp': 'lsp', 'g-smax': 'smax', 'g-laser': 'laser' };
+    Object.keys(map).forEach(id => { $(id).value = G[map[id]]; });
+  }
+
+  function readGen() {
+    const n = id => parseFloat($(id).value);
+    const g = {
+      shape: $('g-shape').value, rowVar: $('g-rowvar').value,
+      sFrom: n('g-sfrom'), sTo: n('g-sto'), sCount: Math.round(n('g-scount')),
+      rFrom: n('g-rfrom'), rTo: n('g-rto'), rCount: Math.round(n('g-rcount')),
+      fp: n('g-fp'), fn: Math.round(n('g-fn')), d: n('g-d'), gap: n('g-gap'), ls: n('g-ls'),
+      lp: n('g-lp'), lsp: n('g-lsp'), smax: Math.round(n('g-smax')), laser: $('g-laser').value
+    };
+    const bad = [g.sFrom, g.sTo, g.sCount, g.rFrom, g.rTo, g.rCount, g.d, g.gap, g.lp, g.lsp].some(x => !isFinite(x));
+    if (bad) return { error: 'Complète tous les champs avec des nombres.' };
+    if (g.shape === 'disc' && !(g.ls >= 0.03 && g.ls <= 1)) return { error: 'L\'interligne de gravure doit être entre 0,03 et 1 mm.' };
+    if (g.rowVar === 'passes' && !(g.fp >= 1 && g.fp <= 100)) return { error: 'La puissance fixe doit être entre 1 et 100 %.' };
+    if (g.rowVar === 'power' && !(g.fn >= 1 && g.fn <= 60)) return { error: 'Les passes fixes doivent être entre 1 et 60.' };
+    if (g.sFrom < 0.1 || g.sTo > 400 || g.sFrom > g.sTo) return { error: 'La vitesse doit aller de 0,1 à 400 mm/s, du plus petit au plus grand.' };
+    if (g.rFrom < 1 || g.rTo > 100 || g.rFrom > g.rTo) return { error: 'Les valeurs de ligne doivent aller de 1 à 100, du plus petit au plus grand.' };
+    if (g.sCount < 1 || g.sCount > 8 || g.rCount < 1 || g.rCount > 8) return { error: 'Entre 1 et 8 colonnes et entre 1 et 8 lignes.' };
+    if (g.d < 5 || g.d > 30 || g.gap < 2 || g.gap > 20) return { error: 'Diamètre de 5 à 30 mm, écart de 2 à 20 mm.' };
+    if (g.lp < 1 || g.lp > 100 || g.lsp < 1 || g.lsp > 400) return { error: 'Étiquettes : puissance de 1 à 100 %, vitesse de 1 à 400 mm/s.' };
+    g.cols = lin(g.sFrom, g.sTo, g.sCount, 'dec');
+    g.rows = lin(g.rFrom, g.rTo, g.rCount, 'int');
+    return g;
+  }
+
+  function makeLayout(g) {
+    const pitch = g.d + g.gap, left = 12, top = 8, pad = 2;
+    const W = Math.ceil((left + g.cols.length * pitch - g.gap + pad) * 10) / 10;
+    const H = Math.ceil((top + g.rows.length * pitch - g.gap + pad) * 10) / 10;
+    const cells = [], labels = [];
+    g.rows.forEach((rv, r) => g.cols.forEach((cv, c) => {
+      cells.push({ r, c, i: cells.length, cx: left + c * pitch + g.d / 2, cy: top + r * pitch + g.d / 2,
+        p: g.rowVar === 'power' ? rv : g.fp, s: cv, n: g.rowVar === 'passes' ? rv : g.fn });
+    }));
+    g.rows.forEach((rv, r) => labels.push(...textSegs(String(rv), left - 2, top + r * pitch + g.d / 2, 'r')));
+    g.cols.forEach((cv, c) => labels.push(...textSegs(numStr(cv), left + c * pitch + g.d / 2, top - 3.5, 'c')));
+    cells.forEach(c => { c.color = hsl2hex((c.i * 137.5) % 360, 85, 42); });
+    return { W, H, pitch, cells, labels };
+  }
+  const f2 = n => (+n.toFixed(3)).toString();
+
+  function cellSeconds(c, g) {
+    const len = g.shape === 'circle'
+      ? Math.PI * g.d
+      : (g.d / g.ls) * (Math.PI * g.d / 4);
+    return len * c.n / c.s;
+  }
+  function fmtDuration(sec) {
+    const m = Math.round(sec / 60);
+    return m < 1 ? 'moins d\'une minute' : m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min';
+  }
+
+  function buildPreviewSvg(lay, g) {
+    const { W, H, cells, labels } = lay;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="group" aria-label="Aperçu de la plaque d'essai : clique sur une case pour retenir ses valeurs">`;
+    s += `<path d="${labels.map(l => `M${f2(l[0])} ${f2(l[1])}L${f2(l[2])} ${f2(l[3])}`).join('')}" fill="none" stroke="var(--muted)" stroke-width=".25" stroke-linecap="round"/>`;
+    cells.forEach(c => {
+      const r = g.d / 2;
+      s += g.shape === 'disc'
+        ? `<circle cx="${f2(c.cx)}" cy="${f2(c.cy)}" r="${f2(r)}" fill="var(--fg)" fill-opacity=".55" stroke="var(--fg)" stroke-width=".25"/>`
+        : `<circle cx="${f2(c.cx)}" cy="${f2(c.cy)}" r="${f2(r)}" fill="none" stroke="var(--fg)" stroke-width=".4"/>`;
+    });
+    if (sel) {
+      const c = cells.find(x => x.r === sel.r && x.c === sel.c);
+      if (c) s += `<circle cx="${f2(c.cx)}" cy="${f2(c.cy)}" r="${f2(g.d / 2 + 1)}" fill="none" stroke="var(--accent)" stroke-width=".8"/>`;
+    }
+    cells.forEach(c => {
+      const lbl = `Ligne ${c.r + 1}, colonne ${c.c + 1} : ${c.p} %, ${c.s} mm/s, ${c.n} passe(s)`;
+      s += `<circle class="pick" tabindex="0" role="button" data-r="${c.r}" data-c="${c.c}" cx="${f2(c.cx)}" cy="${f2(c.cy)}" r="${f2(g.d / 2 + g.gap / 2 - 0.2)}" aria-label="${esc(lbl)}"><title>${esc(lbl)}</title></circle>`;
+    });
+    return s + '</svg>';
+  }
+
+  function buildSvg(lay, g) {
+    const { W, H, cells, labels } = lay;
+    let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${W}mm" height="${H}mm" viewBox="0 0 ${W} ${H}">\n`;
+    s += `<title>Plaque d'essai ${esc(machine().name)} - ${esc(byId(state.mat).name)} - ${g.shape === 'disc' ? 'disques' : 'cercles'}</title>\n`;
+    s += `<g id="etiquettes" fill="none" stroke="#0000ff" stroke-width="0.1" stroke-linecap="round">\n<path d="${labels.map(l => `M${f2(l[0])} ${f2(l[1])}L${f2(l[2])} ${f2(l[3])}`).join(' ')}"/>\n</g>\n`;
+    s += '<g id="essais">\n';
+    cells.forEach(c => {
+      const id = `L${c.r + 1}C${c.c + 1}_P${c.p}_V${c.s}_N${c.n}`.replace(/\./g, 'p');
+      s += g.shape === 'disc'
+        ? `<circle id="${id}" cx="${f2(c.cx)}" cy="${f2(c.cy)}" r="${f2(g.d / 2)}" fill="${c.color}" stroke="${c.color}" stroke-width="0.1"/>\n`
+        : `<circle id="${id}" cx="${f2(c.cx)}" cy="${f2(c.cy)}" r="${f2(g.d / 2)}" fill="none" stroke="${c.color}" stroke-width="0.1"/>\n`;
+    });
+    return s + '</g>\n</svg>\n';
+  }
+
+  function buildGcode(lay, g) {
+    const { H, cells, labels } = lay, L = [];
+    const X = x => (+x.toFixed(3)).toFixed(3), Y = y => (+(H - y).toFixed(3)).toFixed(3);
+    const sv = p => Math.round(p / 100 * g.smax), F = s => Math.round(s * 60);
+    L.push('; Plaque d\'essai de réglages laser');
+    L.push(`; Machine : ${machine().name} · matériau : ${byId(state.mat).name}`);
+    L.push(`; Forme : ${g.shape === 'disc' ? 'disques pleins (gravure, interligne ' + g.ls + ' mm)' : 'cercles (contour)'} · diamètre ${g.d} mm · écart ${g.gap} mm`);
+    L.push(`; Taille de la plaque : ${lay.W} x ${lay.H} mm`);
+    L.push(`; Lignes : ${g.rowVar === 'power' ? 'puissance (%)' : 'nombre de passes'} = ${g.rows.join(', ')} (du haut vers le bas)`);
+    L.push(`; Colonnes : vitesse (mm/s) = ${g.cols.join(', ')} (de gauche à droite)`);
+    L.push('; ORIGINE : place la tête au coin BAS GAUCHE de la zone de test et fixe X0 Y0 à cet endroit.');
+    L.push('; Mode laser GRBL requis ($32=1). Vérifie le cadrage avant de lancer. Reste devant la machine.');
+    L.push('G21 ; millimètres', 'G90 ; coordonnées absolues', 'G17', 'M5');
+    L.push(`; --- étiquettes : ${g.lp} %, ${g.lsp} mm/s`);
+    L.push(`${g.laser} S${sv(g.lp)}`);
+    labels.forEach((l, i) => {
+      L.push(`G0 X${X(l[0])} Y${Y(l[1])}`);
+      L.push(`G1 X${X(l[2])} Y${Y(l[3])}` + (i === 0 ? ` F${F(g.lsp)}` : ''));
+    });
+    L.push('M5');
+    const r = g.d / 2, N = 72;
+    cells.forEach(c => {
+      L.push(`; --- ligne ${c.r + 1}, colonne ${c.c + 1} : ${c.p} %, ${c.s} mm/s, ${c.n} passe(s)`);
+      L.push(`${g.laser} S${sv(c.p)}`);
+      let first = true;
+      for (let pass = 0; pass < c.n; pass++) {
+        if (g.shape === 'circle') {
+          L.push(`G0 X${X(c.cx + r)} Y${Y(c.cy)}`);
+          for (let k = 1; k <= N; k++) {
+            const t = 2 * Math.PI * k / N;
+            L.push(`G1 X${X(c.cx + r * Math.cos(t))} Y${Y(c.cy + r * Math.sin(t))}` + (first ? ` F${F(c.s)}` : ''));
+            first = false;
+          }
+        } else {
+          const count = Math.floor((2 * r - g.ls) / g.ls + 1e-9) + 1;
+          let dir = 1;
+          for (let i = 0; i < count; i++) {
+            const dy = -r + g.ls / 2 + i * g.ls, hw = Math.sqrt(Math.max(0, r * r - dy * dy));
+            L.push(`G0 X${X(c.cx - hw * dir)} Y${Y(c.cy + dy)}`);
+            L.push(`G1 X${X(c.cx + hw * dir)} Y${Y(c.cy + dy)}` + (first ? ` F${F(c.s)}` : ''));
+            first = false; dir = -dir;
+          }
+        }
+      }
+      L.push('M5');
+    });
+    L.push('G0 X0 Y0', 'M5', '; fin');
+    return L.join('\n') + '\n';
+  }
+
+  function genRender() {
+    const g = readGen();
+    const rv = $('g-rowvar').value;
+    $('g-rfrom-l').firstChild.textContent = rv === 'power' ? 'Puissance mini (%)' : 'Passes mini';
+    $('g-rto-l').firstChild.textContent = rv === 'power' ? 'Puissance maxi (%)' : 'Passes maxi';
+    $('g-fp-w').hidden = rv !== 'passes';
+    $('g-fn-w').hidden = rv !== 'power';
+    $('g-ls-w').hidden = $('g-shape').value !== 'disc';
+    const gcOk = machine().gcode;
+    document.querySelectorAll('.gc').forEach(el => { el.hidden = !gcOk; });
+    $('g-tag').textContent = machine().short + ' · ' + byId(state.mat).name + (state.mode === 'cut' ? ' ' + fmt(state.thick) + ' mm' : '') + ' · ' + modeLabel(state.mode);
+    $('g-dl-msg').textContent = '';
+    if (g.error) { $('g-msg').textContent = g.error; $('g-out').hidden = true; last = null; return; }
+    $('g-msg').textContent = '';
+    const lay = makeLayout(g);
+    if (g.d + g.gap < 9) $('g-msg').textContent = 'Les étiquettes risquent de se toucher : garde diamètre + écart d\'au moins 9 mm.';
+    last = { lay, g };
+    $('g-out').hidden = false;
+    const secs = lay.cells.reduce((a, c) => a + cellSeconds(c, g), 0);
+    $('g-info').textContent = `Plaque de ${lay.W} × ${lay.H} mm · ${lay.cells.length} cases · durée estimée ${fmtDuration(secs * 1.1)} (hors déplacements).`;
+    $('g-prev').innerHTML = buildPreviewSvg(lay, g);
+    $('g-legend').textContent = `Colonnes (de gauche à droite) : vitesse en mm/s. Lignes (du haut vers le bas) : ${g.rowVar === 'power' ? 'puissance en %, passes fixes ' + g.fn : 'nombre de passes, puissance fixe ' + g.fp + ' %'}. Les chiffres sont gravés à côté de chaque ligne et colonne.`;
+    $('g-help').textContent = gcOk
+      ? 'SVG : à importer dans LightBurn ou tout autre logiciel ; chaque couleur devient en général un calque à régler d\'après le tableau ci-dessous. G-code : à ouvrir dans LaserGRBL ou LightBurn, déjà réglé case par case, origine au coin bas gauche. Si rien ne se télécharge dans l\'aperçu en ligne, utilise « Copier ».'
+      : 'SVG en millimètres, à importer dans xTool Studio. Chaque couleur devient en général un calque : règle-le d\'après le tableau ci-dessous. Le G-code n\'est pas proposé pour la xTool M1. Si rien ne se télécharge dans l\'aperçu en ligne, utilise « Copier ».';
+    $('g-table').innerHTML = lay.cells.map(c =>
+      `<tr><td><span class="sw" style="background:${c.color}"></span> ${c.color}</td><td>${c.r + 1}</td><td>${c.c + 1}</td><td>${fmt(c.p)} %</td><td>${fmt(c.s)} mm/s</td><td>${c.n}</td></tr>`).join('');
+  }
+
+  function pick(r, c) {
+    if (!last) return;
+    const cell = last.lay.cells.find(x => x.r === r && x.c === c);
+    if (!cell) return;
+    sel = { r, c };
+    genRender();
+    openEdit({ p: cell.p, s: cell.s, n: cell.n });
+  }
+  $('g-prev').addEventListener('click', e => { const t = e.target.closest('[data-r]'); if (t) pick(+t.dataset.r, +t.dataset.c); });
+  $('g-prev').addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const t = e.target.closest('[data-r]'); if (t) { e.preventDefault(); pick(+t.dataset.r, +t.dataset.c); }
+  });
+  $('gen-form').addEventListener('input', () => { sel = null; genRender(); });
+  $('gen-form').addEventListener('change', () => { sel = null; genRender(); });
+
+  const fileBase = () => 'essai-' + state.machine + '-' + state.mat + '-' + state.mode;
+  $('dl-svg').addEventListener('click', () => { if (!last) return; download(fileBase() + '.svg', buildSvg(last.lay, last.g), 'image/svg+xml'); $('g-dl-msg').textContent = 'Fichier ' + fileBase() + '.svg demandé. Si rien ne se télécharge, utilise « Copier le SVG ».'; });
+  $('cp-svg').addEventListener('click', () => { if (last) copyText(buildSvg(last.lay, last.g), ok => { $('g-dl-msg').textContent = ok ? 'SVG copié. Colle-le dans un fichier .svg.' : FAILCOPY; }); });
+  $('dl-gc').addEventListener('click', () => { if (!last) return; download(fileBase() + '.nc', buildGcode(last.lay, last.g), 'text/plain'); $('g-dl-msg').textContent = 'Fichier ' + fileBase() + '.nc demandé. Si rien ne se télécharge, utilise « Copier le G-code ».'; });
+  $('cp-gc').addEventListener('click', () => { if (last) copyText(buildGcode(last.lay, last.g), ok => { $('g-dl-msg').textContent = ok ? 'G-code copié. Colle-le dans un fichier .nc.' : FAILCOPY; }); });
+
+  /* ---------- navigation ---------- */
+  function renderAll() {
+    normalize(); renderMachines(); renderMaterials(); renderThickness(); renderModes(); render(); renderMine();
+    genDefaults(); genRender();
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || b.disabled) return;
+    if (b.dataset.mach) { state.machine = b.dataset.mach; $('edit').hidden = true; renderAll(); }
+    else if (b.dataset.mat) { state.mat = b.dataset.mat; $('edit').hidden = true; renderAll(); }
+    else if (b.dataset.t) { state.thick = Number(b.dataset.t); $('edit').hidden = true; renderThickness(); render(); genDefaults(); genRender(); }
+    else if (b.dataset.mode) { state.mode = b.dataset.mode; $('edit').hidden = true; renderAll(); }
+  });
+
+  $('copy').addEventListener('click', () => {
+    const m = byId(state.mat);
+    const txt = machine().name + ' · ' + m.name + (state.mode === 'cut' ? ' ' + fmt(state.thick) + ' mm' : '') + ' · ' + modeLabel(state.mode) +
+      ' : puissance ' + $('r-power').textContent + ' %, vitesse ' + $('r-speed').textContent + ' mm/s, ' + $('r-pass').textContent + ' ' + $('r-pass-u').textContent;
+    const btn = $('copy');
+    copyText(txt, ok => { btn.textContent = ok ? 'Copié' : 'Copie impossible'; setTimeout(() => { btn.textContent = 'Copier les réglages'; }, 1500); });
+  });
+
+  /* ---------- démarrage ---------- */
+  const sv0 = lsGet('lz-state'); if (sv0 && sv0.mat) state = Object.assign(state, sv0);
+  const ov0 = lsGet('lz-ov'); if (ov0) local = sanitize(ov0);
+  renderAll();
+  try {
+    fetch('reglages.json', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(j => { if (j && j.valeurs) { repo = sanitize(j.valeurs); render(); renderMine(); if (!sel) { genDefaults(); genRender(); } } })
+      .catch(() => {});
+  } catch (e) {}
+})();
+</script>
+
+</html>
