@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'affaire des pommes vertes — Enquête guidée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbf5e6;--paper:#fffdf6;--ink:#2d2a24;--soft:#6b6355;--line:#e6dcc4;--green:#3f8f3a;--green2:#e3f3dc;--red:#c8372d;--red2:#fbe3df;--amber:#e9a31a;--amber2:#fff1cf;--blue:#2f6fb3;--blue2:#e2eefb}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg) radial-gradient(circle at 10% 0%,#fff3d6 0,transparent 40%);color:var(--ink);font:19px/1.6 Andika,Verdana,Arial,sans-serif;min-height:100vh}
+h1,h2,h3{font-family:Fredoka,Andika,sans-serif;font-weight:600;margin:0;line-height:1.2}
+.wrap{max-width:980px;margin:0 auto;padding:16px 18px 40px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+header h1{font-size:1.7rem;flex:1;min-width:260px}
+header h1 small{display:block;font:400 .85rem Andika,sans-serif;color:var(--soft);letter-spacing:.03em}
+.who{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--soft)}
+.who input{font:inherit;font-size:1rem;padding:6px 10px;border:2px solid var(--line);border-radius:10px;width:170px;background:#fff}
+/* frise des étapes */
+.steps{display:flex;gap:6px;margin:6px 0 14px;flex-wrap:wrap}
+.steps span{flex:1;min-width:110px;text-align:center;font-size:.82rem;padding:7px 6px;border-radius:10px;background:#efe6cf;color:var(--soft);border:2px solid transparent}
+.steps span.done{background:var(--green2);color:var(--green);border-color:#bfe0b2}
+.steps span.on{background:var(--amber2);color:#7a5200;border-color:var(--amber);font-weight:700}
+.card{background:var(--paper);border:2px solid var(--line);border-radius:18px;padding:20px 22px;box-shadow:0 6px 0 #eadfc6}
+.card h2{font-size:1.45rem;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.read{margin-left:auto;font:600 .85rem Fredoka,sans-serif;border:2px solid var(--blue);color:var(--blue);background:var(--blue2);border-radius:999px;padding:4px 12px;cursor:pointer}
+.story{background:var(--amber2);border-left:6px solid var(--amber);border-radius:0 12px 12px 0;padding:10px 16px;margin:10px 0}
+.voc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:12px 0}
+.voc div{background:var(--blue2);border-radius:12px;padding:10px 14px;font-size:.95rem}
+.voc b{display:block;color:var(--blue);font-family:Fredoka,sans-serif}
+.q{font-weight:700;margin:14px 0 6px;font-size:1.05rem}
+.opts{display:grid;gap:10px}
+.opt{font:inherit;text-align:left;background:#fff;border:3px solid var(--line);border-radius:14px;padding:12px 16px;cursor:pointer;display:flex;gap:12px;align-items:center}
+.opt:hover,.opt:focus-visible{border-color:var(--amber);outline:none}
+.opt .em{font-size:1.6rem}
+.opt.good{border-color:var(--green);background:var(--green2)}
+.opt.bad{border-color:var(--red);background:var(--red2)}
+.fb{margin-top:12px;padding:12px 16px;border-radius:12px;font-size:1rem}
+.fb.ok{background:var(--green2);border:2px solid #9fd090}
+.fb.no{background:var(--red2);border:2px solid #f0a59c}
+.btn{font:600 1.05rem Fredoka,sans-serif;border:0;border-radius:14px;padding:12px 20px;cursor:pointer;background:var(--green);color:#fff;box-shadow:0 4px 0 #2b6a27}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #2b6a27}
+.btn.light{background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:0 4px 0 #e2d6bb}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.hint{background:#fff;border:2px dashed var(--amber);border-radius:12px;padding:10px 14px;margin-top:10px;font-size:.98rem}
+/* pommes */
+.apples{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin:12px 0}
+.ap{background:#fff;border:3px solid var(--line);border-radius:16px;padding:8px 8px 10px;text-align:center;font-size:.9rem;position:relative}
+.ap svg{width:86px;height:86px;display:block;margin:0 auto}
+.ap.click{cursor:pointer}
+.ap.click:hover{border-color:var(--amber)}
+.ap.sel{border-color:var(--amber);background:var(--amber2)}
+.ap.err{border-color:var(--red);background:var(--red2)}
+.ap.okc{border-color:var(--green);background:var(--green2)}
+.lab{display:inline-block;margin-top:4px;font-weight:700;border-radius:999px;padding:2px 10px;font-size:.85rem}
+.lab.bonne{background:var(--green2);color:var(--green)}
+.lab.abimee{background:var(--red2);color:var(--red)}
+.dec{display:block;font-size:.85rem;color:var(--soft)}
+.tag{position:absolute;top:6px;right:8px;font-size:1.1rem}
+/* robot */
+.trio{display:flex;gap:14px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 14px;margin:10px 0}
+.trio svg{width:74px;height:74px;flex:none}
+/* suspects */
+.sus{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:10px}
+.sp{background:#fff;border:3px solid var(--line);border-radius:16px;padding:12px;cursor:pointer;text-align:left;font:inherit}
+.sp:hover{border-color:var(--amber)}
+.sp.good{border-color:var(--green);background:var(--green2)} .sp.bad{border-color:var(--red);background:var(--red2)}
+.sp .hd{display:flex;gap:10px;align-items:center}
+.sp svg{width:56px;height:56px;flex:none}
+.sp b{font-family:Fredoka,sans-serif;font-size:1.1rem}
+.log{width:100%;border-collapse:collapse;margin:10px 0;font-size:.98rem;background:#fff;border-radius:12px;overflow:hidden}
+.log td,.log th{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+.log th{background:#efe6cf;font-size:.85rem;color:var(--soft)}
+.log tr.hl td{background:var(--amber2);font-weight:700}
+.machine{height:16px;border-radius:999px;background:#efe6cf;overflow:hidden;margin:10px 0}
+.machine i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),#7cc56f);transition:width 1.6s ease}
+.stamp{display:inline-block;border:5px solid var(--green);color:var(--green);padding:6px 20px;font:600 1.7rem Fredoka,sans-serif;transform:rotate(-5deg);border-radius:12px;margin:6px 0 12px}
+.learn li{margin:6px 0}
+.stars{font-size:1.8rem}
+#certPrint{display:none}
+.cert{background:#fffdf5;color:#222;border:6px double #3f8f3a;padding:28px;text-align:center;border-radius:8px;font-family:Andika,sans-serif}
+@media print{body>*:not(#certPrint){display:none!important}#certPrint{display:block!important}body{background:#fff}}
+@media (max-width:560px){body{font-size:17px}.card{padding:16px}.apples{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:reduce){.machine i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🍏 L'affaire des pommes vertes<small>ENQUÊTE GUIDÉE · FERME DES COQUELICOTS · SAMEDI MATIN</small></h1>
+    <label class="who">Enquêteur·rice <input id="nameIn" placeholder="Ton prénom" maxlength="30"></label>
+  </header>
+  <div class="steps" id="steps"></div>
+  <main class="card" id="main"></main>
+</div>
+<div id="certPrint"></div>
+
+<script>
+/* ---------- Dessins ---------- */
+const COL={rouge:['#d63b2e','#a92219'],verte:['#7cc24a','#4f8f2a'],jaune:['#f2c84b','#c99a17']};
+function apple(c,spots){
+  const [a,b]=COL[c];
+  let s=`<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 26c-10-8-34-8-36 18-2 24 16 46 30 46 3 0 4-2 6-2s3 2 6 2c14 0 32-22 30-46-2-26-26-26-36-18z" fill="${a}" stroke="${b}" stroke-width="3"/>`+
+    `<path d="M50 26c0-8 2-14 7-18" stroke="#6b4a2b" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M54 18c8-8 18-6 20-4-6 8-14 8-20 4z" fill="#5aa13a"/>`+
+    `<ellipse cx="34" cy="44" rx="6" ry="10" fill="#fff" opacity=".35"/>`;
+  if(spots)s+=`<circle cx="62" cy="58" r="8" fill="#7a4a1e" opacity=".85"/><circle cx="42" cy="70" r="5" fill="#7a4a1e" opacity=".8"/><circle cx="66" cy="74" r="3.5" fill="#7a4a1e" opacity=".8"/>`;
+  return s+'</svg>';
+}
+const ROBOT=`<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="22" y="28" width="56" height="46" rx="12" fill="#e9a31a"/><rect x="30" y="38" width="40" height="22" rx="8" fill="#2d2a24"/><circle cx="42" cy="49" r="6" fill="#7cc24a"/><circle cx="58" cy="49" r="6" fill="#7cc24a"/><rect x="40" y="64" width="20" height="4" rx="2" fill="#2d2a24"/><line x1="50" y1="28" x2="50" y2="15" stroke="#e9a31a" stroke-width="4"/><circle cx="50" cy="12" r="5" fill="#c8372d"/><rect x="14" y="44" width="8" height="18" rx="4" fill="#c88a12"/><rect x="78" y="44" width="8" height="18" rx="4" fill="#c88a12"/></svg>`;
+function face(skin,hair,shirt,extra){return `<svg viewBox="0 0 100 100" aria-hidden="true"><rect y="70" width="100" height="40" rx="18" fill="${shirt}"/><circle cx="50" cy="44" r="24" fill="${skin}"/>${hair}<circle cx="41" cy="44" r="2.8" fill="#222"/><circle cx="59" cy="44" r="2.8" fill="#222"/><path d="M42 55 q8 6 16 0" stroke="#222" fill="none" stroke-width="2.2"/>${extra||''}</svg>`;}
+const PEOPLE={
+  lucie:face('#e7b48f','<path d="M26 42 q4 -26 24 -26 q20 0 24 26 q-8 -14 -24 -14 q-16 0 -24 14z" fill="#8a4a20"/>','#3f8f3a','<path d="M22 30 h56 l-6 -8 h-44z" fill="#e9c46a"/>'),
+  tom:face('#f1c9a5','<path d="M27 38 l4 -14 l10 6 l9 -10 l9 10 l10 -6 l4 14 q-23 -12 -46 0z" fill="#3a2418"/>','#2f6fb3'),
+  jeanne:face('#ecc5a8','<circle cx="50" cy="20" r="11" fill="#d9d9d9"/><path d="M26 44 q0 -26 24 -26 q24 0 24 26 q-6 -12 -24 -12 q-18 0 -24 12z" fill="#d9d9d9"/>','#b0477a','<g stroke="#222" fill="none" stroke-width="1.8"><circle cx="41" cy="44" r="6"/><circle cx="59" cy="44" r="6"/><line x1="47" y1="44" x2="53" y2="44"/></g>')
+};
+
+/* ---------- Données ---------- */
+// Pommes testées ce matin : Trio les range (bonne / abîmée)
+const TEST=[{c:'rouge',s:0},{c:'verte',s:0},{c:'jaune',s:0},{c:'verte',s:0},{c:'rouge',s:1},{c:'verte',s:0}];
+// Cahier d'entraînement : photo + étiquette écrite par un humain. Les deux pommes vertes sont mal étiquetées.
+const TRAIN=[{c:'rouge',s:0,l:'bonne'},{c:'rouge',s:1,l:'abimee'},{c:'verte',s:0,l:'abimee',bad:1},{c:'jaune',s:0,l:'bonne'},
+             {c:'jaune',s:1,l:'abimee'},{c:'verte',s:0,l:'abimee',bad:1},{c:'rouge',s:0,l:'bonne'},{c:'rouge',s:1,l:'abimee'}];
+const LBL={bonne:'bonne',abimee:'abîmée'};
+// Trio cherche dans son cahier la photo qui ressemble le plus : même couleur, mêmes taches
+function trio(a,train){
+  const same=train.filter(t=>t.c===a.c&&t.s===a.s); if(same.length)return same[0].l;
+  const sp=train.filter(t=>t.s===a.s); return sp.length?sp[0].l:'bonne';
+}
+const truth=a=>a.s?'abimee':'bonne';
+
+/* ---------- État ---------- */
+const S={step:0,max:0,ans:{},tries:0,hints:0,sel:[],fixed:[],pick:null,retrained:false,name:''};
+const STEPS=['1 · L\'affaire','2 · Les erreurs','3 · Le cahier','4 · Qui ?','5 · Réparer'];
+const $=id=>document.getElementById(id);
+
+/* ---------- Lecture à voix haute ---------- */
+function speak(){
+  try{
+    speechSynthesis.cancel();
+    const txt=$('main').querySelector('[data-read]')?$('main').querySelector('[data-read]').innerText:$('main').innerText;
+    const u=new SpeechSynthesisUtterance(txt);u.lang='fr-FR';u.rate=.92;speechSynthesis.speak(u);
+  }catch(e){}
+}
+const readBtn='<button class="read" data-act="read" title="Écouter le texte">🔊 Écouter</button>';
+function choice(id,list,okText){ // question à choix ; on peut réessayer autant qu'on veut
+  const a=S.ans[id];
+  let h=`<div class="opts">`;
+  list.forEach((o,i)=>{const cls=a&&a.i===i?(o.ok?'good':'bad'):'';h+=`<button class="opt ${cls}" data-act="ans" data-q="${id}" data-i="${i}" ${a&&a.done?'disabled':''}><span class="em">${o.e}</span><span>${o.t}</span></button>`;});
+  h+='</div>';
+  if(a)h+=a.done?`<div class="fb ok">✅ ${okText}</div>`:`<div class="fb no">${list[a.i].fb} <b>Essaie encore !</b></div>`;
+  return h;
+}
+const Q={
+  q1:[{e:'🍎',t:'Trio jette les pommes rouges',fb:'Regarde bien l\'histoire : quelles pommes partent à la compote ?'},
+      {e:'🍏',t:'Trio jette les pommes vertes, même quand elles sont parfaites',ok:1},
+      {e:'🔌',t:'Trio est en panne et ne bouge plus',fb:'Non, Trio fonctionne : il trie… mais il se trompe.'}],
+  q2:[{e:'🟢',t:'Ce sont toutes des pommes vertes',ok:1},
+      {e:'🟤',t:'Elles ont toutes des taches',fb:'Regarde-les de près : elles sont lisses, sans taches.'},
+      {e:'🔴',t:'Ce sont toutes des pommes rouges',fb:'Regarde la couleur des pommes entourées en rouge.'}],
+  q4:[{e:'😮',t:'Tom s\'est trompé : il a cru que les pommes vertes n\'étaient pas mûres',ok:1},
+      {e:'😈',t:'Tom voulait casser Trio exprès',fb:'Relis ce que dit Tom. Il voulait aider, pas casser.'},
+      {e:'👵',t:'Mamie Jeanne a changé les photos',fb:'Mamie Jeanne était au marché à 17 h, et elle n\'a pas de compte sur l\'ordinateur.'}]
+};
+const HINT={0:'Lis la phrase en gras dans l\'histoire : elle dit quelles pommes partent à la compote.',
+  1:'Les erreurs sont entourées en rouge. Compare leur couleur.',
+  2:'Une pomme « abîmée » a des taches marron. Cherche les pommes SANS taches qui ont l\'étiquette « abîmée ».',
+  3:'Regarde la ligne en jaune dans le journal : à quelle heure, et avec quel compte ?',
+  4:'Clique sur chaque pomme verte mal étiquetée pour changer son étiquette en « bonne ».'};
+const hintBox=()=>S.hint===S.step?`<div class="hint">💡 ${HINT[S.step]}</div>`:'';
+const hintBtn='<button class="btn light" data-act="hint">💡 Coup de pouce</button>';
+const next=(ok,label)=>`<button class="btn" data-act="next" ${ok?'':'disabled'}>${label||'Étape suivante →'}</button>`;
+
+/* ---------- Étapes ---------- */
+function step0(){
+  return `<h2>📁 L'affaire ${readBtn}</h2>
+  <div data-read><div class="story"><p>Samedi matin, à la <b>ferme des Coquelicots</b>, c'est jour de marché.</p>
+  <p>Pour aller plus vite, la fermière Lucie utilise <b>Trio</b>, un robot avec une caméra et une <b>intelligence artificielle</b> (IA). Trio regarde chaque pomme : les <b>bonnes</b> vont dans le panier du marché, les <b>abîmées</b> vont à la compote.</p>
+  <p><b>Mais ce matin, Trio envoie toutes les pommes vertes à la compote, même les plus belles !</b></p>
+  <p>Lucie te demande de l'aide. Tu vas mener l'enquête, étape par étape.</p></div>
+  <div class="trio">${ROBOT}<div><b>Trio, le robot trieur</b><br>« Moi, j'ai appris en regardant des photos de pommes. Chaque photo a une étiquette : <i>bonne</i> ou <i>abîmée</i>. »</div></div>
+  <div class="voc"><div><b>IA</b>Un programme qui apprend à partir d'exemples.</div><div><b>Exemple</b>Une photo que l'on montre à l'IA pour qu'elle apprenne.</div><div><b>Étiquette</b>Le mot écrit par un humain sous la photo : « bonne » ou « abîmée ».</div></div>
+  <p class="q">❓ Quel est le problème de Trio ?</p></div>
+  ${choice('q1',Q.q1,'Exactement : Trio jette les pommes vertes, même parfaites.')}
+  ${hintBox()}<div class="row">${hintBtn}${next(S.ans.q1&&S.ans.q1.done)}</div>`;
+}
+function step1(){
+  const show=S.ans.q2&&S.ans.q2.done;
+  return `<h2>🔍 Les erreurs de Trio ${readBtn}</h2>
+  <div data-read><p>Voici 6 pommes triées par Trio ce matin. Sous chaque pomme : ce que Trio a décidé.</p>
+  <p>Les pommes entourées en <b style="color:var(--red)">rouge</b> sont des <b>erreurs</b> : Trio s'est trompé.</p></div>
+  <div class="apples">${TEST.map(a=>{const d=trio(a,TRAIN),e=d!==truth(a);return `<div class="ap ${e?'err':'okc'}"><span class="tag">${e?'❌':'✅'}</span>${apple(a.c,a.s)}<span class="dec">Trio dit :</span><span class="lab ${d}">${LBL[d]}</span></div>`;}).join('')}</div>
+  <p class="q">❓ Qu'ont en commun toutes les erreurs ?</p>
+  ${choice('q2',Q.q2,'Bien vu ! Trio se trompe seulement sur les pommes vertes. Et ces pommes n\'ont aucune tache : elles sont bonnes.')}
+  ${hintBox()}<div class="row">${hintBtn}${next(show)}</div>`;
+}
+function step2(){
+  const found=TRAIN.every((t,i)=>!t.bad||S.sel.includes(i)), wrong=S.sel.filter(i=>!TRAIN[i].bad);
+  const ok=S.ans.cahier;
+  return `<h2>📒 Le cahier d'entraînement ${readBtn}</h2>
+  <div data-read><p>Trio a appris avec ces <b>8 photos</b>. Sous chaque photo, un humain a écrit une <b>étiquette</b>.</p>
+  <p>Rappel : une pomme <b>abîmée</b> a des <b>taches marron</b>. Une pomme sans tache est <b>bonne</b>.</p>
+  <p>👉 Clique sur les photos dont l'étiquette est <b>fausse</b>, puis clique sur « Vérifier ».</p></div>
+  <div class="apples">${TRAIN.map((t,i)=>`<div class="ap click ${S.sel.includes(i)?'sel':''} ${ok&&t.bad?'err':''}" data-act="sel" data-i="${i}" role="button" tabindex="0">${S.sel.includes(i)?'<span class="tag">🚩</span>':''}${apple(t.c,t.s)}<span class="dec">Étiquette :</span><span class="lab ${t.l}">${LBL[t.l]}</span></div>`).join('')}</div>
+  <div class="row"><button class="btn light" data-act="check" ${ok?'disabled':''}>✔ Vérifier</button><span>${S.sel.length} photo(s) choisie(s)</span></div>
+  ${S.cfb?`<div class="fb ${ok?'ok':'no'}">${S.cfb}</div>`:''}
+  ${hintBox()}<div class="row">${hintBtn}${next(ok)}</div>`;
+}
+function step3(){
+  const pk=S.pick;
+  const SAY={lucie:['« Hier, j\'étais au marché toute la journée. Je suis rentrée à 19 h. »','Lucie était au marché à 17 h : ce n\'est pas elle qui a ajouté les photos.'],
+             tom:['« Hier à 17 h, j\'ai ajouté deux photos dans le cahier de Trio. Je voulais l\'aider ! Pour moi, une pomme verte, ce n\'est pas mûr… »','C\'est le compte de Tom, à 17 h 02. Et il le reconnaît !'],
+             jeanne:['« L\'ordinateur ? Je ne sais pas m\'en servir, mon petit. Hier, je vendais des confitures avec Lucie. »','Mamie Jeanne était au marché, et elle n\'a pas de compte sur l\'ordinateur.']};
+  return `<h2>👥 Qui a écrit ces étiquettes ? ${readBtn}</h2>
+  <div data-read><p>Les deux photos fausses ont été <b>ajoutées hier</b>. Regarde le journal de l'ordinateur de la ferme.</p></div>
+  <table class="log"><tr><th>Heure</th><th>Compte</th><th>Action</th></tr>
+  <tr><td>08 h 15</td><td>Lucie</td><td>Démarre Trio</td></tr>
+  <tr class="hl"><td>17 h 02</td><td>Tom</td><td>Ajoute 2 photos de pommes vertes, étiquette « abîmée »</td></tr>
+  <tr><td>19 h 10</td><td>Lucie</td><td>Éteint Trio</td></tr></table>
+  <p>👉 Clique sur chaque personne pour l'écouter.</p>
+  <div class="sus">${['lucie','tom','jeanne'].map(k=>`<button class="sp ${pk===k?(k==='tom'?'bad':'good'):''}" data-act="pick" data-k="${k}"><span class="hd">${PEOPLE[k]}<span><b>${{lucie:'Lucie',tom:'Tom',jeanne:'Mamie Jeanne'}[k]}</b><br><small>${{lucie:'la fermière',tom:'l\'apprenti, 15 ans',jeanne:'la grand-mère'}[k]}</small></span></span>${pk===k?`<p>${SAY[k][0]}</p><p><b>${SAY[k][1]}</b></p>`:''}</button>`).join('')}</div>
+  <p class="q">❓ Que s'est-il passé ?</p>
+  ${choice('q4',Q.q4,'Oui ! Tom n\'a pas saboté Trio : il s\'est trompé d\'étiquette. Et Trio a appris cette erreur.')}
+  ${hintBox()}<div class="row">${hintBtn}${next(S.ans.q4&&S.ans.q4.done)}</div>`;
+}
+function step4(){
+  const fixedTrain=TRAIN.map((t,i)=>S.fixed.includes(i)?{...t,l:'bonne'}:t);
+  const allFixed=TRAIN.every((t,i)=>!t.bad||S.fixed.includes(i));
+  let h=`<h2>🔧 Réparer Trio ${readBtn}</h2>
+  <div data-read><p>Pour réparer une IA, on corrige ses <b>exemples</b>, puis on la fait <b>apprendre à nouveau</b>.</p>
+  <p>👉 Clique sur les deux pommes vertes pour changer leur étiquette en « bonne ».</p></div>
+  <div class="apples">${fixedTrain.map((t,i)=>`<div class="ap ${TRAIN[i].bad&&!S.fixed.includes(i)?'click err':''} ${S.fixed.includes(i)?'okc':''}" ${TRAIN[i].bad&&!S.fixed.includes(i)?`data-act="fix" data-i="${i}" role="button" tabindex="0"`:''}>${apple(t.c,t.s)}<span class="lab ${t.l}">${LBL[t.l]}</span></div>`).join('')}</div>
+  <div class="row"><button class="btn" data-act="retrain" ${allFixed&&!S.retrained?'':'disabled'}>🔁 Faire réapprendre Trio</button></div>
+  <div class="machine"><i id="bar" style="width:${S.retrained?100:0}%"></i></div>`;
+  if(S.retrained){
+    h+=`<p><b>Nouveau test :</b></p><div class="apples">${TEST.map(a=>{const d=trio(a,fixedTrain);return `<div class="ap okc"><span class="tag">✅</span>${apple(a.c,a.s)}<span class="dec">Trio dit :</span><span class="lab ${d}">${LBL[d]}</span></div>`;}).join('')}</div>
+    <div class="fb ok">🎉 6 pommes sur 6 bien triées ! Trio ne jette plus les pommes vertes.</div>
+    <div class="row">${next(true,'Voir mon résultat →')}</div>`;
+  }else h+=hintBox()+`<div class="row">${hintBtn}</div>`;
+  return h;
+}
+function stars(){return Math.max(1,3-(S.hints>=3?1:0)-(S.tries>=4?1:0));}
+function step5(){
+  const st=stars();
+  return `<div style="text-align:center"><div class="stamp">AFFAIRE RÉSOLUE</div><div class="stars">${'⭐'.repeat(st)}${'☆'.repeat(3-st)}</div></div>
+  <div class="trio">${ROBOT}<div><b>Trio :</b> « Merci ! Je n'étais pas méchant, j'ai juste appris ce qu'on m'a montré. »</div></div>
+  <div class="card" style="box-shadow:none;margin-top:10px" data-read><h3>🎓 Ce que j'ai appris ${readBtn}</h3><ol class="learn">
+  <li>Une <b>IA apprend avec des exemples</b> choisis par des humains.</li>
+  <li>Si une <b>étiquette est fausse</b>, l'IA apprend une erreur… et la répète.</li>
+  <li>Pour réparer une IA, on <b>corrige les exemples</b> et on la fait <b>réapprendre</b>.</li></ol></div>
+  <div class="row"><button class="btn" data-act="cert">🖨️ Imprimer mon diplôme</button><button class="btn light" data-act="replay">↺ Recommencer</button></div>`;
+}
+const STEPF=[step0,step1,step2,step3,step4,step5];
+
+/* ---------- Rendu ---------- */
+function render(){
+  $('steps').innerHTML=STEPS.map((t,i)=>`<span class="${i===S.step?'on':i<S.step?'done':''}">${i<S.step?'✔ ':''}${t}</span>`).join('');
+  $('main').innerHTML=STEPF[S.step]();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function act(el,e){
+  const a=el.dataset.act;
+  if(a==='read'){speak();return;}
+  try{speechSynthesis.cancel();}catch(_){}
+  if(a==='ans'){const q=el.dataset.q,i=+el.dataset.i,o=Q[q][i];S.ans[q]={i,done:!!o.ok};if(!o.ok)S.tries++;}
+  else if(a==='hint'){if(S.hint!==S.step){S.hint=S.step;S.hints++;}}
+  else if(a==='next'){S.step++;S.hint=null;}
+  else if(a==='sel'){const i=+el.dataset.i;if(S.ans.cahier)return;S.sel=S.sel.includes(i)?S.sel.filter(x=>x!==i):[...S.sel,i];S.cfb='';}
+  else if(a==='check'){
+    const bad=TRAIN.map((t,i)=>t.bad?i:-1).filter(i=>i>=0),wrong=S.sel.filter(i=>!TRAIN[i].bad),miss=bad.filter(i=>!S.sel.includes(i));
+    if(!wrong.length&&!miss.length){S.ans.cahier=true;S.cfb='✅ Bravo ! Ces deux pommes vertes sont <b>bonnes</b> (aucune tache), mais quelqu\'un a écrit « abîmée ». Trio a appris que <b>vert = abîmé</b>. Voilà la cause de la panne !';}
+    else{S.tries++;S.cfb=wrong.length?'Une des photos choisies a une étiquette juste. Regarde les taches : pas de tache = bonne, des taches = abîmée.':`Il manque ${miss.length} photo(s). Cherche une pomme sans tache avec l'étiquette « abîmée ».`;}
+  }
+  else if(a==='pick'){S.pick=el.dataset.k;}
+  else if(a==='fix'){const i=+el.dataset.i;if(!S.fixed.includes(i))S.fixed.push(i);}
+  else if(a==='retrain'){S.retrained=true;render();const b=$('bar');if(b){b.style.width='0%';requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.width='100%'));}return;}
+  else if(a==='cert'){cert();return;}
+  else if(a==='replay'){Object.assign(S,{step:0,ans:{},tries:0,hints:0,sel:[],fixed:[],pick:null,retrained:false,cfb:'',hint:null});}
+  render();
+}
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(el&&!el.disabled)act(el,e);});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button][data-act]')){e.preventDefault();act(e.target,e);}});
+$('nameIn').addEventListener('input',e=>{S.name=e.target.value;});
+function cert(){
+  $('certPrint').innerHTML=`<div class="cert"><div style="font-size:54px">🍏</div><h2 style="color:#2b6a27;font-family:Fredoka,sans-serif">DIPLÔME D'ENQUÊTEUR·RICE</h2><p>décerné à</p><p style="font-size:30px"><b>${(S.name||'Enquêteur·rice').replace(/</g,'&lt;')}</b></p><p>pour avoir résolu <b>« L'affaire des pommes vertes »</b><br>et réparé une intelligence artificielle en corrigeant ses exemples.</p><p style="font-size:26px">${'⭐'.repeat(stars())}</p></div>`;
+  setTimeout(()=>window.print(),50);
+}
+render();
+</script>
+</body>
+</html>
