@@ -4759,8 +4759,8 @@ const JOINTS = [[SPLIT + TNL/2, 73.2], [SPLIT + TNL/2, 106.5]];
    épaisseur : la chape de la demi-coque GAUCHE appartient à l'ARRIÈRE, celle de la demi-coque DROITE à l'AVANT ; la vis
    d'axe les traverse toutes les deux. En haut, la demi-coque gauche arrière avance de 10 mm (languette) sous la vis de
    fermeture, qui la relie à la demi-coque droite avant. Tout le reste de la coupe est droit (x = SPLIT). */
-const HINGE = {x:SPLIT, z:64.5, r:5, web:[SPLIT - 9, SPLIT + 9], gap:.25, lock:[SPLIT + 5, 106.5], tab:[SPLIT + 10, 100], open:60,
-  bolt:{L:25, head:5.5, headH:3, seat:-11.8, nutAF:5.5, nutH:4, nutIn:9.2, pocketAF:5.8}};   // boulon M3 × 25 (tête Ø5,5) + écrou frein M3 (5,5 sur plats, 4 mm)
+const HINGE = {x:SPLIT, z:63.5, r:6.2, web:[SPLIT - 9, SPLIT + 9], gap:.25, lock:[SPLIT + 5, 106.5], tab:[SPLIT + 10, 100], open:60,
+  bolt:{L:25, head:7, headH:4, seat:-11, nutAF:7, nutH:5, nutIn:8, pocketAF:7.3, hole:2.25}};   // boulon M4 × 25 (tête Ø7) + écrou frein M4 (7 sur plats, 5 mm)
   // 2 vis de jonction : en bas (plancher) et en haut (paroi du dessus)
 /* Passage des 3 fils du laser : encoche en bas de la butée de la pile + rigole dans le plancher, sous la pile, jusqu'à la poignée */
 const WIRE = {x0:40, hw:3.5, z0:74.8, notchTop:80};
@@ -5006,14 +5006,14 @@ function buildCover(){
   if (!laser) for (const s of [-1, 1]) rim = keep(rim.add(cylAxis(.5, 21, 40, 0, [0, s*(cy - .2), 4])));         // bourrelets d'encliquetage
   return laser ? {talon, rim, h} : {cover: keep(talon.add(rim))};
 }
-/* ================= Laser réglable gauche / droite : vis-mère (boulon M3 + écrous) =================
+/* ================= Laser réglable gauche / droite : vis-mère (boulon M4 + écrous) =================
    La tête du laser est tenue dans un support imprimé (chariot) qui pivote autour d'un axe vertical, juste derrière la
    paroi du canon : 2 tourillons (dessus / dessous) tournent dans 2 guides de la coque, le chariot ne peut donc ni
-   monter ni descendre. À l'arrière, une tête plus haute porte un écrou M3 prisonnier. Un boulon M3 traverse le canon
+   monter ni descendre. À l'arrière, une tête plus haute porte un écrou M4 prisonnier. Un boulon M4 traverse le canon
    de gauche à droite et passe dans cet écrou ; il est tenu par sa tête (côté gauche) et par un écrou frein (côté droit),
-   il tourne sans avancer. En le tournant, l'écrou du chariot avance le long du filetage (0,5 mm par tour) et l'arrière
+   il tourne sans avancer. En le tournant, l'écrou du chariot avance le long du filetage (0,7 mm par tour) et l'arrière
    du laser se déplace à gauche ou à droite. */
-const ADJ = {px:FRONT - 6, x0:FRONT - 30, x1:FRONT - 1, rb:9, sx:FRONT - 25.5, sz:99.5, top:103, pin:2.5, pinH:2.5, nutAF:5.6, nutT:2.6, bolt:35};
+const ADJ = {px:FRONT - 6, x0:FRONT - 30, x1:FRONT - 1, rb:11, sx:FRONT - 24.5, sz:99, top:103.5, pin:2.5, pinH:2.5, nutAF:7.2, nutT:3.4, bolt:40, hole:2.25, lock:5};
 const adjOn = () => S.proc !== 'laser' && S.adjLaser;
 const adjSize = () => { const d = num(S.holes.laser) || S.comp.laser; return {d, hw: Math.max(5, d/2 + 2), hz: Math.max(6, d/2 + 3)}; };
 function adjShell(res, g){                                      // modifications de la coque
@@ -5024,7 +5024,7 @@ function adjShell(res, g){                                      // modifications
   res = keep(res.subtract(cylAxis(A.pin + .25, z0 - .3 - A.pinH - .4, z0, 2, [A.px, 0, 0])));                  // logement du tourillon du bas
   const sw = d/2 + 1.8;                                                                                        // fente horizontale : le faisceau peut pivoter
   res = keep(res.subtract(box(FRONT - .5, -sw, 90 - d/2 - 1, FRONT + 8, sw, 90 + d/2 + 1)));
-  res = keep(res.subtract(cylAxis(1.7, -g.W2 - 1, g.W2 + 1, 1, [A.sx, 0, A.sz])));                             // passage Ø3,4 du boulon, à gauche et à droite
+  res = keep(res.subtract(cylAxis(A.hole, -g.W2 - 1, g.W2 + 1, 1, [A.sx, 0, A.sz])));                           // passage Ø4,5 du boulon, à gauche et à droite
   return res;
 }
 function buildAdjHolder(){                                      // chariot du laser (à imprimer debout, arrière sur le plateau)
@@ -5035,8 +5035,8 @@ function buildAdjHolder(){                                      // chariot du la
   h = keep(h.add(cylAxis(A.pin, z0 - A.pinH, z0 + .01, 2, [A.px, 0, 0])));
   h = keep(h.subtract(cylAxis(d/2, A.x0 - 1, A.x1 - 1, 0, [0, 0, 90])));                                       // alésage de la tête du laser (entrée par l'arrière)
   h = keep(h.subtract(cylAxis(Math.max(1.5, d/2 - .6), A.x1 - 1.1, A.x1 + 1, 0, [0, 0, 90])));                 // petite butée devant
-  h = keep(h.subtract(box(A.sx - A.nutAF/2 - .15, -A.nutT/2 - .15, A.sz - 3.3, A.sx + A.nutAF/2 + .15, A.nutT/2 + .15, A.top + 1)));   // fente de l'écrou (par le dessus)
-  h = keep(h.subtract(cylAxis(1.9, -hw - 1, hw + 1, 1, [A.sx, 0, A.sz])));                                    // passage du boulon (avec un peu de jeu)
+  h = keep(h.subtract(box(A.sx - A.nutAF/2 - .15, -A.nutT/2 - .15, A.sz - 4.3, A.sx + A.nutAF/2 + .15, A.nutT/2 + .15, A.top + 1)));   // fente de l'écrou (par le dessus)
+  h = keep(h.subtract(cylAxis(A.hole + .2, -hw - 1, hw + 1, 1, [A.sx, 0, A.sz])));                                    // passage du boulon (avec un peu de jeu)
   return h;
 }
 function renderAdj(){
@@ -5045,7 +5045,7 @@ function renderAdj(){
   $('adjNote').textContent = laser
     ? 'Disponible en impression 3D seulement. En découpe laser, le module se règle à la main puis se colle (colle chaude).'
     : S.adjLaser
-      ? `La tête du laser se monte dans un chariot imprimé (support_laser.stl) qui pivote sur 2 tourillons juste derrière la paroi du canon : il ne peut pas monter ni descendre, seulement tourner à gauche ou à droite. Un boulon M3 × 35 traverse le canon de gauche à droite et passe dans un écrou M3 prisonnier à l’arrière du chariot ; il est tenu par sa tête (côté gauche) et un écrou frein (côté droit). Tourne la tête du boulon : 1 tour = 0,5 mm, soit environ 25 cm à 10 m (un quart de tour ≈ 6 cm). Règle-le une fois à 10 m : vise le centre de la cible, tire, puis tourne le boulon jusqu’à ce que le point arrive au centre. Le trou du laser que tu choisis devient l’alésage du chariot.`
+      ? `La tête du laser se monte dans un chariot imprimé (support_laser.stl) qui pivote sur 2 tourillons juste derrière la paroi du canon : il ne peut pas monter ni descendre, seulement tourner à gauche ou à droite. Un boulon M4 × 40 traverse le canon de gauche à droite et passe dans un écrou M4 prisonnier à l’arrière du chariot ; il est tenu par sa tête (côté gauche) et un écrou frein (côté droit). Tourne la tête du boulon : 1 tour = 0,7 mm, soit environ 38 cm à 10 m (un quart de tour ≈ 9 cm). Règle-le une fois à 10 m : vise le centre de la cible, tire, puis tourne le boulon jusqu’à ce que le point arrive au centre. Le trou du laser que tu choisis devient l’alésage du chariot.`
       : 'Laser fixe : la tête traverse la paroi du canon. Sans réglage, le point laser peut tomber à plusieurs centimètres du point visé à 10 m.';
 }
 function visserie(){
@@ -5055,9 +5055,9 @@ function visserie(){
     return [[4, `vis M3 × ${len} mm`, 'assemblage des 2 parties (trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche)']];
   }
   return [[6, 'vis M3 × 20 mm', '4 plots de la coque + 1 plot à l’avant du canon + 1 en bas de la crosse (tête dans le lamage, côté droit)'],
-          [1, 'boulon M3 × 25 mm (tête cylindrique) + écrou frein M3 (Nylstop)', 'axe de la charnière, sous le canon : tête à droite, écrou dans son logement hexagonal à gauche ; serre juste assez pour que l’avant tourne sans jeu'],
+          [1, 'boulon M4 × 25 mm (tête cylindrique) + écrou frein M4 (Nylstop)', 'axe de la charnière, sous le canon : tête à droite, écrou dans son logement hexagonal à gauche ; serre juste assez pour que l’avant tourne sans jeu'],
           [1, 'vis M3 × 30 mm', 'fermeture de l’avant, en haut du canon'],
-          ...(adjOn() ? [[1, 'boulon M3 × 35 mm + 1 écrou M3 + 1 écrou frein M3 (Nylstop)', 'réglage gauche / droite du laser : la tête à gauche, l’écrou dans le chariot, l’écrou frein à droite (serré au contact)']] : [])];
+          ...(adjOn() ? [[1, 'boulon M4 × 40 mm + 1 écrou M4 + 1 écrou frein M4 (Nylstop)', 'réglage gauche / droite du laser : la tête à gauche, l’écrou dans le chariot, l’écrou frein à droite (serré au contact)']] : [])];
 }
 function renderExtra(){
   const g = G(), laser = S.proc === 'laser';
@@ -5145,8 +5145,8 @@ function buildPrint(){
       }
       {                                                                                              // axe de la charnière : boulon + écrou frein
         const B = H.bolt;
-        let h = cylAxis(1.7, sgn < 0 ? y0 - 1 : 0, sgn < 0 ? 0 : y1 + 1, 1, [H.x, 0, H.z]);          // passage Ø3,4 des 2 côtés (le boulon tourne librement)
-        if (sgn < 0) h = keep(h.add(cylAxis(B.head/2 + .45, -g.W2 - 1, B.seat, 1, [H.x, 0, H.z])));   // lamage Ø6,4 : tête du boulon (côté droit)
+        let h = cylAxis(B.hole, sgn < 0 ? y0 - 1 : 0, sgn < 0 ? 0 : y1 + 1, 1, [H.x, 0, H.z]);          // passage Ø4,5 des 2 côtés (le boulon tourne librement)
+        if (sgn < 0) h = keep(h.add(cylAxis(B.head/2 + .45, -g.W2 - 1, B.seat, 1, [H.x, 0, H.z])));   // lamage Ø7,9 : tête du boulon (côté droit)
         else h = keep(h.add(keep(keep(keep(Manifold.cylinder(g.W2 + 1 - B.nutIn, B.pocketAF/Math.sqrt(3), B.pocketAF/Math.sqrt(3), 6, false)).rotate([-90,0,0])).translate([H.x, B.nutIn, H.z]))));   // logement hexagonal de l'écrou (côté gauche) : il ne tourne pas
         jHole = keep(jHole.add(h));
       }
@@ -5232,10 +5232,10 @@ function buildComponents(){
   const m = c => new THREE.MeshStandardMaterial({color:c, roughness:.4, metalness:.1});
   const cyl = (r, x0, x1, axis, at, mat) => { const gg = new THREE.CylinderGeometry(r, r, Math.abs(x1-x0), 32); if (axis===0) gg.rotateZ(-Math.PI/2); else if (axis===2) gg.rotateX(Math.PI/2); const p = at.slice(); p[axis] = (x0+x1)/2; gg.translate(...p); return new THREE.Mesh(gg, mat); };
   const red = m(0xff3048), grey = m(0x3a4148), blue = m(0x2f8fd0), brass = m(0xc9a44c), pcb = m(0x1f6b3a);
-  if (S.proc !== 'laser') {                                                                   // charnière : boulon M3 × 25 + écrou frein
+  if (S.proc !== 'laser') {                                                                   // charnière : boulon M4 × 25 + écrou frein
     const B = HINGE.bolt, steel = new THREE.MeshStandardMaterial({color:0xaeb6bd, roughness:.3, metalness:.7}), nylon = m(0x2d6fd6);
     g.add(cyl(B.head/2, B.seat - B.headH, B.seat, 1, [HINGE.x, 0, HINGE.z], steel));            // tête
-    g.add(cyl(1.5, B.seat, B.seat + B.L, 1, [HINGE.x, 0, HINGE.z], steel));                    // tige
+    g.add(cyl(2, B.seat, B.seat + B.L, 1, [HINGE.x, 0, HINGE.z], steel));                    // tige
     const nut = new THREE.Mesh(new THREE.CylinderGeometry(B.nutAF/Math.sqrt(3), B.nutAF/Math.sqrt(3), B.nutH*.7, 6), steel); nut.position.set(HINGE.x, B.nutIn + B.nutH*.35, HINGE.z); g.add(nut);
     g.add(cyl(B.nutAF/2 - .3, B.nutIn + B.nutH*.7, B.nutIn + B.nutH, 1, [HINGE.x, 0, HINGE.z], nylon));   // bague nylon du frein
   }
@@ -5251,11 +5251,11 @@ function buildComponents(){
   g.add(cyl(C.rech/2, -W2, -W2 + 11, 1, [RECH[0],0,RECH[1]], grey)); g.add(cyl(C.rech*.37, -W2 - 4, -W2, 1, [RECH[0],0,RECH[1]], blue));
   if (adjOn()) g.add(cyl(C.laser/2, ADJ.x0 + 1, ADJ.x1 - 1, 0, [0,0,90], brass)); else g.add(cyl(C.laser/2, FRONT - 1, 198, 0, [0,0,90], brass));
   const board = new THREE.Mesh(new THREE.BoxGeometry(18, 1.6, 15), pcb); board.position.set(adjOn() ? ADJ.x0 - 10.5 : FRONT - 9.5, 0, 90); g.add(board);
-  if (adjOn()) {                                                                              // boulon de réglage M3 × 35 + écrou du chariot + écrou frein
+  if (adjOn()) {                                                                              // boulon de réglage M4 × 40 + écrou du chariot + écrou frein
     const steel = new THREE.MeshStandardMaterial({color:0xaeb6bd, roughness:.3, metalness:.7}), at = [ADJ.sx, 0, ADJ.sz];
-    g.add(cyl(1.5, -W2 - 5, W2, 1, at, steel)); g.add(cyl(2.75, W2, W2 + 3, 1, at, steel));
+    g.add(cyl(2, -W2 - ADJ.lock - 2, W2, 1, at, steel)); g.add(cyl(3.5, W2, W2 + 4, 1, at, steel));
     const hex = (y0, y1) => { const n = new THREE.Mesh(new THREE.CylinderGeometry(ADJ.nutAF/Math.sqrt(3), ADJ.nutAF/Math.sqrt(3), y1 - y0, 6), steel); n.position.set(ADJ.sx, (y0 + y1)/2, ADJ.sz); g.add(n); };
-    hex(-ADJ.nutT/2, ADJ.nutT/2); hex(-W2 - 2.8, -W2); g.add(cyl(2.5, -W2 - 4, -W2 - 2.8, 1, at, m(0x2d6fd6)));
+    hex(-ADJ.nutT/2, ADJ.nutT/2); hex(-W2 - ADJ.lock*.7, -W2); g.add(cyl(3.2, -W2 - ADJ.lock, -W2 - ADJ.lock*.7, 1, at, m(0x2d6fd6)));
   }   // carte KY-008 derrière la paroi du canon
 
   /* Carte Arduino Nano (18 × 43 mm) debout dans la crosse, prise USB vers le bas */
@@ -5402,7 +5402,7 @@ function renderJoin(){
     $('joinNote').textContent = `4 vis M3 de ${len} mm. Colle ensemble les couches C1 à C${m} (partie droite) et C${m+1} à C${g.n} (partie gauche), puis visse les 2 parties. Trous Ø 3,4 mm à droite, avant-trous Ø 2,6 mm à gauche ; les disques percés découpés dans les cadres sont les entretoises : empile-les au-dessus des trous.`;
   } else {
     $('pillarRow').hidden = true;
-    $('joinNote').textContent = '6 vis M3 de 20 mm : 4 plots, 1 plot à l’avant du canon et 1 vis en bas de la crosse. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) et l’avant pivote vers le bas sur une charnière pour changer la pile. Sous le canon, juste devant la poignée : une chape sur l’arrière gauche et une chape sur l’avant droit, traversées par un boulon M3 × 25 qui sert d’axe, tenu par un écrou frein (Nylstop) logé dans un creux hexagonal à gauche : il ne tourne pas et ne se desserre pas ; serre juste assez pour que l’avant tourne sans jeu. En haut : une vis M3 de 30 mm de fermeture traverse la languette de l’arrière gauche et l’avant droit ; enlève-la pour ouvrir. Chaque chape fait toute l’épaisseur de sa demi-coque : impression à plat, sans support. Avant-trou Ø 2,5 mm à gauche pour la vis du haut. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
+    $('joinNote').textContent = '6 vis M3 de 20 mm : 4 plots, 1 plot à l’avant du canon et 1 vis en bas de la crosse. Chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) et l’avant pivote vers le bas sur une charnière pour changer la pile. Sous le canon, juste devant la poignée : une chape sur l’arrière gauche et une chape sur l’avant droit, traversées par un boulon M4 × 25 qui sert d’axe, tenu par un écrou frein (Nylstop) logé dans un creux hexagonal à gauche : il ne tourne pas et ne se desserre pas ; serre juste assez pour que l’avant tourne sans jeu. En haut : une vis M3 de 30 mm de fermeture traverse la languette de l’arrière gauche et l’avant droit ; enlève-la pour ouvrir. Chaque chape fait toute l’épaisseur de sa demi-coque : impression à plat, sans support. Avant-trou Ø 2,5 mm à gauche pour la vis du haut. Dans la demi-coque droite : trou de passage Ø 3,4 mm avec un lamage pour la tête ; dans la gauche : avant-trou Ø 2,6 mm. Pas besoin de colle : tu peux rouvrir la coque pour changer la Nano.';
   }
 }
 function refresh(){
@@ -5426,7 +5426,7 @@ function refresh(){
     : `Le téléchargement se débloque quand les ${GROUPS.length} diamètres sont corrects (${st.n} / ${GROUPS.length}).`;
   $('exportNote').textContent = S.proc === 'laser'
     ? `Plaques de ${fmt(g.t)} mm. Traits rouges : découpe. Numéros bleus : gravure. C${g.n} est dessinée retournée (décors gravés) : pose-la face gravée vers l’extérieur. Colle les couches C1 à C${halfCount()} ensemble, C${halfCount()+1} à C${g.n} ensemble, puis visse les 2 parties (4 vis M3). Les disques percés et les rectangles découpés dans les cadres sont les entretoises et le rebord devant la pile : colle-les sur la plaque, à leur emplacement.`
-    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Assemble les 2 arrières avec les vis M3 de 20 mm, les 2 avants de même, puis relie-les par le boulon de la charnière (M3 × 25 + écrou frein, sous le canon) et la vis de fermeture (M3 × 30, en haut). Couvercle : talon sur le plateau. Les viseurs sont imprimés avec les coques, sans supports (profil en rampe).';
+    : 'Pose chaque pièce sur sa face extérieure, pas besoin de supports. Couche 0,2 mm, remplissage 20 %. Assemble les 2 arrières avec les vis M3 de 20 mm, les 2 avants de même, puis relie-les par le boulon de la charnière (M4 × 25 + écrou frein M4, sous le canon) et la vis de fermeture (M3 × 30, en haut). Couvercle : talon sur le plateau. Les viseurs sont imprimés avec les coques, sans supports (profil en rampe).';
   const prev = $('exportPreview');
   if (st.ready) prev.innerHTML = S.proc === 'laser' ? laserSVG(true) : '<div class="stlinfo">4 pièces PLA : les 2 arrières (crosse) 95 × 116 × 15 mm au plus (viseur et chape compris) et les 2 avants 115 × 57 × 15 mm au plus (viseur et chape compris). Plus le couvercle de la crosse (46 × 30 mm). Les viseurs sont intégrés aux coques. Il faut un plateau d’au moins 120 × 120 mm (l’avant fait 115 mm de long : pose-le en diagonale si besoin).</div>';
   else prev.innerHTML = '';
@@ -5512,13 +5512,13 @@ Fichiers :
   coque_droite_avant.stl   : demi-coque droite, partie avant avec la chape de la charniere (115 x 57 x 15 mm, viseur compris)
   coque_gauche_arriere.stl : demi-coque gauche, partie arriere avec la crosse
   coque_gauche_avant.stl   : demi-coque gauche, partie avant
-  couvercle_crosse.stl : couvercle a emboiter sous la poignee (talon 46 x 30 x 2 mm + cadre encliquetable)${adjOn() ? '\n  support_laser.stl : chariot reglable de la tete du laser (pivot + ecrou M3), a imprimer debout, arriere sur le plateau' : ''}
+  couvercle_crosse.stl : couvercle a emboiter sous la poignee (talon 46 x 30 x 2 mm + cadre encliquetable)${adjOn() ? '\n  support_laser.stl : chariot reglable de la tete du laser (pivot + ecrou M4), a imprimer debout, arriere sur le plateau' : ''}
 Unites : millimetres. Plateau d'impression minimal : 120 x 120 mm.
 Decors en bas-relief : glissiere, stries, fenetre d'ejection, bouche du canon et plaquette
 de crosse striee, creuses de 0,8 mm dans les faces exterieures.
 Chaque demi-coque est coupee en x = 85 mm. L'avant pivote vers le bas sur une charniere placee sous
 le canon, juste devant la poignee (chape sur l'arriere gauche + chape sur l'avant droit, axe =
-boulon M3 x 25 + ecrou frein Nylstop M3 loge dans un creux hexagonal a gauche). En haut, une vis M3 x 30 de fermeture relie la languette de l'arriere gauche a l'avant droit.
+boulon M4 x 25 + ecrou frein Nylstop M4 loge dans un creux hexagonal a gauche). En haut, une vis M3 x 30 de fermeture relie la languette de l'arriere gauche a l'avant droit.
 Les chapes font toute l'epaisseur de leur demi-coque : impression a plat sans support.
 Logement de la pile agrandi de 5 mm dans les pieces avant, petit rebord devant la pile.
 
@@ -5549,14 +5549,14 @@ Montage :
   4. Assemble les 2 arrieres ensemble, puis les 2 avants ensemble, avec les vis M3 de 20 mm (dont 1 en bas de la
      crosse) : tete de vis dans le lamage de la demi-coque droite, la vis se visse dans l'avant-trou de la gauche.
   5. Charniere : place l'avant contre l'arriere, chape droite (avant) contre chape gauche (arriere), et visse
-     le boulon M3 x 25 par la droite ; pose l'ecrou frein dans le creux hexagonal a gauche (bague nylon
+     le boulon M4 x 25 par la droite ; pose l'ecrou frein dans le creux hexagonal a gauche (bague nylon
      vers l'exterieur) et serre juste assez : l'avant doit pivoter vers le bas sans jeu. Laisse assez de
      longueur aux fils du laser. Ferme, puis visse la vis M3 x 30 du haut (fermeture).
      Changer la pile : devisse la vis du haut, bascule l'avant vers le bas, remplace la pile, referme.
   6. Les viseurs (hausse a l'arriere, guidon a l'avant) font partie des coques.
      La ligne de visee passe 2,6 cm au-dessus du laser : a 10 m, vise un peu au-dessus de la cible.
   7. Emboite le couvercle sous la poignee : le cadre entre dans l'ouverture et se clipse.
-     Pour l'ouvrir, glisse un tournevis plat dans l'encoche a l'arriere. Le cable USB passe par la fente.${adjOn() ? `\n\nLaser reglable (gauche / droite) :\n  - Avant de fermer la coque : glisse un ecrou M3 dans la fente du chariot (par le dessus), enfonce la\n    tete du laser dans le chariot par l'arriere, puis pose le chariot : ses 2 tourillons entrent dans\n    les logements des guides (haut et bas), juste derriere la paroi du canon. La carte du laser reste derriere.\n  - Une fois la coque fermee : passe le boulon M3 x 35 par la gauche, a travers le canon et l'ecrou du\n    chariot, puis visse l'ecrou frein a droite, juste au contact (le boulon doit encore tourner).\n  - Reglage : pose le pistolet sur un appui stable a 10 m d'une cible, vise le centre avec le viseur, tire,\n    puis tourne la tete du boulon : 1 tour = 0,5 mm, soit environ 25 cm a 10 m. Recommence jusqu'a ce que\n    le point laser arrive au centre. La hauteur n'est pas reglable : vise un peu au-dessus (2,6 cm).` : ''}
+     Pour l'ouvrir, glisse un tournevis plat dans l'encoche a l'arriere. Le cable USB passe par la fente.${adjOn() ? `\n\nLaser reglable (gauche / droite) :\n  - Avant de fermer la coque : glisse un ecrou M4 dans la fente du chariot (par le dessus), enfonce la\n    tete du laser dans le chariot par l'arriere, puis pose le chariot : ses 2 tourillons entrent dans\n    les logements des guides (haut et bas), juste derriere la paroi du canon. La carte du laser reste derriere.\n  - Une fois la coque fermee : passe le boulon M4 x 40 par la gauche, a travers le canon et l'ecrou du\n    chariot, puis visse l'ecrou frein a droite, juste au contact (le boulon doit encore tourner).\n  - Reglage : pose le pistolet sur un appui stable a 10 m d'une cible, vise le centre avec le viseur, tire,\n    puis tourne la tete du boulon : 1 tour = 0,7 mm, soit environ 38 cm a 10 m. Recommence jusqu'a ce que\n    le point laser arrive au centre. La hauteur n'est pas reglable : vise un peu au-dessus (2,6 cm).` : ''}
 
 Cablage : D6 gachette, D5 recharger, ${NL === 5 ? 'D2 D3 D4 D7 D8' : 'D2 D3 D4'} LED, D9 laser.
 Securite : ne jamais viser les yeux avec le laser.
