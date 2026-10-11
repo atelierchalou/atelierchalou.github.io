@@ -4746,7 +4746,7 @@ const CAVITY  = [[8,76],[15,76],[15,-1],[44,-1],[44,76],[FRONT,76],[FRONT,104],[
 const INNER   = [[0,70], ...BACKP, [15,0],[15,76],[8,76],[8,104],[FRONT,104],[FRONT,76],[44,76],[44,0], ...FRONTP, [166,70],[166,106],[162,110],[6,110],[0,104]];
 const PLIES = [3, 4, 5, 6, 8];
 /* Plots de vis M3 qui relient les deux demi-coques (position x, z dans la cavité) */
-const POSTS = [[13,98],[70.5,100.5],[FRONT - 13.5,101.5],[30,71]], POST_R = 3.75;
+const POSTS = [[4.5,89],[70.5,100.5],[FRONT - 13.5,101.5],[30,71]], POST_R = 3.75;
 /* Pile 9 V (48,5 × 26,5 × 17,5 mm) debout dans la crosse, posée dans le fond du bouchon vissé : on la change par le dessous */
 const BAT = {x0:15.65, L:48.5, H:26.5, T:17.5, z0:6, stop:0};   // pile debout, centrée dans le cadre du bouchon
 /* Parties avant : logement de la pile agrandi de 5 mm en tout (2,5 mm de chaque côté, en haut et en bas),
@@ -4758,10 +4758,13 @@ const GRIP_SCREW = [11, 18];
 const CAP = {d:10, wall:2, floor:2, col:3.8, screws:[[9.5, 7], [47, -7]],   // vis décalées : chacune entre dans une seule demi-coque (arrière gauche, avant droite)
   rim:{x0:14.2, x1:43.8, hw:10.6, h:7}};                                          // cadre du bouchon qui entre de 7 mm dans la crosse (logement : x 14 à 44, y ±10,8)
 const GACH_Z = 60.5;
-/* Support de la Nano (couchée, broches vers le bas, dessous de la carte en z = 84,5) : 2 appuis au milieu (entre les 2 rangées
-   de broches), à 2 mm sous la carte pour la mousse double-face ou la colle chaude ; butée arrière (contre l'arrachement
-   du câble USB) et butée avant (quand on enfonce le câble). Ils partent du plancher : impression sans support. */
-const NANO = {x0:12, x1:55.2, zb:84.5, pad:2, hw:6.5, pads:[[12, 15.5], [44, 52]], stopR:[10.5, 12], stopF:[55.5, 57], stopFhw:2.5, stopTop:86};   // gâchette au-dessus de la pile et de son clip
+/* Nano couchée, broches vers le bas, dessous de la carte en z = NANO.zb : sous les broches, 14 mm pour les fiches Dupont
+   femelles et de la place pour plier les fils (creux dans le plancher, ouverture de la crosse). La carte est collée
+   (mousse double-face 2 mm ou colle chaude) sur une poutre centrale, entre les 2 rangées de fiches, portée par 2 cloisons
+   (arrière et avant). La cloison avant sert de butée quand on enfonce le câble ; un rebord autour du trou USB empêche
+   la prise de la carte de sortir quand on le tire. Cloisons pleine largeur : impression sans support. */
+const NANO = {zb:96.5, pad:2, hw:6.5, t:2, rear:[9, 11.4], front:[55.4, 56.4], foam:[[13, 19], [47, 53]], usbZ:100.1,
+  dup:{x0:11.7, x1:54.3, y0:7.2, y1:10, z0:80}};   // gâchette au-dessus de la pile et de son clip
 /* Impression 3D : chaque demi-coque est coupée en 2 (arrière avec la crosse, avant) en x = SPLIT ; l'avant s'emboîte dans l'arrière (languette + 2 vis) */
 const SPLIT = 106, TNL = 12, SOLIDS = [[FRONT - 4,78.5]];   // vis supplémentaire dans le bloc plein de l'avant
 /* Vis de jonction des 4 pièces : traverse toute l'épaisseur dans la paroi du bas, au milieu des languettes */
@@ -4897,7 +4900,7 @@ const SIGHT = {z0:110, zb:111, top:116, notch:3.6, blade:2.4,
 const FOOT = {stem:1.5, lug:3.5, z0:105.6, zStep:107.25, gap:.15,     // pied : âme de 3 mm, talon de 7 mm
   slot:{z0:105.4, zStep:107.4}};                                       // encoche : 0,15 mm de jeu, plancher de 1,4 mm
 const GRIP = {x0:15, x1:44};             // ouverture sous la crosse (cavité de la poignée, assez large pour sortir la pile)
-const USB = {z0:82.5, z1:91.5, hw:6};     // passage de la prise mini-USB de la Nano dans la face arrière
+const USB = {z0:96.6, z1:103.6, hw:5.75};  // passage de la fiche mini-USB dans la face arrière (Nano remontée)
 const DEC = {w:1.2, d:.8};                 // décors : largeur et profondeur des traits (impression)
 /* Décors : segments [[x, z], [x, z]] dessinés sur la face extérieure (side −1 : droite, +1 : gauche) */
 function decorLines(side){
@@ -5161,10 +5164,16 @@ function buildPrint(){
     let outer = keep(keep(slab(PROFILE, -g.W2, g.W2).subtract(box(-20, -g.W2 - 1, -1, 80, g.W2 + 1, 70))).add(gripSolid(g)));   // crosse arrondie
     let res = keep(outer.subtract(slab(CAVITY, -g.CY, g.CY)));
     for (const [x, z] of POSTS.concat(SOLIDS)) res = keep(res.add(cylAxis(POST_R, -g.CY - .5, g.CY + .5, 1, [x, 0, z])));   // plots sur les parois latérales
-    res = keep(res.subtract(box(-1, -USB.hw, USB.z0, 8.5, USB.hw, USB.z1)));                                    // prise USB de la Nano, dans la face arrière
-    for (const [a, b] of NANO.pads) res = keep(res.add(box(a, -NANO.hw, 75.5, b, NANO.hw, NANO.zb - NANO.pad)));   // appuis de la Nano (mousse ou colle dessus)
-    res = keep(res.add(box(NANO.stopR[0], -NANO.hw, 75.5, NANO.stopR[1], NANO.hw, NANO.stopTop)));                 // butée arrière
-    res = keep(res.add(box(NANO.stopF[0], -NANO.stopFhw, 75.5, NANO.stopF[1], NANO.stopFhw, NANO.stopTop)));       // butée avant (étroite : place du bouton marche/arrêt)
+    res = keep(res.subtract(box(-1, -USB.hw, USB.z0, 7, USB.hw, USB.z1)));                                      // passage de la fiche USB (face arrière)
+    res = keep(res.subtract(box(6.5, -3.6, NANO.usbZ - 1.8, 8.6, 3.6, NANO.usbZ + 1.8)));                          // rebord : la fiche passe, pas la prise de la carte
+    { const N = NANO, zt = N.zb - N.pad, cy = g.CY + .5;
+      res = keep(res.add(box(N.rear[0], -cy, 75.5, N.rear[1], cy, zt)));                                            // cloison arrière (sous la carte)
+      let fr = box(N.front[0], -cy, 75.5, N.front[1], cy, N.zb + 1.5);                                             // cloison avant (butée)
+      const sr = (num(S.holes.sw) || S.comp.sw)/2 + .5; fr = keep(fr.subtract(cylAxis(sr, 1, g.W2 + 1, 1, [SW[0], 0, SW[1]])));   // place du bouton marche/arrêt
+      res = keep(res.add(fr));
+      res = keep(res.add(box(N.rear[0], -N.hw, zt - N.t, N.front[1], N.hw, zt)));                                   // poutre centrale (mousse dessus)
+      for (const s of [-1, 1]) for (const [a, b] of [[11.5, 15], [43, 55]]) res = keep(res.subtract(box(a, s > 0 ? 5 : -10, 72, b, s > 0 ? 10 : -5, 76.1)));   // creux du plancher : place pour plier les fils
+    }
     for (const c of cutters()) res = keep(res.subtract(cylSolid(c, .5)));
     if (adjOn()) res = adjShell(res, g);                                                                          // laser réglable : chariot + vis-mère
     res = keep(res.subtract(decorCut(-1, DEC.d))); res = keep(res.subtract(decorCut(1, DEC.d)));             // décors en creux
@@ -5306,8 +5315,11 @@ function buildComponents(){
   bx(8, 4, 9, 30, 2.4, 6.5, metal);                                         // prise mini-USB
   bx(3, 1.4, 3, 30, 2.3, 42, white);                                        // bouton reset
   for (const [x, c] of [[25, 0x33ff66], [27, 0xff3048], [33, 0xffb020]]) bx(1, .6, 1.6, x, 1.9, 46, m(c)); // LED de la carte
-  new THREE.Matrix4().set(0,0,1,6, 1,0,0,-30, 0,1,0,84.5, 0,0,0,1).decompose(nano.position, nano.quaternion, nano.scale); g.add(nano);   // couchée : USB en x = 8 (face arrière)
-  if (S.proc !== 'laser') for (const [a, b] of NANO.pads) { const f = new THREE.Mesh(new THREE.BoxGeometry(b - a - .4, 2*NANO.hw - 1, NANO.pad), m(0xf2f2f2)); f.position.set((a + b)/2, 0, NANO.zb - NANO.pad/2); g.add(f); }   // mousse double-face
+  new THREE.Matrix4().set(0,0,1,6, 1,0,0,-30, 0,1,0,NANO.zb, 0,0,0,1).decompose(nano.position, nano.quaternion, nano.scale); g.add(nano);   // couchée : USB en x = 8 (face arrière)
+  if (S.proc !== 'laser') {
+    for (const [a, b] of NANO.foam) { const f = new THREE.Mesh(new THREE.BoxGeometry(b - a, 2*NANO.hw - 1, NANO.pad), m(0xf2f2f2)); f.position.set((a + b)/2, 0, NANO.zb - NANO.pad/2); g.add(f); }   // mousse double-face
+    const D = NANO.dup, dz = NANO.zb - 2.5; for (const s of [-1, 1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(D.x1 - D.x0, 2.5, dz - D.z0), m(0x202020)); f.position.set((D.x0 + D.x1)/2, s*8.6, (dz + D.z0)/2); g.add(f); }   // fiches Dupont
+  }
   const bat = new THREE.Mesh(new THREE.BoxGeometry(BAT.H, BAT.T, BAT.L), m(0x20262b)); const bz = S.proc === 'laser' ? BAT.z0 : -CAP.d + CAP.floor; bat.position.set(BAT.x0 + BAT.H/2, 0, bz + BAT.L/2); g.add(bat);          // pile 9 V
   const term = new THREE.Mesh(new THREE.BoxGeometry(BAT.H + .1, BAT.T + .1, 6), m(0xc9a44c)); term.position.set(BAT.x0 + BAT.H/2, 0, bz + BAT.L - 3); g.add(term);   // bornes (en haut)
   g.visible = $('optComp').checked;
@@ -5427,7 +5439,7 @@ function renderPly(){
 }
 function renderBatt(){
   const g = G(), w = 2*g.CY;
-  $('battNote').textContent = `Pile 9 V (48,5 × 26,5 × 17,5 mm) debout dans la crosse, bornes en haut, posée dans le fond du bouchon vissé sous la poignée : pour la changer, dévisse les 2 vis du bouchon et fais-la glisser vers le bas. La gâchette est au-dessus de la pile et de son clip. La carte Nano est couchée dans le canon, au-dessus de la crosse, broches vers le bas ; elle est collée sur 2 appuis (mousse double-face de 2 mm ou colle chaude), entre une butée arrière et une butée avant qui l’empêchent de glisser quand on branche ou débranche le câble ; sa prise USB est accessible par un trou dans la face arrière du pistolet (programmation sans ouvrir). Les 3 fils du laser vont directement de l’avant à la Nano. Cavité de ${fmt(w)} mm d'épaisseur : ` + (w >= 18 ? 'la pile y rentre.' : 'trop étroite pour la pile, choisis une plaque de 3 à 6 mm.');
+  $('battNote').textContent = `Pile 9 V (48,5 × 26,5 × 17,5 mm) debout dans la crosse, bornes en haut, posée dans le fond du bouchon vissé sous la poignée : pour la changer, dévisse les 2 vis du bouchon et fais-la glisser vers le bas. La gâchette est au-dessus de la pile et de son clip. La carte Nano est couchée dans le canon, au-dessus de la crosse, broches vers le bas, avec 14 mm de place dessous pour les fiches Dupont femelles (et de quoi plier les fils) ; elle est collée (mousse double-face de 2 mm ou colle chaude) sur une poutre centrale, entre les 2 rangées de fiches, avec une butée avant et un rebord autour du trou USB qui l’empêchent de glisser quand on branche ou débranche le câble ; sa prise USB est accessible par un trou dans la face arrière du pistolet (programmation sans ouvrir). Les 3 fils du laser vont directement de l’avant à la Nano. Cavité de ${fmt(w)} mm d'épaisseur : ` + (w >= 18 ? 'la pile y rentre.' : 'trop étroite pour la pile, choisis une plaque de 3 à 6 mm.');
 }
 function renderJoin(){
   const g = G();
@@ -5576,9 +5588,9 @@ Montage :
   1. Place les ${NL} LED (face droite, en haut), le bouton gachette (avant de la poignee),
      le bouton recharger (face droite, partie arriere), le bouton marche/arret (face gauche, au-dessus de la crosse)
      et le module laser (avant). Le bouton marche/arret coupe le + de la pile 9 V avant la Nano (VIN).
-  2. Colle 2 morceaux de mousse double-face de 2 mm (ou un point de colle chaude) sur les 2 appuis du canon,
-     puis pose la Nano dessus, broches vers le bas, entre la butee arriere et la butee avant : la prise USB
-     arrive en face du trou de la face arriere. Les 3 fils du laser vont directement de l'avant a la Nano.
+  2. Branche les fiches Dupont femelles sur les broches de la Nano (14 mm de place sous la carte), colle
+     2 morceaux de mousse double-face de 2 mm (ou un point de colle chaude) sur la poutre centrale du canon,
+     puis pose la Nano dessus, broches vers le bas, la prise USB contre le rebord du trou de la face arriere. Les 3 fils du laser vont directement de l'avant a la Nano.
   3. La pile 9 V se met debout dans la crosse, bornes en haut, par le dessous ; le bouchon la tient.
   4. Assemble les 2 arrieres ensemble, puis les 2 avants ensemble, avec les vis M3 de 20 mm (dont 1 en bas de la
      crosse) : tete de vis dans le lamage de la demi-coque droite, la vis se visse dans l'avant-trou de la gauche.
