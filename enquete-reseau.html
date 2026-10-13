@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script>window.LOCK_LEVEL="3e";window.ENQUETE_ONLY=1;</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atelier Réseau — Collège</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a1120; --grid-line:#132345; --panel:#0f1b30; --panel-2:#13233d;
+    --border:#22385c; --border-soft:#1a2c4a; --text:#e7edf7; --muted:#8093b4;
+    --amber:#f3a94a; --amber-soft:#4a3820; --green:#4ddc9a; --green-soft:#123b2c;
+    --red:#f56a6a; --red-soft:#3d1c1e; --cyan:#5fd0e8; --violet:#b69cff; --violet-soft:#2c2350;
+  }
+  *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
+  html,body{height:100%;}
+  body{
+    margin:0; height:100vh; overflow:hidden;
+    background:radial-gradient(ellipse at 20% -10%, #14264a 0%, transparent 55%), var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif;
+    display:flex; flex-direction:column;
+  }
+  h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif; margin:0;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  header{
+    padding:10px 20px; border-bottom:1px solid var(--border-soft);
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    background:linear-gradient(180deg, rgba(19,35,69,0.6), transparent);
+  }
+  header .title-block{display:flex; align-items:center; gap:12px;}
+  header .badge{width:36px;height:36px;border-radius:8px;background:var(--panel-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--amber);}
+  header h1{font-size:18px; letter-spacing:0.3px;}
+  header p{margin:2px 0 0; color:var(--muted); font-size:12px;}
+  header .actions{display:flex; gap:8px; flex-wrap:wrap;}
+
+  button.btn{
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    padding:7px 12px; border-radius:7px; font-size:13px; font-family:'Inter',sans-serif; font-weight:500;
+    cursor:pointer; display:inline-flex; align-items:center; gap:7px;
+    transition:border-color .15s, background .15s, transform .05s;
+  }
+  button.btn:hover{border-color:var(--cyan); background:#152740;}
+  button.btn:active{transform:translateY(1px);}
+  button.btn.active{background:var(--amber-soft); border-color:var(--amber); color:var(--amber);}
+  button.btn.ghost{background:transparent;}
+  button.btn.danger:hover{border-color:var(--red); color:var(--red);}
+  button.btn.primary{background:var(--amber-soft); border-color:var(--amber); color:var(--amber);}
+  button.btn.primary:hover{background:#5a4326;}
+  button.btn:disabled{opacity:.45; cursor:not-allowed;}
+  .btn-group{display:inline-flex; align-items:center; gap:5px;}
+
+  /* Tabs */
+  .tabs-bar{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:10px 20px 0; border-bottom:1px solid var(--border-soft);}
+  .level-tabs{display:flex; gap:6px;}
+  .score-chip{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; color:var(--amber); border:1px solid var(--amber); border-radius:20px; padding:5px 14px; margin:0 8px 6px 0; background:rgba(255,176,32,0.08); white-space:nowrap;}
+  .score-chip.pass{color:#4ade80; border-color:#4ade80; background:rgba(74,222,128,0.08);}
+  .score-line{font-size:12.5px; margin:-4px 0 10px; padding:7px 10px; border-radius:8px; background:rgba(255,176,32,0.08); border:1px solid var(--border-soft);}
+  .score-line b{color:var(--amber); font-size:14px;}
+  .lvl-tab{
+    font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:600; color:var(--muted);
+    background:transparent; border:1px solid var(--border-soft); border-bottom:none;
+    border-radius:9px 9px 0 0; padding:8px 22px; cursor:pointer;
+  }
+  .lvl-tab:hover{color:var(--text); border-color:var(--border);}
+  .lvl-tab.active{background:var(--panel-2); color:var(--amber); border-color:var(--amber); }
+  .view-tabs{display:flex; gap:6px; padding-bottom:8px;}
+  .view-tab{
+    background:transparent; border:1px solid var(--border); color:var(--muted);
+    border-radius:20px; padding:6px 14px; font-size:13px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .view-tab:hover{color:var(--text);}
+  .view-tab.active{background:var(--cyan); border-color:var(--cyan); color:#06202a; font-weight:600;}
+
+  .layout{flex:1; display:flex; min-height:0;}
+
+  /* Guide */
+  .guide{
+    width:345px; flex-shrink:0; border-right:1px solid var(--border-soft);
+    padding:14px; overflow-y:auto; background:linear-gradient(180deg, rgba(15,27,48,0.5), transparent);
+  }
+  .progress-line{font-size:12px; color:var(--muted); margin-bottom:10px; line-height:1.6;}
+  .progress-line b{color:var(--text);}
+  .pills{display:flex; flex-direction:column; gap:5px; margin-bottom:14px;}
+  .pill{
+    display:flex; align-items:center; gap:9px; padding:7px 9px; border-radius:8px;
+    border:1px solid var(--border-soft); background:var(--panel); cursor:pointer;
+    font-size:12.5px; color:var(--text); text-align:left; font-family:'Inter',sans-serif; width:100%;
+  }
+  .pill .num{
+    width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;background:var(--panel-2);color:var(--muted);border:1px solid var(--border);
+  }
+  .pill .lbl{flex:1;}
+  .pill .tag{font-size:10.5px; color:var(--violet);}
+  .pill.current{border-color:var(--amber); background:var(--amber-soft);}
+  .pill.current .num{background:var(--amber); color:#2a1d08; border-color:var(--amber);}
+  .pill.done .num{background:var(--green); color:#06241a; border-color:var(--green);}
+  .pill.locked{opacity:.45; cursor:not-allowed;}
+  .pill.expert:not(.current){border-style:dashed;}
+
+  .step-card{border:1px solid var(--border); border-radius:11px; padding:14px; background:var(--panel);}
+  .step-badge{display:inline-block; font-size:10.5px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; border-radius:20px; padding:3px 9px; margin-bottom:8px;}
+  .step-badge.required{background:var(--amber-soft); color:var(--amber);}
+  .step-badge.expert{background:var(--violet-soft); color:var(--violet);}
+  .step-card h2{font-size:16px; margin-bottom:8px;}
+  .goal{font-size:13px; line-height:1.6; margin:0 0 12px; padding:9px 11px; background:var(--panel-2); border-radius:8px; border-left:3px solid var(--cyan);}
+  .step-card h4{font-size:11.5px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:14px 0 7px;}
+  ol.instr{margin:0; padding-left:20px; font-size:13px; line-height:1.65;}
+  ol.instr li{margin-bottom:7px;}
+  ol.instr b{color:var(--cyan);}
+  .expert-note{font-size:13px; line-height:1.6; color:var(--violet); background:var(--violet-soft); border-radius:8px; padding:10px 11px; margin-bottom:10px;}
+  .checks{list-style:none; margin:0; padding:0;}
+  .checks li{display:flex; gap:9px; align-items:flex-start; font-size:12.5px; line-height:1.5; padding:5px 0; color:var(--muted);}
+  .checks li .ico{
+    width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:1px;border:1.5px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-size:11px;
+  }
+  .checks li.ok{color:var(--text);}
+  .checks li.ok .ico{background:var(--green); border-color:var(--green); color:#06241a; font-weight:700;}
+  .hint-box{font-size:12.5px; line-height:1.6; color:#ffe6c2; background:var(--amber-soft); border-radius:8px; padding:10px 11px; margin-top:10px;}
+  .success-box{font-size:13px; line-height:1.55; color:#c8ffe4; background:var(--green-soft); border:1px solid var(--green); border-radius:8px; padding:10px 11px; margin-top:12px;}
+  .card-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+  .bravo{font-size:12.5px; line-height:1.55; color:#c8ffe4; background:var(--green-soft); border:1px solid var(--green); border-radius:8px; padding:9px 11px; margin-bottom:12px;}
+
+  /* Canvas column */
+  .canvas-col{flex:1; display:flex; flex-direction:column; min-width:0;}
+  .palette-bar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:9px 14px; border-bottom:1px solid var(--border-soft);}
+  .pal-label{font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); margin-right:4px;}
+  .chip{
+    display:inline-flex; align-items:center; gap:7px; padding:5px 8px 5px 10px; border-radius:20px;
+    border:1px solid var(--border); background:var(--panel); cursor:pointer; color:var(--cyan); font-size:12.5px;
+  }
+  .chip svg{width:22px;height:22px;}
+  .chip span{color:var(--text); font-weight:500;}
+  .chip:hover{border-color:var(--cyan);}
+  .chip.active{border-color:var(--amber); background:var(--amber-soft); color:var(--amber);}
+  .toolbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:8px 14px; border-bottom:1px solid var(--border-soft);}
+  .toolbar .spacer{flex:1;}
+  .canvas-wrap{
+    flex:1; position:relative; overflow:auto;
+    background-image:linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  #canvas{position:relative; width:1400px; height:900px;}
+  svg#cableLayer{position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:visible;}
+  svg#cableLayer path.hit{pointer-events:stroke; cursor:pointer;}
+
+  .device{position:absolute; width:96px; display:flex; flex-direction:column; align-items:center; cursor:grab; user-select:none; touch-action:none;}
+  .device.selected .device-icon{border-color:var(--amber); box-shadow:0 0 0 3px var(--amber-soft);}
+  .device.cabling-pick .device-icon{border-color:var(--cyan); box-shadow:0 0 0 3px rgba(95,208,232,0.2);}
+  .device-icon{width:64px;height:64px;border-radius:12px;background:var(--panel);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--cyan);position:relative;}
+  .device-icon svg{width:40px;height:40px;}
+  .device-name{font-size:12px; font-weight:600; margin-top:12px; text-align:center; max-width:96px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .device-ip{font-size:10.5px; color:var(--muted); margin-top:1px; font-family:'IBM Plex Mono',monospace;}
+  .device-ip.unset{color:#5a6f92; font-style:italic;}
+  .led{position:absolute; top:-4px; right:-4px; width:11px;height:11px;border-radius:50%; background:#33415f; border:2px solid var(--bg);}
+  .led.ok{background:var(--green);} .led.fail{background:var(--red);}
+  .port{
+    position:absolute; top:56px; width:18px;height:18px;border-radius:50%;
+    background:var(--panel-2); border:1.5px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; color:var(--muted); font-family:'IBM Plex Mono',monospace; cursor:pointer;
+  }
+  .port:hover{border-color:var(--cyan); color:var(--cyan);}
+  .port.p1{left:6px;} .port.p2{right:6px;} .port.p3{left:50%; margin-left:-9px; border-style:dashed;}
+  .allow-list{margin:6px 0 10px; padding:8px 10px; border:1px solid var(--border-soft); border-radius:8px; background:rgba(15,27,48,0.5);}
+  .allow-list label{display:flex; align-items:center; gap:8px; font-size:12.5px; padding:2px 0; cursor:pointer;}
+  .port.occupied{border-color:var(--amber); color:var(--amber);}
+
+  .result-banner{margin:8px 14px 0; padding:9px 13px; border-radius:8px; font-size:13px; border:1px solid var(--border); display:none; line-height:1.5;}
+  .result-banner.show{display:block;}
+  .result-banner.ok{background:var(--green-soft); border-color:var(--green); color:#c8ffe4;}
+  .result-banner.fail{background:var(--red-soft); border-color:var(--red); color:#ffd7d7;}
+  .result-banner.warn{background:var(--amber-soft); border-color:var(--amber); color:#ffe6c2;}
+
+  .statusbar{padding:8px 14px; font-size:12.5px; color:var(--muted); border-top:1px solid var(--border-soft); display:flex; gap:10px; align-items:center;}
+  .statusbar .msg{color:var(--text);}
+  .statusbar .dot{width:7px;height:7px;border-radius:50%; background:var(--amber); flex-shrink:0;}
+
+  /* Config */
+  .config-panel{width:270px; flex-shrink:0; border-left:1px solid var(--border-soft); padding:16px; overflow-y:auto; background:linear-gradient(180deg, rgba(15,27,48,0.5), transparent);}
+  .config-panel h3{font-size:14px; margin-bottom:2px;}
+  .config-panel .subtitle{font-size:11.5px; color:var(--muted); margin-bottom:14px;}
+  .empty-config{color:var(--muted); font-size:13px; line-height:1.6; padding-top:30px; text-align:center;}
+  .field{margin-bottom:13px;}
+  .field label{display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); margin-bottom:5px; font-weight:500;}
+  .info-btn{
+    width:16px; height:16px; border-radius:50%; flex-shrink:0; padding:0;
+    border:1px solid var(--border); background:var(--panel-2); color:var(--muted);
+    font-family:'IBM Plex Mono',monospace; font-size:10px; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .info-btn:hover{border-color:var(--cyan); color:var(--cyan);}
+  .def-popover{position:fixed; display:none; width:260px; z-index:90; background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:11px 13px; box-shadow:0 10px 28px rgba(0,0,0,0.45);}
+  .def-popover .def-title{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--amber); margin-bottom:5px;}
+  .def-popover .def-body{font-size:12.5px; color:var(--text); line-height:1.55;}
+  .field input[type=text]{width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--panel); color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:13px;}
+  .field input[type=text].name-input{font-family:'Inter',sans-serif;}
+  .field input:focus{outline:none; border-color:var(--cyan);}
+  .checkbox-field{display:flex; align-items:flex-start; gap:8px; margin-bottom:13px; font-size:12.5px; color:var(--text); line-height:1.5;}
+  .checkbox-field input{margin-top:2px;}
+  .iface-group{border:1px solid var(--border-soft); border-radius:8px; padding:10px; margin-bottom:12px;}
+  .iface-group h4{font-size:12px; color:var(--cyan); margin-bottom:8px;}
+  .note-box{font-size:12px; color:var(--muted); line-height:1.6; background:var(--panel-2); border:1px solid var(--border-soft); border-radius:8px; padding:10px; margin-bottom:13px;}
+  .delete-btn{width:100%; justify-content:center; margin-top:6px;}
+
+  /* Modals */
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(4,8,16,0.72); align-items:center; justify-content:center; z-index:50; padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--panel); border:1px solid var(--border); border-radius:12px; max-width:600px; width:100%; max-height:84vh; overflow-y:auto; padding:24px;}
+  .modal h2{font-size:18px; margin-bottom:4px;}
+  .modal .modal-sub{color:var(--muted); font-size:12.5px; margin:0 0 18px;}
+  .modal-close{float:right; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
+  .modal-close:hover{color:var(--text);}
+  .tuto-step{display:flex; gap:12px; margin-bottom:15px;}
+  .tuto-num{flex-shrink:0; width:26px; height:26px; border-radius:50%; background:var(--amber-soft); color:var(--amber); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600;}
+  .tuto-step p{margin:0; font-size:13.5px; line-height:1.6;}
+  .tuto-step b{color:var(--cyan);}
+  dl.glossary dt{font-family:'Space Grotesk',sans-serif; font-size:14px; color:var(--amber); margin-top:14px;}
+  dl.glossary dd{margin:4px 0 0; font-size:13px; line-height:1.6;}
+  dl.glossary dt .new{font-size:10px; color:var(--violet); background:var(--violet-soft); border-radius:10px; padding:2px 7px; margin-left:6px; font-family:'Inter',sans-serif;}
+
+  .case-brief{font-size:13.5px; line-height:1.65; background:var(--panel-2); border:1px solid var(--border-soft); border-radius:8px; padding:12px; margin-bottom:18px;}
+  .case-section{margin-bottom:20px;}
+  .case-section h3{font-size:13px; color:var(--cyan); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;}
+  .case-rules{margin:0; padding-left:18px; font-size:13px; line-height:1.7;}
+  table.case-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  table.case-table th, table.case-table td{border:1px solid var(--border-soft); padding:6px 8px; text-align:left;}
+  table.case-table th{background:var(--panel-2); color:var(--muted); font-weight:500;}
+  table.case-table td.mono{font-family:'IBM Plex Mono',monospace;}
+  .log-line{display:flex; gap:10px; font-size:12.5px; padding:7px 0; border-bottom:1px dashed var(--border-soft);}
+  .log-line:last-child{border-bottom:none;}
+  .log-time{font-family:'IBM Plex Mono',monospace; color:var(--amber); flex-shrink:0; width:46px;}
+  .log-ip{font-family:'IBM Plex Mono',monospace; color:var(--cyan); flex-shrink:0; width:100px;}
+  .suspect-list{display:flex; flex-direction:column; gap:8px; margin-bottom:16px;}
+  .suspect-option{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--panel); cursor:pointer; font-size:13.5px;}
+  .suspect-option:hover{border-color:var(--cyan);}
+  .suspect-option.picked{border-color:var(--amber); background:var(--amber-soft);}
+  .suspect-option input{accent-color:var(--amber);}
+  .verdict-banner{margin-top:14px; padding:12px 14px; border-radius:8px; font-size:13.5px; line-height:1.6; display:none; border:1px solid var(--border);}
+  .verdict-banner.show{display:block;}
+  .verdict-banner.ok{background:var(--green-soft); border-color:var(--green); color:#c8ffe4;}
+  .verdict-banner.fail{background:var(--red-soft); border-color:var(--red); color:#ffd7d7;}
+  .verdict-banner.warn{background:var(--amber-soft); border-color:var(--amber); color:#ffe6c2;}
+
+  /* Quiz */
+  .quiz-view{flex:1; overflow-y:auto; padding:26px 20px;}
+  .quiz-card{max-width:720px; margin:0 auto; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:26px;}
+  .quiz-top{display:flex; justify-content:space-between; align-items:center; font-size:12.5px; color:var(--muted); margin-bottom:10px;}
+  .quiz-bar{height:6px; background:var(--panel-2); border-radius:6px; overflow:hidden; margin-bottom:22px;}
+  .quiz-bar > div{height:100%; background:var(--amber); transition:width .25s;}
+  .quiz-q{font-family:'Space Grotesk',sans-serif; font-size:19px; line-height:1.45; margin-bottom:18px;}
+  .quiz-opts{display:flex; flex-direction:column; gap:9px;}
+  .quiz-opt{
+    text-align:left; padding:12px 14px; border-radius:9px; border:1px solid var(--border); background:var(--panel-2);
+    color:var(--text); font-family:'Inter',sans-serif; font-size:14px; line-height:1.5; cursor:pointer;
+  }
+  .quiz-opt:hover:not(:disabled){border-color:var(--cyan);}
+  .quiz-opt.right{border-color:var(--green); background:var(--green-soft);}
+  .quiz-opt.wrong{border-color:var(--red); background:var(--red-soft);}
+  .quiz-opt:disabled{cursor:default;}
+  .quiz-why{margin-top:16px; padding:12px 14px; border-radius:9px; font-size:13.5px; line-height:1.6; background:var(--panel-2); border-left:3px solid var(--cyan);}
+  .quiz-score{font-family:'Space Grotesk',sans-serif; font-size:44px; color:var(--amber); margin:6px 0;}
+  .quiz-miss{font-size:13px; line-height:1.6; padding:10px 0; border-top:1px dashed var(--border-soft);}
+  .quiz-miss b{color:var(--cyan);}
+
+
+  .drawer-tab{flex:0 0 22px; width:22px; border:none; cursor:pointer; background:var(--panel, #0f1b30); color:var(--cyan,#5ad1e6); border-left:1px solid var(--border-soft); border-right:1px solid var(--border-soft); font-size:13px; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:0;}
+  .drawer-tab:hover{background:rgba(90,209,230,0.15);}
+  .drawer-tab .vt{writing-mode:vertical-rl; font-size:11px; letter-spacing:.06em; font-weight:600;}
+  .guide.collapsed, .config-panel.collapsed{width:0 !important; min-width:0; padding:0 !important; border:none !important; overflow:hidden; flex-basis:0;}
+  @media (max-width: 1020px){ .drawer-tab{display:none;} .guide.collapsed, .config-panel.collapsed{width:auto !important; padding:16px !important; overflow:visible;} }
+
+  @media (max-width: 1020px){
+    body{height:auto; min-height:100vh; overflow:auto;}
+    .layout{flex-direction:column;}
+    .guide{width:auto; border-right:none; border-bottom:1px solid var(--border-soft); max-height:none;}
+    .config-panel{width:auto; border-left:none; border-top:1px solid var(--border-soft);}
+    .canvas-wrap{min-height:480px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <div class="badge">
+      <svg width="20" height="20" viewBox="0 0 48 48"><rect x="6" y="18" width="36" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><path d="M14 18 L14 10 M34 18 L34 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="14" cy="26" r="2" fill="currentColor"/><circle cx="34" cy="26" r="2" fill="currentColor"/></svg>
+    </div>
+    <div>
+      <h1>Atelier Réseau</h1>
+      <p>Construis, configure et teste ton réseau — de la 5ème à la 3ème.</p>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="btnTuto">📘 Tutoriel</button>
+    <button class="btn" id="btnGloss">📖 Glossaire</button>
+  </div>
+</header>
+
+<nav class="tabs-bar">
+  <div class="level-tabs" id="levelTabs">
+    <button class="lvl-tab active" data-level="5e">5ème</button>
+    <button class="lvl-tab" data-level="4e">4ème</button>
+    <button class="lvl-tab" data-level="3e">3ème</button>
+  </div>
+  <div class="view-tabs">
+    <button class="view-tab active" id="tabAct">🛠️ Activités</button>
+    <button class="view-tab" id="tabQuiz">❓ Quiz (20 questions)</button>
+    <span class="score-chip" id="scoreChip">Note : 0 / 20</span>
+  </div>
+</nav>
+
+<div class="layout" id="activityView">
+  <aside class="guide" id="guidePanel"></aside>
+  <button type="button" class="drawer-tab" id="tabGuide" title="Replier / ouvrir les consignes" aria-expanded="true"><span class="arr">◀</span><span class="vt">Consignes</span></button>
+
+  <div class="canvas-col">
+    <div class="palette-bar" id="paletteBar"></div>
+    <div class="toolbar">
+      <button class="btn" id="btnCable" hidden></button>
+      <span class="btn-group"><button class="btn" id="btnTest">🧪 Tester une connexion</button><button type="button" class="info-btn" data-def="ping" title="Définition">?</button></span>
+      <div class="spacer"></div>
+      <button class="btn danger ghost" id="btnReset">🗑️ Tout effacer</button>
+    </div>
+    <div class="result-banner" id="resultBanner"></div>
+    <div class="canvas-wrap" id="canvasWrap">
+      <div id="canvas">
+        <svg id="cableLayer"></svg>
+        <div id="devicesLayer"></div>
+      </div>
+    </div>
+    <div class="statusbar">
+      <span class="dot"></span>
+      <span class="msg" id="statusMsg">Suis les instructions du panneau de gauche.</span>
+    </div>
+  </div>
+
+  <button type="button" class="drawer-tab" id="tabConfig" title="Replier / ouvrir la configuration" aria-expanded="true"><span class="arr">▶</span><span class="vt">Configuration</span></button>
+  <aside class="config-panel" id="configPanel"></aside>
+</div>
+
+<section class="quiz-view" id="quizView" hidden></section>
+
+<div class="def-popover" id="defPopover">
+  <div class="def-title" id="defTitle"></div>
+  <div class="def-body" id="defBody"></div>
+</div>
+
+<div class="modal-overlay" id="tutoOverlay">
+  <div class="modal">
+    <button class="modal-close" data-close="tutoOverlay">✕</button>
+    <h2>Tutoriel</h2>
+    <p class="modal-sub">Comment utiliser l'atelier</p>
+    <div class="tuto-step"><div class="tuto-num">1</div><p>Choisis ton <b>niveau</b> (5ème, 4ème ou 3ème) avec les onglets du haut. Chaque niveau a ses activités et son quiz de 20 questions.</p></div>
+    <div class="tuto-step"><div class="tuto-num">2</div><p>Suis le panneau de gauche : il te donne l'<b>objectif</b>, les <b>instructions</b> pas à pas et une <b>liste de vérifications</b> qui se coche toute seule quand c'est réussi.</p></div>
+    <div class="tuto-step"><div class="tuto-num">3</div><p>Pour poser un élément, clique sur sa pastille (PC, Serveur…) puis clique dans le plan. Fais-le <b>glisser</b> pour le déplacer. Clique sur la pastille pour arrêter d'en poser.</p></div>
+    <div class="tuto-step"><div class="tuto-num">4</div><p>Choisis l'outil <b>Câble RJ45</b> dans la barre « Éléments », puis clique sur deux éléments pour les relier. Pour un routeur, clique sur le <b>port 1</b> ou <b>2</b> (petits ronds). Clique sur un câble pour le débrancher.</p></div>
+    <div class="tuto-step"><div class="tuto-num">5</div><p>Clique sur un élément pour le <b>renommer</b> et (en 4ème et 3ème) régler ses adresses dans le panneau de droite.</p></div>
+    <div class="tuto-step"><div class="tuto-num">6</div><p>Utilise <b>Tester une connexion</b> : clique sur deux appareils. Vert ✅ = ça communique, sinon le message t'explique pourquoi.</p></div>
+    <div class="tuto-step"><div class="tuto-num">7</div><p>Les boutons <b>?</b> ouvrent une définition. Les étapes <b>⭐ mode expert</b> sont des défis : tu as l'objectif et les vérifications, avec un coup de pouce si besoin.</p></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="glossOverlay">
+  <div class="modal">
+    <button class="modal-close" data-close="glossOverlay">✕</button>
+    <h2 id="glossTitle">Glossaire</h2>
+    <p class="modal-sub" id="glossSub"></p>
+    <dl class="glossary" id="glossList"></dl>
+  </div>
+</div>
+
+<div class="modal-overlay" id="dossierOverlay">
+  <div class="modal">
+    <button class="modal-close" data-close="dossierOverlay">✕</button>
+    <h2 id="caseTitle">Dossier d'enquête</h2>
+    <p class="modal-sub">Pièces à conviction — reconstruis le réseau pour résoudre l'affaire</p>
+    <div id="dossierContent"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="accuseOverlay">
+  <div class="modal">
+    <button class="modal-close" data-close="accuseOverlay">✕</button>
+    <h2>Accuser un suspect</h2>
+    <p class="modal-sub">D'après le réseau que tu as reconstruit, qui a copié le dossier confidentiel à 14h32 ?</p>
+    <div class="suspect-list" id="suspectList"></div>
+    <button class="btn primary" id="btnValidateAccuse" style="width:100%; justify-content:center;">🔎 Valider l'accusation</button>
+    <div class="verdict-banner" id="verdictBanner"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // =====================================================================
+  //  CONSTANTES
+  // =====================================================================
+  const DEV_W = 96, ICON_CY = 32;
+  const TYPE_LABEL = {pc:'PC', serveur:'Serveur', switch:'Commutateur', routeur:'Routeur', internet:'Internet'};
+  const ICONS = {
+    internet: `<svg viewBox="0 0 48 48"><path d="M14 34 C6 34 5 24 13 23 C13 14 25 11 30 18 C38 15 44 24 38 29 C42 33 38 34 34 34 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="26" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 26 H29 M24 21 V31" stroke="currentColor" stroke-width="1.6"/></svg>`,
+    cable: `<svg viewBox="0 0 48 48"><rect x="4" y="18" width="10" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.5"/><rect x="34" y="18" width="10" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M14 24 C22 8, 26 40, 34 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    pc: `<svg viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="20" y1="32" x2="20" y2="38" stroke="currentColor" stroke-width="2.5"/><line x1="28" y1="32" x2="28" y2="38" stroke="currentColor" stroke-width="2.5"/><line x1="14" y1="40" x2="34" y2="40" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    serveur: `<svg viewBox="0 0 48 48"><rect x="8" y="6" width="32" height="36" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="8" y1="18" x2="40" y2="18" stroke="currentColor" stroke-width="2"/><line x1="8" y1="30" x2="40" y2="30" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="12" r="1.6" fill="currentColor"/><circle cx="14" cy="24" r="1.6" fill="currentColor"/><circle cx="14" cy="36" r="1.6" fill="currentColor"/></svg>`,
+    switch: `<svg viewBox="0 0 48 48"><rect x="4" y="16" width="40" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><rect x="9" y="21" width="4" height="6" fill="currentColor"/><rect x="17" y="21" width="4" height="6" fill="currentColor"/><rect x="25" y="21" width="4" height="6" fill="currentColor"/><rect x="33" y="21" width="4" height="6" fill="currentColor"/></svg>`,
+    routeur: `<svg viewBox="0 0 48 48"><rect x="6" y="18" width="36" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M14 18 L14 10 M34 18 L34 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M10 8 Q14 4 18 8 M30 8 Q34 4 38 8" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="14" cy="26" r="1.6" fill="currentColor"/><circle cx="34" cy="26" r="1.6" fill="currentColor"/></svg>`
+  };
+
+  const DEFS = {
+    internet: {title:'Internet', body:`Le réseau mondial qui relie des millions de réseaux entre eux. Pour y accéder, ton réseau passe par le routeur : son port 3 (appelé WAN) se branche sur Internet.`},
+    proxy: {title:'Proxy (serveur de filtrage)', body:`Un serveur de communication peut servir de proxy : tout le trafic Internet des PC passe par lui. Il peut autoriser certains PC et en bloquer d'autres (filtrage). Chaque PC doit connaître l'adresse du proxy.`},
+    pc: {title:'PC', body:`Un ordinateur relié au réseau. C'est un appareil terminal : il envoie et reçoit des données.`},
+    serveur: {title:'Serveur', body:`Un ordinateur qui fournit des services ou des fichiers aux autres appareils du réseau. Il est allumé en permanence.`},
+    switch: {title:'Commutateur (switch)', body:`Boîtier à plusieurs ports qui relie les appareils d'un même réseau et fait circuler les données entre eux.`},
+    routeur: {title:'Routeur', body:`Relie deux réseaux différents (ou plus) et dirige les données de l'un vers l'autre. Chaque interface (port 1, port 2…) est reliée à un réseau.`},
+    rj45: {title:'Câble RJ45', body:`Câble réseau (Ethernet) terminé par des connecteurs RJ45 à 8 contacts. Il relie un appareil à un commutateur et transporte les données.`},
+    ping: {title:'Test de connexion (ping)', body:`Vérifie qu'un appareil peut joindre un autre appareil sur le réseau. Vert = ça communique, sinon le message explique pourquoi.`},
+    ip: {title:'Adresse IP', body:`Numéro (ex. 192.168.1.10) qui identifie un appareil sur le réseau, comme une adresse postale. Deux appareils d'un même réseau ne peuvent pas avoir la même.`},
+    mask: {title:'Masque de sous-réseau', body:`Valeur (ex. 255.255.255.0) qui indique quelle partie de l'adresse désigne le réseau et laquelle désigne l'appareil. Avec 255.255.255.0, les 3 premiers nombres désignent le réseau.`},
+    gateway: {title:'Passerelle', body:`Adresse du routeur à contacter pour envoyer des données vers un autre réseau.`},
+    dhcp: {title:'DHCP', body:`Service d'un serveur qui attribue automatiquement une adresse IP, un masque et une passerelle aux appareils.`}
+  };
+  function infoBtn(key){ return `<button type="button" class="info-btn" data-def="${key}" title="Définition">?</button>`; }
+
+  const GLOSSARY = [
+    {lv:1, t:'Câble RJ45', d:`Câble réseau (Ethernet) terminé par deux connecteurs RJ45, de petites prises rectangulaires à 8 contacts. Il relie un ordinateur ou un serveur au commutateur et transporte les données.`},
+    {lv:1, t:'Serveur', d:`Ordinateur puissant, allumé en permanence, qui fournit des services ou des fichiers aux autres ordinateurs du réseau (par exemple le serveur de fichiers du CDI).`},
+    {lv:1, t:'Commutateur (switch)', d:`Boîtier équipé de plusieurs ports RJ45. Il relie les appareils d'un même réseau et fait circuler les données entre eux.`},
+    {lv:2, t:'Adresse IP', d:`Numéro composé de 4 nombres de 0 à 255 séparés par des points (ex. 192.168.1.10). Il identifie un appareil sur le réseau, comme une adresse postale. Deux appareils d'un même réseau ne peuvent pas avoir la même.`},
+    {lv:2, t:'Serveur de communication', d:`Serveur qui organise les échanges entre les appareils du réseau, par exemple en attribuant automatiquement les adresses IP (service DHCP) ou en transmettant les messages (messagerie).`},
+    {lv:2, t:'Internet', d:`Réseau mondial qui relie des millions de réseaux entre eux. Pour y accéder, un réseau local passe par son routeur, qui joue le rôle de porte de sortie.`},
+    {lv:3, t:'Proxy (filtrage)', d:`Serveur de communication par lequel passe tout le trafic Internet du réseau. Il autorise ou bloque l'accès de chaque PC (filtrage) et peut garder une trace des connexions.`},
+    {lv:3, t:'Routeur', d:`Appareil qui relie deux réseaux différents (ou plus) et dirige les données de l'un vers l'autre. Chacune de ses interfaces a sa propre adresse IP, dans le réseau auquel elle est reliée.`}
+  ];
+
+  const LEVELS = {
+    '5e': {label:'5ème', num:1, ip:false, expertFrom:3},
+    '4e': {label:'4ème', num:2, ip:true,  expertFrom:4},
+    '3e': {label:'3ème', num:3, ip:true,  expertFrom:5}
+  };
+
+  // =====================================================================
+  //  ÉTAT
+  // =====================================================================
+  let devices = [], cables = [], idSeq = 1, selectedId = null;
+  let placingType = null, cablingMode = false, cablingFirst = null, testMode = false, testFirst = null;
+  let highlightCables = new Set(), highlightColor = null;
+  let currentLevel = '5e', currentView = 'act', currentWsKey = 'reseau';
+  const levelState = {};
+  ['5e','4e','3e'].forEach(lv => {
+    levelState[lv] = {stepIndex:0, done:{}, ws:{}, hint:{}, full:{}, quiz:null, best:0, tries:0, caseSolved:false, dossierSeen:false};
+  });
+
+  // Mode IP : en 5ème, les adresses sont données automatiquement (visibles, non modifiables) aux étapes 1-2 ;
+  // à partir de l'étape 3 (mode expert) l'élève les saisit lui-même. En 4ème et 3ème : toujours saisies.
+  const ipActive = (lv, n) => LEVELS[lv].ip || (lv === '5e' && n >= 3);
+  const curStepN = () => { const L = levelState[currentLevel]; const st = getSteps(currentLevel)[L.stepIndex]; return st ? st.n : 1; };
+  const ipModeNow = () => currentWsKey === 'enquete' ? true : ipActive(currentLevel, curStepN());
+  const autoIpMode = () => currentLevel === '5e' && !ipModeNow();
+  function autoAssignIps(){
+    if(!autoIpMode()) return;
+    const comps = components().filter(c => c.some(d => d.type === 'switch'));
+    comps.forEach((comp, idx) => {
+      const prefix = '192.168.' + (idx + 1) + '.';
+      const term = terminals(comp);
+      const used = new Set(term.filter(d => d.ip).map(d => d.ip));
+      term.filter(d => !d.ip).sort((a, b) => (a.type === 'serveur' ? -1 : 1) - (b.type === 'serveur' ? -1 : 1)).forEach(d => {
+        let cand = d.type === 'serveur' ? prefix + '1' : null;
+        if(!cand || used.has(cand)){ for(let h = 10; h < 250; h++){ if(!used.has(prefix + h)){ cand = prefix + h; break; } } }
+        d.ip = cand; d.mask = '255.255.255.0'; used.add(cand);
+      });
+    });
+  }
+
+  function saveWorkspace(){ levelState[currentLevel].ws[currentWsKey] = {devices, cables}; }
+  function loadWorkspace(key){
+    const w = levelState[currentLevel].ws[key] || {devices:[], cables:[]};
+    devices = w.devices; cables = w.cables; currentWsKey = key;
+    selectedId = null; placingType = null; cablingMode = false; cablingFirst = null; testMode = false; testFirst = null;
+    $('btnCable').classList.remove('active'); $('btnTest').classList.remove('active');
+    hideResult();
+  }
+
+  // =====================================================================
+  //  OUTILS GRAPHE / IP
+  // =====================================================================
+  const nodeKey = (id, iface) => iface ? id + '#' + iface : id;
+  const getDevice = id => devices.find(d => d.id === id);
+  const cablesOf = dev => cables.filter(c => c.a.deviceId === dev.id || c.b.deviceId === dev.id);
+  function cablesForPort(id, iface){
+    return cables.filter(c =>
+      (c.a.deviceId === id && (c.a.iface || null) === (iface || null)) ||
+      (c.b.deviceId === id && (c.b.iface || null) === (iface || null)));
+  }
+  function neighbors(dev){
+    const out = [];
+    cables.forEach(c => {
+      if(c.a.deviceId === dev.id){ const o = getDevice(c.b.deviceId); if(o) out.push(o); }
+      else if(c.b.deviceId === dev.id){ const o = getDevice(c.a.deviceId); if(o) out.push(o); }
+    });
+    return out;
+  }
+  function neighborViaPort(r, iface){
+    const c = cablesForPort(r.id, iface)[0];
+    if(!c) return null;
+    const mine = (c.a.deviceId === r.id && (c.a.iface || null) === (iface || null));
+    return getDevice((mine ? c.b : c.a).deviceId) || null;
+  }
+  function portCapacity(dev){ return dev.type === 'switch' ? 8 : 1; }
+
+  const pcs = () => devices.filter(d => d.type === 'pc');
+  const servers = () => devices.filter(d => d.type === 'serveur');
+  const switches = () => devices.filter(d => d.type === 'switch');
+  const routers = () => devices.filter(d => d.type === 'routeur');
+  const isTerm = d => d.type === 'pc' || d.type === 'serveur';
+  const terminals = comp => comp.filter(isTerm);
+  const isCustom = n => !/^(PC|Serveur|Commutateur|Routeur) \d+$/.test(String(n).trim());
+  const onSwitch = d => neighbors(d).some(n => n.type === 'switch');
+
+  function components(){
+    const seen = new Set(), comps = [];
+    devices.filter(d => d.type !== 'routeur').forEach(d => {
+      if(seen.has(d.id)) return;
+      const comp = [], q = [d]; seen.add(d.id);
+      while(q.length){
+        const x = q.shift(); comp.push(x);
+        neighbors(x).forEach(n => { if(n.type !== 'routeur' && !seen.has(n.id)){ seen.add(n.id); q.push(n); } });
+      }
+      comps.push(comp);
+    });
+    return comps;
+  }
+  const compOf = dev => components().find(c => c.some(x => x.id === dev.id)) || [];
+  function networksWithSwitch(){
+    return components().filter(c => c.some(d => d.type === 'switch') && terminals(c).length > 0)
+      .sort((a, b) => terminals(b).length - terminals(a).length);
+  }
+  function twoNets(){
+    const nets = networksWithSwitch();
+    const main = nets.find(c => c.some(d => d.type === 'serveur')) || nets[0] || null;
+    const others = nets.filter(c => c !== main);
+    const second = others.find(c => c.filter(d => d.type === 'pc').length >= 3) || others[0] || null;
+    return {main, second};
+  }
+
+  function validIp(ip){
+    if(!ip) return false;
+    const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(String(ip).trim());
+    return !!m && m.slice(1, 5).every(p => Number(p) >= 0 && Number(p) <= 255);
+  }
+  function ipToInt(ip){ const p = String(ip).trim().split('.').map(Number); return ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]) >>> 0; }
+  function intToIp(n){ return [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.'); }
+  function subnetOf(ip, mask){ return (ipToInt(ip) & ipToInt(mask)) >>> 0; }
+  const hasNet = d => validIp(d.ip) && validIp(d.mask);
+  function netSubnet(comp){ for(const d of terminals(comp)){ if(hasNet(d)) return subnetOf(d.ip, d.mask); } return null; }
+  function allSameSubnet(list){
+    if(!list.length) return false;
+    const s = list.map(d => hasNet(d) ? subnetOf(d.ip, d.mask) : null);
+    return s.every(x => x !== null && x === s[0]);
+  }
+  function allUnique(list){
+    const ips = list.map(d => (d.ip || '').trim());
+    return ips.every(Boolean) && new Set(ips).size === ips.length;
+  }
+
+  function bfsPath(startKey, endKey, bridge){
+    if(startKey === endKey) return [];
+    const adj = {};
+    const add = (k1, k2, cid) => { (adj[k1] = adj[k1] || []).push({to:k2, cid}); (adj[k2] = adj[k2] || []).push({to:k1, cid}); };
+    cables.forEach(c => add(nodeKey(c.a.deviceId, c.a.iface), nodeKey(c.b.deviceId, c.b.iface), c.id));
+    if(bridge) routers().forEach(r => add(nodeKey(r.id, 1), nodeKey(r.id, 2), null));
+    const visited = new Set([startKey]);
+    const queue = [{key:startKey, path:[]}];
+    while(queue.length){
+      const cur = queue.shift();
+      for(const n of (adj[cur.key] || [])){
+        if(visited.has(n.to)) continue;
+        const np = n.cid ? cur.path.concat([n.cid]) : cur.path.slice();
+        if(n.to === endKey) return np;
+        visited.add(n.to);
+        queue.push({key:n.to, path:np});
+      }
+    }
+    return null;
+  }
+
+  function applyDhcp(){
+    const srvs = servers().filter(d => d.dhcpServer && hasNet(d));
+    pcs().filter(d => d.dhcpClient).forEach(pc => {
+      for(const srv of srvs){
+        if(!bfsPath(nodeKey(pc.id), nodeKey(srv.id), false)) continue;
+        const base = subnetOf(srv.ip, srv.mask);
+        const used = new Set(devices.filter(d => d.ip).map(d => d.ip.trim()));
+        for(let host = 10; host < 250; host++){
+          const cand = intToIp((base | host) >>> 0);
+          if(!used.has(cand)){ pc.ip = cand; pc.mask = srv.mask; pc.gateway = srv.gateway || ''; return; }
+        }
+      }
+    });
+  }
+
+  // =====================================================================
+  //  TEST DE CONNEXION (logique pure, sans affichage)
+  // =====================================================================
+  function evalPing(A, B){
+    const ipMode = ipModeNow();
+    const R = (kind, msg, path) => ({kind, msg, path: path || []});
+    const nA = esc(A.name), nB = esc(B.name);
+    if(A.type === 'switch' || B.type === 'switch')
+      return R('warn', `Un <b>commutateur</b> n'a pas d'adresse à tester : choisis deux PC ou serveurs.`);
+    if(A.type === 'internet' || B.type === 'internet') return evalInternet(A.type === 'internet' ? B : A);
+    if(A.type === 'routeur' || B.type === 'routeur')
+      return R('warn', `Teste la connexion entre deux appareils <b>terminaux</b> (PC ou serveur) : le routeur sert de relais tout seul.`);
+    if(!cablesOf(A).length) return R('fail', `❌ <b>${nA}</b> n'est relié à aucun câble.`);
+    if(!cablesOf(B).length) return R('fail', `❌ <b>${nB}</b> n'est relié à aucun câble.`);
+
+    if(!ipMode){
+      const p = bfsPath(nodeKey(A.id), nodeKey(B.id), true);
+      if(p) return R('ok', `✅ <b>Test réussi</b> : ${nA} et ${nB} peuvent communiquer.`, p);
+      if(routers().length)
+        return R('fail', `❌ <b>Échec</b> : ${nA} et ${nB} ne sont pas reliés. Vérifie que le routeur est branché sur ses <b>deux</b> ports (1 et 2), chacun à un commutateur.`);
+      return R('fail', `❌ <b>Échec</b> : aucun chemin de câbles ne relie ${nA} et ${nB}. Ils sont dans deux réseaux séparés : pour les relier, il faut un <b>routeur</b>.`);
+    }
+
+    if(!hasNet(A)) return R('fail', `❌ Configure d'abord une adresse IP et un masque valides sur <b>${nA}</b>.`);
+    if(!hasNet(B)) return R('fail', `❌ Configure d'abord une adresse IP et un masque valides sur <b>${nB}</b>.`);
+    const subA = subnetOf(A.ip, A.mask), subB = subnetOf(B.ip, B.mask);
+
+    if(subA === subB){
+      if(A.ip.trim() === B.ip.trim()) return R('fail', `❌ <b>Conflit d'adresses</b> : ${nA} et ${nB} ont la même adresse IP (<span class="mono">${esc(A.ip)}</span>).`);
+      const p = bfsPath(nodeKey(A.id), nodeKey(B.id), false);
+      if(p) return R('ok', `✅ <b>Test réussi</b> : ${nA} (${esc(A.ip)}) et ${nB} (${esc(B.ip)}) sont dans le même réseau et bien reliés par câble.`, p);
+      return R('fail', `❌ <b>Échec</b> : ${nA} et ${nB} sont dans le même réseau, mais aucun câble ne les relie (directement ou via un commutateur).`);
+    }
+
+    if(!routers().length)
+      return R('fail', `❌ <b>Échec</b> : ${nA} (${esc(A.ip)}) et ${nB} (${esc(B.ip)}) sont dans deux réseaux différents et rien ne les relie. Pour les faire communiquer, il faut un <b>routeur</b>.`);
+
+    let best = null;
+    for(const r of routers()){
+      if(!(validIp(r.ip) && validIp(r.mask) && validIp(r.ip2) && validIp(r.mask2))) continue;
+      const s1 = subnetOf(r.ip, r.mask), s2 = subnetOf(r.ip2, r.mask2);
+      let ifA, ifB, gwA, gwB;
+      if(s1 === subA && s2 === subB){ ifA = 1; ifB = 2; gwA = r.ip; gwB = r.ip2; }
+      else if(s2 === subA && s1 === subB){ ifA = 2; ifB = 1; gwA = r.ip2; gwB = r.ip; }
+      else continue;
+      const pA = bfsPath(nodeKey(A.id), nodeKey(r.id, ifA), false);
+      const pB = bfsPath(nodeKey(r.id, ifB), nodeKey(B.id), false);
+      if(!pA || !pB){
+        if(!best) best = R('warn', `⚠️ Le routeur <b>${esc(r.name)}</b> a les bonnes adresses, mais il manque un câble entre lui et ${!pA ? nA : nB} (ou son commutateur).`);
+        continue;
+      }
+      const okA = A.gateway && A.gateway.trim() === gwA.trim();
+      const okB = B.gateway && B.gateway.trim() === gwB.trim();
+      if(okA && okB) return R('ok', `✅ <b>Test réussi</b> : ${nA} (${esc(A.ip)}) joint ${nB} (${esc(B.ip)}) en passant par le routeur <b>${esc(r.name)}</b>.`, pA.concat(pB));
+      const miss = [];
+      if(!okA) miss.push(`${nA} devrait avoir la passerelle <span class="mono">${esc(gwA)}</span> (actuellement ${esc(A.gateway || 'vide')})`);
+      if(!okB) miss.push(`${nB} devrait avoir la passerelle <span class="mono">${esc(gwB)}</span> (actuellement ${esc(B.gateway || 'vide')})`);
+      best = R('warn', `⚠️ Câblage correct via <b>${esc(r.name)}</b>, mais la passerelle est mal réglée : ${miss.join(' ; ')}.`, pA.concat(pB));
+    }
+    return best || R('fail', `❌ <b>Échec</b> : aucun routeur ne relie les réseaux de ${nA} et ${nB}. Vérifie les adresses IP des deux interfaces du routeur : chacune doit être dans le réseau de son côté.`);
+  }
+
+  function evalInternet(X){
+    const R = (kind, msg, path, extra) => Object.assign({kind, msg, path: path || []}, extra || {});
+    const nX = esc(X.name);
+    if(X.type !== 'pc' && X.type !== 'serveur') return R('warn', `Pour tester Internet, choisis un <b>PC</b> ou un <b>serveur</b>, puis le nuage Internet.`);
+    if(!cablesOf(X).length) return R('fail', `❌ <b>${nX}</b> n'est relié à aucun câble.`);
+    if(!hasNet(X)) return R('fail', `❌ Configure d'abord une adresse IP et un masque valides sur <b>${nX}</b>.`);
+    if(!routers().length) return R('fail', `❌ <b>Échec</b> : pour sortir du réseau vers Internet, il faut un <b>routeur</b>.`);
+    const wan = routers().find(r => { const n = neighborViaPort(r, 3); return n && n.type === 'internet'; });
+    if(!wan) return R('warn', `⚠️ Le routeur n'est pas relié à Internet : avec l'outil Câble RJ45, relie son <b>port 3 (WAN)</b> au nuage Internet.`);
+    const sub = subnetOf(X.ip, X.mask); let iface = 0, gw = '';
+    if(validIp(wan.ip) && validIp(wan.mask) && subnetOf(wan.ip, wan.mask) === sub){ iface = 1; gw = wan.ip; }
+    else if(validIp(wan.ip2) && validIp(wan.mask2) && subnetOf(wan.ip2, wan.mask2) === sub){ iface = 2; gw = wan.ip2; }
+    if(!iface) return R('fail', `❌ <b>Échec</b> : ${nX} (${esc(X.ip)}) n'est dans le réseau d'aucune interface du routeur. Vérifie les adresses du routeur.`);
+    const pX = bfsPath(nodeKey(X.id), nodeKey(wan.id, iface), false);
+    if(!pX) return R('warn', `⚠️ Il manque un câble entre ${nX} (ou son commutateur) et le port ${iface} du routeur.`);
+    const wanCable = cablesForPort(wan.id, 3)[0], path = pX.concat(wanCable ? [wanCable.id] : []);
+    if(!X.gateway || X.gateway.trim() !== gw.trim())
+      return R('warn', `⚠️ Câblage correct, mais ${nX} doit avoir la passerelle <span class="mono">${esc(gw)}</span> (actuellement ${esc(X.gateway || 'vide')}) pour sortir du réseau.`, path);
+    const proxy = servers().find(sv => sv.proxyServer && sv.id !== X.id && compOf(sv).some(d => d.id === X.id));
+    if(proxy && X.type === 'pc'){
+      if(!validIp(proxy.ip) || (X.proxy || '').trim() !== proxy.ip.trim())
+        return R('fail', `❌ <b>Accès refusé</b> : le réseau de ${nX} passe par le serveur de communication <b>${esc(proxy.name)}</b> (proxy). Indique son adresse dans le champ « Serveur proxy » de ${nX}.`, path, {blocked:false, proxyMissing:true});
+      if(!(proxy.proxyAllow || []).includes(X.id))
+        return R('fail', `🚫 <b>Accès bloqué</b> par le serveur de communication <b>${esc(proxy.name)}</b> : ${nX} n'a pas le droit d'aller sur Internet (filtrage).`, path, {blocked:true});
+      return R('ok', `✅ <b>Test réussi</b> : ${nX} (${esc(X.ip)}) accède à Internet via le proxy <b>${esc(proxy.name)}</b> puis le routeur <b>${esc(wan.name)}</b>.`, path);
+    }
+    return R('ok', `✅ <b>Test réussi</b> : ${nX} (${esc(X.ip)}) accède à Internet en passant par le routeur <b>${esc(wan.name)}</b>.`, path);
+  }
+
+  function hideResult(){ const b = $('resultBanner'); b.className = 'result-banner'; b.innerHTML = ''; highlightCables = new Set(); highlightColor = null; }
+  function showResult(kind, html, path){
+    const b = $('resultBanner'); b.className = 'result-banner show ' + kind; b.innerHTML = html;
+    highlightCables = new Set(path || []); highlightColor = kind;
+  }
+  function runTest(aId, bId){
+    if(ipModeNow()) applyDhcp();
+    const A = getDevice(aId), B = getDevice(bId);
+    const r = evalPing(A, B);
+    devices.forEach(d => d.ledState = null);
+    if(r.kind === 'ok' || r.kind === 'fail'){ A.ledState = r.kind; B.ledState = r.kind; }
+    showResult(r.kind, r.msg, r.path);
+  }
+
+  // =====================================================================
+  //  AFFICHAGE : appareils, câbles
+  // =====================================================================
+  function setStatus(msg){ $('statusMsg').textContent = msg; }
+
+  function newDevice(type, x, y){
+    const count = devices.filter(d => d.type === type).length + 1;
+    return {
+      id:'d' + (idSeq++), type, x, y, name: type === 'internet' ? 'Internet' : TYPE_LABEL[type] + ' ' + count,
+      ip:'', mask: type === 'switch' ? '' : '255.255.255.0', gateway:'',
+      dhcpClient:false, dhcpServer:false, ip2:'', mask2:'255.255.255.0', ledState:null, proxy:'', proxyServer:false, proxyAllow:[]
+    };
+  }
+
+  function deviceCenter(dev, iface){
+    if(dev.type === 'routeur' && iface) return {x: dev.x + (iface === 1 ? 15 : (iface === 3 ? DEV_W / 2 : DEV_W - 15)), y: dev.y + 65};
+    return {x: dev.x + DEV_W / 2, y: dev.y + ICON_CY};
+  }
+
+  const wanVisible = () => devices.some(d => d.type === 'internet') || (currentLevel !== '5e' && currentWsKey === 'reseau' && curStepN() >= 5);
+  function renderDevices(){
+    autoAssignIps();
+    const ipMode = ipModeNow() || autoIpMode();
+    const devLayer = $('devicesLayer');
+    devLayer.innerHTML = '';
+    devices.forEach(dev => {
+      const el = document.createElement('div');
+      el.className = 'device' + (dev.id === selectedId ? ' selected' : '') +
+        ((cablingMode && cablingFirst && cablingFirst.deviceId === dev.id && !cablingFirst.iface) ? ' cabling-pick' : '') +
+        ((testMode && testFirst === dev.id) ? ' cabling-pick' : '');
+      el.style.left = dev.x + 'px'; el.style.top = dev.y + 'px'; el.dataset.id = dev.id;
+
+      let ipLine = '';
+      if(ipMode && dev.type !== 'switch' && dev.type !== 'internet'){
+        ipLine = dev.type === 'routeur' ? ((dev.ip || '--') + ' / ' + (dev.ip2 || '--')) : (dev.ip || (dev.dhcpClient ? 'DHCP…' : 'non configuré'));
+      }
+      const unset = ipMode && dev.type !== 'switch' && dev.type !== 'internet' && dev.type !== 'routeur' && !dev.ip;
+      el.innerHTML = `
+        <div class="device-icon">${ICONS[dev.type]}<div class="led ${dev.ledState === 'ok' ? 'ok' : (dev.ledState === 'fail' ? 'fail' : '')}"></div></div>
+        <div class="device-name">${esc(dev.name)}</div>
+        ${ipLine ? `<div class="device-ip ${unset ? 'unset' : ''}">${esc(ipLine)}</div>` : ''}`;
+
+      if(dev.type === 'routeur'){
+        (wanVisible() ? [1, 2, 3] : [1, 2]).forEach(n => {
+          const p = document.createElement('div');
+          p.className = 'port p' + n + (cablesForPort(dev.id, n).length ? ' occupied' : '');
+          p.textContent = String(n);
+          p.title = n === 3 ? 'Port 3 (WAN) : vers Internet' : 'Port ' + n;
+          p.addEventListener('pointerdown', e => e.stopPropagation());
+          p.addEventListener('click', e => { e.stopPropagation(); onDeviceClick(dev.id, n); });
+          el.appendChild(p);
+        });
+      }
+      attachDrag(el, dev);
+      devLayer.appendChild(el);
+    });
+  }
+
+  function renderCables(){
+    const layer = $('cableLayer');
+    layer.innerHTML = '';
+    const ns = 'http://www.w3.org/2000/svg';
+    cables.forEach(c => {
+      const da = getDevice(c.a.deviceId), db = getDevice(c.b.deviceId);
+      if(!da || !db) return;
+      const p1 = deviceCenter(da, c.a.iface), p2 = deviceCenter(db, c.b.iface);
+      const midX = (p1.x + p2.x) / 2, midY = (p1.y + p2.y) / 2 + 30;
+      const d = `M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`;
+      let stroke = '#f3a94a', width = 3;
+      if(highlightCables.has(c.id)){
+        stroke = highlightColor === 'ok' ? '#4ddc9a' : (highlightColor === 'fail' ? '#f56a6a' : '#f3a94a'); width = 4.5;
+      }
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', d); path.setAttribute('stroke', stroke); path.setAttribute('stroke-width', width);
+      path.setAttribute('fill', 'none'); path.setAttribute('stroke-linecap', 'round');
+      layer.appendChild(path);
+      const hit = document.createElementNS(ns, 'path');
+      hit.setAttribute('d', d); hit.setAttribute('stroke', 'transparent'); hit.setAttribute('stroke-width', 16);
+      hit.setAttribute('fill', 'none'); hit.setAttribute('class', 'hit'); hit.style.pointerEvents = 'stroke';
+      hit.addEventListener('click', () => {
+        if(confirm('Débrancher ce câble ?')){ cables = cables.filter(cc => cc.id !== c.id); render(); }
+      });
+      layer.appendChild(hit);
+    });
+  }
+
+  function attachDrag(el, dev){
+    let drag = null;
+    el.addEventListener('pointerdown', e => {
+      drag = {sx:e.clientX, sy:e.clientY, ox:dev.x, oy:dev.y, moved:false};
+      try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    el.addEventListener('pointermove', e => {
+      if(!drag) return;
+      const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+      if(!drag.moved && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+      drag.moved = true;
+      dev.x = Math.max(0, drag.ox + dx); dev.y = Math.max(0, drag.oy + dy);
+      el.style.left = dev.x + 'px'; el.style.top = dev.y + 'px';
+      renderCables();
+    });
+    el.addEventListener('pointerup', () => { if(drag && !drag.moved) onDeviceClick(dev.id, null); drag = null; });
+    el.addEventListener('pointercancel', () => { drag = null; });
+  }
+
+  function onDeviceClick(id, iface){
+    if(cablingMode){ handleCablingClick(id, iface); return; }
+    if(testMode){ handleTestClick(id); return; }
+    selectedId = id; render();
+  }
+
+  // ---------- câblage ----------
+  function handleCablingClick(id, iface){
+    const dev = getDevice(id);
+    if(dev.type === 'routeur' && !iface){ setStatus(`Ce routeur a deux ports : clique précisément sur le port 1 ou le port 2 (petits ronds sous le routeur).`); return; }
+    const existing = cablesForPort(id, iface).length;
+    if(!cablingFirst){
+      if(existing >= portCapacity(dev)){ setStatus(`Ce port est déjà occupé.`); return; }
+      cablingFirst = {deviceId:id, iface: iface || null};
+      setStatus(`Premier point : ${dev.name}${iface ? ' (port ' + iface + ')' : ''}. Clique maintenant sur le second appareil.`);
+      render(); return;
+    }
+    const firstDev = getDevice(cablingFirst.deviceId);
+    const net = firstDev.type === 'internet' || dev.type === 'internet', w3 = cablingFirst.iface === 3 || iface === 3;
+    if((net || w3) && !(net && w3 && (firstDev.type === 'routeur' || dev.type === 'routeur'))){
+      setStatus(`Le nuage Internet se relie seulement au port 3 (WAN) du routeur, et ce port ne sert qu'à Internet.`); cablingFirst = null; render(); return;
+    }
+    if(cablingFirst.deviceId === id){
+      cablingFirst = null; setStatus(`Sélection annulée. Clique sur un premier appareil pour recommencer.`); render(); return;
+    }
+    if(existing >= portCapacity(dev)){ setStatus(`Ce port est déjà occupé.`); return; }
+    cables.push({id:'c' + (idSeq++), a:cablingFirst, b:{deviceId:id, iface: iface || null}});
+    cablingFirst = null;
+    setStatus(`Câble branché ✔ Pose un autre câble, ou clique de nouveau sur « Câble RJ45 » pour arrêter.`);
+    render();
+  }
+
+  // ---------- test ----------
+  function handleTestClick(id){
+    if(!testFirst){ testFirst = id; setStatus(`Premier appareil : ${getDevice(id).name}. Clique sur le second.`); render(); return; }
+    if(testFirst === id){ testFirst = null; setStatus(`Sélection annulée.`); render(); return; }
+    runTest(testFirst, id); testFirst = null; render();
+  }
+
+  // =====================================================================
+  //  PANNEAU DE CONFIGURATION
+  // =====================================================================
+  const proxyUi = () => currentLevel === '3e' && currentWsKey === 'reseau' && curStepN() >= 6;
+  function renderConfigPanel(){
+    const panel = $('configPanel');
+    const dev = getDevice(selectedId);
+    if(!dev){
+      panel.innerHTML = `<div class="empty-config">Clique sur un appareil du plan pour le renommer${ipModeNow() ? ' et régler ses adresses' : (autoIpMode() ? ' et voir son adresse IP' : '')}.</div>`;
+      return;
+    }
+    const ipMode = ipModeNow();
+    let html = `<h3>${esc(dev.name)}</h3><div class="subtitle">${TYPE_LABEL[dev.type]}</div>`;
+    html += `<div class="field"><label>Nom</label><input type="text" class="name-input" id="cfgName" value="${esc(dev.name)}"></div>`;
+
+    if(dev.type === 'internet'){
+      html += `<div class="note-box">☁️ Internet représente le monde extérieur. Relie-le au <b>port 3 (WAN)</b> du routeur : il n'a pas besoin d'adresse IP. ${infoBtn('internet')}</div>`;
+    } else if(dev.type === 'switch'){
+      html += `<div class="note-box">Le commutateur relie les appareils d'un même réseau. Il n'a pas besoin d'adresse IP.</div>`;
+    } else if(!ipMode){
+      html += dev.type === 'routeur'
+        ? `<div class="note-box">Le routeur relie deux réseaux : branche le <b>port 1</b> sur un commutateur et le <b>port 2</b> sur l'autre.</div>`
+        : `<div class="note-box">Donne un nom clair à cet appareil (par exemple <b>CDI-1</b>) pour le reconnaître facilement.</div>`;
+      if(dev.type !== 'routeur'){
+        html += `<div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" value="${esc(dev.ip || 'pas encore attribuée')}" readonly disabled></div>`;
+        html += `<div class="field"><label>Masque de sous-réseau ${infoBtn('mask')}</label><input type="text" value="${esc(dev.mask)}" readonly disabled></div>`;
+        html += `<div class="note-box">🔎 Pour l'instant, l'adresse IP est <b>attribuée automatiquement</b> : tu peux seulement l'observer. Bientôt, ce sera à toi de la saisir !</div>`;
+      }
+    } else if(dev.type === 'pc'){
+      const dis = dev.dhcpClient ? 'disabled' : '';
+      html += `<div class="checkbox-field"><input type="checkbox" id="cfgDhcpClient" ${dev.dhcpClient ? 'checked' : ''}><span>Adresse automatique (DHCP) ${infoBtn('dhcp')}</span></div>`;
+      html += `<div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" id="cfgIp" placeholder="192.168.1.10" value="${esc(dev.ip)}" ${dis}></div>`;
+      html += `<div class="field"><label>Masque de sous-réseau ${infoBtn('mask')}</label><input type="text" id="cfgMask" placeholder="255.255.255.0" value="${esc(dev.mask)}" ${dis}></div>`;
+      html += `<div class="field"><label>Passerelle ${infoBtn('gateway')}</label><input type="text" id="cfgGw" placeholder="(vide si pas de routeur)" value="${esc(dev.gateway)}" ${dis}></div>`;
+      if(proxyUi()) html += `<div class="field"><label>Serveur proxy ${infoBtn('proxy')}</label><input type="text" id="cfgProxy" placeholder="adresse du serveur de communication" value="${esc(dev.proxy || '')}"></div>`;
+    } else if(dev.type === 'serveur'){
+      html += `<div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" id="cfgIp" placeholder="192.168.1.1" value="${esc(dev.ip)}"></div>`;
+      html += `<div class="field"><label>Masque de sous-réseau ${infoBtn('mask')}</label><input type="text" id="cfgMask" placeholder="255.255.255.0" value="${esc(dev.mask)}"></div>`;
+      html += `<div class="field"><label>Passerelle ${infoBtn('gateway')}</label><input type="text" id="cfgGw" placeholder="(vide si pas de routeur)" value="${esc(dev.gateway)}"></div>`;
+      html += `<div class="checkbox-field"><input type="checkbox" id="cfgDhcpServer" ${dev.dhcpServer ? 'checked' : ''}><span>Serveur de communication : distribue les adresses (DHCP) ${infoBtn('dhcp')}</span></div>`;
+      if(proxyUi()){
+        html += `<div class="checkbox-field"><input type="checkbox" id="cfgProxyServer" ${dev.proxyServer ? 'checked' : ''}><span>Proxy : filtre l'accès Internet du réseau ${infoBtn('proxy')}</span></div>`;
+        if(dev.proxyServer){
+          const mates = compOf(dev).filter(d => d.type === 'pc');
+          html += `<div class="allow-list"><b style="font-size:12px">Autoriser Internet à :</b>` + (mates.length ? mates.map(m => `<label><input type="checkbox" class="allow-cb" data-pc="${m.id}" ${(dev.proxyAllow || []).includes(m.id) ? 'checked' : ''}>${esc(m.name)}</label>`).join('') : `<div style="font-size:12px;color:var(--muted)">Aucun PC relié à ce serveur.</div>`) + `</div>`;
+        }
+      }
+    } else if(dev.type === 'routeur'){
+      html += `<div class="iface-group"><h4>Interface 1</h4>
+        <div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" id="cfgIp1" placeholder="192.168.1.254" value="${esc(dev.ip)}"></div>
+        <div class="field"><label>Masque ${infoBtn('mask')}</label><input type="text" id="cfgMask1" placeholder="255.255.255.0" value="${esc(dev.mask)}"></div></div>`;
+      html += `<div class="iface-group"><h4>Interface 2</h4>
+        <div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" id="cfgIp2" placeholder="192.168.2.254" value="${esc(dev.ip2)}"></div>
+        <div class="field"><label>Masque ${infoBtn('mask')}</label><input type="text" id="cfgMask2" placeholder="255.255.255.0" value="${esc(dev.mask2)}"></div></div>`;
+      html += `<div class="note-box">Chaque interface prend une adresse dans le réseau auquel elle est reliée.</div>`;
+    }
+    html += `<button class="btn danger delete-btn" id="cfgDelete">🗑️ Supprimer cet appareil</button>`;
+    panel.innerHTML = html;
+
+    function softUpdate(){
+      const el = $('devicesLayer').querySelector(`.device[data-id="${dev.id}"] .device-ip`);
+      if(el && ipMode && dev.type !== 'switch'){
+        el.textContent = dev.type === 'routeur' ? ((dev.ip || '--') + ' / ' + (dev.ip2 || '--')) : (dev.ip || (dev.dhcpClient ? 'DHCP…' : 'non configuré'));
+        el.className = 'device-ip' + (dev.type !== 'routeur' && !dev.ip ? ' unset' : '');
+      }
+      renderGuide();
+    }
+    const bind = (id, prop) => {
+      const el = $(id); if(!el) return;
+      el.addEventListener('input', () => {
+        dev[prop] = el.value;
+        if(prop === 'name'){
+          const lbl = $('devicesLayer').querySelector(`.device[data-id="${dev.id}"] .device-name`);
+          if(lbl) lbl.textContent = dev.name;
+          renderGuide();
+        } else softUpdate();
+      });
+    };
+    bind('cfgProxy', 'proxy'); bind('cfgName', 'name'); bind('cfgIp', 'ip'); bind('cfgMask', 'mask'); bind('cfgGw', 'gateway');
+    bind('cfgIp1', 'ip'); bind('cfgMask1', 'mask'); bind('cfgIp2', 'ip2'); bind('cfgMask2', 'mask2');
+    const dc = $('cfgDhcpClient');
+    if(dc) dc.addEventListener('change', () => { dev.dhcpClient = dc.checked; if(dev.dhcpClient) dev.ip = ''; renderConfigPanel(); softUpdate(); });
+    const dp = $('cfgProxyServer');
+    if(dp) dp.addEventListener('change', () => { dev.proxyServer = dp.checked; if(!dev.proxyAllow) dev.proxyAllow = []; renderConfigPanel(); renderGuide(); });
+    panel.querySelectorAll('.allow-cb').forEach(cb => cb.addEventListener('change', () => {
+      const set = new Set(dev.proxyAllow || []); if(cb.checked) set.add(cb.dataset.pc); else set.delete(cb.dataset.pc);
+      dev.proxyAllow = Array.from(set); renderGuide();
+    }));
+    const ds = $('cfgDhcpServer');
+    if(ds) ds.addEventListener('change', () => { dev.dhcpServer = ds.checked; renderGuide(); });
+    $('cfgDelete').addEventListener('click', () => {
+      if(!confirm('Supprimer ' + dev.name + ' et ses câbles ?')) return;
+      cables = cables.filter(c => c.a.deviceId !== dev.id && c.b.deviceId !== dev.id);
+      devices = devices.filter(d => d.id !== dev.id);
+      selectedId = null; render();
+    });
+  }
+
+  // =====================================================================
+  //  ENQUÊTE (3ème, mode expert)
+  // =====================================================================
+  const CASE = {
+    title: `Fuite de documents — NetCorp`,
+    briefing: `Le 14 mars, le fichier confidentiel « Bilan_2026.xlsx » a été consulté sur le serveur de fichiers de l'entreprise NetCorp, puis copié sur une clé USB à 14h32. Quatre personnes avaient un poste sur le réseau ce jour-là. Ta mission : reconstruire le réseau de NetCorp d'après le plan et les règles d'adressage, vérifier qu'il fonctionne, puis utiliser le journal du serveur pour trouver quel poste a copié le fichier. Accuse ensuite le bon suspect.`,
+    plan: [
+      {zone:'Comptabilité', type:'Commutateur', name:'Commutateur-Compta', occupant:'—'},
+      {zone:'Comptabilité', type:'Serveur', name:'Serveur-Fichiers', occupant:'—'},
+      {zone:'Comptabilité', type:'PC', name:'PC-Julie', occupant:'Julie Morel (comptable)'},
+      {zone:'Comptabilité', type:'PC', name:'PC-Karim', occupant:'Karim Haddad (comptable)'},
+      {zone:'Direction', type:'Commutateur', name:'Commutateur-Direction', occupant:'—'},
+      {zone:'Direction', type:'PC', name:'PC-Sophie', occupant:'Sophie Laurent (directrice)'},
+      {zone:'Direction', type:'PC', name:'PC-Marc', occupant:'Marc Dubois (responsable RH)'},
+      {zone:'Réseau', type:'Routeur', name:'Routeur-Central', occupant:'relie Comptabilité (port 1) et Direction (port 2)'}
+    ],
+    rules: [
+      `Réseau Comptabilité : <b>192.168.1.0</b> — réseau Direction : <b>192.168.2.0</b> — masque partout : <b>255.255.255.0</b>.`,
+      `Le <b>serveur</b> prend le numéro <b>.1</b> de son réseau.`,
+      `Les <b>postes</b> prennent <b>.10</b>, <b>.11</b>… dans l'ordre de la liste de leur zone.`,
+      `Le <b>routeur</b> prend <b>.254</b> dans chaque réseau (interface 1 : Comptabilité, interface 2 : Direction).`,
+      `La <b>passerelle</b> de chaque poste et du serveur est l'adresse du routeur dans <b>son</b> réseau.`
+    ],
+    log: [
+      {time:'09:14', ip:'192.168.1.10', action:`Connexion normale au serveur de fichiers`},
+      {time:'11:02', ip:'192.168.1.11', action:`Connexion normale au serveur de fichiers`},
+      {time:'13:47', ip:'192.168.2.11', action:`Consultation du planning « Planning_Direction.docx »`},
+      {time:'14:32', ip:'192.168.2.10', action:`Accès au dossier confidentiel « Bilan_2026.xlsx », puis copie sur périphérique USB`}
+    ],
+    suspects: ['Julie Morel', 'Karim Haddad', 'Sophie Laurent', 'Marc Dubois'],
+    suspectDevice: {'Julie Morel':'PC-Julie', 'Karim Haddad':'PC-Karim', 'Sophie Laurent':'PC-Sophie', 'Marc Dubois':'PC-Marc'},
+    culprit: 'Sophie Laurent',
+    devices: [
+      {name:'Serveur-Fichiers', type:'serveur', ip:'192.168.1.1',  gw:'192.168.1.254'},
+      {name:'PC-Julie',  type:'pc', ip:'192.168.1.10', gw:'192.168.1.254'},
+      {name:'PC-Karim',  type:'pc', ip:'192.168.1.11', gw:'192.168.1.254'},
+      {name:'PC-Sophie', type:'pc', ip:'192.168.2.10', gw:'192.168.2.254'},
+      {name:'PC-Marc',   type:'pc', ip:'192.168.2.11', gw:'192.168.2.254'}
+    ],
+    router: {name:'Routeur-Central', ip:'192.168.1.254', ip2:'192.168.2.254'},
+    mask: '255.255.255.0'
+  };
+  const byName = n => devices.find(d => d.name.trim().toLowerCase() === n.toLowerCase());
+
+  const caseNamesOk = () => CASE.devices.every(x => { const d = byName(x.name); return d && d.type === x.type; }) &&
+    (() => { const r = byName(CASE.router.name); return !!r && r.type === 'routeur'; })() && switches().length >= 2;
+  const caseIpOk = () => CASE.devices.every(x => {
+      const d = byName(x.name);
+      return d && (d.ip || '').trim() === x.ip && (d.mask || '').trim() === CASE.mask && (d.gateway || '').trim() === x.gw;
+    }) && (() => {
+      const r = byName(CASE.router.name);
+      return !!r && (r.ip || '').trim() === CASE.router.ip && (r.ip2 || '').trim() === CASE.router.ip2 &&
+        (r.mask || '').trim() === CASE.mask && (r.mask2 || '').trim() === CASE.mask;
+    })();
+  const caseNetOk = () => {
+    const srv = byName('Serveur-Fichiers'); if(!srv) return false;
+    return CASE.devices.filter(x => x.type === 'pc').every(x => { const d = byName(x.name); return d && evalPing(d, srv).kind === 'ok'; });
+  };
+
+  function renderDossier(){
+    $('caseTitle').textContent = CASE.title;
+    let h = `<div class="case-brief">${esc(CASE.briefing)}</div>`;
+    h += `<div class="case-section"><h3>Plan des locaux</h3><table class="case-table"><tr><th>Zone</th><th>Élément</th><th>Nom à donner</th><th>Occupant</th></tr>`;
+    CASE.plan.forEach(p => { h += `<tr><td>${esc(p.zone)}</td><td>${esc(p.type)}</td><td class="mono">${esc(p.name)}</td><td>${esc(p.occupant)}</td></tr>`; });
+    h += `</table></div>`;
+    h += `<div class="case-section"><h3>Règles d'adressage</h3><ul class="case-rules">${CASE.rules.map(r => `<li>${r}</li>`).join('')}</ul></div>`;
+    h += `<div class="case-section"><h3>Extrait du journal du serveur de fichiers</h3>`;
+    CASE.log.forEach(l => { h += `<div class="log-line"><span class="log-time">${esc(l.time)}</span><span class="log-ip">${esc(l.ip)}</span><span>${esc(l.action)}</span></div>`; });
+    h += `</div>`;
+    h += `<div class="case-section"><h3>Suspects</h3><p style="font-size:13px; color:var(--muted); line-height:1.6; margin:0;">${CASE.suspects.map(esc).join(', ')}.</p></div>`;
+    $('dossierContent').innerHTML = h;
+  }
+  function openDossier(){ renderDossier(); $('dossierOverlay').classList.add('show'); }
+
+  let pickedSuspect = null;
+  function renderSuspectList(){
+    const list = $('suspectList');
+    list.innerHTML = CASE.suspects.map(s => `
+      <label class="suspect-option${pickedSuspect === s ? ' picked' : ''}" data-suspect="${esc(s)}">
+        <input type="radio" name="suspectPick" value="${esc(s)}" ${pickedSuspect === s ? 'checked' : ''}><span>${esc(s)}</span>
+      </label>`).join('');
+    list.querySelectorAll('.suspect-option').forEach(opt => opt.addEventListener('click', () => { pickedSuspect = opt.dataset.suspect; renderSuspectList(); }));
+  }
+  function showVerdict(kind, html){ const el = $('verdictBanner'); el.className = 'verdict-banner show ' + kind; el.innerHTML = html; }
+  function openAccuse(){
+    renderSuspectList();
+    $('verdictBanner').className = 'verdict-banner'; $('verdictBanner').innerHTML = '';
+    $('accuseOverlay').classList.add('show');
+  }
+  function validateAccusation(){
+    if(!pickedSuspect){ showVerdict('warn', `Choisis d'abord un suspect dans la liste.`); return; }
+    const missing = [];
+    if(!caseNamesOk()) missing.push(`tous les appareils du plan (avec leur nom exact et les 2 commutateurs)`);
+    else if(!caseIpOk()) missing.push(`les adresses IP, masques et passerelles d'après les règles d'adressage`);
+    else if(!caseNetOk()) missing.push(`le fonctionnement du réseau (chaque PC doit joindre le Serveur-Fichiers : vérifie câbles et routeur)`);
+    if(missing.length){
+      showVerdict('warn', `Avant d'accuser quelqu'un, ton réseau doit être correct. Vérifie : ${missing[0]}.`); return;
+    }
+    const ok = pickedSuspect === CASE.culprit;
+    if(ok){
+      levelState['3e'].caseSolved = true;
+      showVerdict('ok', `✅ <b>Affaire résolue !</b> Le journal indique que l'adresse <span class="mono">192.168.2.10</span> a copié le fichier à 14h32. D'après tes règles d'adressage, c'est le premier poste de la Direction : <b>PC-Sophie</b>, donc <b>${esc(pickedSuspect)}</b>. Note ta démonstration sur ta fiche !`);
+      renderGuide();
+    } else {
+      showVerdict('fail', `❌ Ce n'est pas la bonne personne. Relis la ligne de <b>14h32</b> dans le journal : quelle adresse IP apparaît ? À quel poste correspond-elle d'après tes règles d'adressage ?`);
+    }
+  }
+
+  // =====================================================================
+  //  ÉTAPES GUIDÉES
+  // =====================================================================
+  const stepsCache = {};
+  function getSteps(lv){
+    if(stepsCache[lv]) return stepsCache[lv];
+    let ip = LEVELS[lv].ip;
+    const S = [];
+
+    // ---- Étape 1
+    S.push({
+      n:1, kind:'reseau', title:`Mon premier réseau`, pill:`Mon premier réseau`,
+      goal:`Relier <b>2 PC</b> avec un <b>commutateur</b>, puis vérifier qu'ils communiquent.`,
+      instr: [
+        `Dans la barre « Éléments », clique sur <b>Commutateur</b>, puis clique au milieu du plan pour le poser.`,
+        `Clique sur <b>PC</b>, puis clique à gauche du commutateur pour poser un premier PC. Pose un deuxième PC à droite.`,
+        `Dans « Éléments », clique sur l'outil <b>Câble RJ45</b>. Clique sur le premier PC, puis sur le commutateur : un câble RJ45 apparaît. Recommence avec le deuxième PC.`
+      ].concat(ip ? [
+        `Clique sur <b>PC 1</b> (panneau de droite) : saisis l'adresse IP <b>192.168.1.10</b> et le masque <b>255.255.255.0</b>.`,
+        `Fais pareil pour <b>PC 2</b> avec l'adresse <b>192.168.1.11</b> et le même masque.`
+      ] : []).concat([
+        `Clique de nouveau sur <b>Câble RJ45</b> pour poser l'outil, puis clique sur <b>🧪 Tester une connexion</b>.`,
+        `Clique sur un PC puis sur l'autre : un bandeau vert ✅ doit apparaître.`
+      ]),
+      hint: ip ? `Pour câbler, clique sur deux éléments à la suite (le PC, puis le commutateur). Si le test échoue, vérifie que les deux adresses commencent par 192.168.1 et finissent par des nombres différents.`
+               : `Pour câbler, clique sur deux éléments à la suite : d'abord le PC, ensuite le commutateur. Un câble orange apparaît entre eux.`,
+      checks: [
+        {label:`Un commutateur est posé`, test:() => switches().length >= 1},
+        {label:`Deux PC sont posés`, test:() => pcs().length >= 2},
+        {label:`Les deux PC sont reliés au commutateur par un câble`, test:() => pcs().filter(onSwitch).length >= 2},
+        {label:`Les deux PC ont une adresse IP du même réseau, différentes l'une de l'autre`, ipOnly:true,
+          test:() => switches().some(sw => { const l = neighbors(sw).filter(n => n.type === 'pc'); return l.length >= 2 && allSameSubnet(l) && allUnique(l); })},
+        {label:`Le test de connexion entre les 2 PC réussit`,
+          test:() => { const l = pcs().filter(onSwitch); return l.some((a, i) => l.some((b, j) => i < j && evalPing(a, b).kind === 'ok')); }}
+      ]
+    });
+
+    // ---- Étape 2
+    S.push({
+      n:2, kind:'reseau', title:`Le réseau du CDI`, pill:`Le réseau du CDI`,
+      goal:`Agrandir ton réseau : <b>6 PC renommés</b> et <b>1 serveur</b> reliés au même commutateur (le réseau du CDI).`,
+      instr: [
+        `Garde le réseau de l'étape 1 : tu vas l'agrandir. Ajoute des PC jusqu'à en avoir <b>6</b> au total.`,
+        `Pose un <b>Serveur</b> : ce sera le serveur du CDI.`,
+        `Renomme chaque PC : clique dessus puis change le champ <b>Nom</b> à droite (<b>CDI-1</b> … <b>CDI-6</b>, ou un autre nom de salle). Appelle le serveur <b>Serveur-CDI</b>.`,
+        `Avec l'outil <b>Câble RJ45</b>, relie chaque PC <b>et</b> le serveur au commutateur (il a 8 ports : tu en utilises 7).`
+      ].concat(ip ? [
+        `Configure le serveur : <b>192.168.1.1</b>. Puis CDI-1 à CDI-6 : <b>192.168.1.10</b>, <b>.11</b>, <b>.12</b>, <b>.13</b>, <b>.14</b>, <b>.15</b>. Masque <b>255.255.255.0</b> pour tous.`
+      ] : []).concat([
+        `Teste avec <b>🧪</b> : CDI-1 → CDI-6, puis CDI-3 → Serveur-CDI.`
+      ]),
+      hint: ip ? `Glisse les appareils pour garder un plan lisible. Chaque appareil doit avoir une adresse IP différente, mais commençant par 192.168.1.`
+               : `Glisse les appareils pour garder un plan lisible : le serveur en haut, les PC autour du commutateur. N'oublie pas de relier le serveur aussi !`,
+      checks: [
+        {label:`6 PC (ou plus) sont posés`, test:() => pcs().length >= 6},
+        {label:`Un serveur est posé`, test:() => servers().length >= 1},
+        {label:`Les 6 PC ont un nom personnalisé (ex. CDI-1 … CDI-6)`, test:() => pcs().filter(p => isCustom(p.name)).length >= 6},
+        {label:`Les 6 PC et le serveur sont reliés au même commutateur`,
+          test:() => { const s = servers().find(onSwitch); if(!s) return false; const c = compOf(s); return c.some(d => d.type === 'switch') && c.filter(d => d.type === 'pc').length >= 6; }},
+        {label:`Tous les appareils du CDI ont une adresse du même réseau, toutes différentes`, ipOnly:true,
+          test:() => { const s = servers().find(onSwitch); if(!s) return false; const t = terminals(compOf(s)); return allSameSubnet(t) && allUnique(t); }},
+        {label:`Chaque PC du CDI joint le serveur (test de connexion)`,
+          test:() => { const s = servers().find(onSwitch); if(!s) return false; const p = compOf(s).filter(d => d.type === 'pc'); return p.length >= 6 && p.every(x => evalPing(x, s).kind === 'ok'); }}
+      ]
+    });
+
+    // ---- Étape 3
+    ip = ipActive(lv, 3);
+    S.push({
+      n:3, kind:'reseau', title:`Un deuxième réseau`, pill:`Un 2e réseau`,
+      goal:`Ajouter un <b>deuxième réseau</b> (la salle informatique) avec son propre commutateur et <b>3 PC</b>, bien <b>séparé</b> du CDI.`,
+      instr: [
+        `Pose un <b>deuxième commutateur</b> à droite du premier, bien à l'écart.`,
+        `Pose <b>3 nouveaux PC</b> autour de lui et renomme-les <b>SI-1</b>, <b>SI-2</b>, <b>SI-3</b> (SI = salle informatique).`,
+        `Câble les 3 PC à ce deuxième commutateur. <b>Ne le relie pas</b> au commutateur du CDI : ce sont deux réseaux différents.`
+      ].concat(ip ? [
+        `Configure SI-1, SI-2, SI-3 avec <b>192.168.2.10</b>, <b>.11</b>, <b>.12</b> et le masque <b>255.255.255.0</b>. Le « 2 » montre que c'est un autre réseau que le CDI (192.168.<b>1</b>.x).`
+      ] : []).concat([
+        `Teste SI-1 → SI-2 : ça doit marcher ✅. Teste ensuite SI-1 → CDI-1 : ça doit <b>échouer</b> ❌. Pourquoi ? Rien ne relie les deux réseaux !`
+      ]),
+      hint: ip ? `Le deuxième réseau a ses propres adresses (192.168.2.x), différentes de celles du CDI (192.168.1.x). Ne tire aucun câble entre les deux commutateurs.`
+               : `Deux commutateurs non reliés = deux réseaux séparés. Ne tire aucun câble entre les deux commutateurs.`,
+      checks: [
+        {label:`Un deuxième commutateur est posé`, test:() => switches().length >= 2},
+        {label:`3 PC (ou plus) sont reliés à ce deuxième commutateur`, test:() => { const {second} = twoNets(); return !!second && second.filter(d => d.type === 'pc').length >= 3; }},
+        {label:`Les PC du 2e réseau ont un nom personnalisé (SI-1, SI-2, SI-3…)`,
+          test:() => { const {second} = twoNets(); return !!second && second.filter(d => d.type === 'pc' && isCustom(d.name)).length >= 3; }},
+        {label:`Le 2e réseau a ses propres adresses, différentes de celles du CDI`, ipOnly:true,
+          test:() => { const {main, second} = twoNets(); if(!main || !second) return false; const t = terminals(second);
+            const s = netSubnet(second), m = netSubnet(main); return allSameSubnet(t) && allUnique(t) && s !== null && s !== m; }},
+        {label:`Les PC du 2e réseau communiquent entre eux`,
+          test:() => { const {second} = twoNets(); if(!second) return false; const p = second.filter(d => d.type === 'pc');
+            return p.length >= 2 && p.every((a, i) => p.every((b, j) => i === j || evalPing(a, b).kind === 'ok')); }},
+        {label:`Les deux réseaux ne sont pas encore reliés (SI-1 ne joint pas CDI-1)`,
+          test:() => { const {main, second} = twoNets(); if(!main || !second) return false;
+            const a = main.find(d => d.type === 'pc'), b = second.find(d => d.type === 'pc'); return !!a && !!b && evalPing(a, b).kind !== 'ok'; }}
+      ]
+    });
+
+    // ---- Étape 4
+    ip = ipActive(lv, 4);
+    S.push({
+      n:4, kind:'reseau', title:`Relier les réseaux`, pill:`Relier avec un routeur`,
+      goal:`Relier le réseau du CDI et celui de la salle info avec un <b>routeur</b>, pour que SI-1 et CDI-1 puissent communiquer.`,
+      instr: [
+        `Pose un <b>Routeur</b> entre les deux commutateurs.`,
+        `Avec l'outil <b>Câble RJ45</b>, clique sur le <b>port 1</b> du routeur (petit rond « 1 » sous le routeur), puis sur le commutateur du CDI. Clique ensuite sur le <b>port 2</b>, puis sur le commutateur de la salle info.`
+      ].concat(ip ? [
+        `Clique sur le routeur : interface 1 → <b>192.168.1.254</b> (réseau du CDI), interface 2 → <b>192.168.2.254</b> (salle info), masque <b>255.255.255.0</b>.`,
+        `Renseigne la <b>passerelle</b> : <b>192.168.1.254</b> pour le serveur et CDI-1 à CDI-6 ; <b>192.168.2.254</b> pour SI-1 à SI-3.`
+      ] : []).concat([
+        `Teste CDI-1 → SI-1, puis Serveur-CDI → SI-3 : bandeau vert ✅ attendu.`
+      ]),
+      hint: ip ? `La passerelle d'un appareil est l'adresse du routeur <b>de son côté</b> : celle de l'interface reliée à son propre réseau.`
+               : `Un routeur a deux ports : un câble du port 1 vers un commutateur, un câble du port 2 vers l'autre commutateur.`,
+      checks: [
+        {label:`Un routeur est posé`, test:() => routers().length >= 1},
+        {label:`Les ports 1 et 2 du routeur sont reliés à deux commutateurs différents`,
+          test:() => routers().some(r => { const a = neighborViaPort(r, 1), b = neighborViaPort(r, 2); return !!a && !!b && a.type === 'switch' && b.type === 'switch' && a.id !== b.id; })},
+        {label:`Chaque interface du routeur a une adresse dans le réseau de son côté`, ipOnly:true,
+          test:() => routers().some(r => {
+            const a = neighborViaPort(r, 1), b = neighborViaPort(r, 2);
+            if(!a || !b || a.type !== 'switch' || b.type !== 'switch') return false;
+            const s1 = netSubnet(compOf(a)), s2 = netSubnet(compOf(b));
+            if(s1 === null || s2 === null || s1 === s2) return false;
+            return validIp(r.ip) && validIp(r.mask) && validIp(r.ip2) && validIp(r.mask2) && subnetOf(r.ip, r.mask) === s1 && subnetOf(r.ip2, r.mask2) === s2;
+          })},
+        {label:`Chaque appareil a pour passerelle l'adresse du routeur de son côté`, ipOnly:true,
+          test:() => routers().some(r => {
+            const a = neighborViaPort(r, 1), b = neighborViaPort(r, 2);
+            if(!a || !b) return false;
+            const t1 = terminals(compOf(a)), t2 = terminals(compOf(b));
+            return t1.length > 0 && t2.length > 0 && validIp(r.ip) && validIp(r.ip2) &&
+              t1.every(d => (d.gateway || '').trim() === r.ip.trim()) && t2.every(d => (d.gateway || '').trim() === r.ip2.trim());
+          })},
+        {label:`Un PC du CDI joint un PC de la salle info (test réussi)`,
+          test:() => { const {main, second} = twoNets(); if(!main || !second) return false;
+            const A = main.filter(d => d.type === 'pc'), B = second.filter(d => d.type === 'pc'); return A.some(a => B.some(b => evalPing(a, b).kind === 'ok')); }},
+        {label:`Le serveur du CDI joint un PC de la salle info`,
+          test:() => { const {main, second} = twoNets(); if(!main || !second) return false;
+            const s = main.find(d => d.type === 'serveur'); return !!s && second.filter(d => d.type === 'pc').some(b => evalPing(s, b).kind === 'ok'); }}
+      ]
+    });
+
+
+    // ---- Étape 5 : Internet (4ème et 3ème, mode expert)
+    if(lv !== '5e'){
+      const netPc = pred => () => { const {main, second} = twoNets(); return [main, second].some(n => n && n.filter(d => d.type === 'pc').some(pred)); };
+      S.push({
+        n:5, kind:'reseau', title:`Accéder à Internet`, pill:`Accès à Internet`,
+        goal:`Relier le routeur à <b>Internet</b> (port 3, appelé WAN) pour que les PC des deux réseaux puissent sortir.`,
+        instr: [
+          `Dans « Éléments », pose le nuage <b>Internet</b> à côté du routeur.`,
+          `Avec l'outil <b>Câble RJ45</b>, clique sur le <b>port 3</b> du routeur (le petit rond « 3 » au milieu), puis sur le nuage Internet.`,
+          `Vérifie que tous les appareils ont bien la <b>passerelle</b> du routeur de leur côté (étape 4).`,
+          `Teste avec 🧪 : CDI-1 → Internet, puis SI-1 → Internet.`
+        ],
+        hint: `Le port 3 du routeur est la « porte de sortie » vers Internet. Sans la bonne passerelle sur un PC, le test échoue : relis le message du bandeau.`,
+        checks: [
+          {label:`Le nuage Internet est posé`, test:() => devices.some(d => d.type === 'internet')},
+          {label:`Le port 3 du routeur est relié à Internet`, test:() => routers().some(r => { const n = neighborViaPort(r, 3); return !!n && n.type === 'internet'; })},
+          {label:`Un PC du CDI accède à Internet (test réussi)`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!main && !!net && main.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }},
+          {label:`Un PC de la salle info accède à Internet (test réussi)`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }}
+        ]
+      });
+    }
+    // ---- Étape 6 : proxy (3ème, mode expert)
+    if(lv === '3e'){
+      S.push({
+        n:6, kind:'reseau', title:`Le serveur de communication filtre Internet`, pill:`Proxy : filtrer Internet`,
+        goal:`Faire passer le CDI par son <b>serveur de communication</b> (proxy) : seuls <b>3 PC</b> du CDI ont le droit d'aller sur Internet.`,
+        instr: [
+          `Clique sur le serveur du CDI et coche <b>Proxy : filtre l'accès Internet</b>.`,
+          `Dans la liste « Autoriser Internet à », coche seulement <b>CDI-1, CDI-2, CDI-3</b>.`,
+          `Clique sur chaque PC du CDI et saisis, dans « Serveur proxy », l'adresse IP du serveur (<b>192.168.1.1</b>).`,
+          `Teste : CDI-1 → Internet ✅, CDI-6 → Internet 🚫 (bloqué), SI-1 → Internet ✅ (la salle info n'est pas filtrée).`
+        ],
+        hint: `Le proxy s'applique au réseau du serveur seulement. Un PC autorisé doit aussi connaître l'adresse du proxy, sinon l'accès est refusé.`,
+        checks: [
+          {label:`Le serveur du CDI est réglé en proxy`, test:() => { const {main} = twoNets(); return !!main && main.some(d => d.type === 'serveur' && d.proxyServer); }},
+          {label:`Exactement 3 PC du CDI sont autorisés`, test:() => { const {main} = twoNets(); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && main.filter(d => d.type === 'pc' && (sv.proxyAllow || []).includes(d.id)).length === 3 && main.filter(d => d.type === 'pc').length > 3; }},
+          {label:`Tous les PC du CDI ont l'adresse du proxy`, test:() => { const {main} = twoNets(); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && validIp(sv.ip) && main.filter(d => d.type === 'pc').every(p => (p.proxy || '').trim() === sv.ip.trim()); }},
+          {label:`Un PC autorisé accède à Internet`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && !!net && main.filter(d => d.type === 'pc' && (sv.proxyAllow || []).includes(d.id)).some(p => evalPing(p, net).kind === 'ok'); }},
+          {label:`Un PC non autorisé est bien bloqué (test : « accès bloqué »)`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!net && !!main && main.filter(d => d.type === 'pc').some(p => evalInternet(p).blocked === true); }},
+          {label:`La salle info (non filtrée) accède toujours à Internet`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }}
+        ]
+      });
+    }
+
+    // ---- Étape 7 : enquête (3ème)
+    if(lv === '3e'){
+      S.push({
+        n:7, kind:'enquete', title:`Enquête : la fuite de documents`, pill:`L'enquête`,
+        goal:`Reconstruire le réseau de <b>NetCorp</b> d'après le dossier, puis démasquer la personne qui a copié le fichier confidentiel.`,
+        instr: [
+          `Ouvre le <b>📂 Dossier d'enquête</b> et lis-le : plan des locaux, règles d'adressage, journal du serveur.`,
+          `Pose les appareils (serveur, PC, 2 commutateurs, routeur) et <b>renomme-les</b> exactement comme dans le plan.`,
+          `À partir des règles d'adressage, <b>calcule</b> l'adresse de chaque appareil (note-les sur ta fiche) puis configure-les : adresse, masque et passerelle.`,
+          `Câble chaque zone à son commutateur, puis relie les deux zones au routeur (port 1 → Comptabilité, port 2 → Direction).`,
+          `Teste que chaque PC joint le <b>Serveur-Fichiers</b>.`,
+          `Dans le journal, repère la ligne de <b>14h32</b> : à quel poste appartient cette adresse ? Clique sur <b>🚔 Accuser un suspect</b>.`
+        ],
+        hint: `Commence par écrire sur ta fiche l'adresse de chaque appareil, d'après les règles. Ensuite, construis. Enfin, cherche à qui appartient l'adresse du journal.`,
+        checks: [
+          {label:`Les appareils du plan sont posés et nommés exactement comme dans le dossier`, test:caseNamesOk},
+          {label:`Adresses, masques et passerelles conformes aux règles d'adressage`, ipOnly:true, test:() => caseNamesOk() && caseIpOk()},
+          {label:`Le réseau fonctionne : chaque PC joint le Serveur-Fichiers`, test:() => caseNamesOk() && caseNetOk()},
+          {label:`Le coupable est démasqué`, test:() => levelState['3e'].caseSolved}
+        ]
+      });
+    }
+    if(lv === '5e'){
+      S[0].instr.push(`Clique sur un PC : son <b>adresse IP</b> s'affiche dans le panneau <b>Configuration</b> (à droite). Elle est donnée automatiquement pour l'instant.`);
+      S[1].instr.push(`Clique sur le serveur puis sur quelques PC : regarde leurs adresses IP dans le panneau <b>Configuration</b>. Que remarques-tu ? Elles commencent toutes par les mêmes 3 nombres. Note-le sur ta fiche : à l'étape suivante, c'est toi qui devras les saisir !`);
+      S[2].goal += ` <b>À partir d'ici, tu dois saisir toi-même les adresses IP</b> (inspire-toi de celles du CDI, visibles dans Configuration).`;
+    }
+    S.forEach(s => { s.expert = s.n >= LEVELS[lv].expertFrom; });
+    const OUT = window.ENQUETE_ONLY ? S.filter(x => x.kind === 'enquete') : S;
+    stepsCache[lv] = OUT;
+    return OUT;
+  }
+
+  const safe = fn => { try{ return !!fn(); }catch(_){ return false; } };
+
+  function renderGuide(){
+    const lv = LEVELS[currentLevel], L = levelState[currentLevel];
+    const steps = getSteps(currentLevel), st = steps[L.stepIndex];
+    const results = st.checks.filter(c => !c.ipOnly || ipActive(currentLevel, st.n)).map(c => ({label:c.label, ok:safe(c.test)}));
+    const allOk = results.length > 0 && results.every(r => r.ok);
+    if(allOk && !L.done[st.n]) L.done[st.n] = true;
+
+    const req = steps.filter(s => !s.expert), exp = steps.filter(s => s.expert);
+    const reqDone = req.filter(s => L.done[s.n]).length, expDone = exp.filter(s => L.done[s.n]).length;
+
+    const SP = scoreParts(currentLevel);
+    let h = `<div class="progress-line">Niveau <b>${lv.label}</b> — étapes obligatoires : <b>${reqDone}/${req.length}</b>${exp.length ? ` · défis experts ⭐ : <b>${expDone}/${exp.length}</b>` : ''}</div>`;
+    if(reqDone === req.length){
+      h += `<div class="bravo">🎉 Parcours obligatoire terminé ! ${exp.length ? `Les étapes ⭐ sont des défis en <b>mode expert</b> : à toi de jouer.` : ''} Pense à faire le <b>quiz</b>.</div>`;
+    }
+    h += `<div class="score-line">Note de conception : <b>${fmt(SP.design)} / 20</b> — parcours obligatoire ${fmt(SP.p1)}/${SCORE_PTS.req} · défis experts ${fmt(SP.p2)}/${SCORE_PTS.exp}</div>`;
+    if(window.ENQUETE_ONLY) h = '';
+    h += `<div class="pills">` + steps.map((s, i) => {
+      const unlocked = isUnlocked(steps, i, L);
+      const cls = ['pill', i === L.stepIndex ? 'current' : '', L.done[s.n] ? 'done' : '', unlocked ? '' : 'locked', s.expert ? 'expert' : ''].join(' ');
+      return `<button class="${cls}" data-action="goto" data-i="${i}" ${unlocked ? '' : 'disabled'}><span class="num">${L.done[s.n] ? '✓' : s.n}</span><span class="lbl">${esc(s.pill)}</span>${s.expert ? `<span class="tag">⭐ expert</span>` : ''}</button>`;
+    }).join('') + `</div>`;
+
+    h += `<div class="step-card"><span class="step-badge ${st.expert ? 'expert' : 'required'}">${st.expert ? '⭐ Mode expert' : 'Étape guidée'}</span>`;
+    h += `<h2>${st.kind === 'enquete' ? '' : 'Étape ' + st.n + ' : '}${esc(st.title)}</h2><p class="goal">${st.goal}</p>`;
+
+    if(!st.expert || L.full[st.n]){
+      h += `<h4>Instructions pas à pas</h4><ol class="instr">${st.instr.map(t => `<li>${t}</li>`).join('')}</ol>`;
+    } else {
+      h += `<div class="expert-note">⭐ Ici, plus d'instructions détaillées : atteins l'objectif en validant toute la liste ci-dessous.</div>`;
+    }
+    h += `<h4>Vérifications</h4><ul class="checks">${results.map(r => `<li class="${r.ok ? 'ok' : ''}"><span class="ico">${r.ok ? '✓' : ''}</span><span>${r.label}</span></li>`).join('')}</ul>`;
+    if(L.hint[st.n]) h += `<div class="hint-box">💡 ${st.hint}</div>`;
+
+    h += `<div class="card-actions">`;
+    if(st.kind === 'enquete') h += `<button class="btn" data-action="dossier">📂 Dossier d'enquête</button><button class="btn primary" data-action="accuse">🚔 Accuser un suspect</button>`;
+    h += `<button class="btn ghost" data-action="hint">💡 ${L.hint[st.n] ? 'Masquer le coup de pouce' : 'Coup de pouce'}</button>`;
+    if(st.expert && !L.full[st.n]) h += `<button class="btn ghost" data-action="full">📖 Voir les instructions</button>`;
+    h += `</div>`;
+
+    if(L.done[st.n]){
+      const next = steps[L.stepIndex + 1];
+      h += `<div class="success-box">✅ <b>${st.kind === 'enquete' ? 'Enquête terminée !' : 'Étape réussie !'}</b> ${next ? `Tu peux passer à l'étape suivante${next.expert ? ' (⭐ mode expert)' : ''}.` : (window.ENQUETE_ONLY ? `Bravo détective, l'affaire est classée !` : `Bravo, tu as terminé ce niveau. Tente le quiz !`)}</div>`;
+      if(next) h += `<div class="card-actions"><button class="btn primary" data-action="next">Étape suivante →</button></div>`;
+    }
+    h += `</div>`;
+    $('guidePanel').innerHTML = h;
+    updateScore();
+  }
+
+  function isUnlocked(steps, i, L){ return i === 0 || !!L.done[steps[i - 1].n] || (steps[i].expert && steps.filter(x => !x.expert).every(x => L.done[x.n])); }
+  function goToStep(i){
+    const steps = getSteps(currentLevel), L = levelState[currentLevel];
+    if(i < 0 || i >= steps.length) return;
+    if(!isUnlocked(steps, i, L)) return;
+    const key = steps[i].kind === 'enquete' ? 'enquete' : 'reseau';
+    L.stepIndex = i;
+    if(key !== currentWsKey){ saveWorkspace(); loadWorkspace(key); }
+    renderPalette(); render();
+    if(steps[i].kind === 'enquete' && !L.dossierSeen){ L.dossierSeen = true; openDossier(); }
+    setStatus(steps[i].kind === 'enquete' ? `Enquête : ce plan de travail est neuf. Lis le dossier puis reconstruis le réseau de NetCorp.` : `Étape ${steps[i].n} : ${steps[i].title}. Suis le panneau de gauche.`);
+  }
+
+  // =====================================================================
+  //  PALETTE + RENDU GLOBAL
+  // =====================================================================
+  function renderPalette(){
+    const st = getSteps(currentLevel)[levelState[currentLevel].stepIndex];
+    const types = ['pc', 'serveur', 'switch'];
+    if(st.n >= 4) types.push('routeur');
+    if(currentLevel !== '5e' && st.kind !== 'enquete' && st.n >= 5) types.push('internet');
+    if(placingType && types.indexOf(placingType) < 0) placingType = null;
+    $('paletteBar').innerHTML = `<span class="pal-label">Éléments</span>` + types.map(t =>
+      `<div class="chip${placingType === t ? ' active' : ''}" data-type="${t}">${ICONS[t]}<span>${TYPE_LABEL[t]}</span>${infoBtn(t)}</div>`).join('') +
+      `<div class="chip${cablingMode ? ' active' : ''}" data-type="cable" title="Clique sur le câble, puis sur deux appareils pour les relier">${ICONS.cable}<span>Câble RJ45</span>${infoBtn('rj45')}</div>`;
+  }
+
+  function render(){
+    renderDevices(); renderCables(); renderConfigPanel(); renderGuide();
+  }
+
+  // =====================================================================
+  //  QUIZ
+  // =====================================================================
+  const QUIZ = {
+    '5e': [
+      {q:`Un réseau informatique, c'est…`, o:[`plusieurs appareils reliés entre eux pour échanger des informations`,`un seul ordinateur très puissant`,`un logiciel pour dessiner`,`une prise électrique spéciale`], a:0, why:`Un réseau relie des appareils (PC, serveurs…) pour qu'ils partagent des données et des ressources.`},
+      {q:`Quel câble utilise-t-on pour relier un PC à un commutateur ?`, o:[`Un câble HDMI`,`Un câble RJ45 (câble réseau)`,`Un câble d'alimentation`,`Un câble de souris`], a:1, why:`Le câble RJ45, aussi appelé câble Ethernet, transporte les données du réseau.`},
+      {q:`Comment reconnaît-on un connecteur RJ45 ?`, o:[`Petite prise rectangulaire en plastique avec 8 contacts métalliques`,`Prise ronde avec 3 grosses broches`,`Connecteur plat à 4 contacts seulement`,`Fiche ronde de casque audio`], a:0, why:`Le RJ45 est une petite prise rectangulaire à 8 contacts, avec une languette qui la verrouille.`},
+      {q:`Quel est le rôle d'un commutateur (switch) ?`, o:[`Relier plusieurs appareils d'un même réseau pour qu'ils communiquent`,`Imprimer des documents`,`Protéger l'ordinateur des virus`,`Fabriquer de l'électricité`], a:0, why:`Le commutateur est le « carrefour » du réseau : tous les appareils y sont branchés.`},
+      {q:`Quel est le rôle d'un serveur ?`, o:[`Fournir des services ou des fichiers aux autres ordinateurs`,`Afficher l'image sur l'écran`,`Remplacer le commutateur`,`Servir uniquement à jouer`], a:0, why:`Un serveur rend des services aux autres machines : stockage de fichiers, pages web, messagerie…`},
+      {q:`Au CDI, plusieurs PC doivent accéder aux mêmes documents. Où les placer ?`, o:[`Sur le serveur`,`Sur la souris de chaque PC`,`Dans le câble RJ45`,`Dans le commutateur`], a:0, why:`Un serveur de fichiers centralise les documents : tous les PC y accèdent par le réseau.`},
+      {q:`Combien de câbles RJ45 faut-il pour relier 6 PC à un commutateur ?`, o:[`1`,`3`,`6`,`12`], a:2, why:`Il faut un câble par appareil : 6 PC = 6 câbles.`},
+      {q:`Le câble d'un PC est débranché du commutateur. Que se passe-t-il ?`, o:[`Ce PC ne peut plus communiquer avec le réseau`,`Tout le réseau s'arrête`,`Rien ne change`,`Le commutateur s'éteint`], a:0, why:`Seul le PC dont le câble est débranché est coupé du réseau.`},
+      {q:`Un commutateur possède 8 ports. Combien d'appareils peut-on y brancher au maximum ?`, o:[`2`,`4`,`8`,`16`], a:2, why:`Un port = un appareil : 8 ports permettent de brancher 8 appareils.`},
+      {q:`Dans un réseau en étoile, tous les appareils sont reliés…`, o:[`à un appareil central : le commutateur`,`les uns derrière les autres, en ligne`,`uniquement au serveur`,`sans aucun câble`], a:0, why:`Dans une étoile, chaque appareil a son propre câble vers le commutateur central.`},
+      {q:`Dans un réseau en étoile, un seul câble est débranché. Qui est touché ?`, o:[`Seulement l'appareil relié par ce câble`,`Tous les appareils`,`Seulement le serveur`,`Personne`], a:0, why:`Chaque appareil a son câble : une panne de câble ne touche qu'un appareil.`},
+      {q:`Pourquoi renomme-t-on les PC (CDI-1, CDI-2…) ?`, o:[`Pour les reconnaître facilement`,`Pour les rendre plus rapides`,`Pour changer leur couleur`,`Parce que c'est obligatoire pour les allumer`], a:0, why:`Un nom clair permet de savoir de quel appareil on parle.`},
+      {q:`Quelle différence entre un PC et un serveur ?`, o:[`Le PC est utilisé par une personne ; le serveur offre des services aux autres machines`,`Le serveur n'a pas besoin d'électricité`,`Le PC est toujours plus puissant`,`Il n'y en a aucune`], a:0, why:`Le serveur travaille pour les autres machines et reste allumé en permanence.`},
+      {q:`Un câble RJ45 se branche dans…`, o:[`un port RJ45 d'un appareil ou du commutateur`,`une prise électrique murale`,`une prise casque`,`une clé USB`], a:0, why:`Les ports RJ45 sont les prises réseau des PC, serveurs et commutateurs.`},
+      {q:`À quoi sert le test de connexion dans l'atelier ?`, o:[`À vérifier que deux appareils peuvent communiquer`,`À éteindre un PC`,`À supprimer un câble`,`À changer le nom d'un PC`], a:0, why:`Le test montre si deux appareils se « voient » sur le réseau.`},
+      {q:`Deux PC reliés au même commutateur par des câbles RJ45 peuvent…`, o:[`communiquer entre eux`,`seulement échanger des images`,`ne jamais communiquer`,`communiquer seulement avec une imprimante`], a:0, why:`Le commutateur fait circuler les données entre tous les appareils branchés dessus.`},
+      {q:`Le serveur du CDI tombe en panne. Que perdent les PC ?`, o:[`L'accès aux fichiers et services du serveur`,`Leur écran`,`Leur clavier`,`Leur câble RJ45`], a:0, why:`Les PC restent allumés, mais les services du serveur ne sont plus disponibles.`},
+      {q:`Quel appareil permet de relier plusieurs PC d'une même salle ?`, o:[`Le commutateur`,`L'écran`,`Le clavier`,`Le microphone`], a:0, why:`C'est le rôle du commutateur : relier les appareils d'un même réseau.`},
+      {q:`Un réseau local, c'est un réseau…`, o:[`limité à un lieu (une salle, un collège, une maison)`,`qui relie tous les pays du monde`,`sans aucun câble ni onde`,`qui ne contient jamais de serveur`], a:0, why:`« Local » signifie limité à un lieu : par exemple le réseau du collège.`},
+      {q:`Quel est l'intérêt d'un réseau au collège ?`, o:[`Partager des fichiers, des imprimantes et l'accès à Internet`,`Rendre les PC plus lourds`,`Remplacer les professeurs`,`Éviter d'utiliser l'électricité`], a:0, why:`Le réseau permet de partager des ressources entre tous les utilisateurs.`}
+    ],
+    '4e': [
+      {q:`À quoi sert une adresse IP ?`, o:[`À identifier un appareil sur un réseau`,`À allumer un PC`,`À relier deux câbles`,`À protéger du soleil`], a:0, why:`L'adresse IP est l'« adresse postale » d'un appareil sur le réseau.`},
+      {q:`Une adresse IP (version 4) est composée de…`, o:[`4 nombres séparés par des points`,`2 nombres séparés par deux-points`,`1 seul grand nombre`,`8 lettres`], a:0, why:`Exemple : 192.168.1.10 est composée de quatre nombres.`},
+      {q:`Quelle est la valeur maximale de chaque nombre d'une adresse IP (version 4) ?`, o:[`99`,`100`,`255`,`1000`], a:2, why:`Chaque nombre va de 0 à 255.`},
+      {q:`Laquelle de ces adresses IP est valide ?`, o:[`192.168.1.10`,`192.168.1.300`,`192.168.1`,`192.168.1.10.5`], a:0, why:`300 dépasse 255, il manque un nombre dans la 3ème, et la 4ème en a un de trop.`},
+      {q:`Peut-on donner la même adresse IP à deux PC d'un même réseau ?`, o:[`Non : ce serait un conflit d'adresses`,`Oui, c'est même conseillé`,`Oui, s'ils ont le même nom`,`Oui, mais seulement pour les serveurs`], a:0, why:`Chaque adresse doit être unique dans un réseau, sinon on ne sait plus qui est qui.`},
+      {q:`Avec le masque 255.255.255.0, les adresses 192.168.1.10 et 192.168.1.11 sont…`, o:[`dans le même réseau`,`dans deux réseaux différents`,`identiques`,`invalides`], a:0, why:`Les trois premiers nombres (192.168.1) sont identiques : même réseau.`},
+      {q:`Avec le masque 255.255.255.0, les adresses 192.168.1.10 et 192.168.2.10 sont…`, o:[`dans deux réseaux différents`,`dans le même réseau`,`des adresses de serveurs`,`impossibles à configurer`], a:0, why:`Le 3ème nombre diffère (1 et 2) : ce sont deux réseaux différents.`},
+      {q:`Que fait le masque de sous-réseau 255.255.255.0 ?`, o:[`Il indique que les 3 premiers nombres désignent le réseau et le dernier l'appareil`,`Il cache le PC aux autres`,`Il donne la vitesse du réseau`,`Il protège contre les virus`], a:0, why:`Le masque sépare la partie « réseau » de la partie « appareil » dans l'adresse.`},
+      {q:`Dans 192.168.1.10 avec le masque 255.255.255.0, quelle partie identifie le réseau ?`, o:[`192.168.1`,`10`,`192`,`l'adresse en entier`], a:0, why:`Les trois premiers nombres (192.168.1) identifient le réseau ; le dernier (10) identifie l'appareil.`},
+      {q:`Quel est le rôle d'un serveur de communication ?`, o:[`Organiser les échanges entre les appareils (messagerie, attribution d'adresses…)`,`Remplacer le câble RJ45`,`Imprimer les documents`,`Refroidir les PC`], a:0, why:`Il gère les communications du réseau, par exemple en distribuant les adresses IP.`},
+      {q:`Que fait un serveur DHCP ?`, o:[`Il attribue automatiquement les adresses IP aux appareils`,`Il supprime les adresses IP`,`Il fabrique des câbles`,`Il éteint les PC la nuit`], a:0, why:`DHCP distribue une adresse, un masque et une passerelle aux appareils qui se connectent.`},
+      {q:`Quel est l'avantage du DHCP ?`, o:[`Plus besoin de configurer chaque PC à la main, et moins de doublons`,`Les PC deviennent plus rapides`,`On n'a plus besoin de câbles`,`On n'a plus besoin de commutateur`], a:0, why:`DHCP automatise la configuration et évite les erreurs et les doublons d'adresses.`},
+      {q:`Un PC n'a aucune adresse IP configurée. Que peut-on dire ?`, o:[`Il ne pourra pas communiquer sur un réseau IP`,`Il communique normalement`,`Il devient un serveur`,`Il est le plus rapide du réseau`], a:0, why:`Sans adresse IP, un PC ne peut pas être identifié sur le réseau.`},
+      {q:`Dans l'atelier, un commutateur a-t-il besoin d'une adresse IP pour relier des PC ?`, o:[`Non`,`Oui, toujours`,`Oui, mais seulement 192.168.1.1`,`Seulement avec 6 PC branchés`], a:0, why:`Le commutateur relie les appareils sans avoir lui-même besoin d'adresse IP.`},
+      {q:`Les câbles sont bons mais CDI-1 ne joint pas le serveur. Cause probable ?`, o:[`Les adresses IP ne sont pas dans le même réseau`,`Le PC est trop vieux`,`Le nom du PC est trop court`,`Le câble est trop propre`], a:0, why:`Il faut vérifier les adresses : les trois premiers nombres doivent être identiques avec le masque 255.255.255.0.`},
+      {q:`Quelle adresse convient pour un serveur du réseau 192.168.1.0 (masque 255.255.255.0) ?`, o:[`192.168.1.1`,`192.168.2.1`,`10.0.0.300`,`192.168.1`], a:0, why:`Elle commence par 192.168.1 et se termine par un nombre libre.`},
+      {q:`À quoi sert un ping (test de connexion) ?`, o:[`À vérifier qu'un appareil répond sur le réseau`,`À changer l'adresse IP`,`À effacer des fichiers`,`À mesurer la longueur d'un câble`], a:0, why:`Le ping envoie un petit message et attend la réponse de l'autre appareil.`},
+      {q:`CDI-1 (192.168.1.10) et SI-1 (192.168.2.10) sont sur deux commutateurs séparés. Pourquoi ne communiquent-ils pas ?`, o:[`Ils sont dans deux réseaux différents qui ne sont pas reliés`,`Ils ont le même nom`,`Les PC sont éteints`,`Les câbles sont jaunes`], a:0, why:`Pour relier deux réseaux, il faudra un routeur (c'est le défi expert !).`},
+      {q:`Pourquoi donne-t-on des adresses en 192.168.1.x au CDI et 192.168.2.x à la salle info ?`, o:[`Pour distinguer deux réseaux différents`,`Pour que les PC aillent plus vite`,`Pour économiser des câbles`,`Par hasard`], a:0, why:`Chaque réseau a son propre numéro de réseau (1 ou 2).`},
+      {q:`Qu'est-ce qu'Internet ?`, o:[`Un réseau mondial qui relie des millions de réseaux entre eux`,`Un seul très gros ordinateur`,`Un logiciel installé sur chaque PC`,`Un type de câble`], a:0, why:`Internet n'appartient à personne : c'est l'ensemble des réseaux du monde reliés entre eux. Un réseau local (comme celui du CDI) peut s'y connecter par son routeur.`}
+    ],
+    '3e': [
+      {q:`Quel est le rôle d'un routeur ?`, o:[`Relier des réseaux différents et diriger les données de l'un vers l'autre`,`Relier uniquement des PC d'un même réseau`,`Stocker les fichiers du collège`,`Donner un nom aux PC`], a:0, why:`Le routeur est le « passage » entre deux réseaux.`},
+      {q:`Combien d'interfaces faut-il au minimum à un routeur pour relier deux réseaux ?`, o:[`1`,`2`,`4`,`8`], a:1, why:`Une interface par réseau relié : deux réseaux = deux interfaces.`},
+      {q:`Pourquoi deux PC de réseaux différents ne communiquent-ils pas sans routeur ?`, o:[`Ils ne sont pas dans le même réseau et rien ne les relie`,`Leurs écrans sont différents`,`Ils n'ont pas de souris`,`Ils ont trop de câbles`], a:0, why:`Sans routeur, deux réseaux restent isolés l'un de l'autre.`},
+      {q:`Qu'est-ce que la passerelle d'un PC ?`, o:[`L'adresse du routeur à contacter pour sortir de son réseau`,`Le nom du PC`,`Le numéro du port du commutateur`,`Le masque de sous-réseau`], a:0, why:`La passerelle est l'adresse du routeur, côté réseau du PC.`},
+      {q:`Le routeur a l'adresse 192.168.2.254 côté salle info. Quelle passerelle donne-t-on à SI-1 (192.168.2.10) ?`, o:[`192.168.2.254`,`192.168.1.254`,`192.168.2.10`,`255.255.255.0`], a:0, why:`La passerelle est l'adresse du routeur dans le réseau de SI-1.`},
+      {q:`La passerelle de CDI-1 est fausse, le reste est correct. Que se passe-t-il ?`, o:[`CDI-1 communique dans son réseau mais pas avec les autres réseaux`,`CDI-1 ne s'allume plus`,`Tout le réseau tombe en panne`,`CDI-1 devient un routeur`], a:0, why:`Sans bonne passerelle, un PC ne sait pas sortir de son réseau.`},
+      {q:`L'interface 1 d'un routeur est reliée au réseau 192.168.1.0 (masque 255.255.255.0). Quelle adresse lui donner ?`, o:[`192.168.1.254`,`192.168.2.254`,`10.10.10.300`,`Aucune adresse`], a:0, why:`Chaque interface a une adresse dans le réseau auquel elle est reliée.`},
+      {q:`Quelle différence entre un commutateur et un routeur ?`, o:[`Le commutateur relie des appareils d'un même réseau, le routeur relie des réseaux entre eux`,`Aucune différence`,`Le routeur est toujours moins cher`,`Le commutateur relie seulement deux réseaux`], a:0, why:`Commutateur : à l'intérieur d'un réseau. Routeur : entre les réseaux.`},
+      {q:`Un PC veut joindre un appareil d'un autre réseau. Où envoie-t-il ses données ?`, o:[`À sa passerelle (le routeur)`,`Directement à l'appareil`,`À l'imprimante`,`À un autre PC au hasard`], a:0, why:`Le PC confie les données à sa passerelle, qui les fait suivre.`},
+      {q:`Par quel appareil le réseau du collège accède-t-il à Internet ?`, o:[`Le routeur (via son port WAN)`,`Le commutateur`,`Le câble RJ45 seul`,`L'écran du serveur`], a:0, why:`Le routeur est la porte de sortie du réseau local : son port WAN (port 3 dans l'atelier) est relié à Internet. Les PC doivent avoir la bonne passerelle pour l'atteindre.`},
+      {q:`Laquelle est une adresse privée, utilisée dans un réseau local ?`, o:[`192.168.1.10`,`8.8.8.8`,`256.1.1.1`,`1.1`], a:0, why:`Les adresses en 192.168.x.x sont réservées aux réseaux locaux.`},
+      {q:`À la maison, la box Internet joue notamment le rôle de…`, o:[`routeur`,`imprimante`,`écran`,`clavier`], a:0, why:`La box relie le réseau de la maison à Internet : c'est un routeur.`},
+      {q:`Que contient un journal (log) de serveur ?`, o:[`La trace des connexions : adresse IP, date, heure et action`,`Uniquement des mots de passe`,`Le plan des locaux`,`Rien du tout`], a:0, why:`Le journal garde en mémoire qui (quelle adresse) a fait quoi, et quand.`},
+      {q:`Pourquoi une adresse IP relevée dans un journal ne suffit-elle pas à accuser quelqu'un ?`, o:[`Elle identifie une machine : il faut la relier à un poste puis à son utilisateur`,`Elle est toujours fausse`,`Elle est secrète`,`Elle n'existe pas`], a:0, why:`On relie l'adresse au poste (plan, règles d'adressage), puis à la personne qui l'utilise.`},
+      {q:`Avec DHCP, l'adresse d'un PC peut changer. Pour retrouver qui utilisait une adresse à 14h32, on…`, o:[`croise les journaux (DHCP et serveur) avec l'heure`,`tire au sort`,`regarde la couleur du câble`,`redémarre le routeur`], a:0, why:`L'heure permet de savoir quel PC avait quelle adresse à ce moment-là.`},
+      {q:`Un test de connexion réussi entre CDI-1 et SI-1 montre que…`, o:[`le câblage, les adresses, le routeur et les passerelles fonctionnent`,`les deux PC ont le même nom`,`le routeur est éteint`,`le serveur est en panne`], a:0, why:`Pour réussir, tout doit être correct : câbles, adresses, interfaces du routeur et passerelles.`},
+      {q:`Le câble du port 2 du routeur est débranché. Quelles conséquences ?`, o:[`Les deux réseaux ne communiquent plus entre eux mais chacun fonctionne de son côté`,`Plus aucun PC ne fonctionne`,`Les PC changent d'adresse IP`,`Rien ne change`], a:0, why:`Chaque réseau reste en état de marche, mais le lien entre eux est coupé.`},
+      {q:`Pourquoi séparer les réseaux (CDI, salle info, direction…) ?`, o:[`Pour organiser et mieux contrôler qui accède à quoi`,`Pour utiliser plus de câbles`,`Pour ralentir volontairement`,`Pour éviter d'avoir des adresses IP`], a:0, why:`Séparer les réseaux permet de mieux organiser et de mieux protéger.`},
+      {q:`Un serveur proxy sert à…`, o:[`faire passer et filtrer l'accès Internet des PC (autoriser ou bloquer)`,`attribuer une couleur à chaque PC`,`remplacer le commutateur`,`augmenter la taille de l'écran`], a:0, why:`Tout le trafic Internet passe par le proxy, qui peut autoriser certains PC, en bloquer d'autres et garder une trace des connexions.`},
+      {q:`SI-1 joint SI-2 mais pas CDI-1. Quelle est la première vérification ?`, o:[`La passerelle de SI-1 et le câble vers le routeur`,`La couleur de l'écran`,`Le nom de SI-2`,`La longueur de la souris`], a:0, why:`Quand on joint son propre réseau mais pas les autres, on vérifie la passerelle et le routeur.`}
+    ]
+  };
+
+  function shuffle(a){ a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function startQuiz(lv){
+    levelState[lv].quiz = {
+      i:0, score:0, picked:null, results:[], done:false,
+      qs: QUIZ[lv].map(q => { const order = shuffle([0, 1, 2, 3]); return {q:q.q, o:order.map(k => q.o[k]), a:order.indexOf(q.a), why:q.why}; })
+    };
+  }
+  function renderQuiz(){
+    if(typeof SC !== 'undefined' && SC.locked){ $('quizView').innerHTML = `<div class="quiz-card"><div class="quiz-top"><span>Quiz ${LEVELS[currentLevel].label}</span></div><div class="quiz-score">🔒</div><p style="font-size:15px">Cette tentative du quiz est déjà terminée et sa note est enregistrée.</p><p style="font-size:13px; color:var(--muted)">Pour refaire le quiz, ferme cette page et relance l'activité depuis ELEA : une nouvelle tentative sera créée (si ton professeur l'autorise).</p><button class="btn primary" onclick="try{window.close()}catch(e){}">Fermer cette fenêtre</button></div>`; return; }
+    const L = levelState[currentLevel];
+    if(!L.quiz) startQuiz(currentLevel);
+    const Q = L.quiz, total = Q.qs.length, root = $('quizView');
+    if(Q.done){
+      const s = Q.score;
+      const msg = s >= 18 ? `Excellent ! Tu maîtrises le sujet.` : s >= 14 ? `Très bien ! Relis juste les points ratés.` : s >= 10 ? `Bien, mais relis ton glossaire et refais les activités.` : `À retravailler : reprends les activités puis retente le quiz.`;
+      let h = `<div class="quiz-card"><div class="quiz-top"><span>Quiz ${LEVELS[currentLevel].label} — terminé</span></div><div class="quiz-score">${s} / ${total}</div><p style="font-size:15px; margin:0 0 6px;">${msg}</p><p style="font-size:13.5px; margin:0 0 8px;">${window.SCORM_PART === 'quiz' ? `Ta note : <b>${s} / ${total}</b> — elle a été envoyée à ton professeur.` : `Note du quiz (meilleur essai) : <b>${fmt(scoreParts(currentLevel).quiz)} / 20</b> · Cet essai : ${s} / ${total}`}</p><p style="font-size:12.5px; color:var(--muted); margin:0 0 16px;">Reporte ton score sur ta fiche.</p>`;
+      const missed = Q.results.map((r, i) => ({r, i})).filter(x => !x.r.ok);
+      if(missed.length){
+        h += `<h3 style="font-size:14px; margin:8px 0;">À revoir (${missed.length})</h3>`;
+        missed.forEach(m => { const q = Q.qs[m.i]; h += `<div class="quiz-miss">Q${m.i + 1}. ${esc(q.q)}<br>Bonne réponse : <b>${esc(q.o[q.a])}</b><br><span style="color:var(--muted)">${esc(q.why)}</span></div>`; });
+      }
+      h += window.SCORM_PART === 'quiz'
+        ? `<div class="score-line" style="margin-top:18px;">🔒 Le quiz est terminé et fermé. Pour le refaire, relance l'activité depuis ELEA : une nouvelle tentative sera enregistrée.</div><div style="margin-top:10px;"><button class="btn primary" onclick="try{window.close()}catch(e){}">Fermer cette fenêtre</button></div></div>`
+        : `<div style="margin-top:18px;"><button class="btn primary" data-quiz="restart">🔁 Recommencer le quiz</button></div></div>`;
+      root.innerHTML = h; return;
+    }
+    const q = Q.qs[Q.i], answered = Q.picked !== null;
+    let h = `<div class="quiz-card"><div class="quiz-top"><span>Quiz ${LEVELS[currentLevel].label}</span><span>Question ${Q.i + 1} / ${total} · score ${Q.score}</span></div>`;
+    h += `<div class="quiz-bar"><div style="width:${(Q.i + (answered ? 1 : 0)) / total * 100}%"></div></div>`;
+    h += `<div class="quiz-q">${esc(q.q)}</div><div class="quiz-opts">`;
+    q.o.forEach((o, k) => {
+      let cls = 'quiz-opt';
+      if(answered){ if(k === q.a) cls += ' right'; else if(k === Q.picked) cls += ' wrong'; }
+      h += `<button class="${cls}" data-quiz="pick" data-k="${k}" ${answered ? 'disabled' : ''}>${esc(o)}</button>`;
+    });
+    h += `</div>`;
+    if(answered){
+      h += `<div class="quiz-why">${Q.picked === q.a ? '✅ <b>Bravo !</b>' : '❌ <b>Pas tout à fait.</b>'} ${esc(q.why)}</div>`;
+      h += `<div style="margin-top:16px;"><button class="btn primary" data-quiz="next">${Q.i + 1 < total ? 'Question suivante →' : 'Voir mon résultat'}</button></div>`;
+    }
+    h += `</div>`;
+    root.innerHTML = h;
+  }
+
+  // =====================================================================
+  //  NAVIGATION : niveaux, vues
+  // =====================================================================
+  function setView(v){
+    currentView = v;
+    $('activityView').hidden = (v !== 'act');
+    $('quizView').hidden = (v !== 'quiz');
+    $('tabAct').classList.toggle('active', v === 'act');
+    $('tabQuiz').classList.toggle('active', v === 'quiz');
+    if(v === 'quiz') renderQuiz();
+  }
+  function switchLevel(lv){
+    if(lv === currentLevel) return;
+    saveWorkspace();
+    currentLevel = lv;
+    const st = getSteps(lv)[levelState[lv].stepIndex];
+    loadWorkspace(st.kind === 'enquete' ? 'enquete' : 'reseau');
+    document.querySelectorAll('.lvl-tab').forEach(b => b.classList.toggle('active', b.dataset.level === lv));
+    renderPalette(); render();
+    if(currentView === 'quiz') renderQuiz();
+    setStatus(`Niveau ${LEVELS[lv].label} : suis les instructions du panneau de gauche.`);
+  }
+  function openGlossary(){
+    const lv = LEVELS[currentLevel];
+    $('glossTitle').textContent = 'Glossaire — ' + lv.label;
+    $('glossSub').textContent = lv.num === 1 ? `Les mots à connaître en 5ème.` : `Les mots de ${lv.label} : ceux des niveaux précédents, plus les nouveaux.`;
+    $('glossList').innerHTML = GLOSSARY.filter(g => g.lv <= lv.num)
+      .map(g => `<dt>${esc(g.t)}${g.lv === lv.num && lv.num > 1 ? `<span class="new">nouveau</span>` : ''}</dt><dd>${esc(g.d)}</dd>`).join('');
+    $('glossOverlay').classList.add('show');
+  }
+
+  // =====================================================================
+  //  ÉVÉNEMENTS
+  // =====================================================================
+  document.querySelectorAll('.lvl-tab').forEach(b => b.addEventListener('click', () => switchLevel(b.dataset.level)));
+  $('tabAct').addEventListener('click', () => setView('act'));
+  $('tabQuiz').addEventListener('click', () => setView('quiz'));
+  $('btnTuto').addEventListener('click', () => $('tutoOverlay').classList.add('show'));
+  $('btnGloss').addEventListener('click', openGlossary);
+  document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', () => $(btn.dataset.close).classList.remove('show')));
+  document.querySelectorAll('.modal-overlay').forEach(ov => ov.addEventListener('click', e => { if(e.target === ov) ov.classList.remove('show'); }));
+  $('btnValidateAccuse').addEventListener('click', validateAccusation);
+
+  $('guidePanel').addEventListener('click', e => {
+    const b = e.target.closest('[data-action]'); if(!b) return;
+    const L = levelState[currentLevel], st = getSteps(currentLevel)[L.stepIndex];
+    const act = b.dataset.action;
+    if(act === 'goto') goToStep(Number(b.dataset.i));
+    else if(act === 'next') goToStep(L.stepIndex + 1);
+    else if(act === 'hint'){ L.hint[st.n] = !L.hint[st.n]; renderGuide(); }
+    else if(act === 'full'){ L.full[st.n] = true; renderGuide(); }
+    else if(act === 'dossier') openDossier();
+    else if(act === 'accuse') openAccuse();
+  });
+
+  $('quizView').addEventListener('click', e => {
+    const b = e.target.closest('[data-quiz]'); if(!b) return;
+    const L = levelState[currentLevel]; const Q = L.quiz;
+    const act = b.dataset.quiz;
+    if(act === 'restart'){ if(window.SCORM_PART === 'quiz') return; startQuiz(currentLevel); renderQuiz(); return; }
+    if(!Q) return;
+    if(act === 'pick' && Q.picked === null){
+      const k = Number(b.dataset.k), ok = (k === Q.qs[Q.i].a);
+      Q.picked = k; Q.results[Q.i] = {ok}; if(ok) Q.score++;
+      renderQuiz();
+    } else if(act === 'next' && Q.picked !== null){
+      if(Q.i + 1 < Q.qs.length){ Q.i++; Q.picked = null; } else { Q.done = true; L.best = Math.max(L.best || 0, Q.score); L.tries = (L.tries || 0) + 1; L.last = Q.score; updateScore(true); if(window.SCORM_PART === 'quiz') endScorm(); }
+      renderQuiz();
+    }
+  });
+
+  $('paletteBar').addEventListener('click', e => {
+    if(e.target.closest('.info-btn')) return;
+    const chip = e.target.closest('.chip'); if(!chip) return;
+    const t = chip.dataset.type;
+    if(t === 'cable'){ $('btnCable').click(); return; }
+    cablingMode = false; testMode = false; cablingFirst = null; testFirst = null;
+    $('btnCable').classList.remove('active'); $('btnTest').classList.remove('active');
+    if(placingType === t){ placingType = null; setStatus(`Pose terminée.`); }
+    else { placingType = t; setStatus(`Clique dans le plan pour poser un(e) ${TYPE_LABEL[t].toLowerCase()}. Clique encore sur la pastille pour arrêter.`); }
+    renderPalette(); renderDevices();
+  });
+
+  $('canvas').addEventListener('click', e => {
+    if(e.target !== $('canvas') && e.target.id !== 'devicesLayer') return;
+    if(!placingType){ if(selectedId){ selectedId = null; render(); } return; }
+    const rect = $('canvas').getBoundingClientRect();
+    const x = Math.max(4, e.clientX - rect.left - DEV_W / 2), y = Math.max(4, e.clientY - rect.top - 30);
+    const dev = newDevice(placingType, x, y);
+    devices.push(dev); selectedId = dev.id; render();
+    setStatus(`${dev.name} posé. Clique de nouveau dans le plan pour en poser un autre, ou sur la pastille pour arrêter.`);
+  });
+
+  $('btnCable').addEventListener('click', () => {
+    cablingMode = !cablingMode; testMode = false; cablingFirst = null; testFirst = null; placingType = null;
+    $('btnCable').classList.toggle('active', cablingMode); $('btnTest').classList.remove('active');
+    hideResult(); renderPalette();
+    setStatus(cablingMode ? `Câble RJ45 sélectionné : clique sur un premier appareil, puis sur le second pour les relier.` : `Pose de câbles terminée.`);
+    render();
+  });
+  $('btnTest').addEventListener('click', () => {
+    testMode = !testMode; cablingMode = false; cablingFirst = null; testFirst = null; placingType = null;
+    $('btnTest').classList.toggle('active', testMode); $('btnCable').classList.remove('active');
+    hideResult(); renderPalette();
+    setStatus(testMode ? `Mode test : clique sur deux appareils (PC ou serveur) pour tester leur connexion.` : `Mode test arrêté.`);
+    render();
+  });
+  $('btnReset').addEventListener('click', () => {
+    if(!confirm('Effacer tout le plan de travail ?')) return;
+    devices.length = 0; cables.length = 0; selectedId = null; placingType = null;
+    cablingMode = false; testMode = false; cablingFirst = null; testFirst = null;
+    $('btnCable').classList.remove('active'); $('btnTest').classList.remove('active');
+    hideResult(); renderPalette(); render();
+    setStatus(`Plan de travail effacé.`);
+  });
+
+  // ---------- Popover de définition ----------
+  const defPopover = $('defPopover');
+  let openDefBtn = null;
+  function hideDef(){ defPopover.style.display = 'none'; openDefBtn = null; }
+  function showDef(btn, key){
+    const def = DEFS[key]; if(!def) return;
+    $('defTitle').textContent = def.title; $('defBody').textContent = def.body;
+    defPopover.style.display = 'block';
+    const r = btn.getBoundingClientRect();
+    let left = Math.min(r.left, window.innerWidth - 272); if(left < 8) left = 8;
+    defPopover.style.left = left + 'px'; defPopover.style.top = (r.bottom + 8) + 'px';
+    const pr = defPopover.getBoundingClientRect();
+    if(pr.bottom > window.innerHeight - 8) defPopover.style.top = Math.max(8, r.top - pr.height - 8) + 'px';
+    openDefBtn = btn;
+  }
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.info-btn');
+    if(btn){ e.stopPropagation(); e.preventDefault(); if(openDefBtn === btn) hideDef(); else showDef(btn, btn.dataset.def); return; }
+    if(!e.target.closest('.def-popover')) hideDef();
+  }, true);
+  window.addEventListener('scroll', hideDef, true);
+  window.addEventListener('resize', hideDef);
+  document.addEventListener('keydown', e => { if(e.key === 'Escape'){ hideDef(); document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show')); } });
+
+  // =====================================================================
+  //  DÉMARRAGE
+  // =====================================================================
+
+  // ---- Tiroirs repliables (consignes / configuration)
+  (function(){
+    const defs = [['tabGuide','guidePanel','◀','▶','lvGuideCollapsed'], ['tabConfig','configPanel','▶','◀','lvConfigCollapsed']];
+    defs.forEach(([tid, pid, openArr, closedArr, key]) => {
+      const tab = $(tid), panel = $(pid);
+      const apply = c => { panel.classList.toggle('collapsed', c); tab.setAttribute('aria-expanded', String(!c)); tab.querySelector('.arr').textContent = c ? closedArr : openArr; };
+      let c = false; try{ c = localStorage.getItem(key) === '1'; }catch(_){}
+      apply(c);
+      tab.addEventListener('click', () => {
+        c = !panel.classList.contains('collapsed'); apply(c);
+        try{ localStorage.setItem(key, c ? '1' : '0'); }catch(_){}
+        render();
+      });
+    });
+  })();
+
+  // =====================================================================
+  //  NOTE SUR 20  +  SCORM (ELEA / Moodle)
+  // =====================================================================
+  // Deux notes séparées sur 20 : CONCEPTION = 10 pts (parcours obligatoire) + 10 pts (défis experts) ; QUIZ = meilleur essai sur 20.
+  // => l'élève atteint 10/20 quand il a terminé la dernière étape obligatoire (5ème : étape 2 ; 4ème : étape 3 ; 3ème : étape 4).
+  const SCORE_PTS = {req:10, exp:10};
+  const fmt = n => String(Math.round(n * 10) / 10).replace('.', ',');
+  function scoreParts(lv){
+    const L = levelState[lv], steps = getSteps(lv);
+    const req = steps.filter(x => !x.expert), exp = steps.filter(x => x.expert);
+    const rd = req.filter(x => L.done[x.n]).length, ed = exp.filter(x => L.done[x.n]).length;
+    const p1 = SCORE_PTS.req * rd / (req.length || 1);
+    const p2 = exp.length ? SCORE_PTS.exp * ed / exp.length : 0;
+    const design = Math.round((p1 + p2) * 10) / 10;
+    const quiz = Math.round(20 * (L.best || 0) / QUIZ[lv].length * 10) / 10;
+    return {p1, p2, design, quiz, tries:L.tries || 0, rd, nreq:req.length, ed, nexp:exp.length};
+  }
+
+  const SC = {api:null, ok:false, timer:null, ended:false};
+  function findApi(){
+    const look = w => { let n = 0; while(w && n++ < 30){ try{ if(w.API_1484_11) return w.API_1484_11; }catch(_){} if(!w.parent || w.parent === w) break; w = w.parent; } return null; };
+    let a = look(window);
+    if(!a){ try{ if(window.opener) a = look(window.opener); }catch(_){} }
+    return a;
+  }
+  function scSet(k, v){ try{ return SC.api.SetValue(k, String(v)) === 'true' || true; }catch(_){ return false; } }
+  function packState(){
+    saveWorkspace();
+    const o = {v:1, seq:idSeq, L:{}};
+    Object.keys(levelState).forEach(lv => {
+      const L = levelState[lv];
+      o.L[lv] = {d:Object.keys(L.done).filter(k => L.done[k]).map(Number), b:L.best || 0, q:L.tries || 0, c:L.caseSolved ? 1 : 0, i:L.stepIndex, s:L.dossierSeen ? 1 : 0, ws:L.ws};
+    });
+    let str = JSON.stringify(o);
+    if(str.length > 60000){ Object.keys(o.L).forEach(lv => { o.L[lv].ws = {}; }); str = JSON.stringify(o); }
+    return str;
+  }
+  function restoreState(str){
+    const o = JSON.parse(str); if(!o || !o.L) return;
+    Object.keys(o.L).forEach(lv => {
+      const L = levelState[lv], r = o.L[lv]; if(!L) return;
+      (r.d || []).forEach(n => { L.done[n] = true; });
+      L.best = r.b || 0; L.tries = r.q || 0; L.caseSolved = !!r.c; L.dossierSeen = !!r.s; L.ws = r.ws || {};
+      const steps = getSteps(lv);
+      L.stepIndex = Math.max(0, Math.min(r.i || 0, steps.length - 1));
+    });
+    let mx = o.seq || 1;
+    Object.keys(levelState).forEach(lv => Object.keys(levelState[lv].ws).forEach(k => (levelState[lv].ws[k].devices || []).forEach(d => { const n = parseInt(String(d.id).slice(1), 10); if(n >= mx) mx = n + 1; })));
+    idSeq = mx;
+  }
+  function syncScorm(){
+    if(!SC.ok || SC.ended) return;
+    try{
+      const lv = window.LOCK_LEVEL || currentLevel, P = scoreParts(lv), a = SC.api;
+      a.SetValue('cmi.score.min', '0'); a.SetValue('cmi.score.max', '20');
+      const quizPart = window.SCORM_PART === 'quiz';
+      const raw = quizPart ? Math.round(20 * (levelState[lv].last || 0) / QUIZ[lv].length * 10) / 10 : P.design;
+      if(quizPart && !(P.tries > 0)) return;
+      a.SetValue('cmi.score.raw', String(raw)); a.SetValue('cmi.score.scaled', String(Math.round(raw / 20 * 1000) / 1000));
+      const finished = quizPart ? P.tries > 0 : P.rd === P.nreq;
+      a.SetValue('cmi.progress_measure', quizPart ? (finished ? '1' : '0') : String(Math.round(P.rd / P.nreq * 100) / 100));
+      a.SetValue('cmi.completion_status', finished ? 'completed' : 'incomplete');
+      a.SetValue('cmi.success_status', quizPart ? (raw >= 10 ? 'passed' : 'failed') : (finished ? 'passed' : 'unknown'));
+      if(!quizPart) a.SetValue('cmi.suspend_data', packState());
+      a.SetValue('cmi.exit', quizPart && finished ? 'normal' : 'suspend');
+      a.Commit('');
+    }catch(_){}
+  }
+  function endScorm(){
+    if(!SC.ok || SC.ended) return;
+    clearTimeout(SC.timer); syncScorm(); SC.ended = true;
+    try{ SC.api.Terminate(''); }catch(_){}
+  }
+  function initScorm(){
+    SC.api = findApi(); if(!SC.api) return;
+    try{
+      if(SC.api.Initialize('') !== 'true') return;
+      SC.ok = true;
+      if(window.SCORM_PART === 'quiz'){
+        // une tentative = un passage : si cette tentative est déjà terminée, on verrouille (nouvelle tentative = relancer l'activité)
+        if(SC.api.GetValue('cmi.completion_status') === 'completed'){ SC.locked = true; SC.ended = true; try{ SC.api.Terminate(''); }catch(_){} }
+      } else {
+        const sd = SC.api.GetValue('cmi.suspend_data');
+        if(sd){ try{ restoreState(sd); }catch(_){} }
+      }
+      window.addEventListener('pagehide', endScorm);
+      window.addEventListener('beforeunload', endScorm);
+    }catch(_){ SC.ok = false; }
+  }
+  function updateScore(now){
+    const lv = currentLevel, P = scoreParts(lv), chip = $('scoreChip');
+    if(chip){
+      const part = window.SCORM_PART;
+      chip.textContent = part === 'quiz' ? 'Note quiz : ' + fmt(P.quiz) + ' / 20'
+        : part === 'design' ? 'Note conception : ' + fmt(P.design) + ' / 20'
+        : 'Conception : ' + fmt(P.design) + ' / 20 · Quiz : ' + fmt(P.quiz) + ' / 20';
+      chip.classList.toggle('pass', part === 'quiz' ? P.quiz >= 10 : P.rd === P.nreq);
+      chip.title = `Conception : parcours obligatoire ${fmt(P.p1)}/${SCORE_PTS.req} + défis experts ${fmt(P.p2)}/${SCORE_PTS.exp} · Quiz : meilleur essai ${fmt(P.quiz)}/20`;
+    }
+    if(SC.ok){ clearTimeout(SC.timer); if(now) syncScorm(); else SC.timer = setTimeout(syncScorm, 2000); }
+  }
+
+  // ---- Démarrage (niveau verrouillé pour SCORM, restauration de la progression)
+  (function boot(){
+    const lock = window.LOCK_LEVEL;
+    if(lock && LEVELS[lock]){
+      currentLevel = lock;
+      document.querySelectorAll('.lvl-tab').forEach(b => { b.classList.toggle('active', b.dataset.level === lock); if(b.dataset.level !== lock) b.style.display = 'none'; });
+    }
+    if(window.SCORM_MODE) initScorm();
+    const st = getSteps(currentLevel)[levelState[currentLevel].stepIndex];
+    loadWorkspace(st.kind === 'enquete' ? 'enquete' : 'reseau');
+  })();
+  renderPalette();
+  render();
+  (function applyPart(){
+    if(window.ENQUETE_ONLY){
+      ['levelTabs', 'tabQuiz', 'tabAct', 'scoreChip'].forEach(id => { const e = $(id); if(e) e.style.display = 'none'; });
+      document.title = 'Enquête réseau — NetCorp';
+      const h1 = document.querySelector('header h1'); if(h1) h1.textContent = 'Enquête réseau';
+      levelState['3e'].full[7] = true;
+      const st = document.createElement('style'); st.textContent = '.pills{display:none !important}'; document.head.appendChild(st);
+      goToStep(0);
+    }
+    const part = window.SCORM_PART;
+    if(part === 'design'){ $('tabQuiz').style.display = 'none'; }
+    else if(part === 'quiz'){ $('tabAct').style.display = 'none'; $('tabQuiz').style.display = 'none'; setView('quiz'); }
+    updateScore();
+  })();
+  
+})();
+</script>
+</body>
+</html>

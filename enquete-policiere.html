@@ -27,10 +27,10 @@
 
   /* ===== Le livre ===== */
   .book{width:100%; max-width:1180px; flex:1; min-height:0; display:flex; flex-direction:column;}
-  .tabs{display:flex; gap:4px; padding:0 18px 0 26px; overflow-x:auto; scrollbar-width:thin; flex:0 0 auto; position:relative; z-index:1;}
+  .tabs{display:flex; gap:3px; padding:0 14px 0 20px; overflow-x:auto; scrollbar-width:thin; flex:0 0 auto; position:relative; z-index:1;}
   .tab{
     flex:0 0 auto; border:0; cursor:pointer; font-family:var(--type); font-size:.84rem; color:#2a2420;
-    padding:9px 9px 11px; margin-bottom:-6px; border-radius:8px 8px 0 0;
+    padding:9px 7px 11px; margin-bottom:-6px; border-radius:8px 8px 0 0;
     background:var(--c); filter:saturate(.75) brightness(.86); box-shadow:inset 0 -6px 8px -6px rgba(0,0,0,.35);
     transform:translateY(6px); transition:transform .18s, filter .18s;
   }
@@ -112,9 +112,9 @@
   .toc .pg-n{color:var(--ink-soft);}
 
   .facts .spec{display:inline-block; font-family:var(--type); font-size:.8rem; letter-spacing:.04em; color:#fff; background:#2b3a55; border-radius:3px; padding:1px 8px; margin:0 4px 2px 0;}
-  .facts .spec.ia{background:#6b2fa3;} .facts .spec.prog{background:#7a1e18;}
+  .facts .spec.ia{background:#6b2fa3;} .facts .spec.prog{background:#7a1e18;} .facts .spec.net{background:#0f6470;}
   .toc .spec{display:inline-block; font-size:.66rem; letter-spacing:.05em; text-transform:uppercase; color:#fff; background:#2b3a55; border-radius:3px; padding:0 5px; margin-left:6px; vertical-align:2px; text-decoration:none;}
-  .toc .spec.ia{background:#6b2fa3;} .toc .spec.prog{background:#7a1e18;}
+  .toc .spec.ia{background:#6b2fa3;} .toc .spec.prog{background:#7a1e18;} .toc .spec.net{background:#0f6470;}
   .grades{width:100%; border-collapse:collapse; font-size:1rem; margin:4px 0 14px;}
   .grades th{font-family:var(--type); font-weight:400; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); text-align:left; border-bottom:2px solid #b9a982; padding:4px 6px;}
   .grades td{border-bottom:1px dashed #cdbf9c; padding:6px; vertical-align:top;}
@@ -208,6 +208,7 @@
       <button class="tab" role="tab" id="t-neopulse"   data-p="neopulse"   style="--c:#e39a8c"><small>V</small>NéoPulse</button>
       <button class="tab" role="tab" id="t-ia"         data-p="ia"         style="--c:#b9a3e3"><small>VI</small>IA sabotée</button>
       <button class="tab" role="tab" id="t-pommes"     data-p="pommes"     style="--c:#a9d48f"><small>VII</small>Pommes</button>
+      <button class="tab" role="tab" id="t-reseau"     data-p="reseau"     style="--c:#8fd0d6"><small>VIII</small>Fuite</button>
     </div>
 
     <div class="volume is-closed" id="volume">
@@ -250,7 +251,7 @@
           <span class="clip" aria-hidden="true"></span>
           <p class="kicker">Avant-propos</p>
           <h2>Sommaire</h2>
-          <p>Un tableau volé. Un casier sous cadenas. Un chien enlevé. Un drone disparu. Les plans secrets d'un stimulateur cardiaque dérobés en pleine nuit. Une intelligence artificielle sabotée. Un robot qui jette les pommes vertes. Sept affaires, et deux langues à maîtriser : le binaire des cartes percées de trous… et la logique des IA.</p>
+          <p>Un tableau volé. Un casier sous cadenas. Un chien enlevé. Un drone disparu. Les plans secrets d'un stimulateur cardiaque dérobés en pleine nuit. Une intelligence artificielle sabotée. Un robot qui jette les pommes vertes. Un fichier confidentiel copié sur une clé USB. Huit affaires, et trois langues à maîtriser : le binaire des cartes percées de trous, la logique des IA… et les adresses des réseaux informatiques.</p>
           <p class="hook">Pour les résoudre, il faudra parler la langue des machines.</p>
           <ol class="toc">
             <li><button data-go="formation">0 · Formation de l'enquêteur <span class="spec">Binaire</span></button><span class="dots"></span><span class="pg-n">p. 3</span></li>
@@ -261,6 +262,7 @@
             <li><button data-go="neopulse">V · L'affaire NéoPulse <span class="spec">Binaire</span><span class="spec prog">Programmation</span></button><span class="dots"></span><span class="pg-n">p. 13</span></li>
             <li><button data-go="ia">VI · Qui a saboté l'IA ? <span class="spec ia">IA</span></button><span class="dots"></span><span class="pg-n">p. 15</span></li>
             <li><button data-go="pommes">VII · L'affaire des pommes vertes <span class="spec ia">IA</span></button><span class="dots"></span><span class="pg-n">p. 17</span></li>
+            <li><button data-go="reseau">VIII · La fuite de documents <span class="spec net">Réseaux</span></button><span class="dots"></span><span class="pg-n">p. 19</span></li>
           </ol>
           <button class="corner next" data-step="1" aria-label="Page suivante" title="Page suivante"></button>
           <div class="folio">2</div>
@@ -291,7 +293,7 @@
             <tr><td>🔰 Recrue</td><td><button data-go="chat">I · Le Chat de Minuit</button> ou <button data-go="pommes">VII · Les pommes vertes</button></td></tr>
             <tr><td>🥉 Agent</td><td><button data-go="zero">II · Professeur Zéro, niveau Apprenti</button></td></tr>
             <tr><td>🥈 Inspecteur</td><td><button data-go="zero">II · Professeur Zéro, niveau Expert</button></td></tr>
-            <tr><td>🥇 Lieutenant</td><td><button data-go="neopulse">III · L'affaire NéoPulse</button></td></tr>
+            <tr><td>🥇 Lieutenant</td><td><button data-go="neopulse">V · L'affaire NéoPulse</button> ou <button data-go="reseau">VIII · La fuite de documents</button></td></tr>
           </table>
           <p class="hook">Alors, simple recrue ou futur lieutenant ? Il n'y a qu'une façon de le savoir.</p>
           <a class="open" href="formation-police-scientifique.html" target="_blank" rel="noopener">🪪 Passer le test d'aptitude</a>
@@ -491,10 +493,37 @@
           </dl>
           <p class="hook">Trio n'est pas méchant : il a juste appris ce qu'on lui a montré…</p>
           <a class="open" href="pommes-vertes.html" target="_blank" rel="noopener">📂 Ouvrir le dossier</a>
-          <div class="pagefoot"><button data-step="-1">← Chapitre VI</button><span></span></div>
+          <div class="pagefoot"><button data-step="-1">← Chapitre VI</button><button data-step="1">Chapitre VIII →</button></div>
           <div class="folio">18</div>
         </div>
       </section>
+
+      <!-- ===== CHAPITRE VIII ===== -->
+      <section class="leaf" id="p-reseau" role="tabpanel" aria-labelledby="t-reseau">
+        <div class="pg left">
+          <p class="kicker">Chapitre VIII</p>
+          <h2>La fuite de documents</h2>
+          <span class="stamp">AFFAIRE NETCORP · RÉSEAU D'ENTREPRISE</span>
+          <p>Le 14 mars, chez <strong>NetCorp</strong>, le fichier confidentiel <strong>« Bilan_2026.xlsx »</strong> a été ouvert sur le serveur de fichiers… puis copié sur une clé USB à <strong>14 h 32</strong>.</p>
+          <p>Quatre personnes avaient un poste branché sur le réseau ce jour-là. Le journal du serveur n'a gardé qu'une trace : une <strong>adresse IP</strong>.</p>
+          <p>Reconstruis le réseau de l'entreprise d'après le plan et les règles d'adressage, vérifie que tout communique, puis remonte jusqu'au poste qui a copié le fichier.</p>
+          <button class="corner prev" data-step="-1" aria-label="Page précédente" title="Page précédente"></button>
+          <div class="folio">19</div>
+        </div>
+        <div class="pg right">
+          <figure class="evidence"><div class="bag"><div class="seal">PIÈCE À CONVICTION · N° 8</div><svg viewBox="0 0 230 150" aria-hidden="true"><rect x="10" y="12" width="210" height="126" rx="6" fill="#f3efe2" stroke="#8a7f66" stroke-width="1.5"/><g stroke="#2b3a55" stroke-width="2.2" fill="none"><path d="M115 36 L62 64 M115 36 L168 64 M62 72 L30 104 M62 72 L62 104 M62 72 L94 104 M168 72 L146 104 M168 72 L190 104"/></g><g font-family="Courier New, monospace" font-size="8" font-weight="700" fill="#2b3a55" text-anchor="middle"><rect x="92" y="24" width="46" height="16" rx="3" fill="#0f6470"/><text x="115" y="35" fill="#fff">ROUTEUR</text><rect x="40" y="62" width="44" height="12" rx="2" fill="#8fd0d6" stroke="#2b3a55" stroke-width="1.5"/><text x="62" y="71">COMPTA</text><rect x="142" y="62" width="52" height="12" rx="2" fill="#8fd0d6" stroke="#2b3a55" stroke-width="1.5"/><text x="168" y="71">DIRECTION</text><rect x="20" y="100" width="20" height="24" rx="2" fill="#d8d2c0" stroke="#2b3a55" stroke-width="1.5"/><text x="30" y="133">SRV</text><rect x="52" y="104" width="20" height="14" rx="2" fill="#fff" stroke="#2b3a55" stroke-width="1.5"/><text x="62" y="129">PC</text><rect x="84" y="104" width="20" height="14" rx="2" fill="#fff" stroke="#2b3a55" stroke-width="1.5"/><text x="94" y="129">PC</text><rect x="136" y="104" width="20" height="14" rx="2" fill="#fff" stroke="#b3261e" stroke-width="2"/><text x="146" y="129" fill="#b3261e">PC ?</text><rect x="180" y="104" width="20" height="14" rx="2" fill="#fff" stroke="#2b3a55" stroke-width="1.5"/><text x="190" y="129">PC</text></g><g transform="rotate(-7 50 32)"><rect x="16" y="23" width="70" height="18" rx="3" fill="#fff" stroke="#b3261e" stroke-width="2"/><text x="51" y="35.5" text-anchor="middle" font-family="Courier New, monospace" font-weight="700" font-size="8" fill="#b3261e">14h32 · USB</text></g><g transform="rotate(18 196 40)"><rect x="186" y="26" width="16" height="30" rx="3" fill="#b3261e" stroke="#5e1410" stroke-width="1.5"/><rect x="189" y="18" width="10" height="9" fill="#c9c9c9" stroke="#5e1410" stroke-width="1.2"/></g></svg></div><figcaption>Le plan du réseau de NetCorp… et une clé USB.</figcaption></figure>
+          <dl class="facts">
+            <dt>Spécialité</dt><dd><span class="spec net">🌐 Réseaux informatiques</span></dd>
+            <dt>Grade conseillé</dt><dd>🥇 Lieutenant · niveau 3e</dd>
+            <dt>Au programme</dt><dd>câbler commutateurs et routeur, régler adresses IP, masque et passerelle, lire le journal d'un serveur</dd>
+          </dl>
+          <p class="hook">Sur un réseau, chaque poste laisse son adresse partout où il passe…</p>
+          <a class="open" href="enquete-reseau.html" target="_blank" rel="noopener">📂 Ouvrir le dossier</a>
+          <div class="pagefoot"><button data-step="-1">← Chapitre VII</button><span></span></div>
+          <div class="folio">20</div>
+        </div>
+      </section>
+
 
 
 
@@ -505,7 +534,7 @@
 /* Le livre : il démarre fermé sur la couverture. Onglets, sommaire, coins de page, flèches du clavier
    ou glisser du doigt : les pages se tournent comme dans un vrai livre. */
 (function(){
-  var ORDER = ['couverture', 'sommaire', 'formation', 'chat', 'zero', 'chien', 'drone', 'neopulse', 'ia', 'pommes'];
+  var ORDER = ['couverture', 'sommaire', 'formation', 'chat', 'zero', 'chien', 'drone', 'neopulse', 'ia', 'pommes', 'reseau'];
   var vol = document.getElementById('volume'), cover = document.querySelector('#p-couverture .pg.cover');
   var cur = 0, busy = false, queued = null;
   var simpleMQ = window.matchMedia('(max-width:820px)'), reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
