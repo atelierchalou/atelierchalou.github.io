@@ -50,13 +50,17 @@
   /* cartons d'archives */
   .box{position:relative; width:var(--bw); height:calc(var(--bh) - var(--h)); flex:0 0 auto; padding:0; cursor:pointer; font:inherit; color:var(--ink);
        border:2px solid #5d3b1b; border-radius:3px 3px 1px 1px; transform:rotate(var(--r)); transform-origin:bottom center;
-       background:linear-gradient(180deg, #b8874c 0 15%, #8a5f31 15% 16.5%, transparent 16.5%),
+       background:linear-gradient(180deg, #2b1a0c 0 6%, #5a3a1c 15%, transparent 15%),
                   repeating-linear-gradient(90deg, rgba(0,0,0,.03) 0 3px, transparent 3px 7px),
                   linear-gradient(160deg, #d5a668, #bf8c4f 60%, #a9773e);
        box-shadow:inset -6px 0 10px -6px rgba(0,0,0,.45), 0 4px 6px rgba(0,0,0,.4);
-       transition:transform .2s cubic-bezier(.3,.7,.3,1.3), box-shadow .2s;}
-  .box:hover, .box:focus-visible{transform:translateY(-10px) rotate(0deg); box-shadow:inset -6px 0 10px -6px rgba(0,0,0,.45), 0 14px 16px rgba(0,0,0,.5); outline:none;}
-  .box:focus-visible{outline:3px solid var(--accent); outline-offset:3px;}
+       }
+  .lid{position:absolute; left:-4px; right:-4px; top:-3px; height:calc(15% + 3px); border:2px solid #5d3b1b; border-radius:3px;
+        background:linear-gradient(180deg, #d9ab6c, #b8874c 70%, #9c6e3a); box-shadow:0 2px 0 rgba(0,0,0,.25);
+        transform-origin:100% 100%; transition:transform .25s cubic-bezier(.3,.7,.3,1.4);}
+  .box:hover .lid, .box:focus-visible .lid{transform:translateY(-12px) rotate(-7deg);}
+  .box:focus-visible{outline:none;}
+  .box:focus-visible{outline:3px solid var(--accent); outline-offset:4px;}
   .hole{position:absolute; left:50%; top:20%; width:34px; height:11px; transform:translateX(-50%); border-radius:8px; background:#2b1a0c; box-shadow:inset 0 2px 3px #000;}
   .lbl{position:absolute; left:10px; right:10px; top:31%; bottom:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; text-align:center;
        background:#f8f2e2; border:1px solid #c8b78f; padding:12px 6px 6px; transform:rotate(calc(var(--r) * -1.5));}
@@ -80,6 +84,7 @@
   .book:focus-visible{outline:3px solid var(--accent); outline-offset:3px;}
   .bk-t{font-family:var(--type); font-size:clamp(12px, calc(var(--bh) * .07), 16.5px); line-height:1.2;}
   .book svg{width:calc(var(--bw) * .3);}
+  .bk-spec{font-family:var(--type); font-size:.66rem; letter-spacing:.06em; color:#fff; background:var(--c-bin); border:1px solid #b8903f; border-radius:3px; padding:1px 6px;}
   .bk-s{font-family:var(--type); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:#d7b96a; border-top:1px solid #b8903f; padding-top:4px;}
 
   .legend{display:flex; flex-wrap:wrap; justify-content:center; gap:6px 16px; margin:10px 0 0; font-size:.86rem; color:var(--chalk-dim);}
@@ -166,7 +171,7 @@
     .folder .ftab{font-size:.76rem; padding:6px 12px 0;}
     .fnav{font-size:.8rem;}
   }
-  @media (prefers-reduced-motion: reduce){ .box, .book{transition:none;} }
+  @media (prefers-reduced-motion: reduce){ .lid, .book{transition:none;} }
 </style>
 </head>
 <body>
@@ -180,23 +185,28 @@
 
   <main class="case">
       <section class="shelf bin wide" aria-label="Étagère Binaire">
-        <div class="row"><button class="book" data-open="formation" aria-label="Livre : formation de l'enquêteur, test d'aptitude">
+        <div class="row"><button class="book" data-open="formation" aria-label="Livre : formation de l'enquêteur, test d'aptitude, spécialité binaire">
             <span class="bk-t">Formation<br>de l'enquêteur</span>
             <svg viewBox="0 0 100 120" aria-hidden="true" fill="none" stroke="#d7b96a" stroke-width="3" stroke-linecap="round"><path d="M50 10c-22 0-38 18-38 42"/><path d="M50 18c-17 0-30 14-30 34v14"/><path d="M50 26c-13 0-22 11-22 26v26"/><path d="M50 34c-8 0-14 7-14 18v34"/><path d="M50 42c-4 0-6 4-6 10v40"/><path d="M50 10c22 0 38 18 38 42v20"/><path d="M50 18c17 0 30 14 30 34v30"/><path d="M50 26c13 0 22 11 22 26v40"/><path d="M50 34c8 0 14 7 14 18v46"/><path d="M50 42c4 0 6 4 6 10v52"/><path d="M50 52v58"/></svg>
             <span class="bk-s">Test d'aptitude</span>
+            <span class="bk-spec">🔢 Binaire</span>
           </button><button class="box bin" data-open="chat" style="--r:-1.2deg; --h:0px" aria-label="Dossier I : Le Chat de Minuit">
+            <span class="lid" aria-hidden="true"></span>
             <span class="hole" aria-hidden="true"></span>
             <span class="lbl"><span class="no">N° I</span><span class="tt">Le Chat de Minuit</span><span class="lv">🔰 Recrue</span></span>
             <span class="tape" aria-hidden="true"></span>
           </button><button class="box bin" data-open="zero" style="--r:0.8deg; --h:6px" aria-label="Dossier II : Le casier du Professeur Zéro">
+            <span class="lid" aria-hidden="true"></span>
             <span class="hole" aria-hidden="true"></span>
             <span class="lbl"><span class="no">N° II</span><span class="tt">Le casier du Professeur Zéro</span><span class="lv">Agent · Inspecteur</span></span>
             <span class="tape" aria-hidden="true"></span>
           </button><button class="box bin" data-open="chien" style="--r:-0.5deg; --h:-4px" aria-label="Dossier III : Le chien volé du gardien">
+            <span class="lid" aria-hidden="true"></span>
             <span class="hole" aria-hidden="true"></span>
             <span class="lbl"><span class="no">N° III</span><span class="tt">Le chien volé du gardien</span><span class="lv">Intermédiaire</span></span>
             <span class="tape" aria-hidden="true"></span>
           </button><button class="box bin" data-open="drone" style="--r:1.4deg; --h:3px" aria-label="Dossier IV : La boîte noire du drone">
+            <span class="lid" aria-hidden="true"></span>
             <span class="hole" aria-hidden="true"></span>
             <span class="lbl"><span class="no">N° IV</span><span class="tt">La boîte noire du drone</span><span class="lv">Confirmé</span></span>
             <span class="tape" aria-hidden="true"></span>
@@ -205,6 +215,7 @@
       </section>
       <div class="lower"><section class="shelf prog " aria-label="Étagère Programmation">
         <div class="row"><button class="box prog" data-open="neopulse" style="--r:-0.8deg; --h:2px" aria-label="Dossier V : L'affaire NéoPulse">
+            <span class="lid" aria-hidden="true"></span>
             <span class="hole" aria-hidden="true"></span>
             <span class="lbl"><span class="no">N° V</span><span class="tt">L'affaire NéoPulse</span><span class="lv">🥇 Lieutenant</span><span class="tag2">+ Binaire</span></span>
             <span class="tape" aria-hidden="true"></span>
@@ -212,10 +223,12 @@
         <div class="plank"><span class="plate">⚙️ Programmation</span></div>
       </section><section class="shelf ia " aria-label="Étagère Intelligence artificielle">
         <div class="row"><button class="box ia" data-open="ia" style="--r:0.6deg; --h:-3px" aria-label="Dossier VI : Qui a saboté l'IA ?">
+            <span class="lid" aria-hidden="true"></span>
             <span class="hole" aria-hidden="true"></span>
             <span class="lbl"><span class="no">N° VI</span><span class="tt">Qui a saboté l'IA ?</span><span class="lv">Intermédiaire · binôme</span></span>
             <span class="tape" aria-hidden="true"></span>
           </button><button class="box ia" data-open="pommes" style="--r:-1.1deg; --h:5px" aria-label="Dossier VII : Les pommes vertes">
+            <span class="lid" aria-hidden="true"></span>
             <span class="hole" aria-hidden="true"></span>
             <span class="lbl"><span class="no">N° VII</span><span class="tt">Les pommes vertes</span><span class="lv">🔰 Recrue</span></span>
             <span class="tape" aria-hidden="true"></span>
@@ -223,6 +236,7 @@
         <div class="plank"><span class="plate">🤖 Intelligence artificielle</span></div>
       </section><section class="shelf net " aria-label="Étagère Réseaux informatiques">
         <div class="row"><button class="box net" data-open="reseau" style="--r:0.9deg; --h:0px" aria-label="Dossier VIII : La fuite de documents">
+            <span class="lid" aria-hidden="true"></span>
             <span class="hole" aria-hidden="true"></span>
             <span class="lbl"><span class="no">N° VIII</span><span class="tt">La fuite de documents</span><span class="lv">🥇 Lieutenant</span></span>
             <span class="tape" aria-hidden="true"></span>
