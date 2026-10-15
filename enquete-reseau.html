@@ -309,7 +309,7 @@
     <button class="lvl-tab" data-level="3e">3ème</button>
   </div>
   <div class="view-tabs">
-    <button class="view-tab active" id="tabAct">🛠️ Activités</button>
+    <button class="view-tab active" id="tabAct">🛠️ Étapes</button>
     <button class="view-tab" id="tabQuiz">❓ Quiz (20 questions)</button>
     <span class="score-chip" id="scoreChip">Note : 0 / 20</span>
   </div>
@@ -346,6 +346,18 @@
 
 <section class="quiz-view" id="quizView" hidden></section>
 
+<div class="modal-overlay" id="ficheOverlay" style="z-index:60">
+  <div class="modal">
+    <h2 id="ficheTitle">📝 Étape réussie !</h2>
+    <p class="modal-sub" id="ficheSub"></p>
+    <div id="ficheBody"></div>
+    <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+      <button class="btn ghost" id="ficheLater">Pas encore</button>
+      <button class="btn primary" id="ficheOk">✅ Ma fiche est remplie</button>
+    </div>
+  </div>
+</div>
+
 <div class="def-popover" id="defPopover">
   <div class="def-title" id="defTitle"></div>
   <div class="def-body" id="defBody"></div>
@@ -356,7 +368,7 @@
     <button class="modal-close" data-close="tutoOverlay">✕</button>
     <h2>Tutoriel</h2>
     <p class="modal-sub">Comment utiliser l'atelier</p>
-    <div class="tuto-step"><div class="tuto-num">1</div><p>Choisis ton <b>niveau</b> (5ème, 4ème ou 3ème) avec les onglets du haut. Chaque niveau a ses activités et son quiz de 20 questions.</p></div>
+    <div class="tuto-step"><div class="tuto-num">1</div><p>Choisis ton <b>niveau</b> (5ème, 4ème ou 3ème) avec les onglets du haut. Chaque niveau a ses étapes et son quiz de 20 questions.</p></div>
     <div class="tuto-step"><div class="tuto-num">2</div><p>Suis le panneau de gauche : il te donne l'<b>objectif</b>, les <b>instructions</b> pas à pas et une <b>liste de vérifications</b> qui se coche toute seule quand c'est réussi.</p></div>
     <div class="tuto-step"><div class="tuto-num">3</div><p>Pour poser un élément, clique sur sa pastille (PC, Serveur…) puis clique dans le plan. Fais-le <b>glisser</b> pour le déplacer. Clique sur la pastille pour arrêter d'en poser.</p></div>
     <div class="tuto-step"><div class="tuto-num">4</div><p>Choisis l'outil <b>Câble RJ45</b> dans la barre « Éléments », puis clique sur deux éléments pour les relier. Pour un routeur, clique sur le <b>port 1</b> ou <b>2</b> (petits ronds). Clique sur un câble pour le débrancher.</p></div>
@@ -434,7 +446,7 @@
 
   const GLOSSARY = [
     {lv:1, t:'Câble RJ45', d:`Câble réseau (Ethernet) terminé par deux connecteurs RJ45, de petites prises rectangulaires à 8 contacts. Il relie un ordinateur ou un serveur au commutateur et transporte les données.`},
-    {lv:1, t:'Serveur', d:`Ordinateur puissant, allumé en permanence, qui fournit des services ou des fichiers aux autres ordinateurs du réseau (par exemple le serveur de fichiers du CDI).`},
+    {lv:1, t:'Serveur', d:`Ordinateur puissant, allumé en permanence, qui fournit des services ou des fichiers aux autres ordinateurs du réseau (par exemple le serveur de fichiers du collège).`},
     {lv:1, t:'Commutateur (switch)', d:`Boîtier équipé de plusieurs ports RJ45. Il relie les appareils d'un même réseau et fait circuler les données entre eux.`},
     {lv:2, t:'Adresse IP', d:`Numéro composé de 4 nombres de 0 à 255 séparés par des points (ex. 192.168.1.10). Il identifie un appareil sur le réseau, comme une adresse postale. Deux appareils d'un même réseau ne peuvent pas avoir la même.`},
     {lv:2, t:'Serveur de communication', d:`Serveur qui organise les échanges entre les appareils du réseau, par exemple en attribuant automatiquement les adresses IP (service DHCP) ou en transmettant les messages (messagerie).`},
@@ -458,7 +470,7 @@
   let currentLevel = '5e', currentView = 'act', currentWsKey = 'reseau';
   const levelState = {};
   ['5e','4e','3e'].forEach(lv => {
-    levelState[lv] = {stepIndex:0, done:{}, ws:{}, hint:{}, full:{}, quiz:null, best:0, tries:0, caseSolved:false, dossierSeen:false};
+    levelState[lv] = {stepIndex:0, done:{}, ws:{}, hint:{}, full:{}, quiz:null, best:0, tries:0, ack:{}, caseSolved:false, dossierSeen:false};
   });
 
   // Mode IP : en 5ème, les adresses sont données automatiquement (visibles, non modifiables) aux étapes 1-2 ;
@@ -880,7 +892,7 @@
     } else if(!ipMode){
       html += dev.type === 'routeur'
         ? `<div class="note-box">Le routeur relie deux réseaux : branche le <b>port 1</b> sur un commutateur et le <b>port 2</b> sur l'autre.</div>`
-        : `<div class="note-box">Donne un nom clair à cet appareil (par exemple <b>CDI-1</b>) pour le reconnaître facilement.</div>`;
+        : `<div class="note-box">Donne un nom clair à cet appareil (par exemple <b>${SCEN[currentLevel].A.tag}-1</b>) pour le reconnaître facilement.</div>`;
       if(dev.type !== 'routeur'){
         html += `<div class="field"><label>Adresse IP ${infoBtn('ip')}</label><input type="text" value="${esc(dev.ip || 'pas encore attribuée')}" readonly disabled></div>`;
         html += `<div class="field"><label>Masque de sous-réseau ${infoBtn('mask')}</label><input type="text" value="${esc(dev.mask)}" readonly disabled></div>`;
@@ -1068,9 +1080,30 @@
   //  ÉTAPES GUIDÉES
   // =====================================================================
   const stepsCache = {};
+  // Scénarios : chaque niveau a ses propres salles, noms et plages d'adresses (pour varier d'une année à l'autre).
+  const mkHosts = n => Array.from({length:n - 1}, (_, i) => `, <b>.${11 + i}</b>`).join('');
+  const mkNames = (tag, n) => Array.from({length:n}, (_, i) => `<b>${tag}-${i + 1}</b>`).join(', ');
+  const SCEN = {
+    '5e': {allow:3,
+      A:{the:'le CDI', of:'du CDI', tag:'CDI', n:6, srv:'Serveur-CDI', base:'192.168.1', title:`Le réseau du CDI`},
+      B:{the:'la salle informatique', The:'La salle informatique', of:'de la salle informatique', short:'salle info', tag:'SI', meaning:'salle informatique', n:3, base:'192.168.2', third:2}},
+    '4e': {allow:3,
+      A:{the:'la salle des professeurs', of:'de la salle des professeurs', tag:'PROF', n:5, srv:'Serveur-Profs', base:'192.168.10', title:`Le réseau de la salle des professeurs`},
+      B:{the:'le laboratoire de sciences', The:'Le laboratoire de sciences', of:'du laboratoire de sciences', short:'labo', tag:'LABO', meaning:'laboratoire', n:4, base:'192.168.20', third:20}},
+    '3e': {allow:2,
+      A:{the:'la vie scolaire', of:'de la vie scolaire', tag:'VS', n:4, srv:'Serveur-VS', base:'192.168.30', title:`Le réseau de la vie scolaire`},
+      B:{the:"l'atelier de technologie", The:"L'atelier de technologie", of:"de l'atelier de technologie", short:'atelier techno', tag:'TECHNO', meaning:'technologie', n:5, base:'192.168.40', third:40}}
+  };
+  Object.keys(SCEN).forEach(k => {
+    const Zk = SCEN[k];
+    [Zk.A, Zk.B].forEach(x => { x.hostsTail = mkHosts(x.n); x.namesB = mkNames(x.tag, x.n); });
+    Zk.allowNames = Array.from({length:Zk.allow}, (_, i) => `${Zk.A.tag}-${i + 1}`).join(', ');
+  });
+
   function getSteps(lv){
     if(stepsCache[lv]) return stepsCache[lv];
     let ip = LEVELS[lv].ip;
+    const Z = SCEN[lv], A = Z.A, B = Z.B;
     const S = [];
 
     // ---- Étape 1
@@ -1082,13 +1115,13 @@
         `Clique sur <b>PC</b>, puis clique à gauche du commutateur pour poser un premier PC. Pose un deuxième PC à droite.`,
         `Dans « Éléments », clique sur l'outil <b>Câble RJ45</b>. Clique sur le premier PC, puis sur le commutateur : un câble RJ45 apparaît. Recommence avec le deuxième PC.`
       ].concat(ip ? [
-        `Clique sur <b>PC 1</b> (panneau de droite) : saisis l'adresse IP <b>192.168.1.10</b> et le masque <b>255.255.255.0</b>.`,
-        `Fais pareil pour <b>PC 2</b> avec l'adresse <b>192.168.1.11</b> et le même masque.`
+        `Clique sur <b>PC 1</b> (panneau de droite) : saisis l'adresse IP <b>${A.base}.10</b> et le masque <b>255.255.255.0</b>.`,
+        `Fais pareil pour <b>PC 2</b> avec l'adresse <b>${A.base}.11</b> et le même masque.`
       ] : []).concat([
         `Clique de nouveau sur <b>Câble RJ45</b> pour poser l'outil, puis clique sur <b>🧪 Tester une connexion</b>.`,
         `Clique sur un PC puis sur l'autre : un bandeau vert ✅ doit apparaître.`
       ]),
-      hint: ip ? `Pour câbler, clique sur deux éléments à la suite (le PC, puis le commutateur). Si le test échoue, vérifie que les deux adresses commencent par 192.168.1 et finissent par des nombres différents.`
+      hint: ip ? `Pour câbler, clique sur deux éléments à la suite (le PC, puis le commutateur). Si le test échoue, vérifie que les deux adresses commencent par ${A.base} et finissent par des nombres différents.`
                : `Pour câbler, clique sur deux éléments à la suite : d'abord le PC, ensuite le commutateur. Un câble orange apparaît entre eux.`,
       checks: [
         {label:`Un commutateur est posé`, test:() => switches().length >= 1},
@@ -1103,30 +1136,30 @@
 
     // ---- Étape 2
     S.push({
-      n:2, kind:'reseau', title:`Le réseau du CDI`, pill:`Le réseau du CDI`,
-      goal:`Agrandir ton réseau : <b>6 PC renommés</b> et <b>1 serveur</b> reliés au même commutateur (le réseau du CDI).`,
+      n:2, kind:'reseau', title:`Le réseau ${A.of}`, pill:`Le réseau ${A.of}`,
+      goal:`Agrandir ton réseau : <b>${A.n} PC renommés</b> et <b>1 serveur</b> reliés au même commutateur (le réseau ${A.of}).`,
       instr: [
-        `Garde le réseau de l'étape 1 : tu vas l'agrandir. Ajoute des PC jusqu'à en avoir <b>6</b> au total.`,
-        `Pose un <b>Serveur</b> : ce sera le serveur du CDI.`,
-        `Renomme chaque PC : clique dessus puis change le champ <b>Nom</b> à droite (<b>CDI-1</b> … <b>CDI-6</b>, ou un autre nom de salle). Appelle le serveur <b>Serveur-CDI</b>.`,
-        `Avec l'outil <b>Câble RJ45</b>, relie chaque PC <b>et</b> le serveur au commutateur (il a 8 ports : tu en utilises 7).`
+        `Garde le réseau de l'étape 1 : tu vas l'agrandir. Ajoute des PC jusqu'à en avoir <b>${A.n}</b> au total.`,
+        `Pose un <b>Serveur</b> : ce sera le serveur ${A.of}.`,
+        `Renomme chaque PC : clique dessus puis change le champ <b>Nom</b> à droite (<b>${A.tag}-1</b> … <b>${A.tag}-${A.n}</b>, ou un autre nom). Appelle le serveur <b>${A.srv}</b>.`,
+        `Avec l'outil <b>Câble RJ45</b>, relie chaque PC <b>et</b> le serveur au commutateur (il a 8 ports : tu en utilises ${A.n + 1}).`
       ].concat(ip ? [
-        `Configure le serveur : <b>192.168.1.1</b>. Puis CDI-1 à CDI-6 : <b>192.168.1.10</b>, <b>.11</b>, <b>.12</b>, <b>.13</b>, <b>.14</b>, <b>.15</b>. Masque <b>255.255.255.0</b> pour tous.`
+        `Configure le serveur : <b>${A.base}.1</b>. Puis ${A.tag}-1 à ${A.tag}-${A.n} : <b>${A.base}.10</b>${A.hostsTail}. Masque <b>255.255.255.0</b> pour tous.`
       ] : []).concat([
-        `Teste avec <b>🧪</b> : CDI-1 → CDI-6, puis CDI-3 → Serveur-CDI.`
+        `Teste avec <b>🧪</b> : ${A.tag}-1 → ${A.tag}-${A.n}, puis ${A.tag}-3 → ${A.srv}.`
       ]),
-      hint: ip ? `Glisse les appareils pour garder un plan lisible. Chaque appareil doit avoir une adresse IP différente, mais commençant par 192.168.1.`
+      hint: ip ? `Glisse les appareils pour garder un plan lisible. Chaque appareil doit avoir une adresse IP différente, mais commençant par ${A.base}.`
                : `Glisse les appareils pour garder un plan lisible : le serveur en haut, les PC autour du commutateur. N'oublie pas de relier le serveur aussi !`,
       checks: [
-        {label:`6 PC (ou plus) sont posés`, test:() => pcs().length >= 6},
+        {label:`${A.n} PC (ou plus) sont posés`, test:() => pcs().length >= A.n},
         {label:`Un serveur est posé`, test:() => servers().length >= 1},
-        {label:`Les 6 PC ont un nom personnalisé (ex. CDI-1 … CDI-6)`, test:() => pcs().filter(p => isCustom(p.name)).length >= 6},
-        {label:`Les 6 PC et le serveur sont reliés au même commutateur`,
-          test:() => { const s = servers().find(onSwitch); if(!s) return false; const c = compOf(s); return c.some(d => d.type === 'switch') && c.filter(d => d.type === 'pc').length >= 6; }},
-        {label:`Tous les appareils du CDI ont une adresse du même réseau, toutes différentes`, ipOnly:true,
+        {label:`Les ${A.n} PC ont un nom personnalisé (ex. ${A.tag}-1 … ${A.tag}-${A.n})`, test:() => pcs().filter(p => isCustom(p.name)).length >= A.n},
+        {label:`Les ${A.n} PC et le serveur sont reliés au même commutateur`,
+          test:() => { const s = servers().find(onSwitch); if(!s) return false; const c = compOf(s); return c.some(d => d.type === 'switch') && c.filter(d => d.type === 'pc').length >= A.n; }},
+        {label:`Tous les appareils ${A.of} ont une adresse du même réseau, toutes différentes`, ipOnly:true,
           test:() => { const s = servers().find(onSwitch); if(!s) return false; const t = terminals(compOf(s)); return allSameSubnet(t) && allUnique(t); }},
-        {label:`Chaque PC du CDI joint le serveur (test de connexion)`,
-          test:() => { const s = servers().find(onSwitch); if(!s) return false; const p = compOf(s).filter(d => d.type === 'pc'); return p.length >= 6 && p.every(x => evalPing(x, s).kind === 'ok'); }}
+        {label:`Chaque PC ${A.of} joint le serveur (test de connexion)`,
+          test:() => { const s = servers().find(onSwitch); if(!s) return false; const p = compOf(s).filter(d => d.type === 'pc'); return p.length >= A.n && p.every(x => evalPing(x, s).kind === 'ok'); }}
       ]
     });
 
@@ -1134,30 +1167,30 @@
     ip = ipActive(lv, 3);
     S.push({
       n:3, kind:'reseau', title:`Un deuxième réseau`, pill:`Un 2e réseau`,
-      goal:`Ajouter un <b>deuxième réseau</b> (la salle informatique) avec son propre commutateur et <b>3 PC</b>, bien <b>séparé</b> du CDI.`,
+      goal:`Ajouter un <b>deuxième réseau</b> (${B.the}) avec son propre commutateur et <b>${B.n} PC</b>, bien <b>séparé</b> ${A.of}.`,
       instr: [
         `Pose un <b>deuxième commutateur</b> à droite du premier, bien à l'écart.`,
-        `Pose <b>3 nouveaux PC</b> autour de lui et renomme-les <b>SI-1</b>, <b>SI-2</b>, <b>SI-3</b> (SI = salle informatique).`,
-        `Câble les 3 PC à ce deuxième commutateur. <b>Ne le relie pas</b> au commutateur du CDI : ce sont deux réseaux différents.`
+        `Pose <b>${B.n} nouveaux PC</b> autour de lui et renomme-les ${B.namesB} (${B.tag} = ${B.meaning}).`,
+        `Câble les ${B.n} PC à ce deuxième commutateur. <b>Ne le relie pas</b> au commutateur ${A.of} : ce sont deux réseaux différents.`
       ].concat(ip ? [
-        `Configure SI-1, SI-2, SI-3 avec <b>192.168.2.10</b>, <b>.11</b>, <b>.12</b> et le masque <b>255.255.255.0</b>. Le « 2 » montre que c'est un autre réseau que le CDI (192.168.<b>1</b>.x).`
+        `Configure ${B.tag}-1 à ${B.tag}-${B.n} avec <b>${B.base}.10</b>${B.hostsTail} et le masque <b>255.255.255.0</b>. Le troisième nombre (<b>${B.third}</b>) montre que c'est un autre réseau que ${A.the} (${A.base}.x).`
       ] : []).concat([
-        `Teste SI-1 → SI-2 : ça doit marcher ✅. Teste ensuite SI-1 → CDI-1 : ça doit <b>échouer</b> ❌. Pourquoi ? Rien ne relie les deux réseaux !`
+        `Teste ${B.tag}-1 → ${B.tag}-2 : ça doit marcher ✅. Teste ensuite ${B.tag}-1 → ${A.tag}-1 : ça doit <b>échouer</b> ❌. Pourquoi ? Rien ne relie les deux réseaux !`
       ]),
-      hint: ip ? `Le deuxième réseau a ses propres adresses (192.168.2.x), différentes de celles du CDI (192.168.1.x). Ne tire aucun câble entre les deux commutateurs.`
+      hint: ip ? `Le deuxième réseau a ses propres adresses (${B.base}.x), différentes de celles ${A.of} (${A.base}.x). Ne tire aucun câble entre les deux commutateurs.`
                : `Deux commutateurs non reliés = deux réseaux séparés. Ne tire aucun câble entre les deux commutateurs.`,
       checks: [
         {label:`Un deuxième commutateur est posé`, test:() => switches().length >= 2},
-        {label:`3 PC (ou plus) sont reliés à ce deuxième commutateur`, test:() => { const {second} = twoNets(); return !!second && second.filter(d => d.type === 'pc').length >= 3; }},
-        {label:`Les PC du 2e réseau ont un nom personnalisé (SI-1, SI-2, SI-3…)`,
-          test:() => { const {second} = twoNets(); return !!second && second.filter(d => d.type === 'pc' && isCustom(d.name)).length >= 3; }},
-        {label:`Le 2e réseau a ses propres adresses, différentes de celles du CDI`, ipOnly:true,
+        {label:`${B.n} PC (ou plus) sont reliés à ce deuxième commutateur`, test:() => { const {second} = twoNets(); return !!second && second.filter(d => d.type === 'pc').length >= B.n; }},
+        {label:`Les PC du 2e réseau ont un nom personnalisé (${B.tag}-1, ${B.tag}-2…)`,
+          test:() => { const {second} = twoNets(); return !!second && second.filter(d => d.type === 'pc' && isCustom(d.name)).length >= B.n; }},
+        {label:`Le 2e réseau a ses propres adresses, différentes de celles ${A.of}`, ipOnly:true,
           test:() => { const {main, second} = twoNets(); if(!main || !second) return false; const t = terminals(second);
             const s = netSubnet(second), m = netSubnet(main); return allSameSubnet(t) && allUnique(t) && s !== null && s !== m; }},
         {label:`Les PC du 2e réseau communiquent entre eux`,
           test:() => { const {second} = twoNets(); if(!second) return false; const p = second.filter(d => d.type === 'pc');
             return p.length >= 2 && p.every((a, i) => p.every((b, j) => i === j || evalPing(a, b).kind === 'ok')); }},
-        {label:`Les deux réseaux ne sont pas encore reliés (SI-1 ne joint pas CDI-1)`,
+        {label:`Les deux réseaux ne sont pas encore reliés (${B.tag}-1 ne joint pas ${A.tag}-1)`,
           test:() => { const {main, second} = twoNets(); if(!main || !second) return false;
             const a = main.find(d => d.type === 'pc'), b = second.find(d => d.type === 'pc'); return !!a && !!b && evalPing(a, b).kind !== 'ok'; }}
       ]
@@ -1167,15 +1200,15 @@
     ip = ipActive(lv, 4);
     S.push({
       n:4, kind:'reseau', title:`Relier les réseaux`, pill:`Relier avec un routeur`,
-      goal:`Relier le réseau du CDI et celui de la salle info avec un <b>routeur</b>, pour que SI-1 et CDI-1 puissent communiquer.`,
+      goal:`Relier le réseau ${A.of} et celui ${B.of} avec un <b>routeur</b>, pour que ${B.tag}-1 et ${A.tag}-1 puissent communiquer.`,
       instr: [
         `Pose un <b>Routeur</b> entre les deux commutateurs.`,
-        `Avec l'outil <b>Câble RJ45</b>, clique sur le <b>port 1</b> du routeur (petit rond « 1 » sous le routeur), puis sur le commutateur du CDI. Clique ensuite sur le <b>port 2</b>, puis sur le commutateur de la salle info.`
+        `Avec l'outil <b>Câble RJ45</b>, clique sur le <b>port 1</b> du routeur (petit rond « 1 » sous le routeur), puis sur le commutateur ${A.of}. Clique ensuite sur le <b>port 2</b>, puis sur le commutateur ${B.of}.`
       ].concat(ip ? [
-        `Clique sur le routeur : interface 1 → <b>192.168.1.254</b> (réseau du CDI), interface 2 → <b>192.168.2.254</b> (salle info), masque <b>255.255.255.0</b>.`,
-        `Renseigne la <b>passerelle</b> : <b>192.168.1.254</b> pour le serveur et CDI-1 à CDI-6 ; <b>192.168.2.254</b> pour SI-1 à SI-3.`
+        `Clique sur le routeur : interface 1 → <b>${A.base}.254</b> (réseau ${A.of}), interface 2 → <b>${B.base}.254</b> (${B.short}), masque <b>255.255.255.0</b>.`,
+        `Renseigne la <b>passerelle</b> : <b>${A.base}.254</b> pour le serveur et ${A.tag}-1 à ${A.tag}-${A.n} ; <b>${B.base}.254</b> pour ${B.tag}-1 à ${B.tag}-${B.n}.`
       ] : []).concat([
-        `Teste CDI-1 → SI-1, puis Serveur-CDI → SI-3 : bandeau vert ✅ attendu.`
+        `Teste ${A.tag}-1 → ${B.tag}-1, puis ${A.srv} → ${B.tag}-${B.n} : bandeau vert ✅ attendu.`
       ]),
       hint: ip ? `La passerelle d'un appareil est l'adresse du routeur <b>de son côté</b> : celle de l'interface reliée à son propre réseau.`
                : `Un routeur a deux ports : un câble du port 1 vers un commutateur, un câble du port 2 vers l'autre commutateur.`,
@@ -1199,10 +1232,10 @@
             return t1.length > 0 && t2.length > 0 && validIp(r.ip) && validIp(r.ip2) &&
               t1.every(d => (d.gateway || '').trim() === r.ip.trim()) && t2.every(d => (d.gateway || '').trim() === r.ip2.trim());
           })},
-        {label:`Un PC du CDI joint un PC de la salle info (test réussi)`,
+        {label:`Un PC ${A.of} joint un PC ${B.of} (test réussi)`,
           test:() => { const {main, second} = twoNets(); if(!main || !second) return false;
             const A = main.filter(d => d.type === 'pc'), B = second.filter(d => d.type === 'pc'); return A.some(a => B.some(b => evalPing(a, b).kind === 'ok')); }},
-        {label:`Le serveur du CDI joint un PC de la salle info`,
+        {label:`Le serveur ${A.of} joint un PC ${B.of}`,
           test:() => { const {main, second} = twoNets(); if(!main || !second) return false;
             const s = main.find(d => d.type === 'serveur'); return !!s && second.filter(d => d.type === 'pc').some(b => evalPing(s, b).kind === 'ok'); }}
       ]
@@ -1219,14 +1252,14 @@
           `Dans « Éléments », pose le nuage <b>Internet</b> à côté du routeur.`,
           `Avec l'outil <b>Câble RJ45</b>, clique sur le <b>port 3</b> du routeur (le petit rond « 3 » au milieu), puis sur le nuage Internet.`,
           `Vérifie que tous les appareils ont bien la <b>passerelle</b> du routeur de leur côté (étape 4).`,
-          `Teste avec 🧪 : CDI-1 → Internet, puis SI-1 → Internet.`
+          `Teste avec 🧪 : ${A.tag}-1 → Internet, puis ${B.tag}-1 → Internet.`
         ],
         hint: `Le port 3 du routeur est la « porte de sortie » vers Internet. Sans la bonne passerelle sur un PC, le test échoue : relis le message du bandeau.`,
         checks: [
           {label:`Le nuage Internet est posé`, test:() => devices.some(d => d.type === 'internet')},
           {label:`Le port 3 du routeur est relié à Internet`, test:() => routers().some(r => { const n = neighborViaPort(r, 3); return !!n && n.type === 'internet'; })},
-          {label:`Un PC du CDI accède à Internet (test réussi)`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!main && !!net && main.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }},
-          {label:`Un PC de la salle info accède à Internet (test réussi)`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }}
+          {label:`Un PC ${A.of} accède à Internet (test réussi)`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!main && !!net && main.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }},
+          {label:`Un PC ${B.of} accède à Internet (test réussi)`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }}
         ]
       });
     }
@@ -1234,21 +1267,21 @@
     if(lv === '3e'){
       S.push({
         n:6, kind:'reseau', title:`Le serveur de communication filtre Internet`, pill:`Proxy : filtrer Internet`,
-        goal:`Faire passer le CDI par son <b>serveur de communication</b> (proxy) : seuls <b>3 PC</b> du CDI ont le droit d'aller sur Internet.`,
+        goal:`Faire passer ${A.the} par son <b>serveur de communication</b> (proxy) : seuls <b>${Z.allow} PC</b> ${A.of} ont le droit d'aller sur Internet.`,
         instr: [
-          `Clique sur le serveur du CDI et coche <b>Proxy : filtre l'accès Internet</b>.`,
-          `Dans la liste « Autoriser Internet à », coche seulement <b>CDI-1, CDI-2, CDI-3</b>.`,
-          `Clique sur chaque PC du CDI et saisis, dans « Serveur proxy », l'adresse IP du serveur (<b>192.168.1.1</b>).`,
-          `Teste : CDI-1 → Internet ✅, CDI-6 → Internet 🚫 (bloqué), SI-1 → Internet ✅ (la salle info n'est pas filtrée).`
+          `Clique sur le serveur ${A.of} et coche <b>Proxy : filtre l'accès Internet</b>.`,
+          `Dans la liste « Autoriser Internet à », coche seulement <b>${Z.allowNames}</b>.`,
+          `Clique sur chaque PC ${A.of} et saisis, dans « Serveur proxy », l'adresse IP du serveur (<b>${A.base}.1</b>).`,
+          `Teste : ${A.tag}-1 → Internet ✅, ${A.tag}-${A.n} → Internet 🚫 (bloqué), ${B.tag}-1 → Internet ✅ (${B.the} n'est pas filtrée).`
         ],
         hint: `Le proxy s'applique au réseau du serveur seulement. Un PC autorisé doit aussi connaître l'adresse du proxy, sinon l'accès est refusé.`,
         checks: [
-          {label:`Le serveur du CDI est réglé en proxy`, test:() => { const {main} = twoNets(); return !!main && main.some(d => d.type === 'serveur' && d.proxyServer); }},
-          {label:`Exactement 3 PC du CDI sont autorisés`, test:() => { const {main} = twoNets(); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && main.filter(d => d.type === 'pc' && (sv.proxyAllow || []).includes(d.id)).length === 3 && main.filter(d => d.type === 'pc').length > 3; }},
-          {label:`Tous les PC du CDI ont l'adresse du proxy`, test:() => { const {main} = twoNets(); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && validIp(sv.ip) && main.filter(d => d.type === 'pc').every(p => (p.proxy || '').trim() === sv.ip.trim()); }},
+          {label:`Le serveur ${A.of} est réglé en proxy`, test:() => { const {main} = twoNets(); return !!main && main.some(d => d.type === 'serveur' && d.proxyServer); }},
+          {label:`Exactement ${Z.allow} PC ${A.of} sont autorisés`, test:() => { const {main} = twoNets(); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && main.filter(d => d.type === 'pc' && (sv.proxyAllow || []).includes(d.id)).length === Z.allow && main.filter(d => d.type === 'pc').length > Z.allow; }},
+          {label:`Tous les PC ${A.of} ont l'adresse du proxy`, test:() => { const {main} = twoNets(); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && validIp(sv.ip) && main.filter(d => d.type === 'pc').every(p => (p.proxy || '').trim() === sv.ip.trim()); }},
           {label:`Un PC autorisé accède à Internet`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && !!net && main.filter(d => d.type === 'pc' && (sv.proxyAllow || []).includes(d.id)).some(p => evalPing(p, net).kind === 'ok'); }},
           {label:`Un PC non autorisé est bien bloqué (test : « accès bloqué »)`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!net && !!main && main.filter(d => d.type === 'pc').some(p => evalInternet(p).blocked === true); }},
-          {label:`La salle info (non filtrée) accède toujours à Internet`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }}
+          {label:`${B.The} (non filtrée) accède toujours à Internet`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }}
         ]
       });
     }
@@ -1293,7 +1326,7 @@
     const steps = getSteps(currentLevel), st = steps[L.stepIndex];
     const results = st.checks.filter(c => !c.ipOnly || ipActive(currentLevel, st.n)).map(c => ({label:c.label, ok:safe(c.test)}));
     const allOk = results.length > 0 && results.every(r => r.ok);
-    if(allOk && !L.done[st.n]) L.done[st.n] = true;
+    if(allOk && !L.done[st.n]){ L.done[st.n] = true; L.ack[st.n] = false; requestFiche(st); }
 
     const req = steps.filter(s => !s.expert), exp = steps.filter(s => s.expert);
     const reqDone = req.filter(s => L.done[s.n]).length, expDone = exp.filter(s => L.done[s.n]).length;
@@ -1343,6 +1376,7 @@
     const steps = getSteps(currentLevel), L = levelState[currentLevel];
     if(i < 0 || i >= steps.length) return;
     if(!isUnlocked(steps, i, L)) return;
+    for(let j = L.stepIndex; j < i; j++){ if(L.done[steps[j].n] && !L.ack[steps[j].n]){ showFiche(steps[j]); return; } }
     const key = steps[i].kind === 'enquete' ? 'enquete' : 'reseau';
     L.stepIndex = i;
     if(key !== currentWsKey){ saveWorkspace(); loadWorkspace(key); }
@@ -1368,6 +1402,58 @@
   function render(){
     renderDevices(); renderCables(); renderConfigPanel(); renderGuide();
   }
+
+  // =====================================================================
+  //  FENÊTRE « REMPLIS TA FICHE » entre chaque étape
+  // =====================================================================
+  function ficheTodo(lv, n){
+    const Z = SCEN[lv], A = Z.A, B = Z.B;
+    const common = {
+      1: [`le schéma de ton réseau (appareils et câbles)`, `les adresses IP et masques des 2 PC`, `le résultat du test de connexion`],
+      2: [`le tableau : nom, adresse IP et masque de chaque PC et du serveur`, `les résultats des tests de connexion`, `les phrases à compléter`],
+      3: [`le tableau du 2ᵉ réseau (${B.tag}-1 à ${B.tag}-${B.n}) : nom, adresse IP, masque`, `les résultats des tests et leur explication`, `le début des adresses de chaque réseau`],
+      4: [`les adresses des interfaces du routeur (ports 1 et 2)`, `la passerelle de chaque réseau`, `les résultats des tests entre les deux réseaux`],
+      5: [`le numéro du port WAN du routeur`, `les résultats des tests vers Internet et leur explication`],
+      6: [`l'adresse du proxy`, `le tableau : PC autorisé ou non, proxy saisi, résultat du test`, `la phrase sur le rôle d'un proxy`],
+      7: [`les règles d'adressage et les adresses de chaque appareil`, `la ligne du journal et tes tests`, `ton verdict et ta justification`]
+    };
+    if(lv === '5e') return {
+      1: [`ton schéma (appareils et câbles)`, `le nombre de PC, de commutateurs et de câbles utilisés`, `les adresses IP observées dans la fenêtre Configuration`, `le résultat du test de connexion`],
+      2: [`les noms des PC et du serveur`, `le tableau du nombre de câbles RJ45`, `ce que tu remarques sur les adresses IP`, `le schéma de ton réseau`],
+      3: [`le tableau des adresses IP que tu as saisies (${B.tag}-1 à ${B.tag}-${B.n})`, `le nombre de commutateurs et de PC du 2ᵉ réseau`, `si les deux commutateurs sont reliés ou non`],
+      4: [`les adresses des interfaces du routeur`, `la passerelle de chaque réseau`]
+    }[n] || [];
+    return common[n] || [];
+  }
+  let ficheShown = null;
+  function requestFiche(st){
+    if(window.SCORM_PART === 'quiz') return;
+    const tryShow = (k) => {
+      if(document.querySelector('.modal-overlay.show:not(#ficheOverlay)') && k < 200){ setTimeout(() => tryShow(k + 1), 700); return; }
+      const L = levelState[currentLevel]; if(L.ack[st.n]) return;
+      showFiche(st);
+    };
+    setTimeout(() => tryShow(0), 400);
+  }
+  function showFiche(st){
+    const lv = currentLevel, steps = getSteps(lv), idx = steps.findIndex(x => x.n === st.n), next = steps[idx + 1];
+    ficheShown = st;
+    const isEnq = st.kind === 'enquete';
+    $('ficheTitle').textContent = isEnq ? '📝 Enquête terminée : remplis ta fiche !' : `📝 Étape ${st.n} réussie : remplis ta fiche !`;
+    $('ficheSub').textContent = next ? `Avant de passer à la suite, prends ta fiche du cours.` : `Avant de fermer, termine ta fiche du cours.`;
+    const part = isEnq ? `la partie « L'enquête »` : `la partie « Étape ${st.n} — ${st.title} »`;
+    $('ficheBody').innerHTML = `<p style="margin:0 0 8px;">Complète sur ta fiche ${part}. Tu dois y noter :</p><ul style="margin:0 0 10px 18px; line-height:1.6;">${ficheTodo(lv, st.n).map(t => `<li>${t}</li>`).join('')}</ul><p style="margin:0; color:var(--muted); font-size:13px;">${next ? `Quand c'est fait, clique sur le bouton pour passer à l'étape suivante.` : `Quand c'est fait, clique sur le bouton.`}</p>`;
+    $('ficheOk').textContent = next ? '✅ Ma fiche est remplie : étape suivante' : '✅ Ma fiche est remplie';
+    $('ficheOverlay').classList.add('show');
+  }
+  $('ficheOk').addEventListener('click', () => {
+    const L = levelState[currentLevel], st = ficheShown; if(!st) return;
+    L.ack[st.n] = true; $('ficheOverlay').classList.remove('show'); ficheShown = null;
+    const steps = getSteps(currentLevel), idx = steps.findIndex(x => x.n === st.n);
+    if(steps[idx + 1] && L.stepIndex === idx) goToStep(idx + 1); else renderGuide();
+    updateScore(true);
+  });
+  $('ficheLater').addEventListener('click', () => { $('ficheOverlay').classList.remove('show'); });
 
   // =====================================================================
   //  QUIZ
@@ -1410,11 +1496,11 @@
       {q:`Quel est l'avantage du DHCP ?`, o:[`Plus besoin de configurer chaque PC à la main, et moins de doublons`,`Les PC deviennent plus rapides`,`On n'a plus besoin de câbles`,`On n'a plus besoin de commutateur`], a:0, why:`DHCP automatise la configuration et évite les erreurs et les doublons d'adresses.`},
       {q:`Un PC n'a aucune adresse IP configurée. Que peut-on dire ?`, o:[`Il ne pourra pas communiquer sur un réseau IP`,`Il communique normalement`,`Il devient un serveur`,`Il est le plus rapide du réseau`], a:0, why:`Sans adresse IP, un PC ne peut pas être identifié sur le réseau.`},
       {q:`Dans l'atelier, un commutateur a-t-il besoin d'une adresse IP pour relier des PC ?`, o:[`Non`,`Oui, toujours`,`Oui, mais seulement 192.168.1.1`,`Seulement avec 6 PC branchés`], a:0, why:`Le commutateur relie les appareils sans avoir lui-même besoin d'adresse IP.`},
-      {q:`Les câbles sont bons mais CDI-1 ne joint pas le serveur. Cause probable ?`, o:[`Les adresses IP ne sont pas dans le même réseau`,`Le PC est trop vieux`,`Le nom du PC est trop court`,`Le câble est trop propre`], a:0, why:`Il faut vérifier les adresses : les trois premiers nombres doivent être identiques avec le masque 255.255.255.0.`},
+      {q:`Les câbles sont bons mais PROF-1 ne joint pas le serveur. Cause probable ?`, o:[`Les adresses IP ne sont pas dans le même réseau`,`Le PC est trop vieux`,`Le nom du PC est trop court`,`Le câble est trop propre`], a:0, why:`Il faut vérifier les adresses : les trois premiers nombres doivent être identiques avec le masque 255.255.255.0.`},
       {q:`Quelle adresse convient pour un serveur du réseau 192.168.1.0 (masque 255.255.255.0) ?`, o:[`192.168.1.1`,`192.168.2.1`,`10.0.0.300`,`192.168.1`], a:0, why:`Elle commence par 192.168.1 et se termine par un nombre libre.`},
       {q:`À quoi sert un ping (test de connexion) ?`, o:[`À vérifier qu'un appareil répond sur le réseau`,`À changer l'adresse IP`,`À effacer des fichiers`,`À mesurer la longueur d'un câble`], a:0, why:`Le ping envoie un petit message et attend la réponse de l'autre appareil.`},
-      {q:`CDI-1 (192.168.1.10) et SI-1 (192.168.2.10) sont sur deux commutateurs séparés. Pourquoi ne communiquent-ils pas ?`, o:[`Ils sont dans deux réseaux différents qui ne sont pas reliés`,`Ils ont le même nom`,`Les PC sont éteints`,`Les câbles sont jaunes`], a:0, why:`Pour relier deux réseaux, il faudra un routeur (c'est le défi expert !).`},
-      {q:`Pourquoi donne-t-on des adresses en 192.168.1.x au CDI et 192.168.2.x à la salle info ?`, o:[`Pour distinguer deux réseaux différents`,`Pour que les PC aillent plus vite`,`Pour économiser des câbles`,`Par hasard`], a:0, why:`Chaque réseau a son propre numéro de réseau (1 ou 2).`},
+      {q:`PROF-1 (192.168.10.10) et LABO-1 (192.168.20.10) sont sur deux commutateurs séparés. Pourquoi ne communiquent-ils pas ?`, o:[`Ils sont dans deux réseaux différents qui ne sont pas reliés`,`Ils ont le même nom`,`Les PC sont éteints`,`Les câbles sont jaunes`], a:0, why:`Pour relier deux réseaux, il faudra un routeur (c'est le défi expert !).`},
+      {q:`Pourquoi donne-t-on des adresses en 192.168.10.x à la salle des professeurs et 192.168.20.x au laboratoire ?`, o:[`Pour distinguer deux réseaux différents`,`Pour que les PC aillent plus vite`,`Pour économiser des câbles`,`Par hasard`], a:0, why:`Chaque réseau a son propre numéro de réseau (10 ou 20).`},
       {q:`Qu'est-ce qu'Internet ?`, o:[`Un réseau mondial qui relie des millions de réseaux entre eux`,`Un seul très gros ordinateur`,`Un logiciel installé sur chaque PC`,`Un type de câble`], a:0, why:`Internet n'appartient à personne : c'est l'ensemble des réseaux du monde reliés entre eux. Un réseau local (comme celui du CDI) peut s'y connecter par son routeur.`}
     ],
     '3e': [
@@ -1422,8 +1508,8 @@
       {q:`Combien d'interfaces faut-il au minimum à un routeur pour relier deux réseaux ?`, o:[`1`,`2`,`4`,`8`], a:1, why:`Une interface par réseau relié : deux réseaux = deux interfaces.`},
       {q:`Pourquoi deux PC de réseaux différents ne communiquent-ils pas sans routeur ?`, o:[`Ils ne sont pas dans le même réseau et rien ne les relie`,`Leurs écrans sont différents`,`Ils n'ont pas de souris`,`Ils ont trop de câbles`], a:0, why:`Sans routeur, deux réseaux restent isolés l'un de l'autre.`},
       {q:`Qu'est-ce que la passerelle d'un PC ?`, o:[`L'adresse du routeur à contacter pour sortir de son réseau`,`Le nom du PC`,`Le numéro du port du commutateur`,`Le masque de sous-réseau`], a:0, why:`La passerelle est l'adresse du routeur, côté réseau du PC.`},
-      {q:`Le routeur a l'adresse 192.168.2.254 côté salle info. Quelle passerelle donne-t-on à SI-1 (192.168.2.10) ?`, o:[`192.168.2.254`,`192.168.1.254`,`192.168.2.10`,`255.255.255.0`], a:0, why:`La passerelle est l'adresse du routeur dans le réseau de SI-1.`},
-      {q:`La passerelle de CDI-1 est fausse, le reste est correct. Que se passe-t-il ?`, o:[`CDI-1 communique dans son réseau mais pas avec les autres réseaux`,`CDI-1 ne s'allume plus`,`Tout le réseau tombe en panne`,`CDI-1 devient un routeur`], a:0, why:`Sans bonne passerelle, un PC ne sait pas sortir de son réseau.`},
+      {q:`Le routeur a l'adresse 192.168.40.254 côté atelier de technologie. Quelle passerelle donne-t-on à TECHNO-1 (192.168.40.10) ?`, o:[`192.168.40.254`,`192.168.30.254`,`192.168.40.10`,`255.255.255.0`], a:0, why:`La passerelle est l'adresse du routeur dans le réseau de TECHNO-1.`},
+      {q:`La passerelle de VS-1 est fausse, le reste est correct. Que se passe-t-il ?`, o:[`VS-1 communique dans son réseau mais pas avec les autres réseaux`,`VS-1 ne s'allume plus`,`Tout le réseau tombe en panne`,`VS-1 devient un routeur`], a:0, why:`Sans bonne passerelle, un PC ne sait pas sortir de son réseau.`},
       {q:`L'interface 1 d'un routeur est reliée au réseau 192.168.1.0 (masque 255.255.255.0). Quelle adresse lui donner ?`, o:[`192.168.1.254`,`192.168.2.254`,`10.10.10.300`,`Aucune adresse`], a:0, why:`Chaque interface a une adresse dans le réseau auquel elle est reliée.`},
       {q:`Quelle différence entre un commutateur et un routeur ?`, o:[`Le commutateur relie des appareils d'un même réseau, le routeur relie des réseaux entre eux`,`Aucune différence`,`Le routeur est toujours moins cher`,`Le commutateur relie seulement deux réseaux`], a:0, why:`Commutateur : à l'intérieur d'un réseau. Routeur : entre les réseaux.`},
       {q:`Un PC veut joindre un appareil d'un autre réseau. Où envoie-t-il ses données ?`, o:[`À sa passerelle (le routeur)`,`Directement à l'appareil`,`À l'imprimante`,`À un autre PC au hasard`], a:0, why:`Le PC confie les données à sa passerelle, qui les fait suivre.`},
@@ -1433,11 +1519,11 @@
       {q:`Que contient un journal (log) de serveur ?`, o:[`La trace des connexions : adresse IP, date, heure et action`,`Uniquement des mots de passe`,`Le plan des locaux`,`Rien du tout`], a:0, why:`Le journal garde en mémoire qui (quelle adresse) a fait quoi, et quand.`},
       {q:`Pourquoi une adresse IP relevée dans un journal ne suffit-elle pas à accuser quelqu'un ?`, o:[`Elle identifie une machine : il faut la relier à un poste puis à son utilisateur`,`Elle est toujours fausse`,`Elle est secrète`,`Elle n'existe pas`], a:0, why:`On relie l'adresse au poste (plan, règles d'adressage), puis à la personne qui l'utilise.`},
       {q:`Avec DHCP, l'adresse d'un PC peut changer. Pour retrouver qui utilisait une adresse à 14h32, on…`, o:[`croise les journaux (DHCP et serveur) avec l'heure`,`tire au sort`,`regarde la couleur du câble`,`redémarre le routeur`], a:0, why:`L'heure permet de savoir quel PC avait quelle adresse à ce moment-là.`},
-      {q:`Un test de connexion réussi entre CDI-1 et SI-1 montre que…`, o:[`le câblage, les adresses, le routeur et les passerelles fonctionnent`,`les deux PC ont le même nom`,`le routeur est éteint`,`le serveur est en panne`], a:0, why:`Pour réussir, tout doit être correct : câbles, adresses, interfaces du routeur et passerelles.`},
+      {q:`Un test de connexion réussi entre VS-1 et TECHNO-1 montre que…`, o:[`le câblage, les adresses, le routeur et les passerelles fonctionnent`,`les deux PC ont le même nom`,`le routeur est éteint`,`le serveur est en panne`], a:0, why:`Pour réussir, tout doit être correct : câbles, adresses, interfaces du routeur et passerelles.`},
       {q:`Le câble du port 2 du routeur est débranché. Quelles conséquences ?`, o:[`Les deux réseaux ne communiquent plus entre eux mais chacun fonctionne de son côté`,`Plus aucun PC ne fonctionne`,`Les PC changent d'adresse IP`,`Rien ne change`], a:0, why:`Chaque réseau reste en état de marche, mais le lien entre eux est coupé.`},
-      {q:`Pourquoi séparer les réseaux (CDI, salle info, direction…) ?`, o:[`Pour organiser et mieux contrôler qui accède à quoi`,`Pour utiliser plus de câbles`,`Pour ralentir volontairement`,`Pour éviter d'avoir des adresses IP`], a:0, why:`Séparer les réseaux permet de mieux organiser et de mieux protéger.`},
+      {q:`Pourquoi séparer les réseaux (vie scolaire, atelier, administration…) ?`, o:[`Pour organiser et mieux contrôler qui accède à quoi`,`Pour utiliser plus de câbles`,`Pour ralentir volontairement`,`Pour éviter d'avoir des adresses IP`], a:0, why:`Séparer les réseaux permet de mieux organiser et de mieux protéger.`},
       {q:`Un serveur proxy sert à…`, o:[`faire passer et filtrer l'accès Internet des PC (autoriser ou bloquer)`,`attribuer une couleur à chaque PC`,`remplacer le commutateur`,`augmenter la taille de l'écran`], a:0, why:`Tout le trafic Internet passe par le proxy, qui peut autoriser certains PC, en bloquer d'autres et garder une trace des connexions.`},
-      {q:`SI-1 joint SI-2 mais pas CDI-1. Quelle est la première vérification ?`, o:[`La passerelle de SI-1 et le câble vers le routeur`,`La couleur de l'écran`,`Le nom de SI-2`,`La longueur de la souris`], a:0, why:`Quand on joint son propre réseau mais pas les autres, on vérifie la passerelle et le routeur.`}
+      {q:`TECHNO-1 joint TECHNO-2 mais pas VS-1. Quelle est la première vérification ?`, o:[`La passerelle de TECHNO-1 et le câble vers le routeur`,`La couleur de l'écran`,`Le nom de TECHNO-2`,`La longueur de la souris`], a:0, why:`Quand on joint son propre réseau mais pas les autres, on vérifie la passerelle et le routeur.`}
     ]
   };
 
@@ -1449,7 +1535,7 @@
     };
   }
   function renderQuiz(){
-    if(typeof SC !== 'undefined' && SC.locked){ $('quizView').innerHTML = `<div class="quiz-card"><div class="quiz-top"><span>Quiz ${LEVELS[currentLevel].label}</span></div><div class="quiz-score">🔒</div><p style="font-size:15px">Cette tentative du quiz est déjà terminée et sa note est enregistrée.</p><p style="font-size:13px; color:var(--muted)">Pour refaire le quiz, ferme cette page et relance l'activité depuis ELEA : une nouvelle tentative sera créée (si ton professeur l'autorise).</p><button class="btn primary" onclick="try{window.close()}catch(e){}">Fermer cette fenêtre</button></div>`; return; }
+    if(typeof SC !== 'undefined' && SC.locked){ $('quizView').innerHTML = `<div class="quiz-card"><div class="quiz-top"><span>Quiz ${LEVELS[currentLevel].label}</span></div><div class="quiz-score">🔒</div><p style="font-size:15px">Cette tentative du quiz est déjà terminée et sa note est enregistrée.</p><p style="font-size:13px; color:var(--muted)">Pour refaire le quiz, ferme cette page et relance le quiz depuis ELEA : une nouvelle tentative sera créée (si ton professeur l'autorise).</p><button class="btn primary" onclick="try{window.close()}catch(e){}">Fermer cette fenêtre</button></div>`; return; }
     const L = levelState[currentLevel];
     if(!L.quiz) startQuiz(currentLevel);
     const Q = L.quiz, total = Q.qs.length, root = $('quizView');
@@ -1463,7 +1549,7 @@
         missed.forEach(m => { const q = Q.qs[m.i]; h += `<div class="quiz-miss">Q${m.i + 1}. ${esc(q.q)}<br>Bonne réponse : <b>${esc(q.o[q.a])}</b><br><span style="color:var(--muted)">${esc(q.why)}</span></div>`; });
       }
       h += window.SCORM_PART === 'quiz'
-        ? `<div class="score-line" style="margin-top:18px;">🔒 Le quiz est terminé et fermé. Pour le refaire, relance l'activité depuis ELEA : une nouvelle tentative sera enregistrée.</div><div style="margin-top:10px;"><button class="btn primary" onclick="try{window.close()}catch(e){}">Fermer cette fenêtre</button></div></div>`
+        ? `<div class="score-line" style="margin-top:18px;">🔒 Le quiz est terminé et fermé. Pour le refaire, relance le quiz depuis ELEA : une nouvelle tentative sera enregistrée.</div><div style="margin-top:10px;"><button class="btn primary" onclick="try{window.close()}catch(e){}">Fermer cette fenêtre</button></div></div>`
         : `<div style="margin-top:18px;"><button class="btn primary" data-quiz="restart">🔁 Recommencer le quiz</button></div></div>`;
       root.innerHTML = h; return;
     }
@@ -1676,7 +1762,7 @@
     const o = {v:1, seq:idSeq, L:{}};
     Object.keys(levelState).forEach(lv => {
       const L = levelState[lv];
-      o.L[lv] = {d:Object.keys(L.done).filter(k => L.done[k]).map(Number), b:L.best || 0, q:L.tries || 0, c:L.caseSolved ? 1 : 0, i:L.stepIndex, s:L.dossierSeen ? 1 : 0, ws:L.ws};
+      o.L[lv] = {d:Object.keys(L.done).filter(k => L.done[k]).map(Number), b:L.best || 0, q:L.tries || 0, a:Object.keys(L.ack || {}).filter(k => L.ack[k]).map(Number), c:L.caseSolved ? 1 : 0, i:L.stepIndex, s:L.dossierSeen ? 1 : 0, ws:L.ws};
     });
     let str = JSON.stringify(o);
     if(str.length > 60000){ Object.keys(o.L).forEach(lv => { o.L[lv].ws = {}; }); str = JSON.stringify(o); }
@@ -1687,7 +1773,7 @@
     Object.keys(o.L).forEach(lv => {
       const L = levelState[lv], r = o.L[lv]; if(!L) return;
       (r.d || []).forEach(n => { L.done[n] = true; });
-      L.best = r.b || 0; L.tries = r.q || 0; L.caseSolved = !!r.c; L.dossierSeen = !!r.s; L.ws = r.ws || {};
+      L.best = r.b || 0; L.tries = r.q || 0; L.ack = {}; (r.a || r.d || []).forEach(n => { L.ack[n] = true; }); L.caseSolved = !!r.c; L.dossierSeen = !!r.s; L.ws = r.ws || {};
       const steps = getSteps(lv);
       L.stepIndex = Math.max(0, Math.min(r.i || 0, steps.length - 1));
     });
