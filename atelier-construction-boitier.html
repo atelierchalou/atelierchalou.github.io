@@ -1206,7 +1206,7 @@ function renderTxt(m){
 
 /* ================= Interface ================= */
 // projets qui ont leur propre appli : la carte ouvre l'appli dans un nouvel onglet
-const EXTRA_PICK=`<a class="obj" href="cadenas-3-chiffres.html" target="_blank" rel="noopener"><span class="top"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-6a9 9 0 0 1 18 0v6"/><rect x="9" y="21" width="30" height="22" rx="4"/><path d="M17 28v8M24 28v8M31 28v8"/></svg><b>Cadenas 3 chiffres</b></span><small>roues codées en contreplaqué · appli dédiée ↗</small><span class="badge laser">Découpe laser</span></a>`;
+const EXTRA_PICK=`<a class="obj" href="cadenas-3-chiffres.html" target="_blank" rel="noopener"><span class="top"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-6a9 9 0 0 1 18 0v6"/><rect x="9" y="21" width="30" height="22" rx="4"/><path d="M17 28v8M24 28v8M31 28v8"/></svg><b>Cadenas 3 chiffres</b></span><small>découpe laser ou impression 3D · appli dédiée ↗</small><span class="badge laser">Laser ou 3D</span></a>`;
 function renderPick(){
   $('objects').innerHTML=LEVELS.map(([l,name])=>`<div class="lvlrow"><div class="lvlname">${l?'Niveau '+l:''}<b>${name}</b></div><div class="objects">`+
     OBJS.filter(o=>o[2]===l).map(([id,nm])=>{const p=PRESETS[id];return `<button class="obj" data-id="${id}"><span class="top"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[id]}</svg><b>${nm}</b></span>

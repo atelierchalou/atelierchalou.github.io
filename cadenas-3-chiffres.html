@@ -143,6 +143,11 @@ table.parts td.n { font-family: var(--font-mono); font-variant-numeric: tabular-
 .notice li { margin: 4px 0; }
 .notice code { font-family: var(--font-mono); font-size: 12.5px; background: var(--panel-2); padding: 1px 5px; border-radius: 3px; }
 
+[hidden] { display: none !important; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel-2); }
+.seg button { border: 0; background: transparent; padding: 10px 8px; cursor: pointer; font-weight: 500; color: var(--muted); line-height: 1.2; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-checked="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 @media (max-width: 960px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .work { order: -1; }
@@ -156,11 +161,20 @@ table.parts td.n { font-family: var(--font-mono); font-variant-numeric: tabular-
 <div class="wrap">
   <header class="top">
     <h1>Cadenas 3 chiffres</h1>
-    <p>Contreplaqué, découpe laser. Choisissez le code, testez la maquette, téléchargez les planches.</p>
+    <p id="subtitle">Contreplaqué, découpe laser. Choisissez le code, testez la maquette, téléchargez les planches.</p>
   </header>
 
   <div class="layout">
     <aside class="panel" aria-label="Réglages">
+      <section>
+        <h2>Fabrication</h2>
+        <div class="seg" role="radiogroup" aria-label="Mode de fabrication">
+          <button type="button" role="radio" id="modeLaser" aria-checked="true">Découpe laser</button>
+          <button type="button" role="radio" id="modePrint" aria-checked="false">Impression 3D</button>
+        </div>
+        <p class="hint" id="modeHint"></p>
+      </section>
+
       <section>
         <h2>Code d'ouverture</h2>
         <div class="dials" id="dials"></div>
@@ -169,18 +183,21 @@ table.parts td.n { font-family: var(--font-mono); font-variant-numeric: tabular-
       </section>
 
       <section>
-        <h2>Matériau et laser</h2>
+        <h2 id="setTitle">Matériau et laser</h2>
         <div class="fields">
-          <label>Épaisseur (mm)
+          <label><span id="lblThick">Épaisseur du contreplaqué (mm)</span>
             <select id="thick"><option value="2">2 mm</option><option value="3" selected>3 mm</option><option value="4">4 mm</option><option value="5">5 mm</option><option value="6">6 mm</option></select>
           </label>
-          <label>Trait de coupe (mm)
+          <label id="fKerf">Trait de coupe (mm)
             <input id="kerf" type="number" min="0" max="0.5" step="0.05" value="0">
           </label>
-          <label>Planche largeur (mm)
+          <label id="fClear" hidden>Jeu entre pièces (mm)
+            <input id="clear" type="number" min="0.1" max="0.6" step="0.05" value="0.25">
+          </label>
+          <label><span id="lblW">Planche largeur (mm)</span>
             <input id="sheetW" type="number" min="100" max="1500" step="10" value="400">
           </label>
-          <label>Planche hauteur (mm)
+          <label><span id="lblH">Planche hauteur (mm)</span>
             <input id="sheetH" type="number" min="100" max="1500" step="10" value="300">
           </label>
           <label class="full">Diamètre du cure-dent (mm), 0 pour ne pas percer
@@ -188,7 +205,7 @@ table.parts td.n { font-family: var(--font-mono); font-variant-numeric: tabular-
           </label>
         </div>
         <div class="chips" id="presets"></div>
-        <p class="hint">Le trait de coupe élargit les pièces et rétrécit les trous de la moitié de sa valeur. Laissez 0 si vous ne le connaissez pas.</p>
+        <p class="hint" id="setHint"></p>
       </section>
 
       <section>
@@ -240,11 +257,11 @@ table.parts td.n { font-family: var(--font-mono); font-variant-numeric: tabular-
         <div class="sheetbox">
           <div class="sheetbar">
             <div class="row" id="sheetPager"></div>
-            <span class="legend"><span><i class="sw cut"></i>Découpe</span><span><i class="sw eng"></i>Gravure (à faire en premier)</span></span>
+            <span class="legend"><span><i class="sw cut"></i><span id="legCut">Découpe</span></span><span><i class="sw eng"></i><span id="legEng">Gravure (à faire en premier)</span></span></span>
             <span id="sheetInfo" style="color:var(--muted)"></span>
           </div>
           <div class="svgwrap" id="svgwrap"></div>
-          <div class="tablewrap"><table class="parts"><thead><tr><th>Pièce</th><th>Quantité</th><th>Dimensions (mm)</th><th>Rôle</th></tr></thead><tbody id="partsBody"></tbody></table></div>
+          <div class="tablewrap"><table class="parts"><thead><tr><th>Pièce</th><th>Quantité</th><th>Dimensions (mm)</th><th>Épaisseur (mm)</th><th>Rôle</th></tr></thead><tbody id="partsBody"></tbody></table></div>
         </div>
       </div>
 
@@ -273,8 +290,17 @@ const Pm = {
   LEG_W: 8.0, LEG_CLR: 0.2, OPEN_W: 30.0, LEG_IN: 40.0, CLEAR_H: 25.0, BRIDGE: 8.0,
   MARGIN_L: 5.0, MARGIN_B: 6.0, MARGIN_T: 6.0, SLOT_W: 14.0, FRONT_CUT_W: 12.0,
   CORE_TARGET: 6.0,
-  STEM_W: 4.0, STEM_L: 6.0, STEM_X: 0.5, KNOB_CLR: 0.3, CAP_W: 12.0, CAP_H: 10.0
+  STEM_W: 4.0, STEM_L: 6.0, STEM_X: 0.5, KNOB_CLR: 0.3, CAP_W: 12.0, CAP_H: 10.0, BOLT_R: 1.6
 };
+const state = { T: 3, Tlaser: 3, kerf: 0, sheetW: 400, sheetH: 300, gap: 4, tooth: 2.0, mode: 'laser', clear: 0.25, bedW: 220, bedH: 220 };
+/* Jeux : 0,2 mm pour la découpe laser, réglable pour l'impression 3D */
+function applyClearances() {
+  const c = state.mode === 'print' ? state.clear : 0.2;
+  Pm.POCKET_CLR = Pm.LEG_CLR = Pm.SLOT_CLR = c;
+  Pm.KNOB_CLR = c + 0.1;
+  Pm.BOLT_R = state.mode === 'print' ? 1.75 : 1.6;
+}
+const zgap = () => Pm.POCKET_CLR * 0.6;          // jeu vertical de chaque côté des pièces mobiles
 const S = 1000;                   // Clipper travaille en entiers : 1 mm = 1000 unités
 const EPS = 100;                  // 1e-4 mm² en unités Clipper²
 const C = ClipperLib;
@@ -365,7 +391,8 @@ function digitLines() {
 /* ======================================================================
    4. Implantation et pièces
    ====================================================================== */
-const L = (function () {
+applyClearances();
+function layout() {
   const o = {};
   o.xB0 = Pm.MARGIN_L; o.xB1 = o.xB0 + Pm.LEG_W + 2 * Pm.LEG_CLR;
   o.legB_x0 = o.xB0 + Pm.LEG_CLR; o.legA_x0 = o.legB_x0 + Pm.LEG_W + Pm.OPEN_W;
@@ -381,7 +408,8 @@ const L = (function () {
   o.shW = 2 * Pm.LEG_W + Pm.OPEN_W; o.shH = Pm.LEG_IN + Pm.CLEAR_H + Pm.BRIDGE;
   o.ys = (o.yw[1] + o.yw[2]) / 2;
   return o;
-})();
+}
+let L = layout();
 
 const wheelCache = {};
 function wheelP(code) {
@@ -415,13 +443,13 @@ function shackleP(groove) {
     sh = D(sh, polyP([[xa - 0.01, -0.01], [xa + c, -0.01], [xa - 0.01, c]]));
     sh = D(sh, polyP([[xb + 0.01, -0.01], [xb - c, -0.01], [xb + 0.01, c]]));
   });
-  if (groove !== false) sh = D(sh, offset(noseP(w, L.dg), 0.2));
+  if (groove !== false) sh = D(sh, offset(noseP(w, L.dg), Pm.LEG_CLR));
   return sh;
 }
 const pocketP = i => U(circP(L.xw, L.yw[i], Pm.RW + Pm.POCKET_CLR), boxP(L.xw, L.yw[i] - Pm.SLOT_W / 2, L.BW + 1, L.yw[i] + Pm.SLOT_W / 2));
 const tabSlotP = i => { const hh = Pm.TAB_W / 2 + Pm.SLOT_CLR; return boxP(L.xwall0 - 0.5, L.yw[i] - hh, L.xwall1 + 0.6, L.yw[i] + hh); };
 const boltPts = () => [[14, 24], [38, 24], [L.xw + 8.7, (L.yw[0] + L.yw[1]) / 2], [L.xw + 8.7, (L.yw[1] + L.yw[2]) / 2], [L.xw + 6.7, L.BH - 4.9]];
-const boltsP = () => U(...boltPts().map(b => circP(b[0], b[1], 1.6, 24)));
+const boltsP = () => U(...boltPts().map(b => circP(b[0], b[1], Pm.BOLT_R, 24)));
 function coreP() {
   const cav = U(boxP(L.xB0, L.y_lb, L.xB1, L.BH + 1), boxP(L.xA0, L.y_lb, L.xA1, L.BH + 1),
     boxP(L.x_Ar, L.yb0 - 0.3, L.xwall0, L.yb1 + 0.3),
@@ -444,16 +472,21 @@ function frontP() {
 }
 
 /* Géométries qui ne dépendent pas du code */
-const GEO = { core: coreP(), back: backP(), front: frontP(), bar: barP(), shackle: shackleP(true), stem: stemP(), cap: capP() };
-const FING = [0, 1, 2].map(i => fingerP(i, L.x_Ar));
-const NOSE = noseP(L.x_Ar, L.y_n);
+let GEO, FING, NOSE;
+function buildGeo() {
+  GEO = { core: coreP(), back: backP(), front: frontP(), bar: barP(), shackle: shackleP(true), stem: stemP(), cap: capP() };
+  FING = [0, 1, 2].map(i => fingerP(i, L.x_Ar));
+  NOSE = noseP(L.x_Ar, L.y_n);
+}
+buildGeo();
 const LINES = digitLines();
 
 /* ======================================================================
    5. Mécanique : table de course de l'anse et collisions barre / roues
    ====================================================================== */
 const LIFT_MAX = 50, LIFT_STEP = 0.25;
-const REQ = (function () {
+let REQ = [];
+function computeREQ() {
   const out = [];
   const region = I(GEO.shackle, boxP(L.shW - Pm.LEG_W - 1, -1, L.shW + 1, 45));
   for (let h = 0; h <= LIFT_MAX + 1e-9; h += LIFT_STEP) {
@@ -462,8 +495,13 @@ const REQ = (function () {
     while (dx < 6 && area(I(tr(NOSE, dx, 0), sh)) > EPS) dx += 0.02;
     out.push(dx);
   }
-  return out;
-})();
+  REQ = out;
+}
+computeREQ();
+function rebuildGeometry() {
+  applyClearances(); L = layout(); buildGeo(); computeREQ();
+  VIEW_TARGET.set(L.BW / 2, L.BH * 0.72, 6);
+}
 function reqAt(h) {
   const f = Math.max(0, Math.min(LIFT_MAX, h)) / LIFT_STEP, i = Math.floor(f), t = f - i;
   return i >= REQ.length - 1 ? REQ[REQ.length - 1] : REQ[i] * (1 - t) + REQ[i + 1] * t;
@@ -512,19 +550,18 @@ function runChecks() {
 /* ======================================================================
    6. Pièces à découper, rangement, export
    ====================================================================== */
-const state = { T: 3, kerf: 0, sheetW: 400, sheetH: 300, gap: 4, tooth: 2.0 };
-const toothHoleD = () => state.tooth + 0.1;                         // jeu de 0,1 mm pour la colle
+const toothHoleD = () => state.tooth + (state.mode === 'print' ? 0.25 : 0.1);   // jeu pour la colle
 const toothHoleP = () => circP((stemX0() + stemX1()) / 2, L.ys, toothHoleD() / 2, 40);
 const holed = paths => state.tooth > 0 ? D(paths, toothHoleP()) : paths;
 const ncore = () => Math.max(1, Math.round(Pm.CORE_TARGET / state.T));
 
-function buildParts() {
+function buildLaserParts() {
   const n = ncore(), cb = codeBU(), parts = [];
   const add = (name, role, paths, engrave) => {
     let cut = paths;
     if (state.kerf > 0) cut = offset(paths, state.kerf / 2);
     const b = bounds(cut);
-    parts.push({ name, role, cut, engrave: engrave || [], b });
+    parts.push({ name, role, cut, engrave: engrave || [], b, th: state.T });
   };
   add('Dos', 'Plaque pleine, 5 trous M3', GEO.back);
   add('Façade', '3 fenêtres, échancrures des roues, fente du poussoir', GEO.front);
@@ -539,6 +576,66 @@ function buildParts() {
   add('Poussoir · bouton', state.tooth > 0 ? 'Collé sur la tige, trou de cure-dent' : 'Collé sur la tige, au-dessus de la façade', holed(GEO.cap));
   return parts;
 }
+
+/* ---- Mode impression 3D : solides empilés (couches z0 → z1) posés à plat ---- */
+const GROOVE = 0.5;
+function strokeP(lines, w) {
+  const co = new C.ClipperOffset(2, 0.25 * S / 10);
+  lines.forEach(l => co.AddPath(l.pts.map(q => ({ X: toI(q[0]), Y: toI(q[1]) })), C.JoinType.jtRound, C.EndType.etOpenRound));
+  const sol = new C.Paths(); co.Execute(sol, w / 2 * S); return U(sol);
+}
+function buildPrintParts() {
+  const n = ncore(), T = state.T, cb = codeBU(), zg = zgap(), dm = n * T - 2 * zg, stemD = T + zg + 0.1, parts = [];
+  const add = (name, role, th, layers, foot, engrave) => {
+    parts.push({ name, role, th: +th.toFixed(2), layers, cut: foot, engrave: engrave || [], b: bounds(foot),
+      vol: layers.reduce((a, l) => a + area(l.paths) / (S * S) * (l.z1 - l.z0), 0) });
+  };
+  add('Boîtier', 'Dos + noyau en une pièce, ouverture vers le haut', T + n * T, [{ paths: GEO.back, z0: 0, z1: T }, { paths: GEO.core, z0: T, z1: T + n * T }], GEO.back.concat(GEO.core));
+  add('Façade', '3 fenêtres, échancrures des roues, fente du poussoir', T, [{ paths: GEO.front, z0: 0, z1: T }], GEO.front);
+  const strokes = strokeP(LINES, 0.45);
+  for (let idx = 0; idx < 3; idx++) {
+    const wp = wheelP(cb[2 - idx]);
+    add('Roue ' + (idx + 1), 'Chiffres gravés de ' + GROOVE + ' mm sur la face du dessus', dm,
+      [{ paths: wp, z0: 0, z1: dm - GROOVE }, { paths: D(wp, strokes), z0: dm - GROOVE, z1: dm }], wp, LINES);
+  }
+  add('Barre + tige', 'Doigts vers les roues ; tige du poussoir vers le haut' + (state.tooth > 0 ? ', trou de cure-dent' : ''), dm + stemD,
+    [{ paths: holed(GEO.bar), z0: 0, z1: dm }, { paths: holed(GEO.stem), z0: dm, z1: dm + stemD }], holed(GEO.bar));
+  add('Bouton', 'À coller sur la tige, au-dessus de la façade' + (state.tooth > 0 ? ' (trou de cure-dent)' : ''), T, [{ paths: holed(GEO.cap), z0: 0, z1: T }], holed(GEO.cap));
+  add('Anse', 'Jambes vers le bas', dm, [{ paths: GEO.shackle, z0: 0, z1: dm }], GEO.shackle);
+  return parts;
+}
+const buildParts = () => state.mode === 'print' ? buildPrintParts() : buildLaserParts();
+
+function layerGeo(l, tx, ty) {
+  const g0 = new THREE.ExtrudeGeometry(shapesFrom(tr(l.paths, tx, ty)), { depth: l.z1 - l.z0, bevelEnabled: false, curveSegments: 1 });
+  g0.translate(0, 0, l.z0);
+  return g0.index ? g0.toNonIndexed() : g0;
+}
+function buildSTL(entries) {
+  const geos = [];
+  entries.forEach(e => e.p.layers.forEach(l => geos.push(layerGeo(l, e.tx, e.ty))));
+  let nt = 0; geos.forEach(g => nt += g.attributes.position.count / 3);
+  const buf = new ArrayBuffer(84 + nt * 50), dv = new DataView(buf);
+  const hd = 'Cadenas 3 chiffres - STL binaire, mm'; for (let i = 0; i < hd.length; i++) dv.setUint8(i, hd.charCodeAt(i));
+  dv.setUint32(80, nt, true);
+  let o = 84, vol = 0;
+  geos.forEach(g => {
+    const a = g.attributes.position.array;
+    for (let i = 0; i < a.length; i += 9) {
+      const ux = a[i + 3] - a[i], uy = a[i + 4] - a[i + 1], uz = a[i + 5] - a[i + 2], vx = a[i + 6] - a[i], vy = a[i + 7] - a[i + 1], vz = a[i + 8] - a[i + 2];
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const m = Math.hypot(nx, ny, nz) || 1;
+      dv.setFloat32(o, nx / m, true); dv.setFloat32(o + 4, ny / m, true); dv.setFloat32(o + 8, nz / m, true);
+      for (let k = 0; k < 9; k++) dv.setFloat32(o + 12 + 4 * k, a[i + k], true);
+      dv.setUint16(o + 48, 0, true); o += 50;
+      vol += (a[i] * (a[i + 4] * a[i + 8] - a[i + 5] * a[i + 7]) - a[i + 1] * (a[i + 3] * a[i + 8] - a[i + 5] * a[i + 6]) + a[i + 2] * (a[i + 3] * a[i + 7] - a[i + 4] * a[i + 6])) / 6;
+    }
+    g.dispose();
+  });
+  return { bytes: new Uint8Array(buf), tris: nt, vol };
+}
+const plateEntries = (items, H) => items.map(({ p, x, y }) => ({ p, tx: x - p.b.minx, ty: (H - y - p.b.h) - p.b.miny }));
+const slug = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const SD = () => state.mode === 'print' ? { w: state.bedW, h: state.bedH, gap: 6 } : { w: state.sheetW, h: state.sheetH, gap: state.gap };
 function nest(parts, W, H, gap) {
   const order = parts.slice().sort((a, b) => Math.max(b.b.w, b.b.h) - Math.max(a.b.w, a.b.h));
   const sheets = []; let remaining = order;
@@ -580,7 +677,7 @@ function zipStore(files) {
   const u16 = v => [v & 255, (v >> 8) & 255], u32 = v => [v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >>> 24) & 255];
   const date = ((2026 - 1980) << 9) | (10 << 5) | 10;
   files.forEach(f => {
-    const nm = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+    const nm = enc.encode(f.name), data = f.bytes || enc.encode(f.text), crc = crc32(data);
     const lh = new Uint8Array([0x50, 0x4b, 3, 4, ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(date), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(nm.length), ...u16(0)]);
     chunks.push(lh, nm, data);
     central.push(new Uint8Array([0x50, 0x4b, 1, 2, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(date), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(nm.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), nm);
@@ -671,7 +768,7 @@ function buildModel() {
   M.layers = []; M.mob = []; M.wheelGroups = []; M.wheelMeshes = [];
   const back = solid(GEO.back, T, MAT.body); back.userData.ex = 0; root.add(back); M.layers.push(back);
   for (let k = 0; k < n; k++) { const m = solid(GEO.core, T, MAT.body); m.position.z = T * (1 + k); m.userData.ex = 1 + 0.7 * k; root.add(m); M.layers.push(m); }
-  const zm = T + 0.12, dm = n * T - 0.24; M.zMob = zm;
+  const zg = zgap(), zm = T + zg, dm = n * T - 2 * zg; M.zMob = zm;
   const cb = codeBU();
   for (let i = 0; i < 3; i++) {
     const grp = new THREE.Group(); grp.position.set(L.xw, L.yw[i], zm); grp.userData.ex = 2.6;
@@ -682,7 +779,7 @@ function buildModel() {
   }
   M.bar = new THREE.Group(); M.bar.position.set(0, 0, zm); M.bar.userData.ex = 2.6;
   M.dm = dm; M.barMesh = solid(holed(GEO.bar), dm, MAT.bar); M.bar.add(M.barMesh); root.add(M.bar); M.mob.push(M.bar);
-  const stemD = T + 0.22;
+  const stemD = T + zgap() + 0.1;
   M.knob = new THREE.Group();
   M.stemMesh = solid(holed(GEO.stem), stemD, MAT.knob);
   M.capMesh = solid(holed(GEO.cap), T, MAT.knob); M.capMesh.position.z = stemD;
@@ -886,6 +983,13 @@ function updateHud() {
 }
 
 /* Contrôles */
+const fr = (v, d) => v.toFixed(d == null ? 1 : d).replace('.', ',');
+function printChecks(li, n) {
+  const vol = PARTS.reduce((a, p) => a + (p.vol || 0), 0) / 1000;
+  return li(SHEETS.length > 0, SHEETS.length ? PARTS.length + ' pièces sur <span class="num">' + SHEETS.length + ' plateau' + (SHEETS.length > 1 ? 'x' : '') + '</span> de ' + state.bedW + ' × ' + state.bedH + ' mm.' : 'Les pièces ne tiennent pas sur le plateau.') +
+    li(true, 'Jeu radial <span class="num">' + fr(state.clear, 2) + ' mm</span> (roues, anse, poussoir), jeu vertical <span class="num">' + fr(zgap(), 2) + ' mm</span> de chaque côté ; trous de boulons Ø <span class="num">' + fr(Pm.BOLT_R * 2, 1) + ' mm</span>.') +
+    li(true, 'Boîtier : <span class="num">' + ((1 + n) * state.T) + ' mm</span> de haut (dos ' + state.T + ' mm + noyau ' + (n * state.T) + ' mm), façade ' + state.T + ' mm. Volume <span class="num">' + fr(vol) + ' cm³</span>, soit ≈ <span class="num">' + fr(vol * 1.24, 0) + ' g</span> de PLA à 100 %.');
+}
 function renderChecks(r) {
   const li = (ok, html) => '<li class="' + (ok ? '' : 'bad') + '"><span class="mark">' + (ok ? '✓' : '✗') + '</span><span>' + html + '</span></li>';
   const n = ncore();
@@ -895,17 +999,42 @@ function renderChecks(r) {
     li(r.blocked > 0.05, 'Anse relevée de 1 mm : elle bute sur la barre (<span class="num">' + r.blocked.toFixed(1).replace('.', ',') + ' mm²</span> de recouvrement).') +
     li(r.maxReq <= r.travel, 'La barre recule de <span class="num">' + r.maxReq.toFixed(1).replace('.', ',') + ' mm</span> pour libérer l\'anse, sur <span class="num">' + r.travel.toFixed(1).replace('.', ',') + ' mm</span> de course.') +
     li(r.knob, 'Poussoir : fente de <span class="num">' + r.slotW.toFixed(1).replace('.', ',') + ' × ' + r.slotH.toFixed(1).replace('.', ',') + ' mm</span> pour la tige de ' + Pm.STEM_W + ' mm ; le bouton recouvre la fente sur toute la course.') +
-    (state.tooth > 0 ? li(r.wall >= 0.9, 'Cure-dent Ø ' + String(state.tooth).replace('.', ',') + ' mm : trou de <span class="num">' + r.hole.toFixed(1).replace('.', ',') + ' mm</span> dans le bouton, la tige et la barre ; parois de <span class="num">' + r.wall.toFixed(2).replace('.', ',') + ' mm</span> au minimum.') : '') +
-    li(true, 'Épaisseur empilée <span class="num">' + ((2 + n) * state.T) + ' mm</span> (' + n + ' couche' + (n > 1 ? 's' : '') + ' de noyau).');
+    (state.tooth > 0 ? li(r.wall >= (state.mode === 'print' ? 0.8 : 0.9), 'Cure-dent Ø ' + String(state.tooth).replace('.', ',') + ' mm : trou de <span class="num">' + r.hole.toFixed(1).replace('.', ',') + ' mm</span> dans le bouton, la tige et la barre ; parois de <span class="num">' + r.wall.toFixed(2).replace('.', ',') + ' mm</span> au minimum.') : '') +
+    (state.mode === 'print' ? printChecks(li, n) : li(true, 'Épaisseur empilée <span class="num">' + ((2 + n) * state.T) + ' mm</span> (' + n + ' couche' + (n > 1 ? 's' : '') + ' de noyau).'));
 }
 
 /* Planche, pièces, fichiers, notice */
 let SHEETS = [], PARTS = [], curSheet = 0;
 function codeStr() { return CODE_TB.join('-'); }
+function noticePrint() {
+  const n = ncore(), T = state.T, code = codeStr(), zg = zgap(), dm = n * T - 2 * zg, stemD = T + zg + 0.1;
+  const vol = PARTS.reduce((a, p) => a + (p.vol || 0), 0) / 1000, tl = Math.round(T + stemD + dm - 1);
+  return {
+    mat: ['Filament PLA ou PETG : ≈ ' + fr(vol * 1.24, 0) + ' g à 100 % de remplissage (environ la moitié à 25 %), ' + SHEETS.length + ' plateau' + (SHEETS.length > 1 ? 'x' : '') + ' de ' + state.bedW + ' × ' + state.bedH + ' mm.',
+      '5 boulons M3 × ' + (Math.round(((2 + n) * T + 8) / 5) * 5) + ' mm avec écrous (trous de Ø ' + fr(Pm.BOLT_R * 2, 1) + ' mm).',
+      'Colle cyanoacrylate ou colle à bois, papier de verre fin, bougie ou graphite.'].concat(state.tooth > 0 ? ['Un cure-dent de Ø ' + fr(state.tooth) + ' mm.'] : []),
+    steps: [
+      'Importez les fichiers STL du dossier pieces/ (ou les plateaux déjà rangés) : les pièces sont à plat, dans leur sens d\'impression, sans support. Buse 0,4 mm, couches 0,2 mm, 3 parois, remplissage 25 %.',
+      'Imprimez d\'abord une roue et la barre pour tester les jeux (' + fr(state.clear, 2) + ' mm prévus). Elles doivent coulisser sans frotter ; sinon augmentez « Jeu entre pièces » et réexportez.',
+      'Ébarbez : première couche (pied d\'éléphant), bords des alvéoles, fente du poussoir, doigts de la barre. Poncez au besoin.',
+      'Posez le boîtier à plat, ouverture vers le haut. Placez la barre (bec à gauche, doigts vers les roues, tige vers le haut), les 3 roues chiffres vers le haut, puis l\'anse jambes vers le bas.',
+      'Posez la façade en passant la tige dans la fente, puis serrez les 5 boulons.',
+      'Collez le bouton sur la tige, au-dessus de la façade, avec une feuille de papier glissée dessous comme jeu. Retirez le papier une fois sec.'
+    ].concat(state.tooth > 0 ? ['Coupez le cure-dent à environ ' + tl + ' mm, déposez une goutte de colle dans le trou du bouton et enfoncez-le jusqu\'au fond (il traverse le bouton, la tige et la barre) ; arasez-le au ras du bouton.'] : [],
+      ['Facultatif : remplissez les chiffres gravés (' + GROOVE + ' mm) de peinture ou de feutre, puis frottez les bords des roues et de la barre à la bougie.']),
+    use: [
+      'Ouvrir : affichez ' + code + ' (de haut en bas), poussez le bouton vers les roues, puis tirez l\'anse vers le haut.',
+      'Fermer : enfoncez l\'anse à fond, poussez le bouton vers l\'anse (la barre se loge dans la gorge), puis brouillez les roues.',
+      'Sans le bon code, le bouton ne peut pas aller vers les roues : la barre reste bloquée.'
+    ],
+    limits: ['Objet ludique ou décoratif : le plastique ne protège pas contre le vol.', 'Si une roue accroche, augmentez le jeu ou poncez ses faces. Le PLA se déforme au-delà de 55 °C : évitez la voiture au soleil.']
+  };
+}
 function noticeSteps() {
+  if (state.mode === 'print') return noticePrint();
   const n = ncore(), T = state.T, code = codeStr();
   return {
-    mat: ['Contreplaqué ' + T + ' mm (peuplier ou bouleau), ' + SHEETS.length + ' planche' + (SHEETS.length > 1 ? 's' : '') + ' de ' + state.sheetW + ' × ' + state.sheetH + ' mm.', '5 boulons M3 × ' + (Math.round(((2 + n) * T + 8) / 5) * 5) + ' mm avec écrous (ou 5 goujons de 3 mm collés).', 'Colle à bois, papier de verre fin (240), bougie ou crayon à papier.'],
+    mat: ['Contreplaqué ' + T + ' mm (peuplier ou bouleau), ' + SHEETS.length + ' planche' + (SHEETS.length > 1 ? 's' : '') + ' de ' + SD().w + ' × ' + SD().h + ' mm.', '5 boulons M3 × ' + (Math.round(((2 + n) * T + 8) / 5) * 5) + ' mm avec écrous (ou 5 goujons de 3 mm collés).', 'Colle à bois, papier de verre fin (240), bougie ou crayon à papier.'],
     steps: [
       'Gravez d\'abord les chiffres (bleu), puis découpez (rouge). Mesurez l\'épaisseur réelle de votre planche avant de lancer.',
       'Collez chaque roue en ' + n + ' couche' + (n > 1 ? 's' : '') + ', face gravée vers l\'avant, encoches alignées. Faites de même pour la barre et l\'anse. Serrez jusqu\'au séchage.',
@@ -939,62 +1068,73 @@ function noticeText() {
   const s = noticeSteps();
   return 'CADENAS 3 CHIFFRES — code ' + codeStr() + ' (haut → bas)\n\nMATÉRIEL\n' + s.mat.map(t => '- ' + t).join('\n') +
     '\n\nMONTAGE\n' + s.steps.map((t, i) => (i + 1) + '. ' + t).join('\n') + '\n\nUTILISATION\n' + s.use.map(t => '- ' + t).join('\n') +
-    '\n\nLIMITES\n' + s.limits.map(t => '- ' + t).join('\n') + '\n\nTrait rouge = découpe, trait bleu = gravure.\n';
+    '\n\nLIMITES\n' + s.limits.map(t => '- ' + t).join('\n') + (state.mode === 'print' ? '\n\nFichiers STL en millimètres, posés à plat.\n' : '\n\nTrait rouge = découpe, trait bleu = gravure.\n');
 }
 function renderSheets() {
   PARTS = buildParts();
-  const res = nest(PARTS, state.sheetW, state.sheetH, state.gap);
+  const res = nest(PARTS, SD().w, SD().h, SD().gap);
   const wrap = $('svgwrap'), pager = $('sheetPager'), body = $('partsBody');
   body.innerHTML = '';
   const groups = {};
   PARTS.forEach(p => { const k = p.name.replace(/ · couche \d+/, '').replace(/ \d+$/, ''); (groups[k] = groups[k] || []).push(p); });
   Object.keys(groups).forEach(k => {
     const p = groups[k][0], tr_ = document.createElement('tr');
-    tr_.innerHTML = '<td>' + k + '</td><td class="n">' + groups[k].length + '</td><td class="n">' + p.b.w.toFixed(1) + ' × ' + p.b.h.toFixed(1) + '</td><td>' + p.role + '</td>';
+    tr_.innerHTML = '<td>' + k + '</td><td class="n">' + groups[k].length + '</td><td class="n">' + p.b.w.toFixed(1) + ' × ' + p.b.h.toFixed(1) + '</td><td class="n">' + p.th + '</td><td>' + p.role + '</td>';
     body.appendChild(tr_);
   });
   if (res.error) { SHEETS = []; wrap.innerHTML = '<p style="padding:16px;color:var(--accent)">' + res.error + '</p>'; pager.innerHTML = ''; $('sheetInfo').textContent = ''; renderDownloads(); renderNotice(); return; }
   SHEETS = res.sheets; curSheet = Math.min(curSheet, SHEETS.length - 1);
   pager.innerHTML = '';
-  if (SHEETS.length > 1) SHEETS.forEach((_, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn small' + (i === curSheet ? ' primary' : ''); b.textContent = 'Planche ' + (i + 1) + '/' + SHEETS.length; b.onclick = () => { curSheet = i; renderSheets(); }; pager.appendChild(b); });
-  wrap.innerHTML = sheetSVG(SHEETS[curSheet], state.sheetW, state.sheetH, true);
-  $('sheetInfo').textContent = PARTS.length + ' pièces · ' + SHEETS.length + ' planche' + (SHEETS.length > 1 ? 's' : '') + ' de ' + state.sheetW + ' × ' + state.sheetH + ' mm';
+  if (SHEETS.length > 1) SHEETS.forEach((_, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn small' + (i === curSheet ? ' primary' : ''); b.textContent = (state.mode === 'print' ? 'Plateau ' : 'Planche ') + (i + 1) + '/' + SHEETS.length; b.onclick = () => { curSheet = i; renderSheets(); }; pager.appendChild(b); });
+  wrap.innerHTML = sheetSVG(SHEETS[curSheet], SD().w, SD().h, true);
+  $('sheetInfo').textContent = PARTS.length + ' pièces · ' + SHEETS.length + (state.mode === 'print' ? ' plateau' + (SHEETS.length > 1 ? 'x' : '') : ' planche' + (SHEETS.length > 1 ? 's' : '')) + ' de ' + SD().w + ' × ' + SD().h + ' mm';
   renderDownloads(); renderNotice();
 }
 function sheetFile(i) { return 'cadenas-' + CODE_TB.join('') + '-planche-' + (i + 1) + 'sur' + SHEETS.length + '.svg'; }
 let DL = null;
 function renderDownloads() {
   const list = $('dlList'); list.innerHTML = '';
-  SHEETS.forEach((_, i) => {
+  if (state.mode !== 'print') SHEETS.forEach((_, i) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn';
-    b.textContent = (DL ? 'Télécharger ' : 'Copier ') + sheetFile(i);
+    b.textContent = 'Télécharger ' + sheetFile(i);
     b.onclick = () => deliver(sheetFile(i), sheetSVG(SHEETS[i], state.sheetW, state.sheetH, false), 'image/svg+xml');
     list.appendChild(b);
   });
   $('dlZip').disabled = !SHEETS.length;
-  $('dlZip').textContent = DL ? 'Télécharger tout (.zip)' : 'Copier la notice';
+  $('dlZip').textContent = state.mode === 'print' ? 'Télécharger les STL (.zip)' : 'Télécharger tout (.zip)';
 }
 function say(t) { $('dlMsg').textContent = t; }
-async function deliver(name, data) {
+function anchorSave(name, data, type) {
+  const blob = data instanceof Blob ? data : new Blob([data], { type: type || 'application/octet-stream' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+async function deliver(name, data, type) {
   if (DL) {
     try { const r = await DL.save({ filename: name, data }); say(r.status === 'saved' ? name + ' enregistré.' : name + ' envoyé.'); }
     catch (e) { say(e && e.code === 'declined' ? 'Téléchargement annulé.' : 'Le téléchargement a échoué (' + ((e && e.code) || 'erreur') + ').'); }
   } else {
-    try { await navigator.clipboard.writeText(typeof data === 'string' ? data : ''); say('Contenu copié dans le presse-papiers : collez-le dans un fichier ' + name + '.'); }
-    catch (e) { say('Le téléchargement n\'est pas disponible dans cette vue.'); }
+    try { anchorSave(name, data, type); say(name + ' téléchargé.'); } catch (e) { say('Le téléchargement n\'est pas disponible dans cette vue.'); }
   }
+}
+function buildZipFiles() {
+  const pr = state.mode === 'print', files = [];
+  if (pr) {
+    SHEETS.forEach((items, i) => files.push({ name: 'plateaux/plateau-' + (i + 1) + 'sur' + SHEETS.length + '.stl', bytes: buildSTL(plateEntries(items, state.bedH)).bytes }));
+    PARTS.forEach(p => files.push({ name: 'pieces/' + slug(p.name) + '.stl', bytes: buildSTL([{ p, tx: -p.b.minx, ty: -p.b.miny }]).bytes }));
+  } else SHEETS.forEach((_, i) => files.push({ name: sheetFile(i), text: sheetSVG(SHEETS[i], state.sheetW, state.sheetH, false) }));
+  files.push({ name: 'NOTICE.txt', text: noticeText() });
+  files.push({ name: 'parametres.json', text: JSON.stringify(Object.assign({ mode: pr ? 'impression_3d' : 'decoupe_laser', code_haut_vers_bas: CODE_TB, pieces: PARTS.length },
+    pr ? { jeu_mm: state.clear, plateau_mm: [state.bedW, state.bedH], hauteur_couche_paroi_mm: state.T } : { epaisseur_mm: state.T, trait_de_coupe_mm: state.kerf, planche_mm: [state.sheetW, state.sheetH] }), null, 2) });
+  return files;
 }
 $('dlZip').onclick = () => {
   if (!SHEETS.length) return;
-  if (!DL) { deliver('NOTICE.txt', noticeText()); return; }
-  const files = SHEETS.map((_, i) => ({ name: sheetFile(i), text: sheetSVG(SHEETS[i], state.sheetW, state.sheetH, false) }));
-  files.push({ name: 'NOTICE.txt', text: noticeText() });
-  files.push({ name: 'parametres.json', text: JSON.stringify({ code_haut_vers_bas: CODE_TB, epaisseur_mm: state.T, trait_de_coupe_mm: state.kerf, planche_mm: [state.sheetW, state.sheetH], pieces: PARTS.length }, null, 2) });
-  deliver('cadenas-' + CODE_TB.join('') + '.zip', zipStore(files));
+  deliver('cadenas-' + CODE_TB.join('') + (state.mode === 'print' ? '-impression3d' : '-laser') + '.zip', zipStore(buildZipFiles()), 'application/zip');
 };
 
 /* Réactions aux changements */
-function persist() { try { localStorage.setItem('cadenas3', JSON.stringify({ code: CODE_TB, T: state.T, kerf: state.kerf, w: state.sheetW, h: state.sheetH, tooth: state.tooth })); } catch (e) { } }
+function persist() { try { localStorage.setItem('cadenas3', JSON.stringify({ code: CODE_TB, T: state.Tlaser, kerf: state.kerf, w: state.sheetW, h: state.sheetH, tooth: state.tooth, mode: state.mode, clear: state.clear, bw: state.bedW, bh: state.bedH })); } catch (e) { } }
 let tCheck = 0;
 function onCodeChanged() {
   Object.keys(wheelCache).forEach(k => delete wheelCache[k]);
@@ -1003,15 +1143,49 @@ function onCodeChanged() {
 function onMaterialChanged() { buildModel(); renderSheets(); renderChecks(runChecks()); persist(); }
 
 $('btnRandomCode').onclick = () => { CODE_TB = [0, 1, 2].map(() => Math.floor(Math.random() * 10)); onCodeChanged(); };
-$('thick').onchange = e => { state.T = +e.target.value; onMaterialChanged(); };
+$('thick').onchange = e => { state.T = state.Tlaser = +e.target.value; onMaterialChanged(); };
 $('tooth').onchange = e => { const v = +e.target.value || 0; state.tooth = v <= 0 ? 0 : Math.max(1.5, Math.min(3, v)); e.target.value = state.tooth; onMaterialChanged(); };
 $('kerf').onchange = e => { state.kerf = Math.max(0, Math.min(0.5, +e.target.value || 0)); e.target.value = state.kerf; renderSheets(); persist(); };
-const onSheet = () => { state.sheetW = Math.max(100, +$('sheetW').value || 400); state.sheetH = Math.max(100, +$('sheetH').value || 300); curSheet = 0; renderSheets(); persist(); };
+const onSheet = () => {
+  const w = Math.max(100, +$('sheetW').value || 220), h = Math.max(100, +$('sheetH').value || 220);
+  if (state.mode === 'print') { state.bedW = w; state.bedH = h; } else { state.sheetW = w; state.sheetH = h; }
+  curSheet = 0; renderSheets(); renderChecks(runChecks()); persist();
+};
+function regen() {
+  rebuildGeometry(); Object.keys(wheelCache).forEach(k => delete wheelCache[k]);
+  buildModel(); sim.dirty = true; renderSheets(); renderChecks(runChecks()); persist();
+}
+$('clear').onchange = e => { state.clear = Math.max(0.1, Math.min(0.6, +e.target.value || 0.25)); e.target.value = state.clear; regen(); };
+function buildPresets() {
+  const box = $('presets'); box.innerHTML = '';
+  const list = state.mode === 'print' ? [['180 × 180', 180, 180], ['220 × 220', 220, 220], ['256 × 256', 256, 256], ['300 × 300', 300, 300]] : [['400 × 300', 400, 300], ['300 × 200', 300, 200], ['600 × 300', 600, 300], ['600 × 400', 600, 400]];
+  list.forEach(([t, w, h]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn small'; b.textContent = t;
+    b.onclick = () => { $('sheetW').value = w; $('sheetH').value = h; onSheet(); }; box.appendChild(b);
+  });
+}
+function updateModeUI() {
+  const pr = state.mode === 'print';
+  $('modeLaser').setAttribute('aria-checked', String(!pr)); $('modePrint').setAttribute('aria-checked', String(pr));
+  $('subtitle').textContent = pr ? 'Impression 3D en PLA ou PETG. Choisissez le code, testez la maquette, téléchargez les fichiers STL.' : 'Contreplaqué, découpe laser. Choisissez le code, testez la maquette, téléchargez les planches.';
+  $('modeHint').textContent = pr ? 'Pièces posées à plat, sans support. Jeux réglables selon votre imprimante.' : 'Pièces découpées en contreplaqué, collées par couches.';
+  $('setTitle').textContent = pr ? 'Imprimante 3D' : 'Matériau et laser';
+  $('thick').closest('label').hidden = pr; $('fKerf').hidden = pr; $('fClear').hidden = !pr;
+  $('lblW').textContent = pr ? 'Plateau largeur (mm)' : 'Planche largeur (mm)'; $('lblH').textContent = pr ? 'Plateau hauteur (mm)' : 'Planche hauteur (mm)';
+  $('sheetW').value = pr ? state.bedW : state.sheetW; $('sheetH').value = pr ? state.bedH : state.sheetH;
+  $('thick').value = state.Tlaser; $('clear').value = state.clear;
+  $('tab-sheet').textContent = pr ? 'Plateau d\'impression' : 'Planche de découpe';
+  $('legCut').textContent = pr ? 'Contour des pièces' : 'Découpe'; $('legEng').textContent = pr ? 'Chiffres gravés (0,5 mm)' : 'Gravure (à faire en premier)';
+  $('setHint').textContent = pr ? 'Murs de 3 mm ; le jeu s\'applique aux roues, à l\'anse et au poussoir.' : '';
+  buildPresets();
+}
+function setMode(m) {
+  if (m === state.mode) return;
+  state.mode = m; state.T = m === 'print' ? 3 : state.Tlaser;
+  updateModeUI(); regen();
+}
+$('modeLaser').onclick = () => setMode('laser'); $('modePrint').onclick = () => setMode('print');
 $('sheetW').onchange = onSheet; $('sheetH').onchange = onSheet;
-[['400 × 300', 400, 300], ['300 × 200', 300, 200], ['600 × 300', 600, 300], ['600 × 400', 600, 400]].forEach(([t, w, h]) => {
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn small'; b.textContent = t;
-  b.onclick = () => { $('sheetW').value = w; $('sheetH').value = h; onSheet(); }; $('presets').appendChild(b);
-});
 $('btnShow').onclick = showCode; $('btnScramble').onclick = scramble;
 liftEl.oninput = () => { sim.goal = +liftEl.value; };
 $('barPos').max = L.travel.toFixed(2);
@@ -1049,13 +1223,18 @@ try {
   const sv = JSON.parse(localStorage.getItem('cadenas3') || 'null');
   if (sv) {
     if (Array.isArray(sv.code) && sv.code.length === 3) CODE_TB = sv.code.map(v => mod(+v || 0, 10));
-    if ([2, 3, 4, 5, 6].includes(sv.T)) state.T = sv.T;
+    if ([2, 3, 4, 5, 6].includes(sv.T)) state.Tlaser = sv.T;
+    if (sv.mode === 'print') state.mode = 'print';
+    if (sv.clear >= 0.1 && sv.clear <= 0.6) state.clear = sv.clear;
+    if (sv.bw >= 100) state.bedW = sv.bw; if (sv.bh >= 100) state.bedH = sv.bh;
     if (sv.kerf >= 0 && sv.kerf <= 0.5) state.kerf = sv.kerf;
     if (sv.tooth === 0 || (sv.tooth >= 1.5 && sv.tooth <= 3)) state.tooth = sv.tooth;
     if (sv.w >= 100) state.sheetW = sv.w; if (sv.h >= 100) state.sheetH = sv.h;
   }
 } catch (e) { }
-$('thick').value = state.T; $('tooth').value = state.tooth; $('kerf').value = state.kerf; $('sheetW').value = state.sheetW; $('sheetH').value = state.sheetH;
+state.T = state.mode === 'print' ? 3 : state.Tlaser;
+if (state.mode === 'print' || state.clear !== 0.25) { rebuildGeometry(); Object.keys(wheelCache).forEach(k => delete wheelCache[k]); }
+$('tooth').value = state.tooth; $('kerf').value = state.kerf; updateModeUI();
 
 renderDials(); renderHud(); buildModel(); resetView(true); resize();
 sim.target = [36 * 3, 36 * 8, 36 * 1]; sim.ang = sim.target.slice();
