@@ -328,9 +328,9 @@ header.top .switch input:checked+.sw::after{transform:translateX(16px)}
 .cl-main.on .tbw textarea:hover,.tbw textarea:focus{border-color:#1a4fd6;background:rgba(255,255,255,.55)}
 .tbw .grip,.tbw .del,.tbw .rsz{display:none;position:absolute;z-index:2}
 .cl-main.on .tbw:hover .grip,.cl-main.on .tbw:focus-within .grip,.cl-main.on .tbw:hover .del,.cl-main.on .tbw:focus-within .del,.cl-main.on .tbw:hover .rsz,.cl-main.on .tbw:focus-within .rsz{display:block}
-.tbw .grip{left:-9px;top:-9px;width:18px;height:18px;border-radius:5px;background:#1a4fd6;cursor:move;touch-action:none}
-.tbw .del{right:-9px;top:-9px;width:18px;height:18px;border-radius:50%;border:0;background:#d1242f;color:#fff;font:700 13px/18px sans-serif;padding:0;cursor:pointer}
-.tbw .rsz{right:-6px;bottom:2px;width:10px;height:22px;border-radius:4px;background:#1a4fd6;cursor:ew-resize;touch-action:none}
+.tbw .grip{left:-4px;top:-22px;width:24px;height:22px;border-radius:6px;background:#1a4fd6;cursor:move;touch-action:none;box-shadow:0 1px 4px rgba(0,0,0,.3);background-image:radial-gradient(circle,#fff 1.5px,transparent 2px);background-size:7px 7px;background-position:center}
+.tbw .del{right:-4px;top:-22px;width:22px;height:22px;border-radius:6px;border:0;background:#d1242f;color:#fff;font:700 16px/22px sans-serif;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.tbw .rsz{right:-9px;top:50%;transform:translateY(-50%);width:12px;height:30px;max-height:100%;border-radius:6px;background:#1a4fd6;cursor:ew-resize;touch-action:none;box-shadow:0 1px 4px rgba(0,0,0,.3);background-image:linear-gradient(90deg,transparent 3px,#fff 3px,#fff 4px,transparent 4px,transparent 7px,#fff 7px,#fff 8px,transparent 8px)}
 .cf{position:absolute;border:0;border-bottom:1.5px solid #14232b;background:transparent;font-family:"Comic Sans MS","Comic Neue","Chalkboard SE",cursive,sans-serif;font-size:2.52cqw;color:#1a4fd6;padding:0 .2em;outline:none;border-radius:0}
 .cl-main.on .cf{background:rgba(26,79,214,.07)}
 .cl-main.on .cf:focus{background:rgba(26,79,214,.14)}
@@ -1236,7 +1236,7 @@ function addTextBox(pg, t){
   var pid = pg.getAttribute("data-pid"), layer = pg.querySelector(".layer");
   var w = document.createElement("div"); w.className = "tbw";
   w.style.left = (t.x*100) + "%"; w.style.top = (t.y/PAGE_R*100) + "%"; w.style.width = (t.w*100) + "%";
-  w.innerHTML = '<span class="grip" title="Déplacer"></span><button type="button" class="del" aria-label="Supprimer ce texte">&times;</button><textarea rows="1" spellcheck="false" aria-label="Texte à écrire"></textarea><span class="rsz" title="Largeur"></span>';
+  w.innerHTML = '<span class="grip" title="Déplacer le texte"></span><button type="button" class="del" title="Supprimer ce texte" aria-label="Supprimer ce texte">&times;</button><textarea rows="1" spellcheck="false" aria-label="Texte à écrire"></textarea><span class="rsz" title="Élargir ou rétrécir le cadre"></span>';
   var ta = w.querySelector("textarea"); ta.value = t.t; ta.style.fontSize = (t.s*100) + "cqw"; ta.style.color = t.c; ta.readOnly = !CL.on;
   ta.addEventListener("input", function(){ t.t = ta.value; autosize(ta); clSave(); });
   ta.addEventListener("focus", function(){ CL.focus = {t:t, ta:ta}; });
