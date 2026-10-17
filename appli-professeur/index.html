@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Progression Technologie 5ème</title>
+<title>Progression Technologie</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Concept : cahier de progression d'un prof de techno. Frise verticale (page 1), grille séquences x séances (page 2). */
@@ -232,6 +232,7 @@ body.route-classeur header.top .brand small{display:none}
 body.route-classeur nav a{padding:6px 10px;font-size:.88rem;white-space:nowrap}
 header.top .b-top{flex:1;min-width:0;justify-content:flex-end;flex-wrap:nowrap}
 header.top .b-top .btn{padding:6px 10px;white-space:nowrap}
+body.role-prof.route-classeur header.top .wrap{flex-wrap:wrap}body.role-prof.route-classeur header.top .b-top{flex-wrap:wrap;order:3;flex-basis:100%}
 @media (max-width:1100px){body.route-classeur header.top .wrap{flex-wrap:wrap}header.top .b-top{flex-wrap:wrap;order:3;flex-basis:100%}}
 .b-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
 .b-title{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
@@ -427,6 +428,12 @@ header.top .switch input:checked+.sw::after{transform:translateX(16px)}
 .gate-err{flex-basis:100%;margin:0;color:var(--signal);font-weight:600;font-size:.9rem}
 body.role-eleve header.top nav{display:none}
 body.role-eleve #cl-odt{display:none}
+.lvl{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+.lvl[hidden]{display:none}
+.lvl button{border:0;background:var(--surface);color:var(--ink);font:600 .85rem var(--f-body);padding:6px 11px;cursor:pointer}
+.lvl button+button{border-left:1px solid var(--line)}
+.lvl button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.lvl button:hover:not([aria-pressed="true"]){background:var(--accent-soft)}
 .role-btn{white-space:nowrap}
 @media (max-width:560px){ .seances{grid-template-columns:1fr} }
 
@@ -465,12 +472,13 @@ body.role-eleve #cl-odt{display:none}
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <div class="brand">Progression Technologie<small>Cycle 4 · 5ème</small></div>
+  <div class="brand">Progression Technologie<small id="brand-lvl">Cycle 4 · 5ème</small></div>
   <nav aria-label="Pages">
     <a href="#/progression" id="nav-progression">Ma progression</a>
     <a href="#/tableau" id="nav-tableau">Tableau</a>
     <a href="#/classeur" id="nav-classeur">Classeur élève</a>
   </nav>
+  <div class="lvl" id="lvl" role="group" aria-label="Niveau"><button type="button" data-lvl="5">5ème</button><button type="button" data-lvl="4">4ème</button><button type="button" data-lvl="3">3ème</button></div>
   <button type="button" class="btn" id="save-btn" title="Sauvegarder ou restaurer mes données (changement d'appareil)" aria-label="Sauvegarder ou restaurer mes données">&#128190; <span class="lbl">Sauvegarde</span></button>
   <button type="button" class="btn role-btn" id="role-switch" title="Changer de mode" aria-label="Changer de mode"><span id="role-label"></span></button>
 </div></header>
@@ -491,14 +499,25 @@ body.role-eleve #cl-odt{display:none}
 <div class="toast" id="toast" hidden role="status"></div>
 
 <div id="printzone" aria-hidden="true"></div>
-<script src="ressources/pages-data.js"></script>
+<script>
+/* Niveau (5ème, 4ème ou 3ème) : fixé à la fabrication des applis élèves, choisi dans l'appli professeur */
+window.__FIXED_LEVEL = "";
+(function(){
+  var l = window.__FIXED_LEVEL;
+  if (!l) { try { l = localStorage.getItem("progression-techno-niveau"); } catch(e) {} }
+  if (l !== "4" && l !== "3") l = "5";
+  window.__LEVEL = l;
+  document.write('<script src="ressources/pages-data' + (l === "5" ? "" : "-" + l) + '.js"><\/script>');
+})();
+</script>
 <script>
 /* =====================================================================
    CONFIGURATION : le seul endroit à modifier.
    Pour ajouter une fiche : copier le PDF et le fichier LibreOffice (.odt)
    dans ressources/sequence-N/ puis renseigner ses chemins dans la séance.
    ===================================================================== */
-var SEQUENCES = [
+var LEVELS = {
+  "5": { label:"5ème", garde:"page-de-garde", sequences:[
   { titre:"La cybersécurité et les réseaux informatiques", seances:[
     { type:"presentation", titre:"Fiche de présentation : situation déclenchante", pages:1, pdf:"ressources/sequence-1/presentation.pdf", odt:"ressources/sequence-1/presentation.odt" },
     { type:"seance", titre:"Introduction à la cybersécurité",                 pages:2, pdf:"ressources/sequence-1/seance-1.pdf", odt:"ressources/sequence-1/seance-1.odt" },
@@ -506,7 +525,20 @@ var SEQUENCES = [
     { type:"seance", titre:"Concevoir un réseau avec « Atelier réseau »",     pages:2, pdf:"ressources/sequence-1/seance-3.pdf", odt:"ressources/sequence-1/seance-3.odt" },
     { type:"synthese", titre:"Synthèse : périphériques et cybersécurité",     pages:1, pdf:"ressources/sequence-1/synthese.pdf", odt:"ressources/sequence-1/synthese.odt" }
   ]}
-];
+] },
+  "4": { label:"4ème", garde:"page-de-garde-4", sequences:[] },
+  "3": { label:"3ème", garde:"page-de-garde-3", sequences:[
+    { titre:"Étude préalable : projet objet déstressant", seances:[
+      { type:"presentation", titre:"Fiche de présentation : situation déclenchante", pages:1, pdf:"ressources/niveau-3/sequence-1/presentation.pdf", odt:"ressources/niveau-3/sequence-1/presentation.odt" },
+      { type:"seance", titre:"Expression du besoin",                        pages:1, pdf:"ressources/niveau-3/sequence-1/seance-1.pdf", odt:"ressources/niveau-3/sequence-1/seance-1.odt" },
+      { type:"seance", titre:"Analyse fonctionnelle et cahier des charges", pages:1, pdf:"ressources/niveau-3/sequence-1/seance-2.pdf", odt:"ressources/niveau-3/sequence-1/seance-2.odt" },
+      {},
+      { type:"synthese", titre:"Synthèse 1 : l'analyse fonctionnelle",     pages:2, pdf:"ressources/niveau-3/sequence-1/synthese.pdf", odt:"ressources/niveau-3/sequence-1/synthese.odt" }
+    ]}
+  ]}
+};
+var LEVEL = window.__LEVEL || "5", LV = LEVELS[LEVEL], SEQUENCES = LV.sequences;
+var SUF = LEVEL === "5" ? "" : "-n" + LEVEL;   /* suffixe des clés de sauvegarde : le 5ème garde les clés d'origine */
 var BUILD = "prof";            /* all | prof | eleve | scorm : fixé par le script de fabrication des applis */
 var CODE_PROF = "";            /* code demandé pour entrer en mode professeur (laisser vide = aucun code) */
 var NB_SEQUENCES = 8;           /* nombre de séquences affichées */
@@ -558,7 +590,7 @@ function actions(s, compact){
   return '<div class="'+cls+'">'+
     '<button class="btn" type="button" data-act="view" data-key="'+s.key+'" title="Afficher le PDF" aria-label="Afficher le PDF">'+ICON.eye+(compact?"":"PDF")+'</button>'+
     '<button class="btn" type="button" data-act="print" data-key="'+s.key+'" title="Imprimer le PDF" aria-label="Imprimer le PDF">'+ICON.print+(compact?"":"Imprimer")+'</button>'+
-    '<a class="btn" href="'+esc(s.odt)+'" download title="Télécharger le fichier LibreOffice" aria-label="Télécharger le fichier LibreOffice">'+ICON.dl+(compact?"":"LibreOffice")+'</a>'+
+    (s.odt ? '<a class="btn" href="'+esc(s.odt)+'" download title="Télécharger le fichier LibreOffice" aria-label="Télécharger le fichier LibreOffice">'+ICON.dl+(compact?"":"LibreOffice")+'</a>' : '')+
   '</div>';
 }
 
@@ -617,13 +649,18 @@ var PROGRAMME = [
 
 /* Compétences cochées par défaut pour la séquence 1 (modifiables dans le tableau) */
 var DEFAULT_CHECKS = ["s1-1|T1C1","s1-2|T1C1","s1-2|T1C2","s1-3|T2C1","s1-4|T2C1","s1-4|T3C1","s1-4|T3C2","s1-5|T1C2","s1-5|T2C1"];
-var CHECKS = {}, STORE_KEY = "progression-techno-programme-v2";
-DEFAULT_CHECKS.forEach(function(k){ CHECKS[k] = 1; });
+var CHECKS = {}, STORE_KEY = "progression-techno-programme-v2" + SUF;
+var LEVEL_CHECKS = {
+  "5": DEFAULT_CHECKS,
+  "4": [],
+  "3": ["s1-1|T3C1","s1-2|T1C2","s1-2|T3C1","s1-3|T1C2","s1-3|T1C3","s1-3|T3C1","s1-5|T1C2","s1-5|T1C3","s1-5|T3C1"]
+};
+(LEVEL_CHECKS[LEVEL] || []).forEach(function(k){ CHECKS[k] = 1; });
 try { var saved = localStorage.getItem(STORE_KEY); if (saved) CHECKS = JSON.parse(saved); } catch(e) {}
 function saveChecks(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(CHECKS)); } catch(e) {} }
 
 /* Précisions par défaut : comment chaque séance traite chaque compétence (modifiables dans le tableau) */
-var NOTES_KEY = "progression-techno-notes-v1", NOTES = {
+var NOTES_KEY = "progression-techno-notes-v1" + SUF, NOTES = {
   "s1-1|T1C1": "Situation déclenchante : les piratages récents (messageries, comptes en ligne, ENT du collège) montrent comment l'usage du numérique évolue avec les attaques. Lien avec le programme de 5ème : comprendre la responsabilité de chacun face aux dérives numériques.",
   "s1-2|T1C1": "Étude du piratage de l'ENT départemental à l'aide d'une vidéo : par quel biais les pirates sont entrés, ce qu'ils ont fait, si c'était la première fois. Lien avec le programme de 5ème : appliquer les bases de la cybersécurité.",
   "s1-2|T1C2": "L'élève relève les éléments étranges d'un message (hameçonnage), teste la robustesse de son mot de passe et vérifie si ses adresses ont été piratées. Il voit comment l'utilisateur, l'objet et son environnement numérique interagissent.",
@@ -633,6 +670,18 @@ var NOTES_KEY = "progression-techno-notes-v1", NOTES = {
   "s1-4|T3C2": "Validation par un test de connexion entre les deux PC (réussi ou échoué, avec recherche de la cause), complété par une note de conception et un quiz.",
   "s1-5|T1C2": "Partie « La cybersécurité » de la synthèse : bilan des bonnes pratiques de l'utilisateur pour protéger ses informations.",
   "s1-5|T2C1": "Partie « Les périphériques » de la synthèse : classement des périphériques d'entrée, de sortie et d'entrée/sortie (écran, imprimante, clavier, souris, box, disque dur…) qui échangent des données avec l'ordinateur."
+};
+if (LEVEL !== "5") NOTES = {};
+if (LEVEL === "3") NOTES = {
+  "s1-1|T3C1": "Situation déclenchante : le bureau d'étude d'une entreprise de jouets doit étudier un objet déstressant. Les élèves découvrent le besoin à satisfaire, point de départ de la démarche de conception.",
+  "s1-2|T1C2": "À partir d'une vidéo, l'élève décrit la situation et complète la « bête à corne » : à qui l'objet rend-il service, sur quoi agit-il. Il identifie ainsi les interactions entre l'objet, ses utilisateurs et son environnement.",
+  "s1-2|T3C1": "Formulation du problème puis analyse du besoin : l'élève exprime en groupe le besoin auquel l'objet déstressant doit répondre, première étape de la conception d'une solution.",
+  "s1-3|T1C2": "Avec le diagramme « pieuvre », l'élève représente l'objet déstressant dans son environnement (collégiens, stress, trousse, prix, sécurité, ergonomie) et relie les éléments par des fonctions.",
+  "s1-3|T1C3": "Rédaction du cahier des charges : pour chaque fonction, l'élève donne un critère d'appréciation et un niveau, ce qui permet de caractériser l'objet et de comparer des solutions.",
+  "s1-3|T3C1": "Fonction principale et fonctions contraintes (FP, FC1 à FC5) traduites en cahier des charges : base de la conception d'une solution répondant au besoin.",
+  "s1-5|T1C2": "Synthèse 1 : les étapes 1 et 2 de l'analyse fonctionnelle (bête à corne puis pieuvre) montrent comment un objet interagit avec ses utilisateurs et son environnement.",
+  "s1-5|T1C3": "Synthèse 1 : fonctions de service et de contrainte, critères d'appréciation et niveaux permettent de caractériser un objet et de choisir selon des critères.",
+  "s1-5|T3C1": "Synthèse 1 : l'étape 3 (rédaction du cahier des charges fonctionnel) guide le concepteur dans la création d'une solution à un besoin."
 };
 try { var sn = localStorage.getItem(NOTES_KEY); if (sn) { var o = JSON.parse(sn); for (var nk in o) NOTES[nk] = o[nk]; } } catch(e) {}
 var TVIEW = "fit";
@@ -647,7 +696,7 @@ function exportTable(){
   var pages = [];
   function newPage(){ var c = document.createElement("canvas"); c.width = W; c.height = H; var x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0,0,W,H); x.textBaseline = "top"; pages.push(c); return x; }
   function title(x, sub){
-    x.fillStyle = "#14232b"; x.font = "bold 28px " + FONT; x.fillText("Progression de technologie · 5ème", M, 28);
+    x.fillStyle = "#14232b"; x.font = "bold 28px " + FONT; x.fillText("Progression de technologie · " + LV.label, M, 28);
     x.fillStyle = "#5b6d75"; x.font = "15px " + FONT; x.fillText(sub, M, 64);
   }
   function box(x, px, py, w, h, fill){ if (fill) { x.fillStyle = fill; x.fillRect(px, py, w, h); } x.strokeStyle = "#8a979c"; x.lineWidth = 1; x.strokeRect(px + .5, py + .5, w, h); }
@@ -804,11 +853,15 @@ function applyRole(){
   var lab = document.getElementById("role-label"); if (lab) lab.textContent = (ROLE === "eleve" ? "Élève" : "Professeur") + " · changer";
   var rb = document.getElementById("role-switch"); if (rb) rb.hidden = !ROLE || BUILD !== "all";
   var sb = document.getElementById("save-btn"); if (sb) sb.hidden = !ROLE || BUILD === "scorm";
+  var lv = document.getElementById("lvl"); if (lv) lv.hidden = !(ROLE === "prof" && (BUILD === "all" || BUILD === "prof"));
+  var bl = document.getElementById("brand-lvl"); if (bl) bl.textContent = "Cycle 4 · " + LV.label;
+  document.title = "Progression Technologie " + LV.label;
+  document.querySelectorAll("#lvl button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.getAttribute("data-lvl") === LEVEL)); });
   if (!ROLE) renderGate();
 }
 function renderGate(){
   var g = document.getElementById("gate");
-  g.innerHTML = '<div class="gate-inner"><h1>Progression Technologie</h1><p>Cycle 4 · 5ème. Choisis ton mode pour commencer.</p>'+
+  g.innerHTML = '<div class="gate-inner"><h1>Progression Technologie</h1><p>Cycle 4 · '+LV.label+'. Choisis ton mode pour commencer.</p>'+
     '<div class="gate-cards">'+
     '<button type="button" class="gate-card" data-role="prof"><div class="mascot">'+MASCOTS[1]+'</div><strong>Professeur</strong><span>Accès à tout : progression, tableau des séquences et classeur.</span></button>'+
     '<button type="button" class="gate-card" data-role="eleve"><div class="mascot">'+MASCOTS[2]+'</div><strong>Élève</strong><span>Accès au classeur uniquement.</span></button>'+
@@ -869,7 +922,7 @@ function openViewer(s, thenPrint){
   document.getElementById("viewer-title").textContent = s.label + " : " + s.titre;
   document.getElementById("viewer-print").innerHTML = ICON.print+"Imprimer";
   var d = document.getElementById("viewer-dlpdf"); d.href = s.pdf; d.innerHTML = ICON.dl+"Télécharger le PDF";
-  var o = document.getElementById("viewer-odt"); o.href = s.odt; o.innerHTML = ICON.dl+"Fichier LibreOffice";
+  var o = document.getElementById("viewer-odt"); o.hidden = !s.odt; o.href = s.odt || "#"; o.innerHTML = ICON.dl+"Fichier LibreOffice";
   pending = !!thenPrint;
   frame.src = s.pdf;
   if (!viewer.open) viewer.showModal();
@@ -898,7 +951,7 @@ var PAGE_R = 841.89/595.3;
    CLASSEUR ÉLÈVE
    ===================================================================== */
 var COVER = {
-  pdf:"ressources/page-de-garde.pdf", odt:"ressources/page-de-garde.odt", w:595.247, h:841.861,
+  pdf:"ressources/" + LV.garde + ".pdf", odt:"ressources/" + LV.garde + ".odt", w:595.247, h:841.861,
   fields:[
     {id:"nom",    x:113.4, y:59.5,  w:190.5, h:21},
     {id:"prenom", x:141.8, y:104,   w:160.3, h:21},
@@ -907,7 +960,7 @@ var COVER = {
     {id:"an2",    x:505,   y:753.4, w:31,    h:21}
   ]
 };
-var CL_KEY = "classeur-eleve-v1";
+var CL_KEY = "classeur-eleve-v1" + SUF;
 var CL = { on:false, tool:"text", color:"#1a4fd6", size:.018, sel:"garde", undo:[], focus:null };
 var CLS = { on:false, cover:{}, pages:{} };
 try { var svd = JSON.parse(localStorage.getItem(CL_KEY) || "null"); if (svd) { CLS = svd; CLS.cover = CLS.cover || {}; CLS.pages = CLS.pages || {}; } } catch(e) {}
@@ -1091,7 +1144,7 @@ function updateChrome(idx){
   document.querySelectorAll(".tab").forEach(function(b){ b.setAttribute("aria-current", String(parseInt(b.getAttribute("data-seq"), 10) === seqOf(c.fid))); });
   document.getElementById("b-prev").disabled = idx <= 0;
   document.getElementById("b-next").disabled = idx >= CPAGES.length - 1;
-  var odt = document.getElementById("cl-odt"); if (odt) odt.href = c.f.odt;
+  var odt = document.getElementById("cl-odt"); if (odt) { odt.hidden = !c.f.odt; odt.href = c.f.odt || "#"; }
 }
 
 function renderSheet(idx){
@@ -1490,6 +1543,11 @@ function openBackup(){
 }
 document.getElementById("save-btn").addEventListener("click", openBackup);
 document.getElementById("role-switch").addEventListener("click", clearRole);
+document.querySelectorAll("#lvl button").forEach(function(b){ b.addEventListener("click", function(){
+  var l = b.getAttribute("data-lvl"); if (l === LEVEL) return;
+  try { localStorage.setItem("progression-techno-niveau", l); } catch(e) {}
+  location.reload();
+}); });
 window.addEventListener("hashchange", route);
 applyRole();
 if (ROLE === "eleve" && !/^#\/classeur/.test(location.hash)) location.hash = "#/classeur";
