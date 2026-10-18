@@ -540,7 +540,15 @@ var LEVELS = {
     { type:"synthese", titre:"Synthèse : la conception d\'un objet", pages:1, pdf:"ressources/sequence-3/synthese.pdf", odt:"ressources/sequence-3/synthese.odt" }
   ]}
 ] },
-  "4": { label:"4ème", garde:"page-de-garde-4", sequences:[] },
+  "4": { label:"4ème", garde:"page-de-garde-4", sequences:[
+  { titre:"Comment fonctionne une écluse ?", seances:[
+    { type:"presentation", titre:"Fiche de présentation : situation déclenchante", pages:1, pdf:"ressources/niveau-4/sequence-1/presentation.pdf", odt:"ressources/niveau-4/sequence-1/presentation.odt" },
+    { type:"seance", titre:"Fonctionnement d\'une écluse", pages:2, pdf:"ressources/niveau-4/sequence-1/seance-1.pdf", odt:"ressources/niveau-4/sequence-1/seance-1.odt" },
+    { type:"seance", titre:"Les organigrammes", pages:2, pdf:"ressources/niveau-4/sequence-1/seance-2.pdf", odt:"ressources/niveau-4/sequence-1/seance-2.odt" },
+    { type:"seance", titre:"L\'organigramme de l\'écluse", pages:2, pdf:"ressources/niveau-4/sequence-1/seance-3.pdf", odt:"ressources/niveau-4/sequence-1/seance-3.odt" },
+    { type:"synthese", titre:"Synthèse : les systèmes automatisés", pages:1, pdf:"ressources/niveau-4/sequence-1/synthese.pdf", odt:"ressources/niveau-4/sequence-1/synthese.odt" }
+  ]}
+  ] },
   "3": { label:"3ème", garde:"page-de-garde-3", sequences:[
     { titre:"Étude préalable : projet objet déstressant", seances:[
       { type:"presentation", titre:"Fiche de présentation : situation déclenchante", pages:1, pdf:"ressources/niveau-3/sequence-1/presentation.pdf", odt:"ressources/niveau-3/sequence-1/presentation.odt" },
@@ -684,7 +692,7 @@ var DEFAULT_CHECKS = ["s1-1|T1C1","s1-2|T1C1","s1-2|T1C2","s1-3|T2C1","s1-4|T2C1
 var CHECKS = {}, STORE_KEY = "progression-techno-programme-v2" + SUF;
 var LEVEL_CHECKS = {
   "5": DEFAULT_CHECKS,
-  "4": [],
+  "4": ["s1-1|T1C1","s1-2|T2C1","s1-2|T1C2","s1-3|T2C3","s1-4|T2C1","s1-4|T2C3","s1-5|T2C1","s1-5|T2C3"],
   "3": ["s1-1|T3C1","s1-2|T1C2","s1-2|T3C1","s1-3|T1C2","s1-3|T1C3","s1-3|T3C1","s1-5|T1C2","s1-5|T1C3","s1-5|T3C1"]
 };
 (LEVEL_CHECKS[LEVEL] || []).forEach(function(k){ CHECKS[k] = 1; });
@@ -729,6 +737,16 @@ var NOTES_KEY = "progression-techno-notes-v1" + SUF, NOTES = {
   "s1-5|T2C1": "Partie « Les périphériques » de la synthèse : classement des périphériques d'entrée, de sortie et d'entrée/sortie (écran, imprimante, clavier, souris, box, disque dur…) qui échangent des données avec l'ordinateur."
 };
 if (LEVEL !== "5") NOTES = {};
+if (LEVEL === "4") NOTES = {
+  "s1-1|T1C1": "Situation déclenchante : la traversée manuelle d'une écluse est contraignante, d'où l'intérêt de l'automatiser. Les élèves découvrent l'usage et l'évolution d'un ouvrage d'art.",
+  "s1-2|T2C1": "Étude du fonctionnement de l'écluse à l'aide d'un logiciel de simulation : vocabulaire (vannes, portes, sas), actions à réaliser et conditions à respecter, classées dans l'ordre chronologique.",
+  "s1-2|T1C2": "Les élèves identifient les éléments de l'écluse et leurs interactions (amont, aval, sas, péniche) en faisant passer la péniche dans la simulation.",
+  "s1-3|T2C3": "Découverte des organigrammes (symboles, actions, conditions, boucle) sur ELEA, puis réalisation d'organigrammes de systèmes automatisés : barrière, passage à niveau, escalator, portique.",
+  "s1-4|T2C1": "Fiche ressource capteurs et actionneurs de l'écluse : les élèves relient chaque étape de l'organigramme au capteur ou à l'actionneur correspondant.",
+  "s1-4|T2C3": "Organigramme complet de l'écluse (19 étapes) : chaque rectangle et chaque losange correspond à une étape du programme de l'unité de traitement.",
+  "s1-5|T2C1": "Synthèse : la chaîne capteur → unité de traitement → actionneur décrit l'organisation d'un système automatisé (exemple : la barrière automatisée).",
+  "s1-5|T2C3": "Synthèse : l'organigramme (début, actions, conditions, boucle) représente le programme exécuté par l'unité de traitement."
+};
 if (LEVEL === "3") NOTES = {
   "s1-1|T3C1": "Situation déclenchante : le bureau d'étude d'une entreprise de jouets doit étudier un objet déstressant. Les élèves découvrent le besoin à satisfaire, point de départ de la démarche de conception.",
   "s1-2|T1C2": "À partir d'une vidéo, l'élève décrit la situation et complète la « bête à corne » : à qui l'objet rend-il service, sur quoi agit-il. Il identifie ainsi les interactions entre l'objet, ses utilisateurs et son environnement.",
