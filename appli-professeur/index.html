@@ -525,12 +525,19 @@ var LEVELS = {
     { type:"seance", titre:"Concevoir un réseau avec « Atelier réseau »",     pages:2, pdf:"ressources/sequence-1/seance-3.pdf", odt:"ressources/sequence-1/seance-3.odt" },
     { type:"synthese", titre:"Synthèse : périphériques et cybersécurité",     pages:1, pdf:"ressources/sequence-1/synthese.pdf", odt:"ressources/sequence-1/synthese.odt" }
   ]},
-  { titre:"Conception d'une cabane à oiseaux", seances:[
+  { titre:"Conception d'outils de comptage pour les expériences scientifiques", seances:[
     { type:"presentation", titre:"Fiche de présentation : situation déclenchante", pages:1, pdf:"ressources/sequence-2/presentation.pdf", odt:"ressources/sequence-2/presentation.odt" },
-    { type:"seance", titre:"Détermination des fonctions et des contraintes", pages:1, pdf:"ressources/sequence-2/seance-1.pdf", odt:"ressources/sequence-2/seance-1.odt" },
-    { type:"seance", titre:"Présentation des résultats", pages:1, pdf:"ressources/sequence-2/seance-2.pdf", odt:"ressources/sequence-2/seance-2.odt" },
-    { type:"seance", titre:"Recherche de solution", pages:1, pdf:"ressources/sequence-2/seance-3.pdf", odt:"ressources/sequence-2/seance-3.odt" },
-    { type:"synthese", titre:"Synthèse : la conception d\'un objet", pages:1, pdf:"ressources/sequence-2/synthese.pdf", odt:"ressources/sequence-2/synthese.odt" }
+    { type:"seance", titre:"Compteur de pas : la variable", pages:1, pdf:"ressources/sequence-2/seance-1.pdf", odt:"ressources/sequence-2/seance-1.odt" },
+    { type:"seance", titre:"Compteur de pulsations : boucle et chronomètre", pages:1, pdf:"ressources/sequence-2/seance-2.pdf", odt:"ressources/sequence-2/seance-2.odt" },
+    { type:"seance", titre:"Temps de réaction : condition et opérateurs logiques", pages:1, pdf:"ressources/sequence-2/seance-3.pdf", odt:"ressources/sequence-2/seance-3.odt" },
+    { type:"synthese", titre:"Synthèse : programmer un outil de comptage", pages:1, pdf:"ressources/sequence-2/synthese.pdf", odt:"ressources/sequence-2/synthese.odt" }
+  ]},
+  { titre:"Conception d'une cabane à oiseaux", seances:[
+    { type:"presentation", titre:"Fiche de présentation : situation déclenchante", pages:1, pdf:"ressources/sequence-3/presentation.pdf", odt:"ressources/sequence-3/presentation.odt" },
+    { type:"seance", titre:"Détermination des fonctions et des contraintes", pages:1, pdf:"ressources/sequence-3/seance-1.pdf", odt:"ressources/sequence-3/seance-1.odt" },
+    { type:"seance", titre:"Présentation des résultats", pages:1, pdf:"ressources/sequence-3/seance-2.pdf", odt:"ressources/sequence-3/seance-2.odt" },
+    { type:"seance", titre:"Recherche de solution", pages:1, pdf:"ressources/sequence-3/seance-3.pdf", odt:"ressources/sequence-3/seance-3.odt" },
+    { type:"synthese", titre:"Synthèse : la conception d\'un objet", pages:1, pdf:"ressources/sequence-3/synthese.pdf", odt:"ressources/sequence-3/synthese.odt" }
   ]}
 ] },
   "4": { label:"4ème", garde:"page-de-garde-4", sequences:[] },
@@ -545,7 +552,24 @@ var LEVELS = {
   ]}
 };
 var LEVEL = window.__LEVEL || "5", LV = LEVELS[LEVEL], SEQUENCES = LV.sequences;
-var SUF = LEVEL === "5" ? "" : "-n" + LEVEL;   /* suffixe des clés de sauvegarde : le 5ème garde les clés d'origine */
+var SUF = LEVEL === "5" ? "" : "-n" + LEVEL;
+/* migration unique : la séquence « cabane à oiseaux » est passée de la séquence 2 à la séquence 3 (5ème) */
+(function(){
+  if (LEVEL !== "5") return;
+  try {
+    if (localStorage.getItem("progression-techno-migr-s3")) return;
+    var ren = function(k){ return typeof k === "string" ? k.replace(/^s2-/, "s3-") : k; };
+    ["progression-techno-programme-v2", "progression-techno-notes-v1"].forEach(function(key){
+      var raw = localStorage.getItem(key); if (!raw) return; var o = JSON.parse(raw), r = {};
+      Object.keys(o).forEach(function(k){ r[ren(k)] = o[k]; }); localStorage.setItem(key, JSON.stringify(r));
+    });
+    var da = localStorage.getItem("progression-techno-defauts");
+    if (da) localStorage.setItem("progression-techno-defauts", JSON.stringify(JSON.parse(da).map(ren)));
+    var cl = localStorage.getItem("classeur-eleve-v1");
+    if (cl) { var c = JSON.parse(cl); if (c && c.pages) { var np = {}; Object.keys(c.pages).forEach(function(k){ np[ren(k)] = c.pages[k]; }); c.pages = np; } localStorage.setItem("classeur-eleve-v1", JSON.stringify(c)); }
+    localStorage.setItem("progression-techno-migr-s3", "1");
+  } catch(e) {}
+})();   /* suffixe des clés de sauvegarde : le 5ème garde les clés d'origine */
 var BUILD = "prof";            /* all | prof | eleve | scorm : fixé par le script de fabrication des applis */
 var CODE_PROF = "";            /* code demandé pour entrer en mode professeur (laisser vide = aucun code) */
 var NB_SEQUENCES = 8;           /* nombre de séquences affichées */
@@ -656,7 +680,7 @@ var PROGRAMME = [
 
 /* Compétences cochées par défaut pour la séquence 1 (modifiables dans le tableau) */
 var DEFAULT_CHECKS = ["s1-1|T1C1","s1-2|T1C1","s1-2|T1C2","s1-3|T2C1","s1-4|T2C1","s1-4|T3C1","s1-4|T3C2","s1-5|T1C2","s1-5|T2C1",
-  "s2-1|T3C1","s2-2|T1C2","s2-2|T1C3","s2-3|T1C3","s2-4|T3C1","s2-4|T3C2","s2-5|T1C2","s2-5|T3C1"];
+  "s3-1|T3C1","s3-2|T1C2","s3-2|T1C3","s3-3|T1C3","s3-4|T3C1","s3-4|T3C2","s3-5|T1C2","s3-5|T3C1","s2-1|T3C1","s2-2|T3C1","s2-3|T3C1","s2-1|T3C1","s2-2|T3C3","s2-3|T3C3","s2-4|T3C3","s2-5|T2C3","s2-5|T3C3"];
 var CHECKS = {}, STORE_KEY = "progression-techno-programme-v2" + SUF;
 var LEVEL_CHECKS = {
   "5": DEFAULT_CHECKS,
@@ -688,14 +712,20 @@ var NOTES_KEY = "progression-techno-notes-v1" + SUF, NOTES = {
   "s1-4|T3C1": "Conception d'un réseau en réponse à un besoin : le réseau du CDI (6 PC et un serveur), puis un deuxième réseau en mode expert, avec adresses IP saisies par l'élève.",
   "s1-4|T3C2": "Validation par un test de connexion entre les deux PC (réussi ou échoué, avec recherche de la cause), complété par une note de conception et un quiz.",
   "s1-5|T1C2": "Partie « La cybersécurité » de la synthèse : bilan des bonnes pratiques de l'utilisateur pour protéger ses informations.",
-  "s2-1|T3C1": "Situation déclenchante : concevoir une cabane à oiseaux pour le jardin du collège. Les élèves découvrent le besoin et la démarche de conception qui suivra.",
-  "s2-2|T1C2": "L'élève complète une carte mentale de la cabane à oiseaux : il indique ses fonctions et les contraintes liées à son environnement (dimensions, matériaux, pluie…).",
-  "s2-2|T1C3": "À partir de la carte mentale, l'élève rédige un cahier des charges : il caractérise l'objet par des contraintes précises (dimensions maximales, diamètre de l'ouverture, matériaux).",
-  "s2-3|T1C3": "Mise en forme et remise du cahier des charges sur LibreOffice Writer puis dépôt sur ELEA : présentation des résultats de l'analyse.",
-  "s2-4|T3C1": "Recherche, pour chaque fonction ou contrainte, d'une solution technique, puis conception de la cabane avec « L'atelier du modeleur volumique ».",
-  "s2-4|T3C2": "L'élève remplit le bilan de l'application pour justifier ses choix de solutions et vérifier que sa conception respecte le cahier des charges.",
-  "s2-5|T1C2": "Synthèse : la notion de contrainte (obligation à respecter lors de la conception) et des exemples liés à l'environnement de la cabane.",
-  "s2-5|T3C1": "Synthèse : les trois étapes de la conception (liste des contraintes, recherche de solutions par croquis et schémas, modélisation par une maquette).",
+  "s3-1|T3C1": "Situation déclenchante : concevoir une cabane à oiseaux pour le jardin du collège. Les élèves découvrent le besoin et la démarche de conception qui suivra.",
+  "s3-2|T1C2": "L'élève complète une carte mentale de la cabane à oiseaux : il indique ses fonctions et les contraintes liées à son environnement (dimensions, matériaux, pluie…).",
+  "s3-2|T1C3": "À partir de la carte mentale, l'élève rédige un cahier des charges : il caractérise l'objet par des contraintes précises (dimensions maximales, diamètre de l'ouverture, matériaux).",
+  "s3-3|T1C3": "Mise en forme et remise du cahier des charges sur LibreOffice Writer puis dépôt sur ELEA : présentation des résultats de l'analyse.",
+  "s3-4|T3C1": "Recherche, pour chaque fonction ou contrainte, d'une solution technique, puis conception de la cabane avec « L'atelier du modeleur volumique ».",
+  "s3-4|T3C2": "L'élève remplit le bilan de l'application pour justifier ses choix de solutions et vérifier que sa conception respecte le cahier des charges.",
+  "s3-5|T1C2": "Synthèse : la notion de contrainte (obligation à respecter lors de la conception) et des exemples liés à l'environnement de la cabane.",
+  "s2-1|T3C1": "Situation déclenchante : compter et mesurer en sciences avec la carte micro:bit ; les élèves découvrent le besoin de mesure.",
+  "s2-2|T3C3": "Séance 1 : algorithme et programme d'un compteur de pas (variable, événement « secousse »).",
+  "s2-3|T3C3": "Séance 2 : programme d'un compteur de pulsations (boucle, chronomètre 15 s, condition).",
+  "s2-4|T3C3": "Séance 3 : programme de mesure du temps de réaction (condition, opérateurs logiques, chronomètre).",
+  "s2-5|T2C3": "Synthèse : modéliser et programmer un outil (condition, variable, boucle, opérateurs logiques) pour compter et chronométrer.",
+  "s2-5|T3C3": "Synthèse : la chaîne capter → traiter → agir et l'écriture d'un programme en blocs avec la carte micro:bit.",
+  "s3-5|T3C1": "Synthèse : les trois étapes de la conception (liste des contraintes, recherche de solutions par croquis et schémas, modélisation par une maquette).",
   "s1-5|T2C1": "Partie « Les périphériques » de la synthèse : classement des périphériques d'entrée, de sortie et d'entrée/sortie (écran, imprimante, clavier, souris, box, disque dur…) qui échangent des données avec l'ordinateur."
 };
 if (LEVEL !== "5") NOTES = {};
