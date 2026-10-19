@@ -556,6 +556,27 @@ var LEVELS = {
       { type:"seance", titre:"Analyse fonctionnelle et cahier des charges", pages:1, pdf:"ressources/niveau-3/sequence-1/seance-2.pdf", odt:"ressources/niveau-3/sequence-1/seance-2.odt" },
       {},
       { type:"synthese", titre:"Synthèse 1 : l'analyse fonctionnelle",     pages:2, pdf:"ressources/niveau-3/sequence-1/synthese.pdf", odt:"ressources/niveau-3/sequence-1/synthese.odt" }
+    ]},
+    { titre:"Coder un jeu", seances:[
+      { type:"presentation", titre:"Fiche de présentation : situation déclenchante", pages:1, pdf:"ressources/niveau-3/sequence-2/presentation.pdf", odt:"ressources/niveau-3/sequence-2/presentation.odt" },
+      { type:"seance", titre:"Les coordonnées", pages:2, pdf:"ressources/niveau-3/sequence-2/seance-1.pdf", odt:"ressources/niveau-3/sequence-2/seance-1.odt" },
+      { type:"seance", titre:"Joueur et objet qui tombe", pages:1, pdf:"ressources/niveau-3/sequence-2/seance-2.pdf", odt:"ressources/niveau-3/sequence-2/seance-2.odt" },
+      { type:"seance", titre:"Collision, score et fin de jeu", pages:1, pdf:"ressources/niveau-3/sequence-2/seance-3.pdf", odt:"ressources/niveau-3/sequence-2/seance-3.odt" },
+      { type:"synthese", titre:"Synthèse : coder un jeu", pages:1, pdf:"ressources/niveau-3/sequence-2/synthese.pdf", odt:"ressources/niveau-3/sequence-2/synthese.odt" }
+    ]},
+    { titre:"Réalisation d\'un site internet", seances:[
+    { type:"presentation", titre:"Fiche de présentation : situation déclenchante", pages:1, pdf:"ressources/niveau-3/sequence-3/presentation.pdf", odt:"ressources/niveau-3/sequence-3/presentation.odt" },
+    { type:"seance", titre:"Initiation : créer un document numérique", pages:1, pdf:"ressources/niveau-3/sequence-3/seance-1.pdf", odt:"ressources/niveau-3/sequence-3/seance-1.odt" },
+    { type:"seance", titre:"Recherche : contenus du futur site", pages:3, pdf:"ressources/niveau-3/sequence-3/seance-2.pdf", odt:"ressources/niveau-3/sequence-3/seance-2.odt" },
+    { type:"seance", titre:"Réalisation du site internet", pages:1, pdf:"ressources/niveau-3/sequence-3/seance-3.pdf", odt:"ressources/niveau-3/sequence-3/seance-3.odt" },
+    { type:"synthese", titre:"Synthèse : les fichiers et les dossiers", pages:1, pdf:"ressources/niveau-3/sequence-3/synthese.pdf", odt:"ressources/niveau-3/sequence-3/synthese.odt" }
+    ]},
+    { titre:"Comment éclairer un groupe de musique ?", seances:[
+      { type:"presentation", titre:"Fiche de présentation : situation déclenchante", pages:1, pdf:"ressources/niveau-3/sequence-4/presentation.pdf", odt:"ressources/niveau-3/sequence-4/presentation.odt" },
+      { type:"seance", titre:"Le livret de l\'éclairagiste", pages:2, pdf:"ressources/niveau-3/sequence-4/seance-1.pdf", odt:"ressources/niveau-3/sequence-4/seance-1.odt" },
+      { type:"seance", titre:"Le système d\'éclairage", pages:2, pdf:"ressources/niveau-3/sequence-4/seance-2.pdf", odt:"ressources/niveau-3/sequence-4/seance-2.odt" },
+      {},
+      { type:"synthese", titre:"Synthèse : couleurs et chaînes d\'énergie et d\'information", pages:2, pdf:"ressources/niveau-3/sequence-4/synthese.pdf", odt:"ressources/niveau-3/sequence-4/synthese.odt" }
     ]}
   ]}
 };
@@ -693,7 +714,7 @@ var CHECKS = {}, STORE_KEY = "progression-techno-programme-v2" + SUF;
 var LEVEL_CHECKS = {
   "5": DEFAULT_CHECKS,
   "4": ["s1-1|T1C1","s1-2|T2C1","s1-2|T1C2","s1-3|T2C3","s1-4|T2C1","s1-4|T2C3","s1-5|T2C1","s1-5|T2C3"],
-  "3": ["s1-1|T3C1","s1-2|T1C2","s1-2|T3C1","s1-3|T1C2","s1-3|T1C3","s1-3|T3C1","s1-5|T1C2","s1-5|T1C3","s1-5|T3C1"]
+  "3": ["s1-1|T3C1","s1-2|T1C2","s1-2|T3C1","s1-3|T1C2","s1-3|T1C3","s1-3|T3C1","s1-5|T1C2","s1-5|T1C3","s1-5|T3C1","s3-1|T1C1","s3-2|T3C3","s3-2|T1C3","s3-3|T2C1","s3-3|T3C1","s3-4|T3C1","s3-4|T3C2","s3-5|T2C1","s2-1|T3C1","s2-2|T3C3","s2-3|T3C3","s2-4|T3C3","s2-4|T3C2","s2-5|T3C3","s2-5|T2C3","s4-1|T1C1","s4-2|T1C3","s4-3|T2C1","s4-3|T1C2","s4-5|T2C1","s4-5|T1C2"]
 };
 (LEVEL_CHECKS[LEVEL] || []).forEach(function(k){ CHECKS[k] = 1; });
 var DEF_KEY = "progression-techno-defauts" + SUF;
@@ -748,6 +769,14 @@ if (LEVEL === "4") NOTES = {
   "s1-5|T2C3": "Synthèse : l'organigramme (début, actions, conditions, boucle) représente le programme exécuté par l'unité de traitement."
 };
 if (LEVEL === "3") NOTES = {
+  "s3-1|T1C1": "Situation déclenchante : une entreprise doit réaliser un site internet de prévention sur l'écoute trop forte de la musique, compréhensible par un élève de sixième.",
+  "s3-2|T3C3": "Initiation : les élèves créent des documents HTML, insèrent des images et créent des liens hypertextes entre deux pages, après avoir organisé leurs dossiers.",
+  "s3-2|T1C3": "Évaluation « créer un document numérique » : classer et organiser ses fichiers dans une arborescence (dossier, sous-dossier).",
+  "s3-3|T2C1": "Recherche sur l'appareil auditif, les risques (échelle du bruit) et la durée d'écoute autorisée : les contenus du futur site sont collectés.",
+  "s3-3|T3C1": "Recherche : les élèves choisissent les informations à présenter pour répondre à la question « Comment bien écouter la musique ? ».",
+  "s3-4|T3C1": "Conception et réalisation d'un site de 4 pages (accueil, appareil auditif, risques, conseils) adapté à un public de 10 ans.",
+  "s3-4|T3C2": "Le site est évalué sur des critères : contenu (pas de copié-collé), technique (mise en page, liens), organisation (dossier « site son » et sous-dossier « images »).",
+  "s3-5|T2C1": "Synthèse : fichier, extension, dossier, sous-dossier, arborescence et chemin d'accès ; un site internet est un ensemble de pages HTML reliées par des liens.",
   "s1-1|T3C1": "Situation déclenchante : le bureau d'étude d'une entreprise de jouets doit étudier un objet déstressant. Les élèves découvrent le besoin à satisfaire, point de départ de la démarche de conception.",
   "s1-2|T1C2": "À partir d'une vidéo, l'élève décrit la situation et complète la « bête à corne » : à qui l'objet rend-il service, sur quoi agit-il. Il identifie ainsi les interactions entre l'objet, ses utilisateurs et son environnement.",
   "s1-2|T3C1": "Formulation du problème puis analyse du besoin : l'élève exprime en groupe le besoin auquel l'objet déstressant doit répondre, première étape de la conception d'une solution.",
@@ -756,7 +785,20 @@ if (LEVEL === "3") NOTES = {
   "s1-3|T3C1": "Fonction principale et fonctions contraintes (FP, FC1 à FC5) traduites en cahier des charges : base de la conception d'une solution répondant au besoin.",
   "s1-5|T1C2": "Synthèse 1 : les étapes 1 et 2 de l'analyse fonctionnelle (bête à corne puis pieuvre) montrent comment un objet interagit avec ses utilisateurs et son environnement.",
   "s1-5|T1C3": "Synthèse 1 : fonctions de service et de contrainte, critères d'appréciation et niveaux permettent de caractériser un objet et de choisir selon des critères.",
-  "s1-5|T3C1": "Synthèse 1 : l'étape 3 (rédaction du cahier des charges fonctionnel) guide le concepteur dans la création d'une solution à un besoin."
+  "s1-5|T3C1": "Synthèse 1 : l'étape 3 (rédaction du cahier des charges fonctionnel) guide le concepteur dans la création d'une solution à un besoin.",
+  "s2-1|T3C1": "Situation déclenchante : le club de jeux vidéo veut un mini-jeu sur micro:bit pour la journée portes ouvertes ; les élèves découvrent le besoin et la démarche de programmation.",
+  "s2-2|T3C3": "Séance 1 : les coordonnées (x ; y) de l'écran 5 × 5 et premiers programmes : allumer une LED, déplacer un point avec une variable.",
+  "s2-3|T3C3": "Séance 2 : programmation du joueur (boutons A et B, conditions) et d'un objet qui tombe (boucle, nombre aléatoire, variables ox et oy).",
+  "s2-4|T3C3": "Séance 3 : collision, score et vies avec des conditions et des variables ; fin de jeu.",
+  "s2-4|T3C2": "Les élèves testent leur jeu, repèrent les erreurs et choisissent une amélioration (vitesse, son, affichage des vies).",
+  "s2-5|T3C3": "Synthèse : coordonnées, variable, boucle, condition, aléatoire et événement permettent de programmer un jeu.",
+  "s2-5|T2C3": "Synthèse : l'algorithme du jeu (initialisation, boucle principale, test de collision) décrit le programme exécuté par la carte.",
+  "s4-1|T1C1": "Situation déclenchante : concevoir l'éclairage d'une salle de concert ; les élèves découvrent comment l'usage des projecteurs répond au besoin d'un spectacle.",
+  "s4-2|T1C3": "Livret de l'éclairagiste : synthèses additive et soustractive et couleur des objets, pour choisir les spots et filtres adaptés à la scène.",
+  "s4-3|T2C1": "Étude du système d'éclairage : fonctions du jeu d'orgues, du potentiomètre, du gradateur et du projecteur, et organisation de la commande par câble DMX.",
+  "s4-3|T1C2": "Les élèves raccordent les éléments du système (prise 220 V, câble DMX) et étudient leurs interactions pour piloter plusieurs projecteurs.",
+  "s4-5|T2C1": "Synthèse : chaîne d'information (acquérir, traiter, communiquer) et chaîne d'énergie (alimenter, distribuer, convertir, transmettre) du système d'éclairage.",
+  "s4-5|T1C2": "Synthèse : choix des couleurs des spots (synthèse additive et soustractive) et interactions entre le système et la lumière produite."
 };
 try { var sn = localStorage.getItem(NOTES_KEY); if (sn) { var o = JSON.parse(sn); for (var nk in o) NOTES[nk] = o[nk]; } } catch(e) {}
 var TVIEW = "fit";
