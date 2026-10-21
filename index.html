@@ -40,7 +40,7 @@
   .deco.wood{background:repeating-linear-gradient(92deg, rgba(110,62,24,.13) 0 2px, transparent 2px 11px), linear-gradient(170deg, #dcaa70, var(--wood-2));}
 
   /* ===== Le robot (dimensions de base 760 × 560, mis à l'échelle de l'écran) ===== */
-  .shop{position:relative; width:760px; height:560px; transform-origin:top left;}
+  .shop{position:relative; width:760px; height:640px; transform-origin:top left;}
   .scaler{position:relative;}
   .part{position:absolute; display:flex; flex-direction:column; justify-content:center; gap:4px; padding:14px 18px; text-decoration:none; border-radius:14px; will-change:transform;}
   a.part{cursor:pointer; transition:filter .2s, box-shadow .2s;}
@@ -50,13 +50,18 @@
   .part .d{font-size:.82rem; line-height:1.35; color:#4e3219; text-shadow:0 1px 0 rgba(255,235,200,.35);}
   .part small{font-weight:700; color:#6b4a2b;}
 
-  #p-head{left:255px; top:44px; width:250px; height:140px; border-radius:22px; align-items:center; text-align:center; padding-top:8px;}
-  #p-torso{left:228px; top:204px; width:304px; height:108px; border-radius:18px 18px 12px 12px; padding:10px 18px;}
-  #p-larm{left:18px; top:214px; width:196px; height:116px; border-radius:16px;}
-  #p-rarm{left:546px; top:214px; width:196px; height:116px; border-radius:16px;}
-  #p-legs{left:252px; top:428px; width:256px; height:98px; border-radius:14px;}
+  #p-head{left:255px; top:124px; width:250px; height:140px; border-radius:22px; align-items:center; text-align:center; padding-top:8px;}
+  #p-torso{left:228px; top:284px; width:304px; height:108px; border-radius:18px 18px 12px 12px; padding:10px 18px;}
+  #p-larm{left:18px; top:294px; width:196px; height:116px; border-radius:16px;}
+  #p-rarm{left:546px; top:294px; width:196px; height:116px; border-radius:16px;}
+  #p-legs{left:252px; top:508px; width:256px; height:98px; border-radius:14px;}
   /* le buste est en 2 pièces : poitrine (outils) et ventre (progression) */
-  #p-belly{left:228px; top:318px; width:304px; height:94px; border-radius:12px 12px 18px 18px; padding:10px 18px;}
+  /* chapeau : haut-de-forme en bois (la calotte est le bouton, le bord est un décor) */
+  #p-hat{left:262px; top:30px; width:236px; height:84px; border-radius:16px 16px 4px 4px; align-items:center; text-align:center; gap:2px; padding:4px 10px 18px;}
+  #p-hat::after{content:""; position:absolute; left:0; right:0; bottom:4px; height:8px; background:#7a3e1c; box-shadow:inset 0 1px 0 rgba(255,220,180,.35); pointer-events:none;}
+  #p-hat .t{font-size:.9rem; white-space:nowrap;} #p-hat .t .e{font-size:1.15rem;} #p-hat .d{font-size:.74rem;}
+  #d-brim{left:222px; top:108px; width:316px; height:22px; border-radius:12px;}
+  #p-belly{left:228px; top:398px; width:304px; height:94px; border-radius:12px 12px 18px 18px; padding:10px 18px;}
   #p-belly .t{font-size:1rem;}
 
   .eyes{display:flex; gap:44px; margin-bottom:4px;}
@@ -72,19 +77,19 @@
 
   /* pièces de décor (non cliquables) */
   .deco{position:absolute; pointer-events:none; will-change:transform;}
-  #d-antenna{left:374px; top:6px; width:12px; height:40px; border-radius:6px; border-width:2px;}
+  #d-antenna{left:374px; top:8px; width:12px; height:30px; border-radius:6px; border-width:2px;}
   #d-ball{left:366px; top:0; width:28px; height:28px; border-radius:50%; border-width:2px;}
   .alive #d-ball{background:radial-gradient(circle at 40% 35%, #ffd9cf, #ff6b4a 55%, #c0381c); box-shadow:0 0 16px 4px rgba(255,107,74,.7); animation:pulse 1.2s infinite;}
-  #d-neck{left:350px; top:182px; width:60px; height:26px; border-radius:6px;}
-  #d-lsh{left:202px; top:238px; width:40px; height:40px; border-radius:50%;}
-  #d-rsh{left:518px; top:238px; width:40px; height:40px; border-radius:50%;}
-  #d-lhand{left:2px; top:326px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0, 30% 0, 50% 45%, 70% 0, 100% 0, 100% 100%, 0 100%);}
-  #d-rhand{left:702px; top:326px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0, 30% 0, 50% 45%, 70% 0, 100% 0, 100% 100%, 0 100%);}
-  #d-hips{left:300px; top:412px; width:160px; height:22px; border-radius:6px;}
-  #d-lfoot{left:250px; top:522px; width:110px; height:32px; border-radius:16px 16px 6px 6px;}
-  #d-rfoot{left:400px; top:522px; width:110px; height:32px; border-radius:16px 16px 6px 6px;}
+  #d-neck{left:350px; top:262px; width:60px; height:26px; border-radius:6px;}
+  #d-lsh{left:202px; top:318px; width:40px; height:40px; border-radius:50%;}
+  #d-rsh{left:518px; top:318px; width:40px; height:40px; border-radius:50%;}
+  #d-lhand{left:2px; top:406px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0, 30% 0, 50% 45%, 70% 0, 100% 0, 100% 100%, 0 100%);}
+  #d-rhand{left:702px; top:406px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0, 30% 0, 50% 45%, 70% 0, 100% 0, 100% 100%, 0 100%);}
+  #d-hips{left:300px; top:492px; width:160px; height:22px; border-radius:6px;}
+  #d-lfoot{left:250px; top:602px; width:110px; height:32px; border-radius:16px 16px 6px 6px;}
+  #d-rfoot{left:400px; top:602px; width:110px; height:32px; border-radius:16px 16px 6px 6px;}
   .bubble{
-    position:absolute; left:520px; top:30px; padding:8px 14px; border-radius:16px; background:#fff8e8; color:#3b2412; font-weight:900; font-size:1rem;
+    position:absolute; left:520px; top:110px; padding:8px 14px; border-radius:16px; background:#fff8e8; color:#3b2412; font-weight:900; font-size:1rem;
     box-shadow:0 6px 16px rgba(0,0,0,.35); opacity:0; transform:scale(.6); transform-origin:left bottom; transition:opacity .3s, transform .35s cubic-bezier(.3,1.6,.6,1); pointer-events:none;
   }
   .bubble::after{content:""; position:absolute; left:-8px; bottom:6px; border:8px solid transparent; border-right-color:#fff8e8; border-left:0;}
@@ -101,6 +106,7 @@
     .part{position:relative; left:auto !important; top:auto !important; width:auto !important; height:auto !important; padding:16px 18px;}
     #p-head{align-items:flex-start; text-align:left;}
     .eyes, .panel, .deco, .bubble{display:none;}
+    #p-hat::after{display:none;} #p-hat{align-items:flex-start; text-align:left; padding:16px 18px;} #p-hat .t{font-size:1.05rem; white-space:normal;} #p-hat .t .e{font-size:1.4rem;} #p-hat .d{font-size:.82rem;}
   }
 
   /* ===== Mot de passe : les pièces attendent en vrac sur l'établi ===== */
@@ -145,6 +151,7 @@
       <div class="deco wood" id="d-antenna" aria-hidden="true"></div>
       <div class="deco wood" id="d-ball" aria-hidden="true"></div>
       <div class="deco wood" id="d-neck" aria-hidden="true"></div>
+      <div class="deco wood" id="d-brim" aria-hidden="true"></div>
       <div class="deco wood" id="d-lsh" aria-hidden="true"></div>
       <div class="deco wood" id="d-rsh" aria-hidden="true"></div>
       <div class="deco wood" id="d-lhand" aria-hidden="true"></div>
@@ -153,7 +160,11 @@
       <div class="deco wood" id="d-lfoot" aria-hidden="true"></div>
       <div class="deco wood" id="d-rfoot" aria-hidden="true"></div>
 
-      <!-- les 6 boutons sont les pièces du robot -->
+      <!-- les 7 boutons sont les pièces du robot (et son chapeau) -->
+      <a class="part wood" id="p-hat" href="atelier-depannage.html">
+        <span class="t"><span class="e">🛠️</span>Atelier de dépannage</span>
+        <span class="d">Diagnostiquer et réparer.</span>
+      </a>
       <a class="part wood" id="p-head" href="realisations.html">
         <span class="eyes" aria-hidden="true"><span class="eye"></span><span class="eye"></span></span>
         <span class="t"><span class="e">🏆</span>Les réalisations</span>
@@ -191,7 +202,7 @@
 (function(){
   var shop = document.getElementById('shop'), scaler = document.getElementById('scaler');
   /* ordre de montage : pieds, jambes, bassin, buste, épaules, bras, mains, cou, tête, antenne */
-  var ORDER = ['d-lfoot','d-rfoot','p-legs','d-hips','p-belly','p-torso','d-lsh','d-rsh','p-larm','p-rarm','d-lhand','d-rhand','d-neck','p-head','d-antenna','d-ball'];
+  var ORDER = ['d-lfoot','d-rfoot','p-legs','d-hips','p-belly','p-torso','d-lsh','d-rsh','p-larm','p-rarm','d-lhand','d-rhand','d-neck','p-head','d-brim','p-hat','d-antenna','d-ball'];
   var parts = ORDER.map(function(id){ return document.getElementById(id); });
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var big = false, flyAnims = [];
@@ -199,15 +210,15 @@
   function fit(){                                                    // met l'atelier à l'échelle de l'écran
     big = window.innerWidth >= 600;
     if (!big) { shop.style.transform = ''; scaler.style.width = scaler.style.height = ''; return; }
-    var s = Math.min(1.15, (window.innerWidth - 32)/760, (window.innerHeight - 150)/560);
+    var s = Math.min(1.15, (window.innerWidth - 32)/760, (window.innerHeight - 150)/640);
     shop.style.transform = 'scale(' + s + ')';
-    scaler.style.width = (760*s) + 'px'; scaler.style.height = (560*s) + 'px';
+    scaler.style.width = (760*s) + 'px'; scaler.style.height = (640*s) + 'px';
   }
   /* position « en vrac » de chaque pièce sur l'établi (décalage depuis sa place dans le robot) */
   function scatter(el, i){
     var cx = el.offsetLeft + el.offsetWidth/2, cy = el.offsetTop + el.offsetHeight/2;
     var ang = (i/parts.length)*2*Math.PI + (Math.random() - .5)*.6;
-    var tx = 380 + Math.cos(ang)*(330 + Math.random()*60), ty = 290 + Math.sin(ang)*(210 + Math.random()*40);
+    var tx = 380 + Math.cos(ang)*(330 + Math.random()*60), ty = 330 + Math.sin(ang)*(210 + Math.random()*40);
     el.dataset.sx = (tx - cx).toFixed(0); el.dataset.sy = (ty - cy).toFixed(0);
     el.dataset.sr = ((Math.random()*2 - 1)*28).toFixed(0);
   }
