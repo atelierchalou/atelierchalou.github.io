@@ -22,6 +22,15 @@
     plusminus: (f, a) => `<path d="M6 8.6h6.4M9.2 5.4v6.4M13.6 17.4h6" stroke="${f}" stroke-width="2.3" stroke-linecap="round"/><circle cx="17" cy="8.6" r="1.7" fill="${a}"/><circle cx="7.4" cy="17.4" r="1.7" fill="${a}"/>`,
     text: (f, a) => `<path d="M6.2 7.4h11.6M12 7.4V18" stroke="${f}" stroke-width="2.7" stroke-linecap="round" fill="none"/><circle cx="17.6" cy="16.8" r="1.9" fill="${a}"/>`,
     box: (f, a) => `<path d="M5.5 9.6L12 5.5l6.5 4.1v6.8L12 20.5l-6.5-4.1z" fill="${a}" stroke="${f}" stroke-width="1.8" stroke-linejoin="round"/><path d="M5.8 9.9l6.2 3.7 6.2-3.7M12 13.6v6.8" stroke="${f}" stroke-width="1.6" fill="none" stroke-linejoin="round"/>`,
+    /* ----- dessins pour la micro:bit ----- */
+    grid: (f, a) => { let s = ''; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) s += `<circle cx="${7.2 + x * 4.8}" cy="${7.2 + y * 4.8}" r="1.7" fill="${(x + y) % 2 ? f : a}"/>`; return s; },
+    heart: (f, a) => `<path d="M12 19.2C6.400 15.100 4.200 12.100 4.200 9.100a3.900 3.900 0 0 1 7.800-1.100 3.900 3.900 0 0 1 7.800 1.100c0 3-2.200 6-7.800 10.100z" fill="${a}" stroke="${f}" stroke-width="1.800" stroke-linejoin="round"/>`,
+    tilt: (f, a) => `<rect x="6.500" y="8.500" width="11" height="7" rx="1.800" fill="${f}" transform="rotate(-24 12 12)"/><circle cx="12" cy="12" r="1.700" fill="${a}"/><path d="M5 17.600a8.500 8.500 0 0 0 3 1.800M19 6.400a8.500 8.500 0 0 0-3-1.800" stroke="${f}" stroke-width="1.700" stroke-linecap="round" fill="none"/>`,
+    compass: (f, a) => `<circle cx="12" cy="12" r="7.600" fill="#fff" stroke="${f}" stroke-width="2"/><path d="M14.800 9.200l-1.700 4-4 1.700 1.700-4z" fill="${a}" stroke="${f}" stroke-width="1.400" stroke-linejoin="round"/>`,
+    thermo: (f, a) => `<path d="M10 14.100V6.600a2 2 0 0 1 4 0v7.500a3.700 3.700 0 1 1-4 0z" fill="#fff" stroke="${f}" stroke-width="1.900" stroke-linejoin="round"/><circle cx="12" cy="16.400" r="2" fill="${a}"/><path d="M12 9.400v7" stroke="${a}" stroke-width="1.800" stroke-linecap="round"/>`,
+    sun: (f, a) => `<circle cx="12" cy="12" r="4.200" fill="${a}" stroke="${f}" stroke-width="1.800"/><path d="M12 4.200v2M12 17.800v2M4.200 12h2M17.800 12h2M6.500 6.500l1.400 1.400M16.100 16.100l1.400 1.400M17.500 6.500l-1.400 1.400M7.900 16.100l-1.400 1.400" stroke="${f}" stroke-width="1.800" stroke-linecap="round"/>`,
+    hand: (f, a) => `<path d="M9 12.500V6.800a1.500 1.500 0 0 1 3 0v4.200m0-.600V5.800a1.500 1.500 0 0 1 3 0v5m0-.200V7.600a1.500 1.500 0 0 1 3 0v6.600c0 3.300-2 5.600-5.200 5.600-2.200 0-3.400-1-4.600-2.800L5.800 13.600a1.500 1.500 0 0 1 2.400-1.800L9 12.800" fill="${a}" stroke="${f}" stroke-width="1.700" stroke-linejoin="round" stroke-linecap="round"/>`,
+    mic: (f, a) => `<rect x="9" y="4.200" width="6" height="10" rx="3" fill="${a}" stroke="${f}" stroke-width="1.800"/><path d="M6.200 11.500a5.800 5.800 0 0 0 11.600 0M12 17.300v2.700M9 20h6" stroke="${f}" stroke-width="1.800" stroke-linecap="round" fill="none"/>`,
   };
 
   const uri = (svg) => 'data:image/svg+xml,' + encodeURIComponent(svg);

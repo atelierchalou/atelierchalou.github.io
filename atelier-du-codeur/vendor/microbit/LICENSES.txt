@@ -1,0 +1,14 @@
+Fichiers de ce dossier : composants de la fondation micro:bit (Micro:bit Educational Foundation), sous licence MIT.
+
+- micropython-v1.js : MicroPython pour micro:bit V1 (v1.1.1), https://github.com/bbcmicrobit/micropython
+  Copyright (c) Damien P. George et contributeurs, Micro:bit Educational Foundation. Licence MIT.
+- micropython-v2.js : MicroPython pour micro:bit V2 (v2.1.2), https://github.com/microbit-foundation/micropython-microbit-v2
+  Copyright (c) Damien P. George et contributeurs, Micro:bit Educational Foundation. Licence MIT.
+  (les fichiers .hex officiels, récupérés dans https://github.com/microbit-foundation/python-editor-v3 et placés dans une chaîne JavaScript)
+- microbit-tools.js : assemblage (esbuild) de @microbit/microbit-fs, @microbit/microbit-universal-hex et
+  @microbit/microbit-connection, Copyright (c) Micro:bit Educational Foundation et contributeurs. Licence MIT.
+  Source du pont : build/entry.js. Pour le reconstruire : npm i @microbit/microbit-fs @microbit/microbit-universal-hex
+  @microbit/microbit-connection esbuild, puis : npx esbuild build/entry.js --bundle --minify --format=iife --outfile=microbit-tools.js
+
+Licence MIT : l'autorisation est accordée, gratuitement, de copier, modifier et distribuer ces logiciels, à condition de conserver
+l'avis de droit d'auteur ci-dessus. Les logiciels sont fournis « tels quels », sans garantie d'aucune sorte.

@@ -13,7 +13,21 @@ const { execFile } = require('child_process');
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '127.0.0.1';          // 0.0.0.0 pour ouvrir au réseau local
-const CLI = process.env.ARDUINO_CLI || 'arduino-cli';
+/* Sous Windows, un serveur lancé au démarrage peut ne pas connaître le PATH mis à jour par l'installateur d'arduino-cli :
+   on regarde aussi ses emplacements habituels. */
+function findCli() {
+  if (process.env.ARDUINO_CLI) return process.env.ARDUINO_CLI;
+  if (process.platform === 'win32') {
+    const e = process.env;
+    const dirs = [e.ProgramFiles, e['ProgramFiles(x86)'], e.ProgramW6432, e.LOCALAPPDATA && path.join(e.LOCALAPPDATA, 'Programs')].filter(Boolean);
+    for (const d of dirs) {
+      const f = path.join(d, 'Arduino CLI', 'arduino-cli.exe');
+      if (fs.existsSync(f)) return f;
+    }
+  }
+  return 'arduino-cli';
+}
+const CLI = findCli();
 const ORIGIN = process.env.ALLOWED_ORIGIN || '*';       // restreins-le si le serveur est exposé
 const FQBN = 'arduino:avr:nano:cpu=atmega328';
 const MAX_CODE = 64 * 1024;
