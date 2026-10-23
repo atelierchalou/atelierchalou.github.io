@@ -54,7 +54,10 @@
   #p-torso{left:228px; top:284px; width:304px; height:108px; border-radius:18px 18px 12px 12px; padding:10px 18px;}
   #p-larm{left:18px; top:294px; width:196px; height:116px; border-radius:16px;}
   #p-rarm{left:546px; top:294px; width:196px; height:116px; border-radius:16px;}
-  #p-legs{left:252px; top:508px; width:256px; height:98px; border-radius:14px;}
+  /* 2 jambes : enquête policière (gauche) et atelier du numérique (droite) */
+  #p-legs{left:190px; top:508px; width:186px; height:100px; border-radius:14px; padding:10px 14px;}
+  #p-rleg{left:384px; top:508px; width:186px; height:100px; border-radius:14px; padding:10px 14px;}
+  #p-legs .t, #p-rleg .t{font-size:.94rem; gap:6px;} #p-legs .t .e, #p-rleg .t .e{font-size:1.2rem;} #p-legs .d, #p-rleg .d{font-size:.76rem;} #p-legs .t small{display:block; font-size:.8em;}
   /* le buste est en 2 pièces : poitrine (outils) et ventre (progression) */
   /* chapeau : haut-de-forme en bois (la calotte est le bouton, le bord est un décor) */
   #p-hat{left:262px; top:30px; width:236px; height:84px; border-radius:16px 16px 4px 4px; align-items:center; text-align:center; gap:2px; padding:4px 10px 18px;}
@@ -85,9 +88,9 @@
   #d-rsh{left:518px; top:318px; width:40px; height:40px; border-radius:50%;}
   #d-lhand{left:2px; top:406px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0, 30% 0, 50% 45%, 70% 0, 100% 0, 100% 100%, 0 100%);}
   #d-rhand{left:702px; top:406px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0, 30% 0, 50% 45%, 70% 0, 100% 0, 100% 100%, 0 100%);}
-  #d-hips{left:300px; top:492px; width:160px; height:22px; border-radius:6px;}
-  #d-lfoot{left:250px; top:602px; width:110px; height:32px; border-radius:16px 16px 6px 6px;}
-  #d-rfoot{left:400px; top:602px; width:110px; height:32px; border-radius:16px 16px 6px 6px;}
+  #d-hips{left:270px; top:492px; width:220px; height:22px; border-radius:6px;}
+  #d-lfoot{left:214px; top:602px; width:140px; height:32px; border-radius:16px 16px 6px 6px;}
+  #d-rfoot{left:406px; top:602px; width:140px; height:32px; border-radius:16px 16px 6px 6px;}
   .bubble{
     position:absolute; left:520px; top:110px; padding:8px 14px; border-radius:16px; background:#fff8e8; color:#3b2412; font-weight:900; font-size:1rem;
     box-shadow:0 6px 16px rgba(0,0,0,.35); opacity:0; transform:scale(.6); transform-origin:left bottom; transition:opacity .3s, transform .35s cubic-bezier(.3,1.6,.6,1); pointer-events:none;
@@ -106,6 +109,7 @@
     .part{position:relative; left:auto !important; top:auto !important; width:auto !important; height:auto !important; padding:16px 18px;}
     #p-head{align-items:flex-start; text-align:left;}
     .eyes, .panel, .deco, .bubble{display:none;}
+    #p-legs .t, #p-rleg .t{font-size:1.05rem;} #p-legs .t .e, #p-rleg .t .e{font-size:1.4rem;} #p-legs .d, #p-rleg .d{font-size:.82rem;}
     #p-hat::after{display:none;} #p-hat{align-items:flex-start; text-align:left; padding:16px 18px;} #p-hat .t{font-size:1.05rem; white-space:normal;} #p-hat .t .e{font-size:1.4rem;} #p-hat .d{font-size:.82rem;}
   }
 
@@ -160,7 +164,7 @@
       <div class="deco wood" id="d-lfoot" aria-hidden="true"></div>
       <div class="deco wood" id="d-rfoot" aria-hidden="true"></div>
 
-      <!-- les 7 boutons sont les pièces du robot (et son chapeau) -->
+      <!-- les 8 boutons sont les pièces du robot (et son chapeau) -->
       <a class="part wood" id="p-hat" href="atelier-depannage.html">
         <span class="t"><span class="e">🛠️</span>Atelier de dépannage</span>
         <span class="d">Diagnostiquer et réparer.</span>
@@ -189,7 +193,11 @@
       </a>
       <a class="part wood" id="p-legs" href="enquete-policiere.html">
         <span class="t"><span class="e">🔎</span><span>Enquête policière <small>(ou pas)</small></span></span>
-        <span class="d">Analyser les preuves, démasquer le coupable.</span>
+        <span class="d">Démasquer le coupable.</span>
+      </a>
+      <a class="part wood" id="p-rleg" href="atelier-numerique.html">
+        <span class="t"><span class="e">💻</span><span>L'Atelier du numérique</span></span>
+        <span class="d">Coder et programmer des cartes.</span>
       </a>
 
       <div class="bubble" aria-hidden="true">Bonjour !</div>
@@ -202,7 +210,7 @@
 (function(){
   var shop = document.getElementById('shop'), scaler = document.getElementById('scaler');
   /* ordre de montage : pieds, jambes, bassin, buste, épaules, bras, mains, cou, tête, antenne */
-  var ORDER = ['d-lfoot','d-rfoot','p-legs','d-hips','p-belly','p-torso','d-lsh','d-rsh','p-larm','p-rarm','d-lhand','d-rhand','d-neck','p-head','d-brim','p-hat','d-antenna','d-ball'];
+  var ORDER = ['d-lfoot','d-rfoot','p-legs','p-rleg','d-hips','p-belly','p-torso','d-lsh','d-rsh','p-larm','p-rarm','d-lhand','d-rhand','d-neck','p-head','d-brim','p-hat','d-antenna','d-ball'];
   var parts = ORDER.map(function(id){ return document.getElementById(id); });
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var big = false, flyAnims = [];

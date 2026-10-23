@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'Atelier du numérique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Nunito+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#152720; --chalk:#f4f0e2; --chalk-dim:#b9c2b6; --accent:#e8c468;
+    --bezel:#2b2f33; --bezel2:#1c1f22; --screen:#0f2a24; --glow:#7fe0b0; --ink:#1d1a16;
+    --wood:#c98f52; --wood2:#a46d36; --burn:#5b3313;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    min-height:100dvh; display:flex; flex-direction:column; align-items:center; padding:14px 16px 18px;
+    color:var(--chalk); font-family:'Nunito Sans',system-ui,sans-serif;
+    background:radial-gradient(ellipse at 50% 20%, #24402f 0%, var(--bg) 55%, #0e1a15 100%);
+  }
+  @media (min-width:700px) and (min-height:560px){ body{height:100dvh; overflow:hidden;} }
+  .site-logo{position:fixed; top:16px; left:16px; z-index:10;}
+  .site-logo img{display:block; height:36px; width:auto;}
+  .back{color:var(--chalk-dim); text-decoration:none; font-size:.9rem; padding:4px 0 8px;}
+  .back:hover{color:var(--accent);}
+  h1{font-family:'Kalam',cursive; font-size:clamp(1.7rem, 3.4vw, 2.5rem); margin:0; line-height:1.1; text-align:center;}
+  .sub{margin:4px 0 14px; color:var(--chalk-dim); text-align:center; font-size:.98rem;}
+
+  /* ===== L'ordinateur ===== */
+  .pc{flex:1; min-height:0; width:min(1000px, 100%); display:flex; flex-direction:column; align-items:center;}
+  .monitor{
+    flex:1; min-height:0; width:100%; display:flex; padding:18px 18px 34px; border-radius:18px; position:relative;
+    background:linear-gradient(160deg, #3a3f44, var(--bezel) 40%, var(--bezel2));
+    box-shadow:inset 0 0 0 2px #4a5056, 0 18px 40px rgba(0,0,0,.5);
+  }
+  .monitor::after{content:""; position:absolute; left:50%; bottom:12px; width:10px; height:10px; margin-left:-5px; border-radius:50%;
+                  background:var(--glow); box-shadow:0 0 10px var(--glow); animation:blink 3s infinite;}
+  @keyframes blink{50%{opacity:.35;}}
+  .screen{
+    flex:1; min-height:0; border-radius:10px; overflow:auto; padding:22px; position:relative;
+    background:radial-gradient(ellipse at 50% 40%, #16403a, var(--screen) 70%),
+               repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 2px, transparent 2px 4px);
+    background-blend-mode:screen; box-shadow:inset 0 0 40px rgba(0,0,0,.6);
+  }
+  .prompt{font-family:'JetBrains Mono',monospace; font-size:.9rem; color:var(--glow); margin:0 0 16px; text-shadow:0 0 6px rgba(127,224,176,.5);}
+  .prompt .cur{display:inline-block; width:.6em; height:1em; background:var(--glow); vertical-align:-2px; margin-left:3px; animation:blink 1.1s steps(1) infinite;}
+  .apps{display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:16px;}
+
+  .app{
+    display:flex; flex-direction:column; gap:8px; padding:16px 18px; border-radius:12px; text-decoration:none; color:var(--ink);
+    background:linear-gradient(170deg, #e2b077, var(--wood) 45%, var(--wood2)); border:3px solid var(--burn);
+    box-shadow:inset 0 0 0 1px rgba(255,230,190,.35), 0 8px 18px rgba(0,0,0,.45); transition:transform .15s, box-shadow .15s;
+  }
+  a.app:hover, a.app:focus-visible{transform:translateY(-3px); box-shadow:inset 0 0 0 1px rgba(255,230,190,.35), 0 0 0 3px var(--accent), 0 12px 24px rgba(0,0,0,.5); outline:none;}
+  .app .top{display:flex; align-items:center; gap:10px;}
+  .app .ic{width:46px; height:46px; flex:0 0 auto; display:grid; place-items:center; border-radius:10px; background:#fff3dc; border:2px solid var(--burn);}
+  .app .ic svg{width:34px; height:34px;}
+  .app h2{margin:0; font-size:1.12rem; font-weight:900; line-height:1.15;}
+  .app p{margin:0; font-size:.9rem; line-height:1.4; color:#3b2412;}
+  .tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:auto;}
+  .tag{font-size:.72rem; font-weight:800; padding:2px 8px; border-radius:999px; background:rgba(255,243,220,.75); color:#4e3219;}
+  .app .go{font-weight:900; font-size:.92rem;}
+  .app.soon{background:none; border:2px dashed rgba(127,224,176,.45); box-shadow:none; color:var(--chalk-dim); justify-content:center; align-items:center; text-align:center; min-height:150px;}
+  .app.soon p{color:var(--chalk-dim);}
+
+  .stand{width:120px; height:26px; background:linear-gradient(180deg, #33383d, #1f2225); clip-path:polygon(18% 0, 82% 0, 100% 100%, 0 100%);}
+  .base{width:240px; height:12px; border-radius:6px 6px 3px 3px; background:linear-gradient(180deg, #3a3f44, #1c1f22); box-shadow:0 8px 14px rgba(0,0,0,.45);}
+
+  @media (max-width:599px){
+    body{padding-top:62px;}
+    .back{position:absolute; top:24px; right:16px; padding:0;}
+    .monitor{padding:10px 10px 28px;}
+    .screen{padding:14px;}
+    .apps{grid-template-columns:1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){ .monitor::after, .prompt .cur{animation:none;} }
+</style>
+</head>
+<body>
+  <a class="site-logo" href="index.html"><img src="logo-blanc.png" alt="Atelier Chalou"></a>
+  <a class="back" href="index.html">← Retour à l'accueil</a>
+  <h1>💻 L'Atelier du numérique</h1>
+  <p class="sub">Coder, programmer une carte, comprendre comment fonctionne un programme.</p>
+
+  <div class="pc">
+    <div class="monitor">
+      <div class="screen">
+        <p class="prompt">C:\atelier-chalou&gt; choisis une appli<span class="cur" aria-hidden="true"></span></p>
+        <div class="apps">
+          <a class="app" href="atelier-du-codeur/index.html" target="_blank" rel="noopener">
+            <span class="top">
+              <span class="ic" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none" stroke="#5b3313" stroke-width="2.4" stroke-linejoin="round"><path d="M5 9h10v3h4V9h16v9H19v-3h-4v3H5z" fill="#f2b84b"/><path d="M5 22h10v3h4v-3h16v9H19v-3h-4v3H5z" fill="#6cc3a0"/></svg></span>
+              <h2>L'atelier du codeur</h2>
+            </span>
+            <p>Assemble des blocs pour programmer une carte Arduino Nano, regarde le code se construire, puis envoie-le dans la carte.</p>
+            <span class="tags"><span class="tag">Programmation par blocs</span><span class="tag">Arduino Nano</span></span>
+            <span class="go">Ouvrir l'appli →</span>
+          </a>
+          <div class="app soon">
+            <p>🚧 D'autres applis arrivent bientôt…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="stand" aria-hidden="true"></div>
+    <div class="base" aria-hidden="true"></div>
+  </div>
+</body>
+</html>
