@@ -9,6 +9,43 @@
   const PLUS = svg('<path d="M10 5.500v9M5.500 10h9" stroke="#fff" stroke-width="2.400" stroke-linecap="round"/>', '#34B34A');
   const MINUS = svg('<path d="M5.500 10h9" stroke="#fff" stroke-width="2.400" stroke-linecap="round"/>', '#EF476F');
 
+  /* Écarte les blocs principaux (« au démarrage », « répéter indéfiniment »…) pour qu'ils ne se chevauchent pas :
+     un bloc qui en recouvre un autre au-dessus de lui est poussé vers le bas. */
+  function spread(ws, opts) {
+    opts = opts || {};
+    const gap = opts.gap || 36;
+    if (!ws || !ws.rendered) return 0;
+    const tops = ws.getTopBlocks(true);
+    const placed = [];
+    let moved = 0;
+    for (const b of tops) {
+      const r = b.getBoundingRectangle();
+      let dy = 0, again = true, guard = 0;
+      const canMove = !opts.hatsOnly || !b.previousConnection;
+      while (again && canMove && guard++ < 50) {
+        again = false;
+        for (const p of placed) {
+          const overlapX = r.left < p.right + 10 && r.right > p.left - 10;
+          const overlapY = r.top + dy < p.bottom + gap && r.bottom + dy > p.top;
+          if (overlapX && overlapY) { dy = p.bottom + gap - r.top; again = true; }
+        }
+      }
+      if (dy > 0) { b.moveBy(0, dy); moved++; }
+      placed.push({ left: r.left, right: r.right, top: r.top + dy, bottom: r.bottom + dy });
+    }
+    return moved;
+  }
+  /* Surveille l'espace de travail : quand « au démarrage » grandit, « répéter indéfiniment » descend. */
+  function keepSpread(ws) {
+    let t = null;
+    ws.addChangeListener((e) => {
+      if (e.isUiEvent || e.type === Blockly.Events.VIEWPORT_CHANGE) return;
+      clearTimeout(t);
+      t = setTimeout(() => { if (!ws.isDragging()) spread(ws, { hatsOnly: true }); }, 60);
+    });
+  }
+  root.BlocksLayout = { spread: spread, keepSpread: keepSpread };
+
   const def = Blockly.Blocks.controls_if;
   if (!def || def.__plusButtons) return;
   const origInit = def.init;

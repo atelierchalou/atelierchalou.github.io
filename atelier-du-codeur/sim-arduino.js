@@ -88,6 +88,14 @@
       this.paintAll();
       this.paintSerial();
     }
+    /* Appui « de l'extérieur » (vérification du mode guidé) : le bouton s'enfonce à l'écran. */
+    setPressed(p, down) {
+      p = String(p);
+      this.pressed[p] = !!down;
+      const u = this.ui['btn' + p];
+      if (u) { u.knob.classList.toggle('down', !!down); u.txt.textContent = down ? 'appuyé' : 'relâché'; }
+      return u ? u.knob : null;
+    }
     /* --- API utilisée par le programme simulé --- */
     pinMode(p, m) { this.pin(p).mode = m; this.paintPin(p); }
     digitalWrite(p, v) { const s = this.pin(p); s.v = v ? 1 : 0; s.pwm = null; this.paintPin(p); }
@@ -225,12 +233,13 @@
         this.ui['led' + l.pin] = { bulb: s.querySelector('.b'), glow: s.querySelector('.g'), txt: txt };
       });
       parts.buttons.forEach((bt) => {
-        const knob = holdable(el('div', { class: 'pushbtn press', 'aria-label': 'Bouton sur ' + label(bt.pin) }), (down) => {
+        const knob = holdable(el('div', { class: 'pushbtn press', 'data-pin': String(bt.pin), 'aria-label': 'Bouton sur ' + label(bt.pin) }), (down) => {
           this.pressed[bt.pin] = down;
           txt.textContent = down ? 'appuyé' : 'relâché';
         });
         const txt = el('small', { text: this.pressed[bt.pin] ? 'appuyé' : 'relâché' });
         grid.appendChild(el('div', { class: 'simcard' }, [knob, el('b', { text: 'Bouton · ' + label(bt.pin) }), txt]));
+        this.ui['btn' + bt.pin] = { knob: knob, txt: txt };
       });
       parts.pots.forEach((pt) => {
         if (this.pots[pt.pin] == null) this.pots[pt.pin] = 512;

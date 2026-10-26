@@ -249,6 +249,14 @@
 
   /* Styles communs des panneaux de simulation. */
   const CSS = `
+.has-finger{position:relative;overflow:visible !important}
+.simfinger{position:absolute;left:50%;top:50%;width:34px;height:51px;margin:-47px 0 0 -17px;pointer-events:none;z-index:5;opacity:0;transform:translateY(-14px);transition:opacity .25s,transform .18s ease-in;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+.simfinger.on{opacity:1;transform:translateY(-12px)}
+.simfinger.on.pushing{transform:translateY(2px)}
+.has-finger.down{box-shadow:0 0 0 7px rgba(255,201,51,.85),0 0 18px 8px rgba(255,201,51,.6) !important;animation:fglow 1s ease-in-out infinite}
+@keyframes fglow{50%{box-shadow:0 0 0 10px rgba(255,201,51,.55),0 0 24px 12px rgba(255,201,51,.35)}}
+@media (prefers-reduced-motion: reduce){.simfinger{transition:opacity .2s}}
+
 .tabs{display:flex;gap:4px;margin:10px 14px 0;padding:0 4px;border-bottom:3px solid #3D7BFF}
 .tabs button{display:inline-flex;align-items:center;gap:7px;font:600 14px var(--font);border:2px solid #dfe5f2;border-bottom:0;background:#eef1f8;
   color:var(--muted);border-radius:9px 9px 0 0;padding:8px 16px 7px;cursor:pointer;margin-bottom:-1px}
@@ -294,5 +302,31 @@ aside.simmode .buddy{margin:6px 14px 4px}
     document.head.appendChild(s);
   }
 
-  root.SimCore = { SimGen: SimGen, SimRunner: SimRunner, Sound: Sound, el: el, holdable: holdable, injectCss: injectCss, Stop: Stop };
+  /* Main dessinée qui appuie sur un bouton du simulateur (pendant les vérifications du mode guidé).
+     etat : 'press' (le doigt appuie), 'hover' (le doigt attend au-dessus), 'off' (la main disparaît). */
+  const HAND = '<svg viewBox="0 0 40 60" width="34" height="51" aria-hidden="true">'
+    + '<defs><linearGradient id="fgSkin" x1="0" x2="1"><stop offset="0" stop-color="#f2b48c"/><stop offset=".45" stop-color="#ffd9bd"/><stop offset="1" stop-color="#e9a77f"/></linearGradient>'
+    + '<linearGradient id="fgFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".35" stop-color="#fff" stop-opacity="1"/></linearGradient>'
+    + '<mask id="fgMask"><rect width="40" height="60" fill="url(#fgFade)"/></mask></defs>'
+    + '<g mask="url(#fgMask)"><path d="M8 0h24v42c0 7.5-5.4 14-12 14S8 49.5 8 42z" fill="url(#fgSkin)" stroke="#b9805c" stroke-width="1.6"/>'
+    + '<path d="M13.5 22c4 1.6 9 1.6 13 0" fill="none" stroke="#c98d68" stroke-width="1.3" stroke-linecap="round"/></g>'
+    + '<path d="M13 40c0-4.2 3.1-7 7-7s7 2.8 7 7v4.5c0 3.4-3.1 6-7 6s-7-2.6-7-6z" fill="#ffeee2" stroke="#d6a183" stroke-width="1.2"/>'
+    + '<path d="M15.5 38.5c.8-2 2.5-3 4.5-3" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>'
+    + '</svg>';
+  function finger(target, etat) {
+    if (!target) return;
+    let h = target.querySelector(':scope > .simfinger');
+    if (etat === 'off') { if (h) { h.classList.remove('on', 'pushing'); setTimeout(() => h.remove(), 350); } return; }
+    if (!h) {
+      h = el('div', { class: 'simfinger', html: HAND });
+      target.classList.add('has-finger');
+      target.appendChild(h);
+      void h.offsetWidth;
+    }
+    h.classList.add('on');
+    h.classList.toggle('pushing', etat === 'press');
+  }
+  function fingersOff(root2) { (root2 || document).querySelectorAll('.simfinger').forEach((h) => h.parentNode && finger(h.parentNode, 'off')); }
+
+  root.SimCore = { SimGen: SimGen, SimRunner: SimRunner, Sound: Sound, el: el, holdable: holdable, injectCss: injectCss, Stop: Stop, finger: finger, fingersOff: fingersOff };
 })(typeof window !== 'undefined' ? window : globalThis);

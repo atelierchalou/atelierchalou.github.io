@@ -125,6 +125,7 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4.200l2 2.300H19a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#FFC933"/><path d="M3 10.500h18V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#FFE08A"/></svg>
     Fichier <span class="caret">▾</span></button>
     <div class="dd-menu" role="menu" hidden>
+      <button type="button" role="menuitem" id="mNew">Nouveau<small>commencer un programme vide</small></button>
       <button type="button" role="menuitem" id="mOpen">Ouvrir…<small>reprendre un projet enregistré</small><kbd>Ctrl+O</kbd></button>
       <button type="button" role="menuitem" id="mSave">Enregistrer<small id="mSaveInfo">dans le fichier du projet</small><kbd>Ctrl+S</kbd></button>
       <button type="button" role="menuitem" id="mSaveAs">Enregistrer sous…<small>choisir le nom et l'emplacement du fichier</small></button>
@@ -252,6 +253,7 @@
       zoom: { controls: true, wheel: true, startScale: 0.7, minScale: 0.4, maxScale: 1.6 },
       trashcan: true,
     });
+    BlocksLayout.keepSpread(ws);   // « au démarrage » qui grandit pousse la boucle vers le bas
     ws.registerToolboxCategoryCallback('VARIABLE', Blockly.Variables.flyoutCategory);
 
     let lastCode = '';
@@ -277,6 +279,7 @@
     function loadState(state) {
       Blockly.Events.disable();
       try { ws.clear(); Blockly.serialization.workspaces.load(state, ws); } finally { Blockly.Events.enable(); }
+      BlocksLayout.spread(ws);   // « au démarrage » et la boucle ne se chevauchent pas
       refresh(); save();
       if (typeof sim !== 'undefined' && sim) { if (sim.running) sim.start(); else sim.refresh(); }   // le simulateur suit le nouveau programme
     }
@@ -360,6 +363,18 @@
       catch (err) { log('Ce fichier n\'est pas un projet valide.', 'err'); say('oops', 'Hmm, ce fichier n\'est pas un projet de blocs.'); }
     }
     $('mOpen').onclick = openProject;
+    const NEW_PROJECT = () => ({ blocks: { languageVersion: 0, blocks: [{ type: 'mb_setup', x: 30, y: 30 }, { type: 'mb_loop', x: 30, y: 150 }] } });
+    function newProject() {
+      if (window.GuideMode && GuideMode.active) return;
+      const n = ws.getAllBlocks(false).filter((b) => ['mb_setup', 'mb_loop'].indexOf(b.type) < 0).length;
+      if (n && !confirm('Commencer un nouveau programme ? Les blocs actuels seront effacés (pense à enregistrer ton projet avant).')) return;
+      loadState(NEW_PROJECT());
+      project.reset();
+      ws.scrollCenter();
+      log('Nouveau programme.', 'ok');
+      say('idle', 'Une page blanche ! À toi de jouer.');
+    }
+    $('mNew').onclick = newProject;
     $('mSave').onclick = () => project.save(projectText()).then(saved, fail);
     $('mSaveAs').onclick = () => project.saveAs(projectText()).then(saved, fail);
     document.addEventListener('keydown', (e) => {

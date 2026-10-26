@@ -76,7 +76,7 @@
 
     /* --- Affichage --- */
     holdBtn(label, key, cls) {
-      return holdable(el('span', { class: 'mbtn press ' + (cls || ''), text: label }), (down) => {
+      return holdable(el('span', { class: 'mbtn press ' + (cls || ''), 'data-key': key, text: label }), (down) => {
         this.btn[key] = down;
         if (down) this.clicks[key] = (this.clicks[key] || 0) + 1;
       });

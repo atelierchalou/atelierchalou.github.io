@@ -92,7 +92,7 @@
           if (count > 5 || (last.v === 1 && last.dur > 1000)) return ko(count > 5 ? 'J\'ai compté ' + count + ' clignotements : la LED ne s\'arrête pas. La boucle doit être dans « au démarrage ».' : 'À la fin, la LED doit être éteinte.', count > 5 ? 2 : 2);
           if (count < 5) return ko('J\'ai compté seulement ' + count + ' clignotement' + (count > 1 ? 's' : '') + ' : il en faut 5.', 1);
           if (last.v !== 0) return ko('À la fin, la LED doit rester éteinte.', 2);
-          if (s.filter((x) => x.v === 1).some((x) => x.dur < 300 || x.dur > 800)) return ko('Chaque clignotement doit durer 0,5 seconde allumé.', 1);
+          if ((() => { const d = s.filter((x) => x.v === 1).map((x) => x.dur).sort((a, b) => a - b); const med = d[Math.floor(d.length / 2)]; return med < 300 || med > 800; })()) return ko('Chaque clignotement doit durer 0,5 seconde allumé.', 1);
           return ok('5 clignotements, puis plus rien : la boucle « répéter 5 fois » a bien fonctionné.');
         },
       },

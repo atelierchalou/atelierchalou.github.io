@@ -223,9 +223,17 @@ body.guided aside .tabs{margin-top:8px}
       },
       /* --- cartes et montages (LED, boutons, télécommande, pistolet, cibles) --- */
       pin: (p) => { const s = sim.hw.pins[String(p)]; return s ? (s.pwm != null ? (s.pwm > 0 ? 1 : 0) : s.v) : 0; },
-      setButton(p, down) { sim.hw.pressed[String(p)] = !!down; },
+      /* appuie sur un bouton de la carte… et une main le montre à l'écran */
+      setButton(p, down) {
+        const k = sim.hw.setPressed ? sim.hw.setPressed(p, down) : (sim.hw.pressed[String(p)] = !!down, null);
+        if (k && root.SimCore.finger) root.SimCore.finger(k, down ? 'press' : 'hover');
+      },
       m: () => sim.hw.m,
-      hold(key, down) { const m = sim.hw.m; m.btn[key] = !!down; if (down) m.clicks[key] = (m.clicks[key] || 0) + 1; },
+      hold(key, down) {
+        const m = sim.hw.m; m.btn[key] = !!down; if (down) m.clicks[key] = (m.clicks[key] || 0) + 1;
+        const b = document.querySelector('#simPanel .mbtn[data-key="' + key + '"]');
+        if (b) { b.classList.toggle('down', !!down); if (root.SimCore.finger) root.SimCore.finger(b, down ? 'press' : 'hover'); }
+      },
       async press(key, ms) { T.hold(key, true); await T.wait(ms || 250); T.hold(key, false); },
       shoot(i) { sim.hw.m.hitUntil[i] = performance.now() + 400 / (sim.speed || 1); },
       out: (k) => sim.hw.m.outs[k] || 0,
@@ -332,6 +340,7 @@ body.guided aside .tabs{margin-top:8px}
     o.sim.setSpeed(prevSpeed);
     if (o.sim.hw.robot && o.sim.hw.robot.caption) o.sim.hw.robot.caption('');
     { const c = document.getElementById('gcaption'); if (c) c.hidden = true; }
+    if (root.SimCore.fingersOff) root.SimCore.fingersOff();
     const s = state.missions[m.id] = state.missions[m.id] || {};
     if (r.ok) {
       const won = pointsNow(s);

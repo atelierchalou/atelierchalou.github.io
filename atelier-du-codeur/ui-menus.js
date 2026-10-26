@@ -127,6 +127,8 @@
         download(name, text);
         return { name: name, where: 'téléchargements' };
       },
+      /* Nouveau projet : on oublie le fichier en cours */
+      reset() { handle = null; setName(opts.defaultName); },
       canChooseFolder: canPick,
     };
     return api;
