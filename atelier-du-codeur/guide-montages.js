@@ -92,7 +92,7 @@
           if (count > 5 || (last.v === 1 && last.dur > 1000)) return ko(count > 5 ? 'J\'ai compté ' + count + ' clignotements : la LED ne s\'arrête pas. La boucle doit être dans « au démarrage ».' : 'À la fin, la LED doit être éteinte.', count > 5 ? 2 : 2);
           if (count < 5) return ko('J\'ai compté seulement ' + count + ' clignotement' + (count > 1 ? 's' : '') + ' : il en faut 5.', 1);
           if (last.v !== 0) return ko('À la fin, la LED doit rester éteinte.', 2);
-          if (s.filter((x) => x.v === 1).some((x) => x.dur < 350 || x.dur > 700)) return ko('Chaque clignotement doit durer 0,5 seconde allumé.', 1);
+          if (s.filter((x) => x.v === 1).some((x) => x.dur < 300 || x.dur > 800)) return ko('Chaque clignotement doit durer 0,5 seconde allumé.', 1);
           return ok('5 clignotements, puis plus rien : la boucle « répéter 5 fois » a bien fonctionné.');
         },
       },
@@ -130,6 +130,7 @@
       },
       {
         id: 'feu', title: 'Feu tricolore',
+        ledColors: { [FEU.vert]: 'verte', [FEU.orange]: 'orange', [FEU.rouge]: 'rouge' },
         goal: 'Fabrique un <b>feu tricolore</b> : LED verte (D5) <b>3 s</b>, puis orange (D6) <b>1 s</b>, puis rouge (D7) <b>3 s</b>, et on recommence. Une seule LED allumée à la fois.',
         explain: 'Chaque LED externe se branche sur sa propre broche (avec une résistance). Le programme allume une LED, attend, l\'éteint, et passe à la suivante.',
         criteria: ['Vert 3 s', 'Orange 1 s', 'Rouge 3 s', 'Une seule LED à la fois, dans le bon ordre'],

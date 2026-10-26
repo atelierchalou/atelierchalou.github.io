@@ -254,6 +254,7 @@
 <script src="sim-robot.js"></script>
 <script src="sim-montages.js"></script>
 <script src="sim-arduino.js"></script>
+<script src="scorm.js"></script>
 <script src="guide.js"></script>
 <script src="guide-kit.js"></script>
 <script src="guide-robot.js"></script>
@@ -497,7 +498,13 @@
       ws: ws, sim: sim, fullToolbox: ArduinoBlocks.TOOLBOX, loadState: loadState, snapshot: snapshot, showTab: showTab,
       say: say, log: log, setBoard: (id) => showBoard(id, false), panel: $('guidePanel'), button: $('btnGuide'),
       courses: [GuideMontages.led, GuideRobot, GuideVoiture, GuideMontages.telecommande, GuideMontages.pistolet, GuideMontages.cible, GuideMontages.volets],
+      ...(window.AtelierScorm ? AtelierScorm.guideOptions() : {}),
     });
+    /* Paquetage SCORM (Éléa / Moodle) : ?parcours=<id> lance directement ce parcours */
+    if (window.AtelierScorm && AtelierScorm.parcours && GuideMode.courses.some((c) => c.id === AtelierScorm.parcours)) {
+      GuideMode.enter(AtelierScorm.parcours);
+      log(AtelierScorm.connected ? 'Parcours ouvert depuis la plateforme : ta progression et ta note y sont enregistrées.' : 'Parcours « ' + AtelierScorm.parcours + ' » (hors plateforme : progression gardée dans ce navigateur).');
+    }
 
     /* ---------- Téléversement ---------- */
     /* Page servie par le serveur lui-même (localhost) : adresse vide. Page hébergée ailleurs (GitHub Pages…) :

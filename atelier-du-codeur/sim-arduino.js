@@ -22,6 +22,12 @@
   const str = (v) => (typeof v === 'boolean' ? (v ? '1' : '0') : typeof v === 'number' && !Number.isInteger(v) ? v.toFixed(2) : String(v));
 
   const LED_COLORS = ['#ff3b3b', '#2ecc40', '#ffcc00', '#3d7bff', '#ff8c1a', '#c84bc8', '#12b5a8'];
+  const LED_NAMES = { rouge: '#ff3b3b', verte: '#2ecc40', jaune: '#ffcc00', bleue: '#3d7bff', orange: '#ff8c1a', violette: '#c84bc8', turquoise: '#12b5a8' };
+  const NAME_OF = Object.fromEntries(Object.entries(LED_NAMES).map(([k, v]) => [v, k]));
+  /* Couleur choisie pour chaque broche (clic sur la LED pour la changer), retenue dans le navigateur. */
+  const KEY_COL = 'blocs-couleurs-led';
+  const loadCols = () => { try { return JSON.parse(localStorage.getItem(KEY_COL)) || {}; } catch (e) { return {}; } };
+  const saveCols = (c) => { try { localStorage.setItem(KEY_COL, JSON.stringify(c)); } catch (e) {} };
   const BOARD_LOOK = {
     nano: { body: '#1f6fb8', edge: '#14528a', w: 230 },
     uno: { body: '#1a7fa8', edge: '#11607f', w: 250 },
@@ -197,15 +203,25 @@
       } else if (this.m) this.m.ui = null;
       const grid = el('div', { class: 'simgrid' });
       const label = (p) => board.label(String(p)).replace(' (LED)', '');
+      const userCols = loadCols();
+      const forced = root.GuideMode && root.GuideMode.active && root.GuideMode.mission && root.GuideMode.mission.ledColors;
       parts.leds.forEach((l, i) => {
-        const col = LED_COLORS[i % LED_COLORS.length];
+        const col = (forced && LED_NAMES[forced[l.pin]]) || userCols[l.pin] || LED_COLORS[i % LED_COLORS.length];
         const s = document.createElementNS(svgNS, 'svg');
         s.setAttribute('viewBox', '0 0 40 48'); s.setAttribute('width', '40'); s.setAttribute('height', '48');
         s.innerHTML = '<circle class="g" cx="20" cy="18" r="17" fill="' + col + '" opacity="0"/>'
           + '<path class="b" d="M9 30V18a11 11 0 0 1 22 0v12z" fill="' + col + '" opacity=".22" stroke="' + col + '" stroke-width="1.5"/>'
           + '<rect x="7" y="29" width="26" height="4" rx="1.5" fill="#9aa5b1"/><path d="M15 33v13M25 33v9" stroke="#9aa5b1" stroke-width="2"/>';
         const txt = el('small', { text: 'éteinte' });
-        grid.appendChild(el('div', { class: 'simcard' }, [s, el('b', { text: 'LED · ' + label(l.pin) }), txt]));
+        const card = el('div', { class: 'simcard ledcard', title: forced ? 'LED ' + NAME_OF[col] : 'Clique pour changer la couleur de la LED' }, [s, el('b', { text: 'LED ' + (NAME_OF[col] || '') + ' · ' + label(l.pin) }), txt]);
+        if (!forced) card.addEventListener('click', () => {
+          const all = Object.values(LED_NAMES), c = loadCols();
+          c[l.pin] = all[(all.indexOf(col) + 1) % all.length];
+          saveCols(c);
+          this.build(this.board, this.parts);
+          this.paintAll();
+        });
+        grid.appendChild(card);
         this.ui['led' + l.pin] = { bulb: s.querySelector('.b'), glow: s.querySelector('.g'), txt: txt };
       });
       parts.buttons.forEach((bt) => {
@@ -266,6 +282,7 @@
   const CSS = `
 .boardbox{display:flex;flex-direction:column;align-items:center;gap:2px}
 .boardbox small{color:var(--muted);font-size:12px}
+.ledcard{cursor:pointer}
 .boardsvg{width:100%;max-width:250px;height:auto}
 .simcard.wide{grid-column:1/-1}
 .pushbtn{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ff7b7b,#d62d2d);border:5px solid #2b2d42;box-shadow:0 4px 0 #1a1b26;transition:transform .05s}
