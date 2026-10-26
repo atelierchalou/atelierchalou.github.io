@@ -102,9 +102,12 @@ body.guided aside .tabs{margin-top:8px}
 
   let o = null, course = null, state = null, panel = null, busy = false;   // busy : vérification en cours
   const LIBRE = 'blocs-guide-programme-libre';
-  /* Barème : 3 points sans indice, 2 avec 1 indice, 1,5 avec 2, 1 avec 3 ; 0 si l'élève a dû prendre la solution. */
+  /* Barème : chaque indice demandé ET chaque vérification ratée compte comme une « pénalité ».
+     0 pénalité : 3 points · 1 : 2 · 2 : 1,5 · 3 : 1 · 4 ou plus : 0 ; 0 aussi si l'élève a pris la solution. */
   const POINTS = [3, 2, 1.5, 1];
-  const pointsNow = (s) => (s && s.solution ? 0 : POINTS[Math.min((s && s.hints) || 0, 3)]);
+  const penalties = (s) => ((s && s.hints) || 0) + ((s && s.fails) || 0);
+  const pointsNow = (s) => (s && s.solution ? 0 : (POINTS[penalties(s)] != null ? POINTS[penalties(s)] : 0));
+  const BAREME = 'Barème : 3 points du premier coup · chaque indice ou chaque erreur enlève un cran : 2, puis 1,5, puis 1, puis 0 · 0 avec la solution.';
   const fmt = (n) => String(n).replace('.', ',');
   const pts = (n) => fmt(n) + (n > 1 ? ' points' : ' point');
   const totalPoints = () => course.missions.reduce((t, m) => { const s = state.missions[m.id]; return t + (s && s.done ? s.points || 0 : 0); }, 0);
@@ -114,7 +117,7 @@ body.guided aside .tabs{margin-top:8px}
   function summary(c, st) {
     c = c || course; st = st || state;
     const max = c.missions.length * 3;
-    const missions = c.missions.map((m, i) => { const s = st.missions[m.id] || {}; return { n: i + 1, title: m.title, done: !!s.done, points: s.done ? s.points || 0 : 0, hints: s.hints || 0, solution: !!s.solution }; });
+    const missions = c.missions.map((m, i) => { const s = st.missions[m.id] || {}; return { n: i + 1, title: m.title, done: !!s.done, points: s.done ? s.points || 0 : 0, hints: s.hints || 0, fails: s.fails || 0, solution: !!s.solution }; });
     const total = missions.reduce((t, m) => t + m.points, 0);
     return { course: c.title, id: c.id, total: total, max: max, pct: max ? Math.round(1000 * total / max) / 10 : 0, note20: max ? Math.round(40 * total / max) / 2 : 0,
       done: missions.filter((m) => m.done).length, missions: missions, finished: !!st.finished };
@@ -280,9 +283,12 @@ body.guided aside .tabs{margin-top:8px}
     const bareme = el('p', { class: 'gbareme' });
     const showBareme = () => {
       const cur = state.missions[m.id] || {};
-      bareme.innerHTML = 'Si tu réussis maintenant : <b>' + pts(pointsNow(cur)) + '</b>. Barème : 3 sans indice · 2 avec 1 indice · 1,5 avec 2 · 1 avec 3 · 0 avec la solution.';
+      const h = cur.hints || 0, f = cur.fails || 0;
+      const detail = h || f ? ' (' + [h ? h + ' indice' + (h > 1 ? 's' : '') : '', f ? f + ' erreur' + (f > 1 ? 's' : '') : ''].filter(Boolean).join(', ') + ')' : '';
+      bareme.innerHTML = (cur.done ? 'Mission réussie. ' : 'Si tu réussis maintenant : <b>' + pts(pointsNow(cur)) + '</b>' + detail + '. ') + BAREME;
     };
     showBareme();
+    panel.showBareme = showBareme;
     panel.appendChild(bareme);
     const hint = el('div', { class: 'ghint', hidden: '' });
     const res = el('div', { class: 'gres', hidden: '' });
@@ -358,7 +364,9 @@ body.guided aside .tabs{margin-top:8px}
       stage.success(r.msg || 'Bravo, mission réussie !', won);
       const resNew = panel.querySelector('.gres'); resNew.hidden = false; resNew.className = 'gres ok'; resNew.textContent = r.msg || 'Bravo, mission réussie !';
     } else {
-      s.fails = (s.fails || 0) + 1; store();
+      if (!s.done) s.fails = (s.fails || 0) + 1;   // une erreur enlève des points, comme un indice
+      store();
+      if (panel.showBareme) panel.showBareme();
       res.className = 'gres ko'; res.textContent = r.msg;
       if (panel.mascot) panel.mascot.setAttribute('data-mood', 'oops');
       const info = panel.querySelector('.ginfo');
@@ -491,9 +499,9 @@ body.guided aside .tabs{margin-top:8px}
     const rows = sm.missions.map((m) => el('tr', { class: m.done ? (m.solution ? 'sol' : 'ok') : 'ko' }, [
       el('td', { text: String(m.n) }), el('td', { text: m.title }),
       el('td', { text: m.done ? (m.solution ? '✔ avec la solution' : '✔ réussie') : '✘ pas réussie' }),
-      el('td', { text: String(m.hints) }), el('td', { text: fmt(m.points) + ' / 3' })]));
+      el('td', { text: m.hints + ' / ' + m.fails }), el('td', { text: fmt(m.points) + ' / 3' })]));
     const table = el('table', { class: 'gbilan' }, [
-      el('thead', {}, [el('tr', {}, ['N°', 'Mission', 'Résultat', 'Indices', 'Points'].map((t) => el('th', { text: t })))]),
+      el('thead', {}, [el('tr', {}, ['N°', 'Mission', 'Résultat', 'Indices / erreurs', 'Points'].map((t) => el('th', { text: t })))]),
       el('tbody', {}, rows)]);
     const name = el('input', { type: 'text', class: 'gname', placeholder: 'Ton prénom et ton nom', maxlength: '60', 'aria-label': 'Ton prénom et ton nom' });
     name.value = (o.studentName && o.studentName()) || safe(() => localStorage.getItem(KEY_NOM)) || '';
@@ -514,7 +522,7 @@ body.guided aside .tabs{margin-top:8px}
       el('div', { class: 'gnote' }, [el('span', { text: fmt(sm.note20) }), el('small', { text: '/ 20' })]),
       el('p', { class: 'gnote-sub', text: sm.done + ' mission' + (sm.done > 1 ? 's' : '') + ' réussie' + (sm.done > 1 ? 's' : '') + ' sur ' + sm.missions.length + ' · ' + fmt(sm.total) + ' points sur ' + sm.max }),
       table,
-      el('p', { class: 'gbareme', text: 'Barème par mission : 3 points sans indice · 2 avec 1 indice · 1,5 avec 2 · 1 avec 3 · 0 avec la solution.' }),
+      el('p', { class: 'gbareme', text: BAREME }),
       el('div', { class: 'gstage-foot' }, [name, dl, el('button', { type: 'button', class: 'gbtn gstage-btn light', text: 'Fermer', onclick: () => close() })]),
       msg]);
     const ov = el('div', { class: 'gstage' }, [card]);
@@ -560,13 +568,13 @@ body.guided aside .tabs{margin-top:8px}
     doc.setTextColor(20, 33, 61);
     // tableau
     let y = 66;
-    const cols = [L, L + 12, L + 98, L + 140, L + 158];
+    const cols = [L, L + 12, L + 92, L + 130, L + 156];
     doc.setFillColor(233, 251, 244); doc.rect(L, y - 6, R - L, 9, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
-    ['N°', 'Mission', 'Résultat', 'Indices', 'Points'].forEach((t, i) => doc.text(t, cols[i] + 2, y));
+    ['N°', 'Mission', 'Résultat', 'Ind. / err.', 'Points'].forEach((t, i) => doc.text(t, cols[i] + 2, y));
     doc.setFont('helvetica', 'normal');
     for (const m of sm.missions) {
-      const title = doc.splitTextToSize(clean(m.title), 82);
+      const title = doc.splitTextToSize(clean(m.title), 78);
       const h = Math.max(1, title.length) * 5 + 4;
       y += 3;
       doc.setDrawColor(220, 226, 236); doc.setLineWidth(0.2); doc.line(L, y, R, y);
@@ -576,7 +584,7 @@ body.guided aside .tabs{margin-top:8px}
       if (m.done && !m.solution) doc.setTextColor(26, 111, 62); else if (!m.done) doc.setTextColor(163, 32, 63); else doc.setTextColor(160, 90, 0);
       doc.text(m.done ? (m.solution ? 'Avec la solution' : 'Réussie') : 'Pas réussie', cols[2] + 2, y);
       doc.setTextColor(20, 33, 61);
-      doc.text(String(m.hints), cols[3] + 2, y);
+      doc.text(m.hints + ' / ' + m.fails, cols[3] + 2, y);
       doc.text(fmt(m.points) + ' / 3', cols[4] + 2, y);
       y += h - 9;
     }
@@ -584,7 +592,8 @@ body.guided aside .tabs{margin-top:8px}
     y += 7; doc.setFont('helvetica', 'bold');
     doc.text('Total', cols[1] + 2, y); doc.text(sm.done + ' / ' + sm.missions.length + ' réussies', cols[2] + 2, y); doc.text(fmt(sm.total) + ' / ' + sm.max, cols[4] + 2, y);
     y += 12; doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(93, 106, 130);
-    doc.text('Barème par mission : 3 points sans indice, 2 avec 1 indice, 1,5 avec 2, 1 avec 3, 0 avec la solution.', L, y);
+    doc.text('Barème par mission : 3 points du premier coup ; chaque indice ou chaque erreur enlève un cran : 2, 1,5, 1, puis 0.', L, y);
+    doc.text('0 point si la solution a été affichée.', L, y + 5); y += 5;
     doc.text('Note sur 20 = points obtenus / ' + sm.max + ' x 20 (arrondie au demi-point).', L, y + 5);
     doc.text(clean('Bilan créé le ' + date + ' par L\'atelier du codeur.'), L, 285);
     const slug = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase();
