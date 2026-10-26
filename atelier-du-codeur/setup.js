@@ -11,7 +11,7 @@
 .srv-pill:hover{background:rgba(255,255,255,.32)} .srv-pill:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
 .srv-pill i{width:11px;height:11px;border-radius:50%;background:#c9c9d6;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
 .srv-pill[data-state=ready] i{background:#4ade80}
-.srv-pill[data-state=down] i,.srv-pill[data-state=nocli] i,.srv-pill[data-state=noavr] i{background:#ffb020;animation:ledpulse 1.3s infinite}
+.srv-pill[data-state=down] i,.srv-pill[data-state=nocli] i,.srv-pill[data-state=noavr] i,.srv-pill[data-state=noesp] i{background:#ffb020;animation:ledpulse 1.3s infinite}
 dialog.srv{border:0;border-radius:26px;padding:0;width:min(780px,94vw);max-height:92vh;overflow:hidden;color:var(--ink);font:400 15px/1.5 var(--font);
   box-shadow:0 24px 70px rgba(30,20,80,.4)}
 dialog.srv[open]{display:flex;flex-direction:column}
@@ -50,6 +50,11 @@ dialog.srv::backdrop{background:rgba(35,25,90,.45);backdrop-filter:blur(2px)}
 .srv-warn{font-size:13px;color:#7a5a00;background:#fff4d6;border-radius:10px;padding:6px 10px;margin-top:6px}
 .srv-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 20px;border-top:2px solid #eceffa;background:#fafbff}
 .srv-foot span{flex:1;color:var(--muted);font-size:13px;min-width:200px}
+dialog.srv.connecting .srv-install{display:none}
+dialog.srv.connecting .srv-rows{opacity:.55}
+dialog.srv.connecting #srvTitle::after{content:'';display:inline-block;width:16px;height:16px;margin-left:10px;vertical-align:-2px;border-radius:50%;
+  border:3px solid #9fc0ff;border-top-color:#3D7BFF;animation:srvspin .8s linear infinite}
+@keyframes srvspin{to{transform:rotate(360deg)}}
 `;
 
   const ICON = {
@@ -59,21 +64,24 @@ dialog.srv::backdrop{background:rgba(35,25,90,.45);backdrop-filter:blur(2px)}
   };
 
   const TITLES = {
-    unknown: ['Je cherche mon serveur…', 'Un instant, je regarde si le serveur de compilation est allumé.'],
-    down: ['Il me manque mon assistant de compilation', 'Pour envoyer ton programme dans la carte, j\'ai besoin d\'un petit serveur sur ton ordinateur.'],
+    unknown: ['Connexion au serveur de compilation…', 'Je me connecte au petit serveur de ton ordinateur. Un instant…'],
+    down: ['Je n\'arrive pas à me connecter au serveur', 'Le serveur de compilation ne répond pas : il n\'est peut-être pas démarré, ou pas encore installé. Voici à quoi il sert et comment l\'installer.'],
     nocli: ['Presque ! Il manque arduino-cli', 'Le serveur tourne, mais il ne trouve pas arduino-cli (étape 2).'],
-    noavr: ['Presque ! Il manque les outils de la Nano', 'Le serveur et arduino-cli sont là, il reste à installer les outils de la carte (étape 3).'],
+    noavr: ['Presque ! Il manque les outils de la carte', 'Le serveur et arduino-cli sont là, il reste à installer les outils des cartes Nano et Uno (étape 3).'],
+    noesp: ['Presque ! Il manque les outils de l\'ESP32', 'Le serveur et arduino-cli sont là, il reste à installer les outils de l\'ESP32 (étape 3).'],
     ready: ['Tout est prêt !', 'Le serveur de compilation fonctionne. Tu peux téléverser dans ta carte.'],
   };
-  const PILL = { unknown: 'Recherche du serveur…', down: 'Serveur à installer', nocli: 'Il manque arduino-cli', noavr: 'Il manque les outils Nano', ready: 'Serveur prêt' };
+  const PILL = { unknown: 'Connexion au serveur…', down: 'Serveur à installer', nocli: 'Il manque arduino-cli', noavr: 'Il manque les outils Nano/Uno', noesp: 'Il manque les outils ESP32', ready: 'Serveur prêt' };
 
+  let connecting = false, attempt = 0;   // phase de connexion du démarrage : plusieurs essais avant d'annoncer un échec
   let opts = null, dlg = null, state = 'unknown', health = { up: false }, os = guessOs(), timer = null, closing = null;
 
   function guessOs() {
     const s = (navigator.platform || '') + ' ' + (navigator.userAgent || '');
     return /Mac/i.test(s) ? 'mac' : /Win/i.test(s) ? 'win' : /Linux|X11/i.test(s) ? 'linux' : 'win';
   }
-  const stateOf = (h) => (!h.up ? 'down' : !h.cli ? 'nocli' : !h.avr ? 'noavr' : 'ready');
+  const isEsp = () => !!(opts && opts.getBoard && opts.getBoard() === 'esp32');
+  const stateOf = (h) => (!h.up ? 'down' : !h.cli ? 'nocli' : isEsp() ? (!h.esp32 ? 'noesp' : 'ready') : !h.avr ? 'noavr' : 'ready');
 
   async function ping() {
     const ctrl = new AbortController();
@@ -81,7 +89,7 @@ dialog.srv::backdrop{background:rgba(35,25,90,.45);backdrop-filter:blur(2px)}
     try {
       const r = await fetch(opts.getUrl() + '/health', { cache: 'no-store', signal: ctrl.signal });
       const d = await r.json();
-      return { up: true, cli: !!d.cli, avr: !!d.avr };
+      return { up: true, cli: !!d.cli, avr: !!d.avr, esp32: !!d.esp32 };
     } catch (e) {
       return { up: false };
     } finally { clearTimeout(t); }
@@ -97,7 +105,7 @@ dialog.srv::backdrop{background:rgba(35,25,90,.45);backdrop-filter:blur(2px)}
     if (prev !== state && opts.onChange) opts.onChange(state, prev);
     return state;
   }
-  function start() { if (!timer) timer = setInterval(check, POLL_MS); }
+  function start() { if (connecting) return; if (!timer) timer = setInterval(check, POLL_MS); }
   function stop() { if (timer) { clearInterval(timer); timer = null; } }
 
   /* ----- contenu des étapes, selon le système ----- */
@@ -110,9 +118,16 @@ dialog.srv::backdrop{background:rgba(35,25,90,.45);backdrop-filter:blur(2px)}
       b: '<p>Node.js est ce qui fait tourner le serveur. Télécharge la version « LTS » et installe-la en cliquant sur « Suivant ».</p><div class="srv-act">' + link('https://nodejs.org/', 'Ouvrir nodejs.org') + '</div>' };
     const cliStep = (extra) => ({ done: !!health.cli, h: 'Installer arduino-cli',
       b: '<p>C\'est l\'outil officiel d\'Arduino qui transforme ton programme en code pour la carte.</p>' + extra });
-    const avrStep = { done: !!health.avr, h: 'Installer les outils de la Nano',
-      b: '<p>Ouvre un terminal, tape ces deux lignes l\'une après l\'autre (il faut Internet, compte quelques minutes) :</p>'
-        + cmd('arduino-cli core update-index') + cmd('arduino-cli core install arduino:avr') };
+    const avrStep = isEsp()
+      ? { done: !!health.esp32, h: 'Installer les outils de l\'ESP32',
+        b: '<p>Ouvre un terminal, tape ces trois lignes l\'une après l\'autre. Le téléchargement est gros (plusieurs centaines de Mo) : compte 10 à 20 minutes.</p>'
+          + cmd('arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json')
+          + cmd('arduino-cli core update-index') + cmd('arduino-cli core install esp32:esp32')
+          + '<p class="srv-warn">Sous Windows, il faut aussi le pilote USB de la carte : <b>CP210x</b> (Silicon Labs) ou <b>CH340</b>, selon la puce écrite près du port USB.</p>' }
+      : { done: !!health.avr, h: 'Installer les outils des cartes Nano et Uno',
+        b: '<p>Ouvre un terminal, tape ces deux lignes l\'une après l\'autre (il faut Internet, compte quelques minutes) :</p>'
+          + cmd('arduino-cli core update-index') + cmd('arduino-cli core install arduino:avr')
+          + '<p>Pour la radio du robot Cagett\'bot (module nRF24L01), ajoute aussi sa bibliothèque :</p>' + cmd('arduino-cli lib install RF24') };
     if (os === 'win') {
       return [nodeStep,
         cliStep('<p>Sur la page des versions, choisis le fichier qui se termine par <b>Windows_64bit.msi</b> (dans la liste « Assets »), puis installe-le. Ferme et rouvre ensuite le terminal.</p><div class="srv-act">'
@@ -123,7 +138,7 @@ dialog.srv::backdrop{background:rgba(35,25,90,.45);backdrop-filter:blur(2px)}
             + dl('server.js', 'server.js') + dl('demarrage-automatique.bat', 'demarrage-automatique.bat') + dl('demarrer.bat', 'demarrer.bat') + '</div>'
             + '<p class="srv-warn">Chrome peut dire que ce type de fichier est « dangereux » : clique sur « Conserver ». Ce sont des fichiers de quelques lignes, tu peux les lire avec le Bloc-notes.</p>' },
         { done: health.up, h: 'Démarrer le serveur',
-          b: '<p>Double-clique sur <b>demarrage-automatique.bat</b> : le serveur démarre tout de suite et se rallume tout seul à chaque ouverture de session Windows (une fenêtre réduite apparaît dans la barre des tâches : ne la ferme pas).</p>'
+          b: '<p>Double-clique sur <b>demarrage-automatique.bat</b> : le serveur démarre tout de suite, sans fenêtre, et se rallume tout seul à chaque ouverture de session Windows.</p>'
             + '<p>Tu préfères le lancer à la main ? Double-clique sur <b>demarrer.bat</b> et laisse sa fenêtre ouverte.</p>'
             + '<p class="srv-warn">Si Windows affiche « Windows a protégé votre ordinateur » : clique sur « Informations complémentaires », puis « Exécuter quand même ».</p>' }];
     }
@@ -153,15 +168,19 @@ dialog.srv::backdrop{background:rgba(35,25,90,.45);backdrop-filter:blur(2px)}
     dlg.querySelector('.srv-head svg').setAttribute('data-mood', mood);
     const up = health.up;
     dlg.querySelector('.srv-rows').innerHTML =
-      row(up ? 'ok' : 'no', 'Le serveur de compilation', 'Le petit programme qui tourne sur ton ordinateur')
+      row(up ? 'ok' : state === 'unknown' ? 'unk' : 'no', 'Le serveur de compilation', 'Le petit programme qui tourne sur ton ordinateur')
       + row(up ? (health.cli ? 'ok' : 'no') : 'unk', 'arduino-cli', up ? 'L\'outil officiel d\'Arduino qui compile' : 'On le saura quand le serveur sera allumé')
-      + row(up && health.cli ? (health.avr ? 'ok' : 'no') : 'unk', 'Les outils de la carte Nano', 'Les composants pour les cartes Uno et Nano');
+      + (isEsp()
+        ? row(up && health.cli ? (health.esp32 ? 'ok' : 'no') : 'unk', 'Les outils de l\'ESP32', 'Les composants pour la carte ESP32 DevKit')
+        : row(up && health.cli ? (health.avr ? 'ok' : 'no') : 'unk', 'Les outils des cartes Nano et Uno', 'Les composants pour les cartes Arduino Nano et Uno'));
     const list = steps();
     const now = list.findIndex((s) => !s.done);
     dlg.querySelector('.srv-steps').innerHTML = list.map((s, i) =>
       '<li class="' + (s.done ? 'done' : i === now ? 'now' : '') + '"><h4>' + s.h + '</h4>' + s.b + '</li>').join('');
     dlg.querySelectorAll('.srv-tabs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.os === os)));
-    dlg.querySelector('#srvHint').textContent = state === 'down'
+    dlg.classList.toggle('connecting', state === 'unknown');
+    if (state === 'unknown') dlg.querySelector('#srvSub').textContent = TITLES.unknown[1] + (attempt ? ' (essai ' + attempt + ' sur 3)' : '');
+    dlg.querySelector('#srvHint').textContent = state === 'unknown' ? 'Connexion en cours…' : state === 'down'
       ? 'Déjà installé ? Il est peut-être éteint : lance demarrer.bat (ou redémarre l\'ordinateur si tu as activé le démarrage automatique).'
       : state === 'ready' ? 'Cette fenêtre va se fermer toute seule.' : 'Je vérifie toute seule toutes les quelques secondes.';
     if (state === 'ready' && dlg.open && !closing) closing = setTimeout(() => { dlg.close(); closing = null; }, 2200);
@@ -182,9 +201,9 @@ dialog.srv::backdrop{background:rgba(35,25,90,.45);backdrop-filter:blur(2px)}
       + '<p>Tes blocs sont traduits en code Arduino (tu le vois à droite de l\'écran). Mais la carte ne comprend pas ce code tel quel : il faut le <b>compiler</b>, c\'est-à-dire le transformer en instructions pour sa puce. Un navigateur ne sait pas faire ça tout seul.</p>'
       + '<p>Le <b>serveur de compilation</b> est un petit programme qui tourne <b>sur ton ordinateur</b>, pas sur Internet. La page lui envoie ton programme, il le compile avec <b>arduino-cli</b>, puis la page l\'envoie dans la carte par le câble USB. Tout reste chez toi.</p>'
       + '<h3>Où en es-tu ?</h3><div class="srv-rows"></div>'
-      + '<h3>Installation (une seule fois)</h3>'
+      + '<div class="srv-install"><h3>Installation (une seule fois)</h3>'
       + '<div class="srv-tabs"><button type="button" data-os="win">Windows</button><button type="button" data-os="mac">macOS</button><button type="button" data-os="linux">Linux</button></div>'
-      + '<ol class="srv-steps"></ol><p style="height:6px"></p></div>'
+      + '<ol class="srv-steps"></ol><p style="height:6px"></p></div></div>'
       + '<div class="srv-foot"><button class="srv-btn primary" id="srvRecheck" type="button">Vérifier maintenant</button>'
       + '<button class="srv-btn light" id="srvLater" type="button">Plus tard</button><span id="srvHint"></span></div>';
     document.body.appendChild(dlg);
@@ -215,15 +234,27 @@ dialog.srv::backdrop{background:rgba(35,25,90,.45);backdrop-filter:blur(2px)}
     if (!dlg) build();
     o.pill.onclick = open;
     render();
-    return check().then((s) => {
-      let seen = false;
-      try { seen = sessionStorage.getItem('atelier-assistant-vu') === '1'; } catch (e) { /* stockage indisponible */ }
-      if (s !== 'ready' && o.autoOpen !== false && !seen) {
-        try { sessionStorage.setItem('atelier-assistant-vu', '1'); } catch (e) { /* ignoré */ }
-        setTimeout(open, 900);
+    let seen = false;
+    try { seen = sessionStorage.getItem('atelier-assistant-vu') === '1'; } catch (e) { /* stockage indisponible */ }
+    const auto = o.autoOpen !== false && !seen;
+    const showOnce = () => { try { sessionStorage.setItem('atelier-assistant-vu', '1'); } catch (e) { /* ignoré */ } if (!dlg.open) open(); };
+    return (async () => {
+      /* 1. on annonce d'abord qu'on se connecte, et on essaie 3 fois avant de parler d'échec */
+      connecting = true;
+      for (attempt = 1; attempt <= 3; attempt++) {
+        render();
+        const h = await ping();
+        if (h.up) break;
+        if (attempt === 1 && auto) showOnce();          // la fenêtre s'ouvre en disant « Connexion au serveur… »
+        if (attempt < 3) await new Promise((r) => setTimeout(r, 1500));
       }
-      return s;
-    });
+      connecting = false;
+      attempt = 0;
+      /* 2. résultat : prêt (la fenêtre se ferme), ou explication de ce qui manque */
+      const st = await check();
+      if (st !== 'ready' && auto) showOnce();
+      return st;
+    })();
   }
 
   root.ServerSetup = { init: init, check: check, open: open, get state() { return state; } };

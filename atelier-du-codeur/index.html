@@ -35,6 +35,24 @@
   .btn:disabled { opacity: .6; cursor: wait; }
   .spacer { flex: 1; }
   a.btn { text-decoration: none; }
+  .grpbox { display: inline-flex; align-items: center; gap: 6px; background: #5F3DC4; border-radius: 999px; padding: 3px 4px 3px 12px; font-weight: 600; font-size: 13px; box-shadow: 0 3px 0 rgba(0,0,0,.2); }
+  .grpbox[hidden] { display: none; }
+  .grpbox input { width: 54px; font: 600 14px var(--font); border: 0; border-radius: 999px; padding: 4px 8px; text-align: center; color: #3f2785; }
+  .exwrap { position: relative; display: inline-flex; }
+  .exmenu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 500;   /* au-dessus de la boîte à outils Blockly */ background: #fff; color: var(--ink); border-radius: 16px; padding: 6px;
+    box-shadow: 0 12px 30px rgba(30,20,80,.25); display: flex; flex-direction: column; min-width: 250px; }
+  .exmenu[hidden] { display: none; }
+  .exmenu button { font: 600 14px var(--font); text-align: left; border: 0; background: transparent; border-radius: 10px; padding: 8px 12px; cursor: pointer; color: var(--ink); }
+  .exmenu button:hover, .exmenu button:focus-visible { background: #f1ecff; }
+  .exmenu small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+  .exmenu .exhead { font-size: 12px; font-weight: 600; color: #0b6e75; text-transform: uppercase; letter-spacing: .04em; padding: 8px 12px 2px; }
+  .exmenu .exhead em { text-transform: none; font-style: normal; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+  .exmenu { max-height: 80vh; overflow: auto; }
+  .flyoutNote .blocklyFlyoutLabelText { fill: #6b7690 !important; font-style: italic; font-size: 12.5px !important; font-weight: 400 !important; }
+  .seg { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,.2); border-radius: 999px; padding: 3px 4px 3px 12px; font-weight: 600; font-size: 13px; }
+  .seg button { font: 600 13px var(--font); border: 0; border-radius: 999px; padding: 5px 11px; cursor: pointer; background: transparent; color: #fff; }
+  .seg button[aria-pressed=true] { background: #fff; color: #0b6e75; box-shadow: 0 2px 0 rgba(0,0,0,.2); }
+  .segsep { width: 2px; height: 20px; background: rgba(255,255,255,.4); margin: 0 3px; border-radius: 2px; }
   #banner { display: none; background: #fff3cd; color: #664d03; padding: 8px 14px; font-size: 14px; }
 
   /* ----- zone de travail ----- */
@@ -92,6 +110,10 @@
     margin: 3px 8px !important; padding: 0 12px 0 8px !important; }
   .blocklyTreeLabel { font-family: var(--font) !important; font-size: 15px !important; font-weight: 600 !important; vertical-align: middle; }
   .blocklyToolboxCategory { margin: 0 !important; }
+  /* sous-menus (Extensions) : décalés vers la droite avec un trait qui montre ce qui va ensemble */
+  .blocklyToolboxContents .blocklyToolboxContents { margin-left: 22px; border-left: 3px solid #e3e8f4; border-radius: 0 0 0 8px; }
+  .blocklyToolboxContents .blocklyToolboxContents .blocklyTreeRow { margin-left: 6px !important; height: 34px !important; line-height: 34px !important; }
+  .blocklyToolboxContents .blocklyToolboxContents .blocklyTreeLabel { font-size: 14px !important; }
 
   /* ----- confettis ----- */
   .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 99; }
@@ -99,6 +121,8 @@
   @keyframes confetti-fall { to { transform: translate3d(var(--dx), 105vh, 0) rotate(var(--rot)); } }
   @media (prefers-reduced-motion: reduce) { .mascot * , .mascot { animation: none !important; } }
   @media (max-width: 800px) { main { flex-direction: column; } aside { width: 100%; max-width: none; height: 48%; border-left: 0; border-top: 3px solid #e7defd; } }
+  aside.simmode .logzone { display: none; }   /* messages et réglages : seulement avec le code */
+  .logzone { display: flex; flex-direction: column; flex: none; }
 </style>
 </head>
 <body>
@@ -106,31 +130,73 @@
 <header>
   <div id="logo"></div>
   <h1>L'atelier du codeur</h1>
-  <button id="btnUpload" class="btn primary" title="Compile le programme et l'envoie dans la carte">
+  <div class="dd" id="ddUpload">
+    <button type="button" class="btn primary dd-btn" title="Envoyer ton programme dans la carte">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.4 2.6 5 6.4 4.4 10.6l-2.4 2.4H10l-2.4-2.4C7 8.9 8.600 5.100 12 2.500z" fill="#fff" stroke="#3a2a00" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="9" r="1.9" fill="#3D7BFF" stroke="#3a2a00" stroke-width="1.2"/><path d="M7.600 12.500L4.500 16.200l3.600-.6zM16.400 12.500l3.100 3.700-3.600-.6z" fill="#EF476F" stroke="#3a2a00" stroke-width="1.2" stroke-linejoin="round"/><path d="M10.200 17c.3 2 .9 3.300 1.800 4.200.9-.9 1.500-2.200 1.800-4.200z" fill="#F4631E" stroke="#3a2a00" stroke-width="1.2" stroke-linejoin="round"/></svg>
-    Téléverser dans la carte</button>
-  <button id="btnIno" class="btn" title="Télécharge le code pour l'IDE Arduino">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M7.500 10.200l4.500 4.500 4.500-4.500M5 19.500h14" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Télécharger .ino</button>
+    Téléverser <span class="caret">▾</span></button>
+    <div class="dd-menu" role="menu" hidden>
+      <button type="button" role="menuitem" id="btnUpload">Téléverser dans la carte<small>compile le programme et l'envoie par le câble USB</small></button>
+      <button type="button" role="menuitem" id="btnIno">Téléverser le fichier .ino<small>télécharge le code, à ouvrir avec l'IDE Arduino</small></button>
+    </div>
+  </div>
+  <div class="dd" id="ddFile">
+    <button type="button" class="btn dd-btn" title="Ouvrir ou enregistrer ton projet">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4.200l2 2.300H19a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#FFC933"/><path d="M3 10.500h18V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#FFE08A"/></svg>
+    Fichier <span class="caret">▾</span></button>
+    <div class="dd-menu" role="menu" hidden>
+      <button type="button" role="menuitem" id="mOpen">Ouvrir…<small>reprendre un projet enregistré</small><kbd>Ctrl+O</kbd></button>
+      <button type="button" role="menuitem" id="mSave">Enregistrer<small id="mSaveInfo">dans le fichier du projet</small><kbd>Ctrl+S</kbd></button>
+      <button type="button" role="menuitem" id="mSaveAs">Enregistrer sous…<small>choisir le nom et l'emplacement du fichier</small></button>
+    </div>
+    <input id="fileOpen" type="file" accept=".json,application/json" hidden>
+  </div>
+  <div class="dd" id="ddBoard">
+    <button type="button" class="btn dd-btn" title="Choisir la carte à programmer">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.800 3.500v3M14.200 3.500v3M9.800 17.500v3M14.200 17.500v3M3.500 9.800h3M3.500 14.200h3M17.500 9.800h3M17.500 14.200h3" stroke="#fff" stroke-width="1.800" stroke-linecap="round"/><rect x="6.500" y="6.500" width="11" height="11" rx="2.500" fill="#fff"/><circle cx="12" cy="12" r="2.200" fill="#12B5A8"/></svg>
+    Ma carte : <b id="boardName">Nano</b> <span class="caret">▾</span></button>
+    <div class="dd-menu" role="menu" id="boardSeg" hidden>
+      <span class="dd-head">Arduino (programme en C++)</span>
+      <button type="button" role="menuitem" data-v="nano" aria-pressed="true">Arduino Nano</button>
+      <button type="button" role="menuitem" data-v="uno" aria-pressed="false">Arduino Uno</button>
+      <button type="button" role="menuitem" data-v="esp32" aria-pressed="false">ESP32 DevKit</button>
+      <span class="dd-head">micro:bit (programme en Python)</span>
+      <button type="button" role="menuitem" data-v="mbV2" data-page="microbit" aria-pressed="false">micro:bit V2<small>ouvre la page micro:bit</small></button>
+      <button type="button" role="menuitem" data-v="mbV1" data-page="microbit" aria-pressed="false">micro:bit V1<small>ouvre la page micro:bit</small></button>
+    </div>
+  </div>
+  <button id="btnGuide" class="btn" title="Des missions pas à pas pour apprendre à programmer le robot">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#fff"/><path d="M15.800 8.200l-2.300 5.300-5.300 2.300 2.300-5.300z" fill="#EF476F"/><circle cx="12" cy="12" r="1.300" fill="#fff"/></svg>
+    <span>Mode guidé</span></button>
+  <label class="grpbox" id="grpBox" hidden title="Chaque paire robot + télécommande doit avoir son propre numéro (le même dans les deux programmes)">Groupe radio
+    <input id="grpInput" type="number" min="1" max="99" value="1" aria-label="Numéro de groupe radio"></label>
   <button id="srvPill" class="srv-pill" data-state="unknown" title="État du serveur de compilation : clique pour en savoir plus"><i></i><span>Recherche du serveur…</span></button>
   <span class="spacer"></span>
-  <button id="btnExample" class="btn">
+  <span class="exwrap">  <button id="btnExample" class="btn">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.800l2.400 6.800 6.800 2.400-6.800 2.400L12 21.200l-2.400-6.800L2.800 12l6.800-2.400z" fill="#FFE066"/></svg>
     Exemple</button>
-  <button id="btnSave" class="btn">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.500h11.500L19.500 7.500V19a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1V5.500a1 1 0 0 1 1-1z" fill="#fff"/><rect x="8" y="4.500" width="7" height="5" fill="#8A5CF6"/><rect x="7.500" y="13" width="9" height="7" rx="1" fill="#c9b6ff"/></svg>
-    Enregistrer</button>
-  <button id="btnOpen" class="btn">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4.200l2 2.300H19a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#FFC933"/><path d="M3 10.500h18V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#FFE08A"/></svg>
-    Ouvrir</button>
-  <a class="btn" href="microbit.html" title="Programmer une carte micro:bit">micro:bit</a>
-  <input id="fileOpen" type="file" accept=".json,application/json" hidden>
+    <div id="exMenu" class="exmenu" role="menu" hidden>
+      <span class="exhead">Pour commencer</span>
+      <button type="button" role="menuitem" data-ex="blink">LED qui clignote<small>la LED de la carte s'allume et s'éteint</small></button>
+      <span class="exhead">Robot et télécommande <em>(fonctionnent ensemble par radio)</em></span>
+      <button type="button" role="menuitem" data-ex="ligne">Cagett'bot : suiveur de ligne<small>suit le ruban noir, s'arrête devant un obstacle</small></button>
+      <button type="button" role="menuitem" data-ex="complet">Cagett'bot complet<small>bouton MODE : ligne ou pilotage par la télécommande</small></button>
+      <button type="button" role="menuitem" data-ex="telecommande">Télécommande du robot<small>4 directions + turbo : pilote le Cagett'bot complet</small></button>
+      <span class="exhead">Tir laser <em>(le pistolet vise les cibles)</em></span>
+      <button type="button" role="menuitem" data-ex="pistolet">Pistolet laser<small>5 tirs, puis recharger</small></button>
+      <button type="button" role="menuitem" data-ex="cible">Cible LED<small>5 vies, RAZ pour recommencer</small></button>
+      <button type="button" role="menuitem" data-ex="volets">Cibles à volets<small>chaque cible touchée se ferme</small></button>
+    </div></span>
 </header>
 <main>
   <div id="blocklyDiv"></div>
   <aside>
-    <h2 class="section"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#3D7BFF"/><path d="M9.500 8L5.500 12l4 4M14.500 8l4 4-4 4" fill="none" stroke="#fff" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></svg>Le code Arduino</h2>
-    <div class="codewrap"><pre id="code"></pre></div>
+    <section id="guidePanel" class="guide" hidden aria-live="polite"></section>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tabCode" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#3D7BFF"/><path d="M9.500 8L5.500 12l4 4M14.500 8l4 4-4 4" fill="none" stroke="#fff" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></svg>Le code Arduino</button>
+      <button type="button" role="tab" id="tabSim" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#34B34A"/><path d="M10 7.500v9l7-4.500z" fill="#fff"/></svg>Simulateur</button>
+    </div>
+    <div class="codewrap" id="codePanel"><pre id="code"></pre></div>
+    <div class="simwrap" id="simPanel" hidden></div>
 
     <div class="buddy">
       <svg id="mascot" class="mascot" data-mood="idle" viewBox="0 0 120 124" aria-hidden="true">
@@ -159,31 +225,46 @@
       <div id="bubble" class="bubble" data-mood="idle">Salut ! Glisse des blocs pour créer ton programme.</div>
     </div>
 
+    <div class="logzone">
     <h2 class="section"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#12B5A8"/><path d="M6.500 8.500a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H11l-3.500 3v-3a2 2 0 0 1-1-1.700z" fill="#fff"/></svg>Les messages</h2>
     <div id="log" aria-live="polite"></div>
-    <progress id="progress" value="0" max="1" hidden></progress>
     <details class="settings">
       <summary>Réglages</summary>
       <label>Serveur de compilation (laisser vide si cette page vient du serveur)
         <input id="server" type="text" placeholder="http://localhost:3000" spellcheck="false">
       </label>
     </details>
+    </div>
+    <progress id="progress" value="0" max="1" hidden></progress>
   </aside>
 </main>
 
 <script src="vendor/blockly/blockly_compressed.js"></script>
 <script src="vendor/blockly/blocks_compressed.js"></script>
 <script src="vendor/blockly/msg/fr.js"></script>
+<script src="blocks-common.js"></script>
+<script src="ui-menus.js"></script>
 <script src="art.js"></script>
 <script src="blocks.js"></script>
 <script src="generator.js"></script>
+<script src="blocks-montages.js"></script>
 <script src="flasher.js"></script>
+<script src="vendor/esptool/esp-flasher.js"></script>
+<script src="sim-core.js"></script>
+<script src="sim-robot.js"></script>
+<script src="sim-montages.js"></script>
+<script src="sim-arduino.js"></script>
+<script src="guide.js"></script>
+<script src="guide-kit.js"></script>
+<script src="guide-robot.js"></script>
+<script src="guide-voiture.js"></script>
+<script src="guide-montages.js"></script>
 <script src="setup.js"></script>
 <script>
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const KEY = 'blocs-arduino-projet', KEY_SERVER = 'blocs-arduino-serveur';
+  const KEY = 'blocs-arduino-projet', KEY_SERVER = 'blocs-arduino-serveur', KEY_BOARD = 'blocs-arduino-carte', KEY_TAB = 'blocs-arduino-onglet';
   const safe = (fn) => { try { return fn(); } catch (e) { return null; } };
 
   if (!('serial' in navigator)) $('banner').style.display = 'block';
@@ -214,6 +295,9 @@
       for (const m of [$('mascot'), logo]) { m.style.animation = 'none'; void m.getBoundingClientRect(); m.style.animation = ''; }
     }
 
+    /* ---------- Carte (Nano par défaut) ---------- */
+    ArduinoBlocks.setBoard(safe(() => localStorage.getItem(KEY_BOARD)) || 'nano');
+
     /* ---------- Éditeur ---------- */
     const ws = Blockly.inject('blocklyDiv', {
       toolbox: ArduinoBlocks.TOOLBOX,
@@ -221,7 +305,7 @@
       renderer: 'zelos',
       theme: ArduinoBlocks.THEME,
       grid: { spacing: 25, length: 3, colour: '#dfe2f2', snap: true },
-      zoom: { controls: true, wheel: true, startScale: 0.9, minScale: 0.4, maxScale: 1.6 },
+      zoom: { controls: true, wheel: true, startScale: 0.7, minScale: 0.4, maxScale: 1.6 },
       trashcan: true,
     });
     ws.registerToolboxCategoryCallback('VARIABLE', Blockly.Variables.flyoutCategory);
@@ -235,22 +319,84 @@
         $('code').textContent = '// Erreur : ' + e.message;
       }
     }
+    const snapshot = () => Object.assign(Blockly.serialization.workspaces.save(ws), { board: ArduinoBlocks.board().id, radioGroup: ArduinoBlocks.radioGroup() });
     function save() {
-      safe(() => localStorage.setItem(KEY, JSON.stringify(Blockly.serialization.workspaces.save(ws))));
+      if (window.GuideMode && GuideMode.active) { GuideMode.saveProgram(snapshot()); return; }   // en mode guidé : programme de la mission
+      safe(() => localStorage.setItem(KEY, JSON.stringify(snapshot())));
     }
+    let simTimer = null;
     ws.addChangeListener((e) => {
       if (e.isUiEvent) return;
       refresh();
       save();
+      updateGroupBox();
+      // le simulateur suit les blocs : composants mis à jour, et redémarrage s'il tournait
+      clearTimeout(simTimer);
+      simTimer = setTimeout(() => { if (!sim || (window.GuideMode && GuideMode.busy)) return; if (sim.running) sim.start(); else sim.refresh(); }, 500);
     });
 
     function loadState(state) {
+      if (state && ArduinoBlocks.BOARDS[state.board]) showBoard(state.board, false);
+      if (state && state.radioGroup) setGroup(state.radioGroup, false);
       Blockly.Events.disable();
       try { ws.clear(); Blockly.serialization.workspaces.load(state, ws); } finally { Blockly.Events.enable(); }
       refresh(); save();
+      if (typeof sim !== 'undefined' && sim) { if (sim.running) sim.start(); else sim.refresh(); }   // le simulateur suit le nouveau programme
+      updateGroupBox();
     }
+    /* Sélecteur de carte */
+    function showBoard(id, fromUser) {
+      const n = ArduinoBlocks.setBoard(id, ws);
+      document.querySelectorAll('#boardSeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === id)));
+      $('boardName').textContent = ArduinoBlocks.board().short;
+      safe(() => localStorage.setItem(KEY_BOARD, id));
+      if (fromUser) {
+        const B = ArduinoBlocks.board();
+        log('Carte choisie : ' + B.name + '.' + (n ? ' ' + n + (n > 1 ? ' broches ont été remplacées' : ' broche a été remplacée') + ' (vérifie tes blocs).' : ''));
+        say('idle', B.id === 'esp32' ? 'C\'est parti avec l\'ESP32 ! Sa LED est sur GPIO 2.' : 'C\'est parti avec la carte ' + B.short + ' !');
+        refresh(); save();
+        if (sim) { if (sim.running) sim.start(); else sim.refresh(); }
+        if (window.ServerSetup) ServerSetup.check();
+      }
+    }
+    document.querySelectorAll('#boardSeg button').forEach((b) => {
+      b.onclick = () => {
+        if (b.dataset.page === 'microbit') {   // les micro:bit se programment sur leur propre page (en Python)
+          safe(() => localStorage.setItem('blocs-microbit-carte', b.dataset.v.slice(2)));
+          location.href = 'microbit.html#carte=' + b.dataset.v.slice(2);   // la carte demandée voyage dans l'adresse
+          return;
+        }
+        if (b.getAttribute('aria-pressed') !== 'true') showBoard(b.dataset.v, true);
+      };
+    });
+    showBoard(ArduinoBlocks.board().id, false);
+
+    let sim = null;
+
+    /* Numéro de groupe radio (affiché seulement si le programme utilise la radio) */
+    function setGroup(n, fromUser) {
+      const g = ArduinoBlocks.setRadioGroup(n);
+      $('grpInput').value = String(g);
+      safe(() => localStorage.setItem('blocs-arduino-groupe', String(g)));
+      if (fromUser) {
+        refresh(); save();
+        log('Groupe radio n° ' + g + ' : adresse ' + ArduinoBlocks.radioAddress() + '. Mets le même numéro dans le programme de la télécommande et dans celui du robot.');
+        if (sim) sim.refresh();
+      }
+    }
+    function updateGroupBox() {
+      $('grpBox').hidden = !ws.getAllBlocks(false).some((b) => b.type.indexOf('robot_radio') === 0);
+    }
+    $('grpInput').addEventListener('change', () => setGroup($('grpInput').value, true));
+    setGroup(safe(() => localStorage.getItem('blocs-arduino-groupe')) || 1, false);
     const stored = safe(() => JSON.parse(localStorage.getItem(KEY)));
-    loadState(stored && stored.blocks ? stored : ArduinoBlocks.EXAMPLE);
+    loadState(stored && stored.blocks ? stored : ArduinoBlocks.example());
+    /* carte choisie depuis la page micro:bit : elle l'emporte sur celle du dernier projet */
+    const asked = (/carte=(nano|uno|esp32)/.exec(location.hash) || [])[1];
+    if (asked) {
+      history.replaceState(null, '', location.pathname + location.search);   // on retire « #carte=… » de l'adresse
+      if (asked !== ArduinoBlocks.board().id) showBoard(asked, true);
+    }
 
     /* ---------- Messages ---------- */
     function log(msg, cls) {
@@ -279,23 +425,79 @@
       log('Fichier programme.ino téléchargé. Dans l\'IDE Arduino, place-le dans un dossier nommé « programme ».');
       say('idle', 'C\'est téléchargé ! Ouvre-le avec l\'IDE Arduino.');
     };
-    $('btnSave').onclick = () => {
-      download('projet-blocs.json', JSON.stringify(Blockly.serialization.workspaces.save(ws)), 'application/json');
-      say('idle', 'Projet enregistré. Garde bien ce fichier !');
-    };
-    $('btnOpen').onclick = () => $('fileOpen').click();
-    $('fileOpen').onchange = async (e) => {
-      const f = e.target.files[0];
-      e.target.value = '';
+    /* ---------- Menu Fichier ---------- */
+    const project = UiMenus.ProjectFile({
+      defaultName: 'mon-projet.json', input: $('fileOpen'),
+      onName: (n) => { document.title = n + ' – L\'atelier du codeur'; $('mSaveInfo').textContent = 'dans « ' + n + ' »'; },
+    });
+    const saved = (r) => { if (r) { log('Projet enregistré : ' + r.name + (r.where === 'téléchargements' ? ' (dossier des téléchargements)' : ''), 'ok'); say('idle', 'Projet enregistré. Garde bien ce fichier !'); } };
+    const fail = (e) => { log('Enregistrement impossible : ' + (e && e.message ? e.message : e), 'err'); say('oops', 'Je n\'ai pas pu enregistrer le fichier.'); };
+    async function openProject() {
+      let f;
+      try { f = await project.open(); } catch (e) { return; }
       if (!f) return;
-      try { loadState(JSON.parse(await f.text())); log('Projet ouvert : ' + f.name, 'ok'); say('happy', 'Ton projet est de retour !'); }
+      try { loadState(JSON.parse(f.text)); log('Projet ouvert : ' + f.name, 'ok'); say('happy', 'Ton projet est de retour !'); }
       catch (err) { log('Ce fichier n\'est pas un projet valide.', 'err'); say('oops', 'Hmm, ce fichier n\'est pas un projet de blocs.'); }
+    }
+    $('mOpen').onclick = openProject;
+    $('mSave').onclick = () => project.save(JSON.stringify(snapshot())).then(saved, fail);
+    $('mSaveAs').onclick = () => project.saveAs(JSON.stringify(snapshot())).then(saved, fail);
+    document.addEventListener('keydown', (e) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (k === 's') { e.preventDefault(); (e.shiftKey ? $('mSaveAs') : $('mSave')).click(); }
+      else if (k === 'o') { e.preventDefault(); openProject(); }
+    });
+    UiMenus.init();
+    const EX = {
+      blink: ['clignoter', () => ArduinoBlocks.example(), 'Voici un exemple : il fait clignoter la LED de la carte. Essaie-le dans le simulateur !'],
+      ligne: ['suiveur de ligne', () => ArduinoBlocks.robotExample('ligne'), 'Le Cagett\'bot suit la ligne noire. Dans le simulateur, déplace l\'obstacle pour le voir s\'arrêter !'],
+      complet: ['Cagett\'bot complet', () => ArduinoBlocks.robotExample('complet'), 'Appuie sur MODE pour passer en mode radio, puis pilote-le avec la télécommande du simulateur.'],
+      telecommande: ['télécommande', () => ArduinoMontages.example('telecommande'), 'La télécommande envoie 1 à 4 selon le bouton (11 à 14 en turbo). Essaie-la dans le simulateur !'],
+      pistolet: ['pistolet laser', () => ArduinoMontages.example('pistolet'), 'Chaque appui sur la gâchette tire et éteint une LED. Quand il n\'y a plus de munitions, recharge !'],
+      cible: ['cible LED', () => ArduinoMontages.example('cible'), 'Chaque tir reçu enlève une vie. Dans le simulateur, clique sur « Tirer sur la cible ».'],
+      volets: ['cibles à volets', () => ArduinoMontages.example('volets'), 'Chaque cible touchée ferme son volet et allume sa LED. RAZ rouvre tout.'],
     };
-    $('btnExample').onclick = () => {
-      if (ws.getAllBlocks(false).length && !confirm('Remplacer ton programme par l\'exemple « clignoter » ?')) return;
-      loadState(ArduinoBlocks.EXAMPLE);
-      say('idle', 'Voici un exemple : il fait clignoter la LED de la carte.');
-    };
+    $('btnExample').onclick = (e) => { e.stopPropagation(); $('exMenu').hidden = !$('exMenu').hidden; if (!$('exMenu').hidden) UiMenus.fit($('exMenu')); };
+    document.addEventListener('click', () => { $('exMenu').hidden = true; });
+    $('exMenu').querySelectorAll('button').forEach((b) => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        $('exMenu').hidden = true;
+        const ex = EX[b.dataset.ex];
+        if (ws.getAllBlocks(false).length && !confirm('Remplacer ton programme par l\'exemple « ' + ex[0] + ' » ?')) return;
+        loadState(ex[1]());
+        ws.cleanUp();   // range les blocs en colonne, sans chevauchement
+        say('idle', ex[2]);
+      };
+    });
+
+    /* ---------- Simulateur ---------- */
+    sim = ArduinoSim.mount({
+      container: $('simPanel'), getWorkspace: () => ws,
+      // les messages sont cachés dans l'onglet Simulateur : une erreur est aussi dite par la mascotte
+      log: (m, c) => { log(m, c); if (c === 'err') say('oops', String(m).slice(0, 150)); },
+      onState: (on) => { if (on) say('happy', 'La carte virtuelle tourne ! Regarde la LED et les composants.'); },
+    });
+    function showTab(t) {
+      const isSim = t === 'sim';
+      $('tabCode').setAttribute('aria-selected', String(!isSim));
+      $('tabSim').setAttribute('aria-selected', String(isSim));
+      $('codePanel').hidden = isSim;
+      $('simPanel').hidden = !isSim;
+      document.querySelector('aside').classList.toggle('simmode', isSim);
+      safe(() => localStorage.setItem(KEY_TAB, t));
+    }
+    $('tabCode').onclick = () => showTab('code');
+    $('tabSim').onclick = () => showTab('sim');
+    showTab(safe(() => localStorage.getItem(KEY_TAB)) === 'sim' ? 'sim' : 'code');
+
+    /* ---------- Mode guidé (parcours du robot) ---------- */
+    GuideMode.init({
+      ws: ws, sim: sim, fullToolbox: ArduinoBlocks.TOOLBOX, loadState: loadState, snapshot: snapshot, showTab: showTab,
+      say: say, log: log, setBoard: (id) => showBoard(id, false), panel: $('guidePanel'), button: $('btnGuide'),
+      courses: [GuideMontages.led, GuideRobot, GuideVoiture, GuideMontages.telecommande, GuideMontages.pistolet, GuideMontages.cible, GuideMontages.volets],
+    });
 
     /* ---------- Téléversement ---------- */
     /* Page servie par le serveur lui-même (localhost) : adresse vide. Page hébergée ailleurs (GitHub Pages…) :
@@ -306,7 +508,7 @@
     const serverUrl = () => $('server').value.trim().replace(/\/+$/, '');
 
     ServerSetup.init({
-      getUrl: serverUrl, pill: $('srvPill'),
+      getUrl: serverUrl, pill: $('srvPill'), getBoard: () => ArduinoBlocks.board().id,
       onChange: (st, prev) => {
         if (st === 'ready') say('happy', 'Le serveur est prêt, on peut programmer !');
         else if (prev === 'ready') say('oops', 'Je ne trouve plus le serveur de compilation.');
@@ -327,7 +529,7 @@
       try {
         res = await fetch(serverUrl() + '/compile', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: code, board: 'nano' }),
+          body: JSON.stringify({ code: code, board: ArduinoBlocks.board().id }),
         });
       } catch (e) {
         const ne = new Error('Serveur de compilation injoignable (' + (serverUrl() || 'cette adresse') + '). Est-il démarré ?');
@@ -340,12 +542,14 @@
         if (res.status === 400) err.kind = 'compile';
         throw err;
       }
-      return data.hex;
+      return data;
     }
+    const fromBase64 = (b64) => { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
 
     const firstSentence = (t) => String(t).split(/(?<=[.!?])\s/)[0].slice(0, 110);
 
     $('btnUpload').onclick = async () => {
+      showTab('code');   // les messages d'envoi sont dans l'onglet Code
       const btn = $('btnUpload');
       if (!('serial' in navigator)) {
         log('Ce navigateur ne sait pas parler à la carte. Utilise Chrome ou Edge.', 'err');
@@ -355,19 +559,37 @@
       if (ArduinoGen.orphanCount(ws) > 0) {
         log('Attention : des blocs ne sont pas dans « au démarrage » ou « répéter indéfiniment » : ils sont ignorés.', 'err');
       }
+      if (ArduinoBlocks.board().id === 'esp32' && (ArduinoGen.usesRobot(ws) || ['tc_', 'pl_', 'cl_', 'cv_', 'cible_'].some((p) => ArduinoMontages.uses(ws, p)))) {
+        log('Les blocs du menu Montages correspondent au câblage des montages sur Arduino Nano (ou Uno). Choisis « Nano » dans « Ma carte ».', 'err');
+        say('oops', 'Ces montages ont une carte Nano : choisis Nano en haut.');
+        return;
+      }
       btn.disabled = true;
       try {
         const p = await getPort();               // doit se faire pendant le clic
         say('work', 'Je prépare ton programme…');
         log('Compilation en cours…');
         progress(0);
-        const hex = await compile(lastCode);
+        const board = ArduinoBlocks.board();
+        if (board.id === 'esp32') log('Compilation pour ESP32 : la première fois, cela peut prendre une ou deux minutes…');
+        const data = await compile(lastCode);
         log('Compilation réussie.', 'ok');
         say('work', 'J\'envoie le programme dans la carte…');
-        const r = await Flasher.flashNano(p, hex, (m) => {
-          log(m);
-          if (/RESET/.test(m)) say('work', 'Appuie sur le petit bouton RESET de la carte !');
-        }, progress);
+        let r;
+        if (board.id === 'esp32') {
+          if (!data.bin) throw new Error('Le serveur n\'a pas renvoyé de fichier pour l\'ESP32 (mets à jour server.js).');
+          if (!window.EspFlasher) throw new Error('Le module d\'envoi ESP32 n\'est pas chargé (dossier vendor/esptool).');
+          r = await EspFlasher.flash(p, fromBase64(data.bin), progress, (m) => {
+            log(m);
+            if (/BOOT/.test(m)) say('work', 'Si rien ne bouge, maintiens le bouton BOOT de la carte…');
+          });
+        } else {
+          if (!data.hex) throw new Error('Le serveur n\'a pas renvoyé de programme.');
+          r = await Flasher.flashNano(p, data.hex, (m) => {
+            log(m);
+            if (/RESET/.test(m)) say('work', 'Appuie sur le petit bouton RESET de la carte !');
+          }, progress);
+        }
         log('Programme envoyé (' + r.bytes + ' octets). La carte démarre !', 'ok');
         say('happy', 'Bravo ! Ton programme tourne sur la carte !');
         ArduinoArt.confetti();

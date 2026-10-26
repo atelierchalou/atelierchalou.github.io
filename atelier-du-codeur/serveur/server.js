@@ -1,7 +1,7 @@
 /* Serveur de compilation Arduino Nano (arduino-cli) + service de la page web.
  * Aucune dépendance npm : Node.js 18+ suffit.
- *   POST /compile  { code, board:"nano" }  ->  { hex }  ou  { error }
- *   GET  /health   ->  { ok:true }
+ *   POST /compile  { code, board:"nano"|"uno"|"esp32" }  ->  { hex } (Nano, Uno)  ou  { bin } (ESP32, base64)  ou  { error }
+ *   GET  /health   ->  { ok:true, cli, avr, esp32 }
  *   GET  /*        ->  fichiers du dossier public/
  */
 'use strict';
@@ -15,8 +15,19 @@ const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '127.0.0.1';          // 0.0.0.0 pour ouvrir au réseau local
 /* Sous Windows, un serveur lancé au démarrage peut ne pas connaître le PATH mis à jour par l'installateur d'arduino-cli :
    on regarde aussi ses emplacements habituels. */
+/* Pack « poste du collège » : si un dossier arduino-cli/ est à côté de server.js, on utilise l'arduino-cli qu'il contient
+   et ses cartes / bibliothèques déjà téléchargées (rien à installer, fonctionne sans Internet). */
+const LOCAL_CLI_DIR = path.join(__dirname, 'arduino-cli');
+const LOCAL_CLI = path.join(LOCAL_CLI_DIR, process.platform === 'win32' ? 'arduino-cli.exe' : 'arduino-cli');
+if (!process.env.ARDUINO_CLI && fs.existsSync(LOCAL_CLI)) {
+  process.env.ARDUINO_DIRECTORIES_DATA = path.join(LOCAL_CLI_DIR, 'data');
+  process.env.ARDUINO_DIRECTORIES_DOWNLOADS = path.join(LOCAL_CLI_DIR, 'staging');
+  process.env.ARDUINO_DIRECTORIES_USER = path.join(LOCAL_CLI_DIR, 'user');
+  process.env.ARDUINO_UPDATER_ENABLE_NOTIFICATION = 'false';
+}
 function findCli() {
   if (process.env.ARDUINO_CLI) return process.env.ARDUINO_CLI;
+  if (fs.existsSync(LOCAL_CLI)) return LOCAL_CLI;
   if (process.platform === 'win32') {
     const e = process.env;
     const dirs = [e.ProgramFiles, e['ProgramFiles(x86)'], e.ProgramW6432, e.LOCALAPPDATA && path.join(e.LOCALAPPDATA, 'Programs')].filter(Boolean);
@@ -29,7 +40,11 @@ function findCli() {
 }
 const CLI = findCli();
 const ORIGIN = process.env.ALLOWED_ORIGIN || '*';       // restreins-le si le serveur est exposé
-const FQBN = 'arduino:avr:nano:cpu=atmega328';
+const BOARDS = {
+  nano: { fqbn: 'arduino:avr:nano:cpu=atmega328', out: 'sketch.ino.hex' },
+  uno: { fqbn: 'arduino:avr:uno', out: 'sketch.ino.hex' },
+  esp32: { fqbn: 'esp32:esp32:esp32', out: 'sketch.ino.merged.bin', binary: true, timeout: 5 * 60 * 1000 },
+};
 const MAX_CODE = 64 * 1024;
 const MAX_PARALLEL = Number(process.env.MAX_PARALLEL) || 2;
 const MAX_QUEUE = 20;
@@ -60,7 +75,7 @@ function rateLimited(ip) {
 setInterval(() => { const now = Date.now(); for (const [ip, l] of hits) if (!l.some((t) => now - t < 60000)) hits.delete(ip); }, 60000).unref();
 
 /* ---------- Validation du code reçu ---------- */
-/* Seule la bibliothèque Servo est autorisée : pas d'inclusion de fichiers arbitraires du serveur. */
+/* Seules les bibliothèques Servo, SPI et RF24 (radio du robot) sont autorisées : pas d'inclusion de fichiers arbitraires du serveur. */
 function checkCode(code) {
   if (typeof code !== 'string' || !code.trim()) return 'Aucun code reçu.';
   if (code.length > MAX_CODE) return 'Programme trop long.';
@@ -68,7 +83,7 @@ function checkCode(code) {
   if (/\b(__)?asm(__)?\b/.test(code)) return 'Code non autorisé.';
   for (const line of code.split(/\r?\n/)) {
     const t = line.trim();
-    if (t[0] === '#' && !/^#include\s*<Servo\.h>$/.test(t)) return 'Directive non autorisée : ' + t.slice(0, 40);
+    if (t[0] === '#' && !/^#include\s*<(Servo|SPI|RF24)\.h>$/.test(t)) return 'Directive non autorisée : ' + t.slice(0, 40);
   }
   return null;
 }
@@ -82,7 +97,8 @@ function run(cmd, args, timeout) {
   });
 }
 
-async function compile(code) {
+async function compile(code, boardId) {
+  const board = BOARDS[boardId] || BOARDS.nano;
   const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'blocs-'));
   const sketch = path.join(dir, 'sketch');
   const out = path.join(dir, 'out');
@@ -90,14 +106,24 @@ async function compile(code) {
     await fs.promises.mkdir(sketch);
     await fs.promises.writeFile(path.join(sketch, 'sketch.ino'), code, 'utf8');
     try {
-      await run(CLI, ['compile', '--fqbn', FQBN, '--output-dir', out, sketch]);
+      await run(CLI, ['compile', '--fqbn', board.fqbn, '--output-dir', out, sketch], board.timeout);
     } catch (e) {
       if (e.code === 'ENOENT') throw Object.assign(new Error('arduino-cli est introuvable sur le serveur.'), { status: 500 });
       if (e.killed) throw Object.assign(new Error('La compilation a pris trop de temps.'), { status: 504 });
       const msg = String(e.stderr || e.stdout || e.message).split(dir).join('').replace(/\/sketch\//g, '').trim();
+      if (/RF24\.h: No such file/.test(msg)) {
+        throw Object.assign(new Error('La bibliothèque radio RF24 n\'est pas installée. Dans l\'Invite de commandes, tape : arduino-cli lib install RF24'), { status: 400 });
+      }
       throw Object.assign(new Error(msg.slice(0, 3000) || 'Échec de la compilation.'), { status: 400 });
     }
-    return await fs.promises.readFile(path.join(out, 'sketch.ino.hex'), 'utf8');
+    if (board.binary) {
+      let buf;
+      try { buf = await fs.promises.readFile(path.join(out, board.out)); } catch (e) {
+        throw Object.assign(new Error('Fichier fusionné introuvable : mets à jour les outils ESP32 (arduino-cli core upgrade esp32:esp32).'), { status: 500 });
+      }
+      return { bin: buf.toString('base64') };
+    }
+    return { hex: await fs.promises.readFile(path.join(out, board.out), 'utf8') };
   } finally {
     fs.promises.rm(dir, { recursive: true, force: true }).catch(() => {});
   }
@@ -108,13 +134,17 @@ let healthCache = { t: 0, v: null };
 async function toolchainStatus() {
   const age = Date.now() - healthCache.t;
   const v0 = healthCache.v;
-  if (v0 && age < (v0.cli && v0.avr ? 15000 : 2000)) return v0;
-  let cli = false, avr = false;
+  if (v0 && age < (v0.cli && v0.avr && v0.esp32 ? 15000 : 2000)) return v0;
+  let cli = false, avr = false, esp32 = false;
   try { await run(CLI, ['version'], 8000); cli = true; } catch (e) { /* arduino-cli absent */ }
   if (cli) {
-    try { avr = /^arduino:avr\s/m.test(await run(CLI, ['core', 'list'], 15000)); } catch (e) { /* noyau absent */ }
+    try {
+      const list = await run(CLI, ['core', 'list'], 15000);
+      avr = /^arduino:avr\s/m.test(list);
+      esp32 = /^esp32:esp32\s/m.test(list);
+    } catch (e) { /* noyau absent */ }
   }
-  healthCache = { t: Date.now(), v: { ok: true, cli: cli, avr: avr } };
+  healthCache = { t: Date.now(), v: { ok: true, cli: cli, avr: avr, esp32: esp32 } };
   return healthCache.v;
 }
 
@@ -156,14 +186,15 @@ async function handleCompile(req, res) {
   try { data = JSON.parse(await readBody(req)); } catch (e) {
     return send(res, e.status || 400, { error: e.status ? e.message : 'JSON invalide.' }, e.status === 413 ? { Connection: 'close' } : {});
   }
-  if (data.board && data.board !== 'nano') return send(res, 400, { error: 'Carte non prise en charge : ' + data.board });
+  const board = data.board || 'nano';
+  if (!Object.prototype.hasOwnProperty.call(BOARDS, board)) return send(res, 400, { error: 'Carte non prise en charge : ' + String(board).slice(0, 20) });
   const problem = checkCode(data.code);
   if (problem) return send(res, 400, { error: problem });
   try {
     await acquire();
   } catch (e) { return send(res, e.status, { error: e.message }); }
   try {
-    send(res, 200, { hex: await compile(data.code) });
+    send(res, 200, await compile(data.code, board));
   } catch (e) {
     send(res, e.status || 500, { error: e.message });
   } finally {
