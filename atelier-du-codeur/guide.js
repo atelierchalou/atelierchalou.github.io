@@ -31,6 +31,7 @@
 .gstage-status{margin:4px 0 0;font-size:16px;font-weight:600;border-radius:12px;padding:8px 12px;background:#fff9e6;color:#7a5a00}
 .gstage-status.ok{background:#eafaf0;color:#1a6f3e} .gstage-status.ko{background:#fff0f4;color:#a3203f}
 .gstage-sim #simPanel{margin:0 !important;overflow:visible;flex:none;min-height:0}
+.gstage-sim{pointer-events:none;user-select:none}   /* pendant la vérification, c'est le test qui appuie sur les boutons : pas de clic de l'élève */
 .gstage-sim .simbar{display:none !important}
 .gstage.robot .robotcanvas{max-width:calc((94vh - 290px) * 1.5);margin:0 auto}
 .gstage-sim .serialhead,.gstage-sim .serial,.gstage-sim .simhint{display:none !important}
@@ -384,6 +385,7 @@ body.guided aside .tabs{margin-top:8px}
     const ov = el('div', { class: 'gstage' + (course.robot ? ' robot' : '') }, [card]);
     document.body.appendChild(ov);
     slot.appendChild(sp);
+    slot.setAttribute('inert', '');   // ni clic ni clavier dans le simulateur pendant le test
     sp.hidden = false;
     const repaint = () => { const r = o.sim.hw && o.sim.hw.robot; if (r && r.canvas && r.canvas.isConnected) r.paint(); };
     requestAnimationFrame(repaint);

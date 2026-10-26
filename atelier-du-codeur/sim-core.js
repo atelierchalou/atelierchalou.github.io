@@ -316,7 +316,7 @@ aside.simmode .buddy{margin:6px 14px 4px}
   function finger(target, etat) {
     if (!target) return;
     let h = target.querySelector(':scope > .simfinger');
-    if (etat === 'off') { if (h) { h.classList.remove('on', 'pushing'); setTimeout(() => h.remove(), 350); } return; }
+    if (etat === 'off') { target.classList.remove('has-finger'); if (h) { h.classList.remove('on', 'pushing'); setTimeout(() => h.remove(), 350); } return; }
     if (!h) {
       h = el('div', { class: 'simfinger', html: HAND });
       target.classList.add('has-finger');
