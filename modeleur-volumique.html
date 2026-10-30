@@ -39,6 +39,7 @@
     pointer-events:none;
   }
   #brand{ display:flex; flex-direction:column; gap:2px; }
+  #brand{ filter: drop-shadow(0 1px 4px rgba(15,8,45,0.75)); }     /* lisible aussi sur le ciel clair */
   #brand .title{
     font-family: var(--sans); font-weight:800; font-size:14px;
     letter-spacing:3px; color:var(--text);
@@ -231,7 +232,7 @@
   }
   #objlist .empty{
     font-family: var(--mono); font-size:10.5px; color: var(--text-faint);
-    padding:14px 12px; line-height:1.5;
+    padding:14px 12px; line-height:1.5; text-align:center;
   }
   .obj-row{
     display:flex; align-items:center; justify-content:space-between;
@@ -736,19 +737,25 @@
   }
   #helpModal.show{ display:flex; }
   .help-card{
-    width:min(860px, 100%); max-height:calc(100vh - 32px); overflow-y:auto;
+    width:min(1080px, 100%); max-height:calc(100vh - 24px); overflow-y:auto;
     background: rgba(31,24,80,0.97); border:2px solid var(--pink); border-radius:20px;
-    padding:22px 26px 20px; box-shadow: 0 16px 50px rgba(0,0,0,0.55), 0 0 30px rgba(255,92,168,0.25);
+    padding:16px 22px 16px; box-shadow: 0 16px 50px rgba(0,0,0,0.55), 0 0 30px rgba(255,92,168,0.25);
     animation: popIn .3s ease;
   }
-  .help-title{ font-size:20px; font-weight:800; color: var(--text); margin-bottom:8px; }
-  .help-note{ font-size:13px; color: var(--amber); background: rgba(255,210,63,0.1); border:1px dashed var(--amber); border-radius:10px; padding:8px 12px; margin-bottom:14px; }
-  .help-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:14px 22px; }
-  .help-grid h4{ margin:0 0 6px; font-size:13px; color: var(--cyan); }
-  .help-grid ul{ margin:0; padding-left:16px; font-size:12px; line-height:1.55; color: var(--text-dim); }
-  .help-grid li{ margin-bottom:3px; } .help-grid b{ color: var(--text); }
+  .help-illu{ display:block; width:100%; height:clamp(70px, 15vh, 120px); margin:0 0 10px; border-radius:16px; box-shadow: 0 4px 18px rgba(0,0,0,0.35); }
+  .empty-illu{ display:block; width:92px; height:auto; margin:4px auto 8px; }
+  .help-head{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+  .help-title{ font-size:19px; font-weight:800; color: var(--text); }
+  .help-note{ flex:1; min-width:260px; font-size:12px; color: var(--amber); background: rgba(255,210,63,0.1); border:1px dashed var(--amber); border-radius:10px; padding:6px 10px; }
+  .help-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px 20px; }
+  .help-grid h4{ margin:0 0 4px; font-size:12.5px; color: var(--cyan); }
+  .help-grid ul + h4{ margin-top:10px; }
+  .help-grid ul{ margin:0; padding-left:15px; font-size:11.5px; line-height:1.42; color: var(--text-dim); }
+  .help-grid li{ margin-bottom:2px; } .help-grid b{ color: var(--text); }
+  @media (max-width: 900px){ .help-grid{ grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px){ .help-grid{ grid-template-columns: 1fr; } }
   #helpClose{
-    margin-top:16px; width:100%; padding:11px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800;
+    margin-top:12px; width:100%; padding:11px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:800;
     border:2px solid var(--pink); background: color-mix(in srgb, var(--pink) 22%, var(--bg-panel-2)); color: var(--text);
   }
   #helpClose:hover{ background: color-mix(in srgb, var(--pink) 38%, var(--bg-panel-2)); }
@@ -939,36 +946,36 @@
       </div>
       <div id="topTools">
     <div class="tool-btn" id="sketchBtn" title="Dessiner une forme au sol puis l'extruder">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 19l3-1 10-10-2-2L5 16l-1 3z"/><path d="M14 6l2 2"/><path d="M4 19h5" stroke-dasharray="1.5 1.5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5l3.2-1 10-10-2.2-2.2-10 10-1 3.2z" fill="currentColor" fill-opacity=".28"/><path d="M15 6.3l2.2 2.2 1.3-1.3a1.2 1.2 0 0 0 0-1.7l-.5-.5a1.2 1.2 0 0 0-1.7 0z" fill="currentColor"/><path d="M4 22h5" stroke-dasharray="1.4 1.6"/><path d="M19.6 13.6l.6 1.3 1.3.6-1.3.6-.6 1.3-.6-1.3-1.3-.6 1.3-.6z" fill="#ffd23f" stroke="none"/></svg>
     </div>
     <div class="tool-btn" id="combineBtn" title="Choisir un second objet à combiner">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9.5" cy="12" r="6.5"/><circle cx="14.5" cy="12" r="6.5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9.5" cy="12" r="6.5" fill="currentColor" fill-opacity=".1"/><circle cx="14.5" cy="12" r="6.5" fill="currentColor" fill-opacity=".1"/><path d="M12 6A6.5 6.5 0 0 1 12 18 6.5 6.5 0 0 1 12 6z" fill="currentColor" fill-opacity=".6" stroke="none"/></svg>
     </div>
     <div class="tool-btn disabled" id="undoBtn" title="Retour en arrière (Ctrl+Z)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H10"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 9h10a5.5 5.5 0 0 1 0 11H10"/><path d="M9.2 4L3.6 9l5.6 5z" fill="currentColor" fill-opacity=".45"/></svg>
     </div>
     <div class="tool-btn disabled" id="redoBtn" title="Rétablir (Ctrl+Y ou Ctrl+Maj+Z)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H14"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 9h-10a5.5 5.5 0 0 0 0 11H14"/><path d="M14.8 4l5.6 5-5.6 5z" fill="currentColor" fill-opacity=".45"/></svg>
     </div>
       </div>
-      <button id="simBtn" class="hero-btn hero-sim" title="Simulation : liaisons, moteurs, eau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="3.2"/><path d="M9 4.5v2M9 13.5v2M3.5 10h2M12.5 10h2M5.1 6.1l1.4 1.4M11.5 12.5l1.4 1.4M5.1 13.9l1.4-1.4M11.5 7.5l1.4-1.4"/><path d="M14 19c1.5-1.4 3-1.4 4.5 0s3 1.4 4.5 0" /><path d="M14 22c1.5-1.4 3-1.4 4.5 0" /></svg><span>Simuler</span></button>
+      <button id="simBtn" class="hero-btn hero-sim" title="Simulation : liaisons, moteurs, eau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="3.2" fill="currentColor" fill-opacity=".28"/><circle cx="9" cy="10" r="1" fill="currentColor"/><path d="M9 4.5v2M9 13.5v2M3.5 10h2M12.5 10h2M5.1 6.1l1.4 1.4M11.5 12.5l1.4 1.4M5.1 13.9l1.4-1.4M11.5 7.5l1.4-1.4"/><path d="M14 19c1.5-1.4 3-1.4 4.5 0s3 1.4 4.5 0" /><path d="M14 22c1.5-1.4 3-1.4 4.5 0" /></svg><span>Simuler</span></button>
     </div>
     <div id="topActions">
-      <button id="fileToggle" class="hero-btn hero-file" title="Fichier : ouvrir, enregistrer, exporter (Ctrl+S / Ctrl+O)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/></svg><span>Fichier</span></button>
+      <button id="fileToggle" class="hero-btn hero-file" title="Fichier : ouvrir, enregistrer, exporter (Ctrl+S / Ctrl+O)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z" fill="currentColor" fill-opacity=".16"/><path d="M3.5 10.5h17"/><path d="M18 2.6l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5z" fill="#ffd23f" stroke="none"/></svg><span>Fichier</span></button>
       <button id="exToggle" class="icon-btn" title="Exemples de simulations à ouvrir">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M6 9.5V15c2 2 10 2 12 0V9.5"/><path d="M21 7.5V13"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l9 4.5-9 4.5-9-4.5z" fill="currentColor" fill-opacity=".28"/><path d="M6 9.5V15c2 2 10 2 12 0V9.5"/><path d="M21 7.5V13"/><circle cx="21" cy="14.2" r="1.3" fill="#ffd23f" stroke="none"/></svg>
       </button>
       <button id="helpToggle" class="icon-btn" title="Aide : afficher les indications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity=".18"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
       </button>
       <button id="gridToggle" class="icon-btn" title="Régler la grille de sol">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 3.5v17M14.5 3.5v17"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 3.5h6v6h-6zM14.5 9.5h6v5h-6zM9.5 14.5h5v6h-5z" fill="currentColor" fill-opacity=".4" stroke="none"/><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 3.5v17M14.5 3.5v17"/></svg>
       </button>
       <button id="layersToggle" class="icon-btn" title="Calques">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l9 5-9 5-9-5 9-5z" fill="currentColor" fill-opacity=".35"/><path d="M3 12.5l9 5 9-5"/><path d="M3 16.5l9 5 9-5" stroke-opacity=".55"/></svg>
       </button>
       <button id="modeToggle" class="icon-btn" title="Mode téléphone">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.2h2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="2.5" width="10" height="19" rx="2"/><rect x="8.6" y="4.6" width="6.8" height="11.4" rx=".6" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M11 18.6h2"/></svg>
       </button>
     </div>
   </div>
@@ -1006,36 +1013,75 @@
 
   <div id="helpModal">
     <div class="help-card">
-      <div class="help-title">🧊 Bienvenue dans l'atelier !</div>
-      <div class="help-note">💡 Ces indications se retrouvent à tout moment avec le bouton <b>?</b> (Aide) en haut à droite.</div>
+      <svg class="help-illu" viewBox="0 0 800 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="hiSky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b2a8c"/><stop offset=".55" stop-color="#5a2f8f"/><stop offset="1" stop-color="#1f5f8f"/></linearGradient>
+          <linearGradient id="hiPlate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5ca8"/><stop offset=".4" stop-color="#a05cff"/><stop offset=".7" stop-color="#5c7cff"/><stop offset="1" stop-color="#3df5d6"/></linearGradient>
+          <radialGradient id="hiBall" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#e9fffb"/><stop offset=".35" stop-color="#3df5d6"/><stop offset="1" stop-color="#1b8f84"/></radialGradient>
+          <linearGradient id="hiDrop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe8ff"/><stop offset="1" stop-color="#2f7dff"/></linearGradient>
+        </defs>
+        <rect width="800" height="150" rx="16" fill="url(#hiSky)"/>
+        <g fill="#fff" opacity=".7"><circle cx="60" cy="30" r="1.6"/><circle cx="140" cy="18" r="1.1"/><circle cx="250" cy="40" r="1.4"/><circle cx="560" cy="22" r="1.3"/><circle cx="690" cy="44" r="1.6"/><circle cx="745" cy="16" r="1.1"/><circle cx="420" cy="14" r="1.2"/></g>
+        <!-- portique d'imprimante 3D -->
+        <g stroke="#9aa3b5" stroke-width="3" opacity=".55"><path d="M250 128V30M550 128V30M250 30h300"/></g>
+        <rect x="372" y="24" width="56" height="18" rx="3" fill="#1c1a2b" stroke="#3df5d6" stroke-width="1.5"/>
+        <path d="M396 42h8l-4 9z" fill="#d9a63a"/><circle cx="400" cy="53" r="2.4" fill="#ff8a1a"/>
+        <path d="M400 56v22" stroke="#ff8a1a" stroke-width="1.5" stroke-dasharray="2 3"/>
+        <!-- plateau -->
+        <path d="M400 92l170 26-170 26-170-26z" fill="url(#hiPlate)" opacity=".85"/>
+        <path d="M400 92l170 26-170 26-170-26z" fill="none" stroke="#3df5d6" stroke-width="1.5"/>
+        <!-- cube -->
+        <path d="M330 84l34-12 34 12-34 12z" fill="#ff9ad0"/><path d="M330 84v32l34 12V96z" fill="#ff5ca8"/><path d="M398 84v32l-34 12V96z" fill="#c23a82"/>
+        <!-- sphère -->
+        <circle cx="452" cy="104" r="20" fill="url(#hiBall)"/><ellipse cx="452" cy="126" rx="18" ry="3.5" fill="#000" opacity=".2"/>
+        <!-- engrenage -->
+        <g transform="translate(515 94)"><path d="M-3-22h6l1 6 5 2 5-4 4 4-4 5 2 5 6 1v6l-6 1-2 5 4 5-4 4-5-4-5 2-1 6h-6l-1-6-5-2-5 4-4-4 4-5-2-5-6-1v-6l6-1 2-5-4-5 4-4 5 4 5-2z" fill="#ffd23f"/><circle r="6" fill="#5a2f8f"/></g>
+        <!-- goutte d'eau et vagues -->
+        <path d="M640 64c10 14 15 22 15 30a15 15 0 0 1-30 0c0-8 5-16 15-30z" fill="url(#hiDrop)"/><circle cx="634" cy="94" r="3.5" fill="#fff" opacity=".7"/>
+        <path d="M600 128c10-8 20-8 30 0s20 8 30 0 20-8 30 0" fill="none" stroke="#7fd3ff" stroke-width="3" stroke-linecap="round"/>
+        <!-- papillon -->
+        <g transform="translate(150 70) rotate(-12)"><path d="M0 0c-18-22-34-10-24 6 4 6 14 6 24-6z" fill="#ff8a3d"/><path d="M0 0c-14 14-26 14-20 2" fill="#ffd23f"/><path d="M0 0c18-22 34-10 24 6-4 6-14 6-24-6z" fill="#ff5ca8"/><path d="M0 0c14 14 26 14 20 2" fill="#ffd1ec"/><path d="M0-6v14" stroke="#1d1030" stroke-width="3" stroke-linecap="round"/></g>
+        <!-- pieuvre -->
+        <g transform="translate(720 100)"><ellipse cx="0" cy="-10" rx="16" ry="18" fill="#b05cff"/><circle cx="-6" cy="-10" r="4" fill="#fff"/><circle cx="6" cy="-10" r="4" fill="#fff"/><circle cx="-5" cy="-10" r="2" fill="#1d1030"/><circle cx="7" cy="-10" r="2" fill="#1d1030"/><path d="M-14 4c-6 8-2 14 2 12M-6 6c-2 10 2 14 6 10M6 6c2 10-2 14-6 10M14 4c6 8 2 14-2 12" stroke="#b05cff" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+        <!-- étincelles -->
+        <g fill="#ffd23f"><path d="M90 110l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M600 30l1.6 4 4 1.6-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6z"/><path d="M220 40l1.4 3.4 3.4 1.4-3.4 1.4-1.4 3.4-1.4-3.4-3.4-1.4 3.4-1.4z"/></g>
+      </svg>
+      <div class="help-head"><div class="help-title">🧊 Bienvenue dans l'atelier !</div>
+        <div class="help-note">💡 Ces indications se retrouvent avec le bouton <b>?</b> (Aide) en haut à droite.</div></div>
       <div class="help-grid">
-        <div><h4>🖱️ Vue</h4><ul>
-          <li><b>Clic droit + glisser</b> : tourner autour de la scène</li>
-          <li><b>Molette enfoncée + glisser</b> : déplacer la vue</li>
-          <li><b>Molette</b> : zoomer (centré sur le curseur)</li></ul></div>
-        <div><h4>🧩 Pièces</h4><ul>
-          <li><b>Bibliothèques</b> (à gauche) : formes simples et composants électroniques ; le bouton du haut change de bibliothèque, faites défiler pour voir toutes les pièces ⌄</li>
-          <li><b>Glisser une pièce</b> : la déplacer sur le plateau</li>
-          <li><b>Glisser dans le vide</b> : cadre de sélection ; <b>Maj + clic</b> : ajouter à la sélection</li></ul></div>
-        <div><h4>📐 Dimensions</h4><ul>
-          <li><b>Petits carrés vert-bleu</b> : étirer la pièce dans un sens (avec <b>Maj</b> : garder les proportions)</li>
-          <li><b>Flèche violette</b> : monter / descendre la pièce</li>
-          <li>Tapez une valeur en <b>mm</b> dans les étiquettes ou le panneau de droite</li></ul></div>
-        <div><h4>🛠️ Outils (en haut)</h4><ul>
-          <li><b>✏️ Esquisse</b> : choisir un plan, dessiner des formes, puis extruder</li>
-          <li><b>🔗 Combiner</b> : additionner ou soustraire (A−B / B−A) des volumes</li>
-          <li><b>↩ Retour</b> : annuler (Ctrl+Z, rétablir Ctrl+Y)</li></ul></div>
-        <div><h4>⚙️ Simulation</h4><ul>
-          <li><b>◻️ Pièce creuse</b> (sous Caractéristiques) : vide la pièce, épaisseur de paroi réglable, dessus ouvert ou fermé</li>
-          <li><b>Simuler</b> : ancrer des pièces, créer des liaisons (pivot, glissière, rotule, cardan, ressort…) et des moteurs</li>
-          <li>Les pièces reliées par une liaison <b>se déplacent ensemble</b></li>
-          <li><b>✋ Main</b> : pendant la simulation, clique-glisse une pièce pour la bouger</li>
-          <li><b>Eau</b> (dans 🪵 Matière du modeleur) : « Eau qui coule » (elle s'écoule, éclabousse, remplit un bac) ou « Plan d'eau » (fixe, pour faire flotter des pièces, même très grand)</li>
-          <li><b>▶ Lancer</b> puis <b>⟲ Réinitialiser</b> pour revenir à l'état de départ</li>
-          <li><b>🎓 Exemples</b> (en haut à droite) : aquarium, engrenages, cascade, pendule, dominos, voiture…</li></ul></div>
-        <div><h4>📁 Fichier</h4><ul>
-          <li>Ouvrir, enregistrer (Ctrl+S), enregistrer sous</li>
-          <li>Exporter en <b>STL</b>, <b>SVG</b>, <b>GIF</b> (fond transparent) ou <b>JPG</b></li></ul></div>
+        <div>
+          <h4>🖱️ Vue</h4><ul>
+            <li><b>Clic droit + glisser</b> : tourner autour</li>
+            <li><b>Molette enfoncée + glisser</b> : déplacer la vue</li>
+            <li><b>Molette</b> : zoomer vers le curseur</li></ul>
+          <h4>🛠️ Outils (en haut)</h4><ul>
+            <li><b>✏️ Esquisse</b> : dessiner un profil puis l'extruder</li>
+            <li><b>🔗 Combiner</b> : additionner ou soustraire des volumes</li>
+            <li><b>↩ Retour / ↪ Rétablir</b> : Ctrl+Z / Ctrl+Y</li></ul>
+        </div>
+        <div>
+          <h4>🧩 Pièces</h4><ul>
+            <li><b>Bibliothèques</b> à gauche : formes, électronique, mécanique (le bouton du haut change de bibliothèque ⌄)</li>
+            <li><b>Glisser une pièce</b> : la déplacer (les pièces liées suivent)</li>
+            <li><b>Glisser dans le vide</b> : sélection par cadre ; <b>Maj + clic</b> : ajouter</li>
+            <li><b>🪵 Matière</b>, <b>⚖️ Caractéristiques</b>, <b>◻️ Pièce creuse</b> : dans le panneau de droite</li></ul>
+        </div>
+        <div>
+          <h4>📐 Dimensions</h4><ul>
+            <li><b>Carrés vert-bleu</b> : étirer (<b>Maj</b> : garder les proportions)</li>
+            <li><b>Flèche violette</b> : monter / descendre</li>
+            <li>Valeurs en <b>mm</b> dans les étiquettes ou à droite</li></ul>
+          <h4>📁 Fichier</h4><ul>
+            <li>Ouvrir, enregistrer (Ctrl+S), <b>importer</b> un STL / OBJ (Ctrl+I ou glisser le fichier)</li>
+            <li>Exporter en <b>STL</b>, <b>SVG</b>, <b>GIF</b> ou <b>JPG</b></li></ul>
+        </div>
+        <div>
+          <h4>⚙️ Simulation</h4><ul>
+            <li><b>Simuler</b> : ancrer, créer des liaisons (pivot, glissière, rotule, ressort…) et des moteurs</li>
+            <li><b>Eau</b> (dans Matière) : « eau qui coule » ou « plan d'eau »</li>
+            <li><b>▶ Lancer</b>, <b>⟲ Réinitialiser</b> ; <b>✋ Main</b> pour bouger une pièce</li>
+            <li><b>🎓 Exemples</b> : aquarium, engrenages, pendule, voiture…</li></ul>
+        </div>
       </div>
       <button id="helpClose">C'est parti !</button>
     </div>
@@ -1053,6 +1099,7 @@
     <button id="fmSave"><span>💾 Enregistrer</span><kbd>Ctrl+S</kbd></button>
     <button id="fmSaveAs"><span>📝 Enregistrer sous…</span><kbd>Ctrl+Maj+S</kbd></button>
     <div class="fm-sep"></div>
+    <button id="fmImport" title="Ajouter des objets 3D (STL, OBJ) à la scène — on peut aussi glisser le fichier sur la vue"><span>📥 Importer un objet (STL, OBJ)…</span><kbd>Ctrl+I</kbd></button>
     <button id="fmExport"><span>📤 Exporter</span><kbd class="chev">▸</kbd></button>
     <div id="fmSub">
       <button id="fmStl"><span>🧱 STL — impression 3D (mm)</span></button>
@@ -1062,6 +1109,7 @@
     </div>
   </div>
   <input type="file" id="openInput" accept=".modeleur,.json,application/json" style="display:none">
+  <input type="file" id="importInput" accept=".stl,.obj,model/stl" multiple style="display:none">
   <div id="toast"></div>
 
   <div id="libMenu">
@@ -4017,7 +4065,7 @@
   function refreshList(){
     var body = document.getElementById("objlist-body");
     if(!objects.length){
-      body.innerHTML = '<div class="empty">Aucun volume.<br>Ajoutez une forme depuis la barre d\'outils.</div>';
+      body.innerHTML = '<div class="empty">' + '<svg class="empty-illu" viewBox="0 0 92 70" aria-hidden="true"><path d="M46 52l34 9-34 9-34-9z" fill="#a05cff" opacity=".35"/><path d="M28 30l18-7 18 7-18 7z" fill="none" stroke="#ff8ad8" stroke-width="2" stroke-dasharray="3 3"/><path d="M28 30v20l18 7V37zM64 30v20l-18 7V37z" fill="none" stroke="#ff8ad8" stroke-width="2" stroke-dasharray="3 3"/><path d="M14 18l1.6 4 4 1.6-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6z" fill="#ffd23f"/><path d="M76 10l1.2 3 3 1.2-3 1.2-1.2 3-1.2-3-3-1.2 3-1.2z" fill="#3df5d6"/></svg>' + 'Ta scène est vide.<br>Choisis une forme ou un composant à gauche ✨</div>';
       if(typeof simMode !== "undefined" && simMode) setTimeout(simOnSceneChange, 0);
       return;
     }
@@ -5425,6 +5473,93 @@
     r.readAsText(f);
   });
 
+  // ---- importer des objets : STL (binaire ou texte), OBJ ----
+  // renvoie un tableau plat de sommets (triangles, non indexés) dans le repère de l'appli (y = haut), en mm
+  function parseSTL(buf){
+    var dv = new DataView(buf), n = buf.byteLength >= 84 ? dv.getUint32(80, true) : -1, out;
+    if(n > 0 && 84 + n*50 === buf.byteLength){
+      out = new Float32Array(n * 9);
+      for(var i = 0; i < n; i++){
+        var o = 84 + i*50 + 12;
+        for(var k = 0; k < 3; k++){
+          var X = dv.getFloat32(o + k*12, true), Y = dv.getFloat32(o + k*12 + 4, true), Z = dv.getFloat32(o + k*12 + 8, true);
+          out[i*9 + k*3] = X; out[i*9 + k*3 + 1] = Z; out[i*9 + k*3 + 2] = -Y;      // STL : Z vers le haut
+        }
+      }
+      return out;
+    }
+    var txt = new TextDecoder().decode(buf), re = /vertex\s+([-+\d.eE]+)\s+([-+\d.eE]+)\s+([-+\d.eE]+)/g, m, arr = [];
+    while((m = re.exec(txt))){ arr.push(parseFloat(m[1]), parseFloat(m[3]), -parseFloat(m[2])); }
+    arr.length -= arr.length % 9;
+    return new Float32Array(arr);
+  }
+  function parseOBJ(txt){
+    var v = [], arr = [];
+    txt.split(/\r?\n/).forEach(function(line){
+      line = line.trim();
+      if(line.charAt(0) === "v" && line.charAt(1) === " "){ var p = line.split(/\s+/); v.push([+p[1], +p[2], +p[3]]); }
+      else if(line.charAt(0) === "f" && line.charAt(1) === " "){
+        var ids = line.split(/\s+/).slice(1).map(function(s){ var i = parseInt(s.split("/")[0], 10); return i < 0 ? v.length + i : i - 1; });
+        for(var k = 2; k < ids.length; k++){
+          [ids[0], ids[k-1], ids[k]].forEach(function(id){ var q = v[id] || [0,0,0]; arr.push(q[0], q[1], q[2]); });   // OBJ : Y vers le haut
+        }
+      }
+    });
+    return new Float32Array(arr);
+  }
+  function importGeometry(posMM, name){
+    if(posMM.length < 9) throw new Error("vide");
+    var geo = new THREE.BufferGeometry();
+    for(var i = 0; i < posMM.length; i++) posMM[i] /= MM_PER_UNIT;
+    geo.setAttribute("position", new THREE.BufferAttribute(posMM, 3));
+    geo.computeBoundingBox();
+    var c = geo.boundingBox.getCenter(new THREE.Vector3());
+    geo.translate(-c.x, -c.y, -c.z);                    // centré sur lui-même, posé au sol
+    geo.computeVertexNormals();
+    geo.computeBoundingBox();
+    var sz = geo.boundingBox.getSize(new THREE.Vector3()).multiplyScalar(MM_PER_UNIT);
+    var short = name.replace(/\.[^.]+$/, "").slice(0, 22) || "Import";
+    if(placingId !== null) cancelPlacing();
+    addMeshItem({ short: short, build: function(){ return geo; }, color: COLORS[(nextId-1) % COLORS.length] });
+    var o = objects[objects.length - 1];
+    o.name = short;
+    refreshList();
+    startPlacing(o);
+    var nt = posMM.length / 9;
+    toast("Importé : " + short + " — " + Math.round(sz.x) + " × " + Math.round(sz.z) + " × " + Math.round(sz.y) + " mm" +
+          (nt > 60000 ? " · " + Math.round(nt/1000) + " k triangles : les calculs seront lents" : "") + " — clique pour le déposer", true);
+    setTimeout(function(){ document.getElementById("toast").classList.remove("show"); }, 5000);
+  }
+  function importFile(f){
+    var ext = (f.name.split(".").pop() || "").toLowerCase();
+    var r = new FileReader();
+    r.onerror = function(){ toast("Lecture impossible : " + f.name); };
+    if(ext === "stl"){
+      r.onload = function(){ try{ importGeometry(parseSTL(r.result), f.name); }catch(err){ toast("Ce fichier STL n'est pas lisible"); } };
+      r.readAsArrayBuffer(f);
+    } else if(ext === "obj"){
+      r.onload = function(){ try{ importGeometry(parseOBJ(r.result), f.name); }catch(err){ toast("Ce fichier OBJ n'est pas lisible"); } };
+      r.readAsText(f);
+    } else if(ext === "modeleur" || ext === "json"){
+      r.onload = function(){ try{ loadProject(r.result, f.name); fileHandle = null; toast("Ouvert : " + f.name); }catch(err){ toast("Ce fichier n'est pas un modèle valide"); } };
+      r.readAsText(f);
+    } else toast("Format non pris en charge : ." + ext + " (STL ou OBJ)");
+  }
+  function importObjects(){ document.getElementById("importInput").click(); }
+  document.getElementById("importInput").addEventListener("change", function(){
+    var fs = Array.prototype.slice.call(this.files); this.value = "";
+    if(sketching) cancelSketch();
+    fs.forEach(importFile);
+  });
+  // glisser-déposer un fichier sur la vue 3D
+  window.addEventListener("dragover", function(e){ if(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types, "Files") >= 0){ e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } });
+  window.addEventListener("drop", function(e){
+    if(!e.dataTransfer || !e.dataTransfer.files.length) return;
+    e.preventDefault();
+    if(sketching) cancelSketch();
+    Array.prototype.forEach.call(e.dataTransfer.files, importFile);
+  });
+
   // ---- préparation de la scène pour un rendu « propre » (sans grille, poignées, contours…) ----
   var exportClean = false;
   function beginClean(){
@@ -5704,7 +5839,7 @@
     function close(){ menu.classList.remove("show"); btn.classList.remove("active"); }
     btn.addEventListener("click", function(e){ e.stopPropagation(); var s = menu.classList.toggle("show"); btn.classList.toggle("active", s); });
     document.addEventListener("pointerdown", function(e){ if(!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) close(); });
-    var acts = { fmOpen: openFile, fmSave: saveFile, fmSaveAs: saveAs, fmStl: exportSTL, fmSvg: exportSVG, fmGif: exportGIF, fmJpg: exportJPG };
+    var acts = { fmImport: importObjects, fmOpen: openFile, fmSave: saveFile, fmSaveAs: saveAs, fmStl: exportSTL, fmSvg: exportSVG, fmGif: exportGIF, fmJpg: exportJPG };
     Object.keys(acts).forEach(function(id){
       document.getElementById(id).addEventListener("click", function(){ close(); acts[id](); });
     });
@@ -5718,6 +5853,7 @@
       var k = e.key.toLowerCase();
       if(k === "s"){ e.preventDefault(); if(e.shiftKey) saveAs(); else saveFile(); }
       else if(k === "o"){ e.preventDefault(); openFile(); }
+      else if(k === "i"){ e.preventDefault(); importObjects(); }
     });
   })();
 
@@ -6120,7 +6256,32 @@
   // ---- vagues : surface animée des bassins, houle dans l'eau en particules ----
   var simWaveAmp = 0.01;                           // amplitude (unités ; 1 mm)
   var WAVE_VIS = 4, waveClock = 0, waveLast = 0;    // les vagues sont dessinées plus marquées que leur effet physique
-  var waveMat = new THREE.MeshStandardMaterial({ color:0xffffff, vertexColors:true, transparent:true, opacity:0.55, roughness:0.02, metalness:0.35, side: THREE.DoubleSide, depthWrite:false });
+  // ciel qui se reflète dans l'eau : visible sous tous les angles de vue (pas seulement face aux lampes)
+  function waterSkyEnv(){
+    var faces = [], S = 128;
+    for(var f = 0; f < 6; f++){
+      var cv = document.createElement("canvas"); cv.width = cv.height = S;
+      var g = cv.getContext("2d");
+      if(f === 2){                                          // zénith : ciel lumineux et soleil
+        var rg = g.createRadialGradient(S*0.5, S*0.5, 0, S*0.5, S*0.5, S*0.75);
+        rg.addColorStop(0, "#ffffff"); rg.addColorStop(0.18, "#fff6d8"); rg.addColorStop(0.45, "#bfe6ff"); rg.addColorStop(1, "#7cc4ff");
+        g.fillStyle = rg; g.fillRect(0, 0, S, S);
+      } else if(f === 3){ g.fillStyle = "#0b2a55"; g.fillRect(0, 0, S, S); }
+      else {                                                // horizon : bande claire, nuages, haut bleu
+        var lg = g.createLinearGradient(0, 0, 0, S);
+        lg.addColorStop(0, "#8fd0ff"); lg.addColorStop(0.42, "#e9f7ff"); lg.addColorStop(0.5, "#ffffff"); lg.addColorStop(0.56, "#5aa7e8"); lg.addColorStop(1, "#0b2a55");
+        g.fillStyle = lg; g.fillRect(0, 0, S, S);
+        g.fillStyle = "rgba(255,255,255,0.85)";
+        for(var c = 0; c < 4; c++){ var x = ((f*37 + c*41) % S), y = S*0.18 + (c%2)*S*0.12; g.beginPath(); g.ellipse(x, y, S*0.16, S*0.05, 0, 0, Math.PI*2); g.fill(); }
+      }
+      faces.push(cv);
+    }
+    var t = new THREE.CubeTexture(faces); t.needsUpdate = true;
+    return t;
+  }
+  var waveMat = new THREE.MeshStandardMaterial({ color:0xffffff, vertexColors:true, transparent:true, opacity:0.62, roughness:0.06, metalness:0.7,
+                                                  envMap: waterSkyEnv(), envMapIntensity:1.7, side: THREE.DoubleSide, depthWrite:false });
+  var WAVE_NORMAL_BOOST = 3.5;                         // pentes exagérées pour les reflets : les vagues se lisent sous tous les angles
   function waveTime(){ return simBuilt ? simTime : waveClock; }
   function waveHeight(x, z, t){
     if(simWaveAmp <= 0) return 0;
@@ -6169,6 +6330,12 @@
       w.geometry.attributes.color.needsUpdate = true;
       w.geometry.attributes.position.needsUpdate = true;
       w.geometry.computeVertexNormals();
+      var na = w.geometry.attributes.normal.array;
+      for(var ni = 0; ni < na.length; ni += 3){
+        var nx = na[ni] * WAVE_NORMAL_BOOST, ny = na[ni+1], nz = na[ni+2] * WAVE_NORMAL_BOOST, nl = Math.hypot(nx, ny, nz) || 1;
+        na[ni] = nx/nl; na[ni+1] = ny/nl; na[ni+2] = nz/nl;
+      }
+      w.geometry.attributes.normal.needsUpdate = true;
       faunaFrame(o, bb);
     });
   }
@@ -6217,14 +6384,92 @@
     }
     return { g: g, mats: [dm, lm], dome: dome, lines: lines, kind: "jelly" };
   }
+  var OCTO_COLORS = [0xff6b4a, 0xb05cff, 0xff8ad8, 0xff9f1a];
+  function makeOcto(){
+    var G = faunaGeo(), g = new THREE.Group(), color = OCTO_COLORS[Math.floor(Math.random()*OCTO_COLORS.length)];
+    var bm = new THREE.MeshStandardMaterial({ color: color, roughness:0.35, metalness:0.05, transparent:true, emissive: color, emissiveIntensity:0.22 });
+    var wm = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent:true });
+    var pm = new THREE.MeshBasicMaterial({ color: 0x111122, transparent:true });
+    var head = new THREE.Mesh(G.body, bm); head.scale.set(0.5, 0.62, 0.5); head.position.y = 0.42; g.add(head);
+    [-1, 1].forEach(function(sg){
+      var e = new THREE.Mesh(G.body, wm); e.scale.setScalar(0.12); e.position.set(0.36, 0.3, 0.17*sg); g.add(e);
+      var pu = new THREE.Mesh(G.body, pm); pu.scale.setScalar(0.065); pu.position.set(0.46, 0.3, 0.17*sg); g.add(pu);
+    });
+    var arms = [];
+    for(var i = 0; i < 8; i++){
+      var segs = [];
+      for(var k = 0; k < 7; k++){ var m = new THREE.Mesh(G.body, bm); var r = 0.11 * (1 - k/8.5); m.scale.setScalar(r); g.add(m); segs.push(m); }
+      arms.push({ a: i/8*Math.PI*2 + 0.2, segs: segs });
+    }
+    return { g: g, mats: [bm, wm, pm], head: head, arms: arms, kind: "octo" };
+  }
+  function octoPose(c, now){
+    var cp = 0.5 + 0.5*Math.sin(now*2.1 + c.phase);              // contraction : les bras se referment puis s'ouvrent (propulsion)
+    c.head.scale.set(0.5 - 0.04*cp, 0.62 + 0.06*cp, 0.5 - 0.04*cp);
+    c.arms.forEach(function(arm, i){
+      var ca = Math.cos(arm.a), sa = Math.sin(arm.a), x = 0, y = 0.18, z = 0;
+      arm.segs.forEach(function(m, k){
+        var spread = 0.07 + 0.06*(1 - cp);
+        var curl = Math.sin(now*2.6 + k*0.7 + i*0.9) * 0.035 * k;
+        x += ca * spread + (-sa) * curl * 0.5; z += sa * spread + ca * curl * 0.5;
+        y -= 0.085 + 0.02*cp - (k > 4 ? 0.03*(1 - cp) : 0);
+        m.position.set(x, y, z);
+      });
+    });
+  }
+  function makeAUV(color, mini){
+    var G = faunaGeo(), g = new THREE.Group();
+    var bm = new THREE.MeshStandardMaterial({ color: color, metalness:0.35, roughness:0.3, transparent:true });
+    var dm = new THREE.MeshStandardMaterial({ color: 0x22283a, metalness:0.5, roughness:0.4, transparent:true });
+    var lm = new THREE.MeshBasicMaterial({ color: 0xfff6c8, transparent:true });
+    var sm = new THREE.MeshBasicMaterial({ color: 0x3df5d6, transparent:true });
+    var cy = new THREE.CylinderGeometry(0.28, 0.28, 1.3, 16); cy.rotateZ(Math.PI/2);
+    g.add(new THREE.Mesh(cy, bm));
+    var nose = new THREE.Mesh(G.body, bm); nose.scale.set(0.42, 0.28, 0.28); nose.position.x = 0.65; g.add(nose);
+    var tc = new THREE.ConeGeometry(0.28, 0.5, 16); tc.rotateZ(Math.PI/2);
+    var tail = new THREE.Mesh(tc, dm); tail.position.x = -0.9; g.add(tail);
+    var ring = new THREE.Mesh(new THREE.TorusGeometry(0.29, 0.03, 6, 20), sm); ring.rotation.y = Math.PI/2; ring.position.x = 0.15; g.add(ring);
+    var lamp = new THREE.Mesh(G.body, lm); lamp.scale.setScalar(0.09); lamp.position.set(1.04, 0, 0); g.add(lamp);
+    for(var f = 0; f < 4; f++){ var fin = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.02, 0.22), dm); fin.position.x = -0.75; fin.rotation.x = f*Math.PI/2 + Math.PI/4; fin.translateZ(0.24); g.add(fin); }
+    var prop = new THREE.Group(); prop.position.x = -1.18; g.add(prop);
+    for(var p = 0; p < 3; p++){ var bl = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.34, 0.08), dm); bl.rotation.x = p * Math.PI*2/3; bl.translateY(0.12); prop.add(bl); }
+    return { g: g, mats: [bm, dm, lm, sm], prop: prop, lamp: lamp, kind: "auv" };
+  }
+  function makeROV(){
+    var G = faunaGeo(), g = new THREE.Group();
+    var wm = new THREE.MeshStandardMaterial({ color: 0xeef1f7, metalness:0.2, roughness:0.4, transparent:true });
+    var om = new THREE.MeshStandardMaterial({ color: 0xff8a3d, metalness:0.2, roughness:0.4, transparent:true });
+    var dm = new THREE.MeshStandardMaterial({ color: 0x22283a, metalness:0.5, roughness:0.4, transparent:true });
+    var gl = new THREE.MeshStandardMaterial({ color: 0x0b1a33, metalness:0.9, roughness:0.05, transparent:true, opacity:0.85 });
+    var lm = new THREE.MeshBasicMaterial({ color: 0xfff6c8, transparent:true });
+    var body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.45, 0.8), wm); g.add(body);
+    var top = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.2, 0.8), om); top.position.y = 0.32; g.add(top);
+    var dome = new THREE.Mesh(G.dome, gl); dome.rotation.z = -Math.PI/2; dome.scale.setScalar(0.26); dome.position.set(0.55, 0, 0); g.add(dome);
+    [-1, 1].forEach(function(sd){
+      var l = new THREE.Mesh(G.body, lm); l.scale.setScalar(0.08); l.position.set(0.56, -0.15, 0.3*sd); g.add(l);
+      var th = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.4, 12, 1, true), dm); th.rotation.z = Math.PI/2; th.position.set(-0.1, 0, 0.55*sd); g.add(th);
+    });
+    var skid = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 0.06), dm); skid.position.set(0, -0.3, 0.32); g.add(skid);
+    var skid2 = skid.clone(); skid2.position.z = -0.32; g.add(skid2);
+    return { g: g, mats: [wm, om, dm, gl, lm], kind: "rov" };
+  }
+  var AUV_COLORS = [0xffd23f, 0xff8a3d, 0xeef1f7, 0x3df5d6];
   function spawnCreature(o, now){
+    if(groundMode !== "sol") return spawnMachine(o, now);
     var F = o._fauna, r = Math.random(), c;
+    if(r > 0.7 && r < 0.86){
+      c = makeOcto();
+      c.dur = 12 + Math.random()*5; c.size = 0.85 + Math.random()*0.35;
+      c.y0 = 0.12 + Math.random()*0.25; c.y1 = Math.min(0.8, c.y0 + 0.15 + Math.random()*0.3);
+      r = -1;
+    }
     var alongX = Math.random() < 0.5, dir = Math.random() < 0.5 ? 1 : -1;
-    if(r < 0.62){
+    if(r === -1){ /* pieuvre déjà créée */ }
+    else if(r < 0.55){
       c = makeFish(FISH_COLORS[Math.floor(Math.random()*FISH_COLORS.length)]);
-      c.dur = 2.2 + Math.random()*2; c.size = 0.5 + Math.random()*0.5;
+      c.dur = 6.5 + Math.random()*3.5; c.size = 0.55 + Math.random()*0.5;
       c.y0 = 0.2 + Math.random()*0.6; c.y1 = Math.max(0.15, Math.min(0.85, c.y0 + (Math.random()-0.5)*0.3));
-    } else if(r < 0.82){
+    } else if(r < 0.86){
       // petit banc de poissons qui file ensemble
       var col = FISH_COLORS[Math.floor(Math.random()*FISH_COLORS.length)];
       c = { g: new THREE.Group(), mats: [], kind: "school", members: [] };
@@ -6233,15 +6478,42 @@
         f.off = new THREE.Vector3((Math.random()-0.5)*1.6, (Math.random()-0.5)*0.8, (Math.random()-0.5)*1.2);
         f.g.position.copy(f.off); c.g.add(f.g); c.members.push(f); c.mats = c.mats.concat(f.mats);
       }
-      c.dur = 1.8 + Math.random()*1.2; c.size = 0.6;
+      c.dur = 5.5 + Math.random()*2.5; c.size = 0.6;
       c.y0 = 0.3 + Math.random()*0.5; c.y1 = c.y0;
     } else {
       c = makeJelly();
-      c.dur = 7 + Math.random()*3; c.size = 0.7 + Math.random()*0.4;
+      c.dur = 13 + Math.random()*5; c.size = 0.75 + Math.random()*0.4;
       c.y0 = 0.15 + Math.random()*0.3; c.y1 = Math.min(0.85, c.y0 + 0.35 + Math.random()*0.2);
     }
     c.owner = o; faunaAll.push(c);
     c.alongX = alongX; c.dir = dir; c.t0 = now; c.lane = (Math.random()-0.5)*0.7; c.phase = Math.random()*10;
+    scene.add(c.g);
+    F.list.push(c);
+  }
+  // décor « technologie » : drones sous-marins à la place des animaux
+  function spawnMachine(o, now){
+    var F = o._fauna, r = Math.random(), c;
+    if(r < 0.45){
+      c = makeAUV(AUV_COLORS[Math.floor(Math.random()*AUV_COLORS.length)]);
+      c.dur = 7 + Math.random()*4; c.size = 0.45 + Math.random()*0.25;
+      c.y0 = 0.2 + Math.random()*0.6; c.y1 = Math.max(0.15, Math.min(0.85, c.y0 + (Math.random()-0.5)*0.3));
+    } else if(r < 0.7){
+      var col = AUV_COLORS[Math.floor(Math.random()*AUV_COLORS.length)];
+      c = { g: new THREE.Group(), mats: [], kind: "school", members: [] };
+      for(var i = 0; i < 4; i++){
+        var f = makeAUV(col); f.g.scale.setScalar(0.4);
+        f.off = new THREE.Vector3(-i*0.7, (Math.random()-0.5)*0.3, (i%2 ? 1 : -1) * i * 0.35);   // en formation
+        f.g.position.copy(f.off); c.g.add(f.g); c.members.push(f); c.mats = c.mats.concat(f.mats);
+      }
+      c.dur = 6 + Math.random()*2.5; c.size = 0.6;
+      c.y0 = 0.3 + Math.random()*0.5; c.y1 = c.y0;
+    } else {
+      c = makeROV();
+      c.dur = 13 + Math.random()*5; c.size = 0.55 + Math.random()*0.25;
+      c.y0 = 0.15 + Math.random()*0.3; c.y1 = Math.min(0.8, c.y0 + 0.2 + Math.random()*0.3);
+    }
+    c.owner = o; faunaAll.push(c);
+    c.alongX = Math.random() < 0.5; c.dir = Math.random() < 0.5 ? 1 : -1; c.t0 = now; c.lane = (Math.random()-0.5)*0.7; c.phase = Math.random()*10;
     scene.add(c.g);
     F.list.push(c);
   }
@@ -6251,12 +6523,13 @@
     var F = o._fauna;
     var sx = bb.max.x - bb.min.x, sy = bb.max.y - bb.min.y, sz = bb.max.z - bb.min.z;
     if(sy < 0.15 || Math.min(sx, sz) < 0.3){ return; }
-    if(now > F.next && F.list.length < 3){ spawnCreature(o, now); F.next = now + 2 + Math.random()*4.5; }
-    var base = Math.max(0.05, Math.min(0.35, Math.min(sx, sz, sy*1.5) * 0.09));   // taille adaptée au plan d'eau
+    if(now > F.next && F.list.length < 4){ spawnCreature(o, now); F.next = now + 1.5 + Math.random()*3; }
+    var base = Math.max(0.06, Math.min(0.4, Math.min(sx, sz, sy*1.5) * 0.11));   // taille adaptée au plan d'eau
     F.list = F.list.filter(function(c){
       var p = (now - c.t0) / c.dur;
       if(p >= 1){ scene.remove(c.g); c.mats.forEach(function(m){ m.dispose(); }); return false; }
       var e = p*p*(3 - 2*p);                                         // départ et arrivée en douceur
+      if(c.kind === "octo") e = Math.max(0, Math.min(1, e + Math.sin(p*Math.PI*10) / (Math.PI*10) * 0.7));   // par à-coups
       var a = -0.5 + 0.06 + (1 - 0.12) * (c.dir > 0 ? e : 1 - e);   // traverse d'une paroi à l'autre
       var wig = Math.sin(now*3 + c.phase) * 0.06;
       var lx = c.alongX ? a : c.lane + wig, lz = c.alongX ? c.lane + wig : a;
@@ -6265,11 +6538,22 @@
       var s = base * c.size;
       c.g.scale.setScalar(s);
       var vx = c.alongX ? c.dir : 0, vz = c.alongX ? 0 : c.dir;
-      if(c.kind !== "jelly") c.g.rotation.set(0, Math.atan2(-vz, vx) + Math.cos(now*3 + c.phase)*0.15, 0);
-      var op = Math.min(1, p / 0.15, (1 - p) / 0.15);                 // apparaît et disparaît en fondu
+      if(c.kind === "octo"){
+        // la pieuvre avance par à-coups (jet d'eau) en ondulant ses bras
+        c.g.rotation.set(0, Math.atan2(-vz, vx), -0.25 + 0.15*Math.sin(now*2.1 + c.phase));
+        octoPose(c, now);
+      } else if(c.kind === "auv" || c.kind === "rov"){
+        c.g.rotation.set(0, Math.atan2(-vz, vx) + Math.cos(now*1.3 + c.phase)*0.03, c.kind === "rov" ? 0.05*Math.sin(now*1.7 + c.phase) : 0);
+        if(c.prop) c.prop.rotation.x = now * 28;
+        if(c.lamp) c.lamp.visible = Math.sin(now*4 + c.phase) > -0.6;
+      } else if(c.kind === "school" && c.members[0] && c.members[0].kind === "auv"){
+        c.g.rotation.set(0, Math.atan2(-vz, vx), 0);
+      } else if(c.kind !== "jelly") c.g.rotation.set(0, Math.atan2(-vz, vx) + Math.cos(now*2 + c.phase)*0.12, 0);
+      var op = Math.min(1, p / 0.08, (1 - p) / 0.08);                 // apparaît et disparaît en fondu (court : on les voit longtemps)
       c.mats.forEach(function(m){ m.opacity = op * (m.userData.base || (m.userData.base = m.opacity || 1)); });
       if(c.kind === "fish") c.tail.rotation.y = Math.sin(now*22 + c.phase) * 0.5;
-      if(c.kind === "school") c.members.forEach(function(f, i){ f.tail.rotation.y = Math.sin(now*26 + i) * 0.5; f.g.position.y = f.off.y + Math.sin(now*4 + i)*0.15; });
+      if(c.kind === "school" && c.members[0].kind === "auv") c.members.forEach(function(f, i){ f.prop.rotation.x = now*30 + i; f.g.position.y = f.off.y + Math.sin(now*1.5 + i)*0.05; });
+      else if(c.kind === "school") c.members.forEach(function(f, i){ f.tail.rotation.y = Math.sin(now*26 + i) * 0.5; f.g.position.y = f.off.y + Math.sin(now*4 + i)*0.15; });
       if(c.kind === "jelly"){
         var pulse = 1 + Math.sin(now*3 + c.phase)*0.12;
         c.dome.scale.set(0.6*pulse, 0.45/pulse, 0.6*pulse);
@@ -6415,7 +6699,7 @@
   function simRenderJoints(){
     var list = document.getElementById("simList");
     list.innerHTML = "";
-    if(!simJoints.length){ list.innerHTML = '<div class="sp-empty">Aucune liaison pour l\'instant.</div>'; }
+    if(!simJoints.length){ list.innerHTML = '<div class="sp-empty">' + '<svg viewBox="0 0 40 24" width="40" height="24" aria-hidden="true" style="vertical-align:middle;margin-right:6px"><circle cx="11" cy="12" r="7" fill="none" stroke="#ffd23f" stroke-width="2.5"/><circle cx="29" cy="12" r="7" fill="none" stroke="#3df5d6" stroke-width="2.5"/><circle cx="20" cy="12" r="2.6" fill="#ff5ca8"/></svg>' + 'Aucune liaison pour l\'instant.</div>'; }
     simJoints.forEach(function(j){
       var row = document.createElement("div");
       row.className = "sp-jrow" + (j.id === simSel ? " active" : "");
@@ -7443,7 +7727,7 @@
         "  vec3 c = texture2D(uTex, vW.xz / 3.0).rgb;",                       // un motif tous les 300 mm
         "  float big = 0.9 + 0.1 * texture2D(uTex, vW.xz / 23.0 + 0.37).g;",  // grandes nuances
         "  float d = length(vW.xz - uCam.xz);",
-        "  float a = 1.0 - smoothstep(10.0, 28.0, d);",
+        "  float a = 1.0 - smoothstep(14.0, 36.0, d);",
         "  gl_FragColor = vec4(c * big, a);",
         "}"].join("\n")
     });
@@ -7467,6 +7751,7 @@
     VIEW_LIMIT = plate ? 12 : 70;
     ["posX","posY"].forEach(function(id){ var el = document.getElementById(id); el.min = -POS_LIMIT*100; el.max = POS_LIMIT*100; });
     var pz = document.getElementById("posZ"); pz.min = -300; pz.max = plate ? 300 : 3000;
+    decorMode(mode);
   }
   function groundFrame(){
     // le sol suit la vue : il paraît sans fin où que l'on aille
@@ -7474,6 +7759,653 @@
     if(infGrid && infGrid.visible){ infGrid.material.uniforms.uCam.value.copy(camera.position); infGrid.position.set(gx, infGrid.position.y, gz); }
     if(grassGround && grassGround.visible){ grassGround.material.uniforms.uCam.value.copy(camera.position); grassGround.position.set(gx, grassGround.position.y, gz); }
   }
+  // ---------------- décors : ciel nuageux (sol) ou intérieur d'imprimante 3D (plateau, grille infinie) ----------------
+  var decorDome = null, decorClouds = null, printer = null, decorClock = 0, decorLast = 0;
+  // pistes de circuit imprimé (pour le décor « technologie »)
+  function circuitTexture(){
+    var W = 512, H = 256, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    var c = cv.getContext("2d"), seed = 11;
+    var rnd = function(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    c.strokeStyle = "rgba(255,255,255,0.9)"; c.fillStyle = "rgba(255,255,255,0.95)"; c.lineCap = "round"; c.lineJoin = "round";
+    var G = 16;
+    for(var i = 0; i < 70; i++){                         // pistes : segments droits et à 45°
+      var x = Math.floor(rnd()*W/G)*G, y = Math.floor(rnd()*H/G)*G, dir = Math.floor(rnd()*4);
+      c.lineWidth = rnd() < 0.3 ? 3 : 1.6;
+      c.beginPath(); c.moveTo(x, y);
+      for(var s = 0; s < 4 + rnd()*7; s++){
+        var len = G * (1 + Math.floor(rnd()*4));
+        if(rnd() < 0.35) dir = (dir + (rnd() < 0.5 ? 1 : 3)) % 4;
+        var diag = rnd() < 0.25;
+        x += [len, 0, -len, 0][dir] + (diag ? [0, len, 0, -len][dir] : 0);
+        y += [0, len, 0, -len][dir] + (diag ? [len, 0, -len, 0][dir] * 0 : 0);
+        c.lineTo(x, y);
+      }
+      c.stroke();
+      c.beginPath(); c.arc(x, y, 3.2, 0, Math.PI*2); c.fill();
+    }
+    for(var k = 0; k < 9; k++){                          // puces avec leurs pattes
+      var cx = 20 + rnd()*(W-60), cy = 20 + rnd()*(H-60), w = 22 + rnd()*30, h = 16 + rnd()*20;
+      c.globalAlpha = 0.55; c.fillRect(cx, cy, w, h); c.globalAlpha = 1;
+      c.lineWidth = 1.2; c.strokeRect(cx, cy, w, h);
+      for(var p = 4; p < w - 2; p += 5){ c.beginPath(); c.moveTo(cx + p, cy); c.lineTo(cx + p, cy - 5); c.moveTo(cx + p, cy + h); c.lineTo(cx + p, cy + h + 5); c.stroke(); }
+    }
+    var t = new THREE.CanvasTexture(cv);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
+    return t;
+  }
+  function makeDecorDome(){
+    var mat = new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false,
+      uniforms: { uMode: { value: 0 }, uTime: { value: 0 }, uTex: { value: circuitTexture() } },
+      vertexShader: "varying vec3 vDir; void main(){ vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+      fragmentShader: [
+        "uniform float uMode; uniform float uTime; uniform sampler2D uTex; varying vec3 vDir;",
+        "void main(){",
+        "  vec3 d = normalize(vDir); float h = d.y; vec3 col;",
+        "  if(uMode < 0.5){",                                             // ciel bleu
+        "    vec3 zen = vec3(0.20, 0.50, 0.93), hor = vec3(0.82, 0.92, 1.0), low = vec3(0.42, 0.64, 0.36);",
+        "    col = h > 0.0 ? mix(hor, zen, pow(h, 0.55)) : mix(hor, low, smoothstep(0.0, 0.06, -h));",
+        "    vec3 sd = normalize(vec3(0.55, 0.62, 0.35)); float s = max(dot(d, sd), 0.0);",
+        "    col += vec3(1.0, 0.93, 0.75) * (pow(s, 600.0)*1.6 + pow(s, 12.0)*0.22);",
+        "  } else {",                                                     // intérieur d'une machine : circuits lumineux
+        "    col = mix(vec3(0.03, 0.025, 0.09), vec3(0.10, 0.06, 0.24), smoothstep(-0.4, 0.9, h));",
+        "    float u = atan(d.z, d.x) / 6.2831853 + 0.5, v = asin(clamp(h, -1.0, 1.0)) / 3.1415927 + 0.5;",
+        "    float tr = texture2D(uTex, vec2(u*5.0, v*2.5)).a;",
+        "    float pulse = pow(0.5 + 0.5*sin(u*70.0 + v*25.0 - uTime*1.6), 8.0);",
+        "    vec3 tc = mix(vec3(0.24, 0.96, 0.84), vec3(1.0, 0.36, 0.66), smoothstep(0.45, 0.85, v));",
+        "    col += tc * tr * (0.32 + 0.9*pulse) * smoothstep(-0.16, 0.03, h);",
+        "    col = mix(col, vec3(0.012, 0.01, 0.035), (1.0 - smoothstep(-0.4, 0.0, h)) * 0.9);",   // sous la grille : fondu sombre
+        "    col += vec3(0.24, 0.96, 0.84) * 0.22 * exp(-abs(h)*30.0);",   // ligne d'horizon lumineuse
+        "    col += vec3(0.65, 0.36, 1.0) * 0.12 * pow(max(h, 0.0), 3.0);",
+        "  }",
+        "  gl_FragColor = vec4(col, 1.0);",
+        "}"].join("\n")
+    });
+    var m = new THREE.Mesh(new THREE.SphereGeometry(85, 48, 24), mat);
+    m.renderOrder = -100; m.frustumCulled = false;
+    return m;
+  }
+  // nuages : plusieurs boules douces, un peu grisées dessous
+  function cloudTexture(seed){
+    var W = 256, H = 128, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    var c = cv.getContext("2d");
+    var rnd = function(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    for(var i = 0; i < 16; i++){
+      var x = 40 + rnd()*(W-80), y = 50 + rnd()*40, r = 18 + rnd()*30;
+      var g = c.createRadialGradient(x, y - r*0.2, 0, x, y, r);
+      g.addColorStop(0, "rgba(255,255,255,0.95)"); g.addColorStop(0.65, "rgba(250,252,255,0.8)"); g.addColorStop(1, "rgba(235,242,252,0)");
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fill();
+    }
+    var sh = c.createLinearGradient(0, 60, 0, H);              // dessous légèrement ombré
+    sh.addColorStop(0, "rgba(180,195,220,0)"); sh.addColorStop(1, "rgba(160,178,210,0.35)");
+    c.globalCompositeOperation = "source-atop"; c.fillStyle = sh; c.fillRect(0, 0, W, H);
+    var t = new THREE.CanvasTexture(cv);
+    return t;
+  }
+  function makeClouds(){
+    var g = new THREE.Group(), texs = [cloudTexture(3), cloudTexture(77), cloudTexture(421)];
+    for(var i = 0; i < 16; i++){
+      var m = new THREE.SpriteMaterial({ map: texs[i % 3], transparent: true, depthWrite: false, fog: false, opacity: 0.92 });
+      var s = new THREE.Sprite(m);
+      s.userData = { az: Math.random()*Math.PI*2, el: 0.07 + Math.random()*0.42, dist: 62 + Math.random()*12,
+                     spd: 0.006 + Math.random()*0.01, w: 16 + Math.random()*14 };
+      s.scale.set(s.userData.w, s.userData.w * 0.5, 1);
+      s.renderOrder = -90;
+      g.add(s);
+    }
+    return g;
+  }
+
+  // ---- intérieur d'imprimante 3D : montants en profilé alu, portique, tête d'impression qui se promène ----
+  function extrusionTexture(){
+    var cv = document.createElement("canvas"); cv.width = 32; cv.height = 8;
+    var c = cv.getContext("2d");
+    var g = c.createLinearGradient(0, 0, 32, 0);
+    g.addColorStop(0, "#7d8699"); g.addColorStop(0.35, "#c9d0dc"); g.addColorStop(0.5, "#3a3f4c"); g.addColorStop(0.65, "#c9d0dc"); g.addColorStop(1, "#7d8699");
+    c.fillStyle = g; c.fillRect(0, 0, 32, 8);
+    return new THREE.CanvasTexture(cv);
+  }
+  function makePrinter(){
+    var P = { g: new THREE.Group(), key: "" };
+    var alu = new THREE.MeshStandardMaterial({ color: 0xffffff, map: extrusionTexture(), metalness: 0.75, roughness: 0.35 });
+    var dark = new THREE.MeshStandardMaterial({ color: 0x1c1a2b, metalness: 0.3, roughness: 0.55 });
+    var steel = new THREE.MeshStandardMaterial({ color: 0xd8dde6, metalness: 0.95, roughness: 0.18 });
+    var led = new THREE.MeshBasicMaterial({ color: 0x3df5d6 });
+    var ledPink = new THREE.MeshBasicMaterial({ color: 0xff5ca8 });
+    var brass = new THREE.MeshStandardMaterial({ color: 0xd9a63a, metalness: 0.9, roughness: 0.3 });
+    var hot = new THREE.MeshBasicMaterial({ color: 0xff8a1a });
+    var box = new THREE.BoxGeometry(1, 1, 1), cyl = new THREE.CylinderGeometry(1, 1, 1, 12);
+    var add = function(geo, mat, parent){ var m = new THREE.Mesh(geo, mat); (parent || P.g).add(m); return m; };
+    P.posts = []; for(var i = 0; i < 4; i++) P.posts.push(add(box, alu.clone()));       // matériaux propres : ils s'estompent quand ils gênent la vue
+    P.beams = []; for(var b = 0; b < 8; b++) P.beams.push(add(box, alu));          // 4 en haut, 4 en bas
+    P.motors = []; for(var mo = 0; mo < 2; mo++){ var mg = new THREE.Group(); P.g.add(mg);
+      add(box, dark, mg).scale.set(0.42, 0.42, 0.42); var cap = add(box, steel, mg); cap.scale.set(0.44, 0.05, 0.44); cap.position.y = 0.23;
+      var sh = add(cyl, steel, mg); sh.scale.set(0.035, 0.12, 0.035); sh.position.y = 0.3; P.motors.push(mg); }
+    P.screws = []; for(var sc = 0; sc < 2; sc++) P.screws.push(add(cyl, steel.clone()));
+    P.leds = [add(box, led), add(box, led), add(box, ledPink), add(box, ledPink)];
+    // portique (axe Y) avec ses deux tiges, et chariot (axe X) avec la buse
+    P.gantry = new THREE.Group(); P.g.add(P.gantry);
+    P.gBeam = add(box, alu, P.gantry);
+    P.rods = [add(cyl, steel, P.gantry), add(cyl, steel, P.gantry)];
+    P.belt = add(box, dark, P.gantry);
+    P.head = new THREE.Group(); P.gantry.add(P.head);
+    var plate = add(box, dark, P.head); plate.scale.set(0.42, 0.34, 0.07); plate.position.set(0, 0, 0.16);
+    var fan = add(box, dark, P.head); fan.scale.set(0.3, 0.3, 0.1); fan.position.set(0, -0.32, 0.2);
+    var fanRing = add(new THREE.TorusGeometry(0.11, 0.015, 6, 24), ledPink, P.head); fanRing.position.set(0, -0.32, 0.255);
+    P.fanBlade = add(new THREE.BoxGeometry(0.2, 0.03, 0.01), steel, P.head); P.fanBlade.position.set(0, -0.32, 0.26);
+    for(var f = 0; f < 6; f++){ var fin = add(cyl, steel, P.head); fin.scale.set(0.09, 0.012, 0.09); fin.position.set(0, -0.2 - f*0.045, 0.04); }   // radiateur
+    var block = add(box, steel, P.head); block.scale.set(0.16, 0.09, 0.12); block.position.set(0, -0.5, 0.04);
+    var noz = add(new THREE.ConeGeometry(0.045, 0.1, 10), brass, P.head); noz.rotation.x = Math.PI; noz.position.set(0, -0.6, 0.04);
+    P.tip = add(new THREE.SphereGeometry(0.022, 8, 6), hot, P.head); P.tip.position.set(0, -0.655, 0.04);
+    P.status = add(new THREE.SphereGeometry(0.025, 8, 6), led, P.head); P.status.position.set(0.15, 0.1, 0.2);
+    P.g.traverse(function(o){ o.userData.decor = true; });
+    return P;
+  }
+  function printerLayout(P, hx, hz, H){
+    var key = [hx, hz, H].join(","); if(P.key === key) return;
+    P.key = key; P.hx = hx; P.hz = hz; P.H = H;
+    var T = 0.14;
+    [[-1,-1],[1,-1],[1,1],[-1,1]].forEach(function(s, i){ var m = P.posts[i]; m.scale.set(T, H, T); m.position.set(s[0]*hx, H/2, s[1]*hz); });
+    [H - T/2, T/2].forEach(function(y, lv){
+      P.beams[lv*4+0].scale.set(2*hx, T, T); P.beams[lv*4+0].position.set(0, y, -hz);
+      P.beams[lv*4+1].scale.set(2*hx, T, T); P.beams[lv*4+1].position.set(0, y,  hz);
+      P.beams[lv*4+2].scale.set(T, T, 2*hz); P.beams[lv*4+2].position.set(-hx, y, 0);
+      P.beams[lv*4+3].scale.set(T, T, 2*hz); P.beams[lv*4+3].position.set( hx, y, 0);
+    });
+    P.motors[0].position.set(-hx + 0.3, 0.21 + T, 0); P.motors[1].position.set(hx - 0.3, 0.21 + T, 0);
+    P.screws.forEach(function(s, i){ s.scale.set(0.028, H - 0.6, 0.028); s.position.set((i ? 1 : -1)*(hx - 0.3), 0.45 + (H - 0.6)/2, 0); });
+    P.leds[0].scale.set(2*hx - 0.3, 0.03, 0.03); P.leds[0].position.set(0, H - T - 0.03, -hz + 0.09);
+    P.leds[1].scale.set(2*hx - 0.3, 0.03, 0.03); P.leds[1].position.set(0, H - T - 0.03,  hz - 0.09);
+    P.leds[2].scale.set(0.03, 0.03, 2*hz - 0.3); P.leds[2].position.set(-hx + 0.09, H - T - 0.03, 0);
+    P.leds[3].scale.set(0.03, 0.03, 2*hz - 0.3); P.leds[3].position.set( hx - 0.09, H - T - 0.03, 0);
+    P.gBeam.scale.set(2*hx, 0.12, 0.16);
+    P.rods[0].scale.set(0.025, 2*hx, 0.025); P.rods[0].rotation.z = Math.PI/2; P.rods[0].position.set(0, 0.1, 0.1);
+    P.rods[1].scale.set(0.025, 2*hx, 0.025); P.rods[1].rotation.z = Math.PI/2; P.rods[1].position.set(0, -0.1, 0.1);
+    P.belt.scale.set(2*hx, 0.02, 0.01); P.belt.position.set(0, 0, 0.13);
+  }
+  // un montant entre la caméra et la scène devient presque transparent
+  function printerFade(P){
+    var C = camera.position, T = target, ox = P.g.position.x, oz = P.g.position.z;
+    var dx = T.x - C.x, dz = T.z - C.z, L2 = dx*dx + dz*dz || 1;
+    P.posts.concat(P.screws).forEach(function(m){
+      var px = m.position.x + ox, pz = m.position.z + oz;
+      var u = ((px - C.x)*dx + (pz - C.z)*dz) / L2;
+      var qx = C.x + dx*Math.max(0, Math.min(1, u)), qz = C.z + dz*Math.max(0, Math.min(1, u));
+      var d = Math.hypot(px - qx, pz - qz);
+      var want = (u > -0.05 && u < 1.05 && d < 1.1) ? 0.12 : 1;
+      var mt = m.material;
+      mt.opacity += (want - mt.opacity) * 0.18;
+      var tr = mt.opacity < 0.99;
+      if(mt.transparent !== tr){ mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; }
+    });
+  }
+  function printerFrame(P, t){
+    printerFade(P);
+    var gz = P.hz * 0.72 * Math.sin(t*0.21), hxp = P.hx * 0.72 * Math.sin(t*0.34 + 1.2);
+    P.gantry.position.set(0, P.H - 0.38, gz);
+    P.head.position.set(hxp, 0, 0);
+    P.fanBlade.rotation.z = t * 18;
+    P.tip.material.color.setHSL(0.07, 1, 0.5 + 0.12*Math.sin(t*5));
+    P.status.visible = Math.sin(t*3) > -0.3;
+  }
+  var decorTheme = null;
+  function decorMode(mode){
+    var th = mode === "sol" ? "nature" : "tech";
+    if(decorTheme && th !== decorTheme){
+      bugsClear();
+      objects.forEach(function(o){ if(o._fauna) faunaClear(o); });     // animaux marins <-> drones sous-marins
+    }
+    decorTheme = th;
+    if(!decorDome){ decorDome = makeDecorDome(); scene.add(decorDome); }
+    var sky = (mode === "sol");
+    decorDome.material.uniforms.uMode.value = sky ? 0 : 1;
+    if(sky && !decorClouds){ decorClouds = makeClouds(); scene.add(decorClouds); }
+    if(decorClouds) decorClouds.visible = sky;
+    if(!sky && !printer){ printer = makePrinter(); scene.add(printer.g); }
+    if(printer) printer.g.visible = !sky;
+    scene.fog.color.set(sky ? 0xcfe7f7 : 0x15103a);
+    hemi.color.set(sky ? 0xe6f3ff : 0xcdb8ff); hemi.groundColor.set(sky ? 0x5d8f45 : 0x2a1a5e);
+  }
+  function decorFrame(){
+    var now = performance.now() / 1000;
+    var dt = decorLast ? Math.min(0.1, now - decorLast) : 0; decorLast = now;
+    decorClock += dt;
+    if(decorDome){ decorDome.position.copy(camera.position); decorDome.material.uniforms.uTime.value = decorClock; }
+    if(decorClouds && decorClouds.visible){
+      decorClouds.children.forEach(function(s){
+        var u = s.userData; u.az += u.spd * dt;
+        var ce = Math.cos(u.el);
+        s.position.set(camera.position.x + Math.cos(u.az)*ce*u.dist, camera.position.y + Math.sin(u.el)*u.dist, camera.position.z + Math.sin(u.az)*ce*u.dist);
+      });
+    }
+    if(printer && printer.g.visible){
+      // cadre plus large que le plateau : la vue par défaut se trouve « dans » la machine
+      if(groundMode === "plateau") printerLayout(printer, Math.max(gridWidthMM/200 + 0.6, 7), Math.max(gridDepthMM/200 + 0.6, 7), Math.max(6.5, Math.max(gridWidthMM, gridDepthMM)/100 * 0.6 + 3));
+      else printerLayout(printer, 7.5, 7.5, 6.5);
+      printer.g.position.set(groundMode === "plateau" ? 0 : Math.round(target.x/14)*14, 0, groundMode === "plateau" ? 0 : Math.round(target.z/14)*14);
+      printerFrame(printer, decorClock);
+    }
+    bugsFrame(dt, now);
+  }
+
+  // ---------------- petites bêtes en mode simulation : papillons, abeilles, coccinelles, libellules (décor) ----------------
+  var bugGroup = new THREE.Group(), bugs = [], bugNext = 0, bugBoxes = [], bugBoxT = 0, BUG_TEX = null;
+  scene.add(bugGroup);
+  function bugTextures(){
+    if(BUG_TEX) return BUG_TEX;
+    var mk = function(w, h, draw){ var cv = document.createElement("canvas"); cv.width = w; cv.height = h; draw(cv.getContext("2d"), w, h); var t = new THREE.CanvasTexture(cv); return t; };
+    var wing = function(c1, c2){
+      return mk(128, 128, function(c, S){
+        var lobe = function(x, y, rx, ry, rot){
+          var g = c.createRadialGradient(x - rx*0.3, y, 2, x, y, Math.max(rx, ry));
+          g.addColorStop(0, c2); g.addColorStop(0.7, c1); g.addColorStop(1, "#1d1030");
+          c.fillStyle = g; c.beginPath(); c.ellipse(x, y, rx, ry, rot, 0, Math.PI*2); c.fill();
+          c.lineWidth = 4; c.strokeStyle = "#1d1030"; c.stroke();
+        };
+        lobe(S*0.66, S*0.46, S*0.3, S*0.42, -0.35);       // aile avant
+        lobe(S*0.3, S*0.36, S*0.24, S*0.3, 0.3);          // aile arrière
+        c.fillStyle = "#ffffff";
+        [[0.78,0.72,5],[0.68,0.8,4],[0.3,0.55,4]].forEach(function(d){ c.beginPath(); c.arc(d[0]*S, d[1]*S, d[2], 0, Math.PI*2); c.fill(); });
+      });
+    };
+    BUG_TEX = {
+      wings: [wing("#ff8a3d", "#ffe066"), wing("#4da3ff", "#bde7ff"), wing("#ff5ca8", "#ffd1ec"), wing("#a78bfa", "#f0e6ff"), wing("#7cf06b", "#fffbd0")],
+      bee: mk(64, 64, function(c, w, h){ for(var i = 0; i < 8; i++){ c.fillStyle = i % 2 ? "#1d1a14" : "#ffc81f"; c.fillRect(0, i*h/8, w, h/8); } }),
+      lady: mk(128, 64, function(c, w, h){
+        c.fillStyle = "#e42a24"; c.fillRect(0, 0, w, h);
+        c.fillStyle = "#14100e"; c.fillRect(w*0.25 - 1.5, 0, 3, h); c.fillRect(w*0.75 - 1.5, 0, 3, h);
+        [[0.1,0.5],[0.38,0.55],[0.12,0.25],[0.62,0.5],[0.88,0.55],[0.62,0.25],[0.4,0.25],[0.88,0.25]].forEach(function(d){ c.beginPath(); c.arc(d[0]*w, d[1]*h, 6, 0, Math.PI*2); c.fill(); });
+        var g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "rgba(255,255,255,0.35)"); g.addColorStop(0.3, "rgba(255,255,255,0)");
+        c.fillStyle = g; c.fillRect(0, 0, w, h);
+      }),
+      clear: mk(64, 32, function(c, w, h){ c.fillStyle = "rgba(220,240,255,0.75)"; c.beginPath(); c.ellipse(w/2, h/2, w/2 - 2, h/2 - 2, 0, 0, Math.PI*2); c.fill(); c.strokeStyle = "rgba(90,110,140,0.8)"; c.lineWidth = 1.5; c.stroke(); })
+    };
+    return BUG_TEX;
+  }
+  function bugMat(o){ o.transparent = true; o.opacity = 0; return o; }
+  function makeButterfly(){
+    var T = bugTextures(), g = new THREE.Group(), mats = [];
+    var wm = new THREE.MeshStandardMaterial(bugMat({ map: T.wings[Math.floor(Math.random()*T.wings.length)], side: THREE.DoubleSide, alphaTest: 0.25, roughness: 0.6, emissive: 0x221133 }));
+    var bm = new THREE.MeshStandardMaterial(bugMat({ color: 0x1d1030, roughness: 0.5 }));
+    mats.push(wm, bm);
+    var body = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.012, 0.26, 6), bm); body.rotation.z = Math.PI/2; g.add(body);
+    var wingGeo = new THREE.PlaneGeometry(0.34, 0.34); wingGeo.rotateX(-Math.PI/2); wingGeo.translate(0, 0, 0.17);
+    var wl = new THREE.Group(), wr = new THREE.Group();
+    wr.add(new THREE.Mesh(wingGeo, wm)); var ml = new THREE.Mesh(wingGeo, wm); ml.scale.z = -1; wl.add(ml);
+    g.add(wl); g.add(wr);
+    [-1, 1].forEach(function(s){ var a = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.12, 4), bm); a.position.set(0.17, 0.03, 0.03*s); a.rotation.set(0.4*s, 0, -0.9); g.add(a); });
+    return { g: g, mats: mats, wl: wl, wr: wr, kind: "butterfly", speed: 0.55, flap: 11 + Math.random()*3, yMin: 0.45, yMax: 2.2 };
+  }
+  function makeBee(){
+    var T = bugTextures(), g = new THREE.Group(), mats = [];
+    var bm = new THREE.MeshStandardMaterial(bugMat({ map: T.bee, roughness: 0.55 }));
+    var hm = new THREE.MeshStandardMaterial(bugMat({ color: 0x1d1a14, roughness: 0.5 }));
+    var wm = new THREE.MeshBasicMaterial(bugMat({ map: T.clear, side: THREE.DoubleSide, depthWrite: false }));
+    mats.push(bm, hm, wm);
+    var sg = new THREE.SphereGeometry(1, 14, 10); sg.rotateZ(Math.PI/2);
+    var body = new THREE.Mesh(sg, bm); body.scale.set(0.085, 0.055, 0.055); g.add(body);
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.038, 10, 8), hm); head.position.x = 0.095; g.add(head);
+    var wg = new THREE.PlaneGeometry(0.11, 0.06); wg.rotateX(-Math.PI/2); wg.translate(-0.01, 0, 0.055);
+    var wl = new THREE.Group(), wr = new THREE.Group(); wl.position.y = wr.position.y = 0.045;
+    wr.add(new THREE.Mesh(wg, wm)); var ml = new THREE.Mesh(wg, wm); ml.scale.z = -1; wl.add(ml);
+    g.add(wl); g.add(wr);
+    return { g: g, mats: mats, wl: wl, wr: wr, kind: "bee", speed: 1.1, flap: 55, yMin: 0.3, yMax: 1.6 };
+  }
+  function makeDragonfly(){
+    var T = bugTextures(), g = new THREE.Group(), mats = [];
+    var col = Math.random() < 0.5 ? 0x2fb8ff : 0x3df5a0;
+    var bm = new THREE.MeshStandardMaterial(bugMat({ color: col, metalness: 0.6, roughness: 0.3, emissive: col, emissiveIntensity: 0.2 }));
+    var wm = new THREE.MeshBasicMaterial(bugMat({ map: T.clear, side: THREE.DoubleSide, depthWrite: false }));
+    mats.push(bm, wm);
+    var body = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.018, 0.34, 6), bm); body.rotation.z = Math.PI/2; body.position.x = -0.06; g.add(body);
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), bm); head.position.x = 0.13; g.add(head);
+    var wg = new THREE.PlaneGeometry(0.06, 0.24); wg.rotateX(-Math.PI/2); wg.translate(0, 0, 0.12);
+    var wl = new THREE.Group(), wr = new THREE.Group(); wl.position.y = wr.position.y = 0.02;
+    [0.06, -0.01].forEach(function(x){ var a = new THREE.Mesh(wg, wm); a.position.x = x; wr.add(a); var b = new THREE.Mesh(wg, wm); b.position.x = x; b.scale.z = -1; wl.add(b); });
+    g.add(wl); g.add(wr);
+    return { g: g, mats: mats, wl: wl, wr: wr, kind: "dragonfly", speed: 1.4, flap: 40, yMin: 0.35, yMax: 1.4 };
+  }
+  function makeLadybug(){
+    var T = bugTextures(), g = new THREE.Group(), mats = [];
+    var sm = new THREE.MeshStandardMaterial(bugMat({ map: T.lady, roughness: 0.25, metalness: 0.1 }));
+    var hm = new THREE.MeshStandardMaterial(bugMat({ color: 0x14100e, roughness: 0.5 }));
+    mats.push(sm, hm);
+    var shell = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, Math.PI*2, 0, Math.PI/2), sm); shell.scale.set(0.075, 0.055, 0.062); g.add(shell);
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), hm); head.position.set(0.07, 0.012, 0); g.add(head);
+    var em = new THREE.MeshBasicMaterial(bugMat({ color: 0xffffff })); mats.push(em);
+    [-1, 1].forEach(function(s){ var e = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 4), em); e.position.set(0.092, 0.025, 0.014*s); g.add(e); });
+    return { g: g, mats: mats, kind: "ladybug", speed: 0.12, crawl: true };
+  }
+  // ---- nouvelles petites bêtes du sol : ver de terre, chenille, sauterelle ; oiseaux dans le ciel ----
+  function makeWorm(){
+    var g = new THREE.Group(), mats = [], segs = [];
+    var col = [0xd77b84, 0xc96b78, 0xe08a8f][Math.floor(Math.random()*3)];
+    var m = new THREE.MeshStandardMaterial(bugMat({ color: col, roughness: 0.35, metalness: 0.05 })); mats.push(m);
+    var cm = new THREE.MeshStandardMaterial(bugMat({ color: 0xb2535f, roughness: 0.4 })); mats.push(cm);   // anneau (clitellum)
+    var sg = new THREE.SphereGeometry(1, 10, 6);
+    for(var k = 0; k < 22; k++){
+      var r = 0.016 * (k < 2 ? 0.8 + k*0.1 : k > 17 ? 1 - (k-17)*0.15 : 1);
+      var s = new THREE.Mesh(sg, k >= 5 && k <= 7 ? cm : m); s.scale.set(r*1.15, r, r); g.add(s); segs.push({ m: s, r: r });
+    }
+    return { g: g, mats: mats, segs: segs, kind: "worm", trailKind: true, speed: 0.07, spacing: 0.014, crawl: true };
+  }
+  function makeCaterpillar(){
+    var g = new THREE.Group(), mats = [], segs = [];
+    var body = [0x7cd94a, 0x9be05a, 0xffc93d][Math.floor(Math.random()*3)];
+    var m1 = new THREE.MeshStandardMaterial(bugMat({ color: body, roughness: 0.5 }));
+    var m2 = new THREE.MeshStandardMaterial(bugMat({ color: new THREE.Color(body).multiplyScalar(0.75), roughness: 0.5 }));
+    var hm = new THREE.MeshStandardMaterial(bugMat({ color: 0x2f2a1e, roughness: 0.5 }));
+    var dm = new THREE.MeshBasicMaterial(bugMat({ color: 0xffffff }));
+    mats.push(m1, m2, hm, dm);
+    var sg = new THREE.SphereGeometry(1, 12, 8);
+    for(var k = 0; k < 10; k++){
+      var r = k === 0 ? 0.026 : 0.024 - k*0.0008;
+      var s = new THREE.Mesh(sg, k === 0 ? hm : (k % 2 ? m1 : m2)); s.scale.setScalar(r); g.add(s); segs.push({ m: s, r: r });
+      if(k > 0 && k % 2){ var dot = new THREE.Mesh(sg, dm); dot.position.set(0, 0.9, 0); s.add(dot); dot.scale.setScalar(0.25); }
+    }
+    [-1, 1].forEach(function(sd){ var a = new THREE.Mesh(new THREE.CylinderGeometry(0.0025, 0.0025, 0.035, 4), hm); a.position.set(0.012, 0.03, 0.01*sd); a.rotation.set(0.4*sd, 0, -0.5); segs[0].m.add(a); a.scale.setScalar(1/0.026); a.position.multiplyScalar(1/0.026); });
+    return { g: g, mats: mats, segs: segs, kind: "caterpillar", trailKind: true, speed: 0.09, spacing: 0.034, crawl: true };
+  }
+  function makeGrasshopper(){
+    var g = new THREE.Group(), mats = [];
+    var col = Math.random() < 0.6 ? 0x6fc23a : 0xa3b83a;
+    var bm = new THREE.MeshStandardMaterial(bugMat({ color: col, roughness: 0.5 }));
+    var dm = new THREE.MeshStandardMaterial(bugMat({ color: new THREE.Color(col).multiplyScalar(0.7), roughness: 0.6 }));
+    var em = new THREE.MeshBasicMaterial(bugMat({ color: 0x1d1a14 }));
+    mats.push(bm, dm, em);
+    var sg = new THREE.SphereGeometry(1, 12, 8);
+    var body = new THREE.Mesh(sg, bm); body.scale.set(0.085, 0.03, 0.03); body.position.y = 0.045; g.add(body);
+    var head = new THREE.Mesh(sg, bm); head.scale.set(0.03, 0.032, 0.026); head.position.set(0.085, 0.055, 0); g.add(head);
+    [-1, 1].forEach(function(s){ var e = new THREE.Mesh(sg, em); e.scale.setScalar(0.009); e.position.set(0.098, 0.065, 0.017*s); g.add(e); });
+    var wing = new THREE.Mesh(sg, dm); wing.scale.set(0.07, 0.012, 0.028); wing.position.set(-0.02, 0.07, 0); g.add(wing);
+    var legs = [];
+    [-1, 1].forEach(function(s){
+      var thigh = new THREE.Group(); thigh.position.set(-0.01, 0.05, 0.03*s); g.add(thigh);
+      var t = new THREE.Mesh(sg, bm); t.scale.set(0.055, 0.012, 0.01); t.position.set(-0.05, 0.02, 0); thigh.add(t);
+      var shin = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.09, 4), dm); shin.position.set(-0.1, -0.005, 0); shin.rotation.z = -0.5; thigh.add(shin);
+      thigh.rotation.z = 0.45; legs.push(thigh);
+      for(var f = 0; f < 2; f++){ var l = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.05, 4), dm); l.position.set(0.04 - f*0.035, 0.02, 0.03*s); l.rotation.x = 0.5*s; g.add(l); }
+      var an = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.1, 4), dm); an.position.set(0.12, 0.1, 0.012*s); an.rotation.set(0.3*s, 0, -1.0); g.add(an);
+    });
+    return { g: g, mats: mats, legs: legs, kind: "grasshopper", hop: true };
+  }
+  function wingShape(span, chord){
+    var sh = new THREE.Shape(); sh.moveTo(0, -chord*0.5); sh.lineTo(-chord*0.3, span); sh.lineTo(-chord*0.7, span*0.75); sh.lineTo(-chord*0.6, 0); sh.lineTo(0, -chord*0.5);
+    var geo = new THREE.ShapeGeometry(sh); geo.rotateX(Math.PI/2);       // l'aile s'étend selon +z
+    return geo;
+  }
+  function makeBird(){
+    var g = new THREE.Group(), mats = [];
+    var col = [0x2b3a55, 0x3b2f2a, 0x5a6b82, 0x1f2a44][Math.floor(Math.random()*4)];
+    var bm = new THREE.MeshStandardMaterial(bugMat({ color: col, roughness: 0.6, side: THREE.DoubleSide }));
+    var wm = new THREE.MeshStandardMaterial(bugMat({ color: 0xf2f2f2, roughness: 0.6 }));
+    var km = new THREE.MeshStandardMaterial(bugMat({ color: 0xffa23a, roughness: 0.5 }));
+    mats.push(bm, wm, km);
+    var sg = new THREE.SphereGeometry(1, 12, 8);
+    var body = new THREE.Mesh(sg, bm); body.scale.set(0.17, 0.065, 0.07); g.add(body);
+    var belly = new THREE.Mesh(sg, wm); belly.scale.set(0.12, 0.05, 0.055); belly.position.set(0.02, -0.025, 0); g.add(belly);
+    var head = new THREE.Mesh(sg, bm); head.scale.setScalar(0.055); head.position.set(0.17, 0.03, 0); g.add(head);
+    var beak = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.06, 6), km); beak.rotation.z = -Math.PI/2; beak.position.set(0.24, 0.025, 0); g.add(beak);
+    var tail = new THREE.Mesh(wingShape(0.06, 0.16), bm); tail.rotation.y = -Math.PI/2; tail.position.set(-0.13, 0, 0); g.add(tail);
+    var wl = new THREE.Group(), wr = new THREE.Group();
+    var wgeo = wingShape(0.42, 0.18);
+    wr.add(new THREE.Mesh(wgeo, bm)); var ml = new THREE.Mesh(wgeo, bm); ml.scale.z = -1; wl.add(ml);
+    wl.position.x = wr.position.x = 0.04;
+    g.add(wl); g.add(wr);
+    return { g: g, mats: mats, wl: wl, wr: wr, kind: "bird", speed: 2.4, flap: 9, yMin: 3, yMax: 5.5, cross: true };
+  }
+
+  // ---- machines du décor « technologie » : mini drones, drones porteurs, petits robots roulants ----
+  var DRONE_ACCENTS = [0x3df5d6, 0xff5ca8, 0xffd23f, 0xa78bfa, 0x4da3ff];
+  function makeQuad(big){
+    var g = new THREE.Group(), tilt = new THREE.Group(); g.add(tilt);
+    var acc = DRONE_ACCENTS[Math.floor(Math.random()*DRONE_ACCENTS.length)];
+    var dark = new THREE.MeshStandardMaterial(bugMat({ color: 0x22283a, metalness: 0.5, roughness: 0.4 }));
+    var shell = new THREE.MeshStandardMaterial(bugMat({ color: acc, metalness: 0.3, roughness: 0.3, emissive: acc, emissiveIntensity: 0.15 }));
+    var prop = new THREE.MeshBasicMaterial(bugMat({ color: 0xc8d2e6, depthWrite: false }));
+    var ledF = new THREE.MeshBasicMaterial(bugMat({ color: 0x3df5d6 })), ledB = new THREE.MeshBasicMaterial(bugMat({ color: 0xff3d6b }));
+    var mats = [dark, shell, prop, ledF, ledB];
+    var body = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.03, 0.07), dark); tilt.add(body);
+    var top = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 8, 0, Math.PI*2, 0, Math.PI/2), shell); top.scale.set(0.055, 0.03, 0.04); top.position.y = 0.014; tilt.add(top);
+    var props = [];
+    [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(function(s, i){
+      var arm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.008, 0.012), dark); arm.position.set(s[0]*0.04, 0, s[1]*0.04); arm.rotation.y = -s[0]*s[1]*Math.PI/4; tilt.add(arm);
+      var mot = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.02, 8), dark); mot.position.set(s[0]*0.075, 0.01, s[1]*0.075); tilt.add(mot);
+      var p = new THREE.Group(); p.position.set(s[0]*0.075, 0.022, s[1]*0.075); tilt.add(p);
+      p.add(new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.002, 0.01), prop));
+      var ring = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.003, 4, 20), dark); ring.rotation.x = Math.PI/2; ring.position.copy(p.position); tilt.add(ring);
+      props.push({ p: p, dir: i % 3 === 0 ? 1 : -1 });
+    });
+    var lf = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 4), ledF); lf.position.set(0.052, 0, 0); tilt.add(lf);
+    var lb = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 4), ledB); lb.position.set(-0.052, 0, 0); tilt.add(lb);
+    var cam = new THREE.Mesh(new THREE.SphereGeometry(0.014, 8, 6), dark); cam.position.set(0.04, -0.02, 0); tilt.add(cam);
+    var b = { g: g, tilt: tilt, mats: mats, props: props, blink: lb, kind: "quad", speed: 1.0, yMin: 0.35, yMax: 1.8 };
+    if(big){
+      g.scale.setScalar(2.6);
+      var crate = new THREE.MeshStandardMaterial(bugMat({ color: 0xff9f43, roughness: 0.7 })); mats.push(crate);
+      var cable = new THREE.Mesh(new THREE.CylinderGeometry(0.0015, 0.0015, 0.05, 4), dark); cable.position.y = -0.04; tilt.add(cable);
+      var box = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.035, 0.05), crate); box.position.y = -0.08; tilt.add(box);
+      b.kind = "bigdrone"; b.speed = 1.9; b.yMin = 2.6; b.yMax = 4.2; b.cross = true;
+    }
+    return b;
+  }
+  function makeRover(){
+    var g = new THREE.Group(), mats = [];
+    var acc = DRONE_ACCENTS[Math.floor(Math.random()*DRONE_ACCENTS.length)];
+    var white = new THREE.MeshStandardMaterial(bugMat({ color: 0xeef1f7, metalness: 0.2, roughness: 0.4 }));
+    var dark = new THREE.MeshStandardMaterial(bugMat({ color: 0x22283a, roughness: 0.6 }));
+    var glow = new THREE.MeshBasicMaterial(bugMat({ color: acc }));
+    var red = new THREE.MeshBasicMaterial(bugMat({ color: 0xff3d3d }));
+    var solar = new THREE.MeshStandardMaterial(bugMat({ color: 0x1b2f7a, metalness: 0.6, roughness: 0.25 }));
+    mats.push(white, dark, glow, red, solar);
+    var ch = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.04, 0.085), white); ch.position.y = 0.045; g.add(ch);
+    var pan = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.006, 0.075), solar); pan.position.y = 0.068; g.add(pan);
+    var mast = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.05, 0.012), dark); mast.position.set(0.045, 0.09, 0); g.add(mast);
+    var head = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.02, 0.05), white); head.position.set(0.05, 0.12, 0); g.add(head);
+    var eye = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.008, 0.038), glow); eye.position.set(0.063, 0.12, 0); g.add(eye);
+    var ant = new THREE.Mesh(new THREE.CylinderGeometry(0.0015, 0.0015, 0.07, 4), dark); ant.position.set(-0.05, 0.1, 0.03); g.add(ant);
+    var tip = new THREE.Mesh(new THREE.SphereGeometry(0.006, 6, 4), red); tip.position.set(-0.05, 0.137, 0.03); g.add(tip);
+    var wheels = [], wg = new THREE.CylinderGeometry(0.024, 0.024, 0.018, 12); wg.rotateX(Math.PI/2);
+    [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(function(s){ var w = new THREE.Mesh(wg, dark); w.position.set(s[0]*0.045, 0.024, s[1]*0.052); g.add(w); wheels.push(w); });
+    return { g: g, mats: mats, wheels: wheels, blink: tip, kind: "rover", speed: 0.16, crawl: true };
+  }
+
+  function bugTheme(){ return groundMode === "sol" ? "nature" : "tech"; }
+  function bugPools(){ return objects.filter(function(o){ return o.water === "pool"; }); }
+  function bugArea(){
+    var c = new THREE.Vector3(target.x, 0, target.z), R = 3.2;
+    if(groundMode === "plateau"){ c.set(0, 0, 0); R = Math.max(1.2, Math.min(gridWidthMM, gridDepthMM) / 200 - 0.15); }
+    return { c: c, R: R };
+  }
+  function bugWaypoint(b){
+    var A = bugArea(), pools = bugPools();
+    if(b.kind === "dragonfly" && pools.length && Math.random() < 0.8){
+      var bb = new THREE.Box3().setFromObject(pools[Math.floor(Math.random()*pools.length)].mesh);
+      return new THREE.Vector3(bb.min.x + Math.random()*(bb.max.x-bb.min.x), bb.max.y + 0.15 + Math.random()*0.35, bb.min.z + Math.random()*(bb.max.z-bb.min.z));
+    }
+    if((b.kind === "bee" || b.kind === "quad") && objects.length && Math.random() < 0.6){     // butiner / inspecter les pièces
+      var ob = new THREE.Box3().setFromObject(objects[Math.floor(Math.random()*objects.length)].mesh);
+      return new THREE.Vector3((ob.min.x + ob.max.x)/2 + (Math.random()-0.5)*0.3, ob.max.y + 0.15 + Math.random()*0.25, (ob.min.z + ob.max.z)/2 + (Math.random()-0.5)*0.3);
+    }
+    var a = Math.random()*Math.PI*2, r = Math.sqrt(Math.random()) * A.R;
+    return new THREE.Vector3(A.c.x + Math.cos(a)*r, b.yMin + Math.random()*(b.yMax - b.yMin), A.c.z + Math.sin(a)*r);
+  }
+  function pickBug(){
+    var r = Math.random(), pools = bugPools().length;
+    if(bugTheme() === "tech"){
+      if(r < 0.5) return makeQuad(false);
+      if(r < 0.72) return makeQuad(true);
+      return makeRover();
+    }
+    var T = [["butterfly", 0.2], ["bee", 0.12], ["dragonfly", pools ? 0.12 : 0.05], ["ladybug", 0.1], ["worm", 0.13], ["caterpillar", 0.13], ["grasshopper", 0.15], ["bird", 0.1]];
+    var tot = T.reduce(function(s, t){ return s + t[1]; }, 0), x = r * tot;
+    for(var i = 0; i < T.length; i++){ x -= T[i][1]; if(x <= 0) break; }
+    var k = T[Math.min(i, T.length - 1)][0];
+    return ({ butterfly: makeButterfly, bee: makeBee, dragonfly: makeDragonfly, ladybug: makeLadybug, worm: makeWorm,
+              caterpillar: makeCaterpillar, grasshopper: makeGrasshopper, bird: makeBird })[k]();
+  }
+  function spawnBug(now){
+    var b = pickBug(), A = bugArea();
+    b.theme = bugTheme();
+    b.t0 = now; b.dur = 16 + Math.random()*14; b.phase = Math.random()*10; b.vel = new THREE.Vector3();
+    if(b.cross){                                        // oiseau, drone porteur : traverse le ciel de part en part
+      var az = Math.random()*Math.PI*2, D = A.R + 9, y = b.yMin + Math.random()*(b.yMax - b.yMin);
+      b.pos = new THREE.Vector3(A.c.x + Math.cos(az)*D, y, A.c.z + Math.sin(az)*D);
+      var az2 = az + Math.PI + (Math.random()-0.5)*1.2;
+      b.wp = new THREE.Vector3(A.c.x + Math.cos(az2)*D, y + (Math.random()-0.5), A.c.z + Math.sin(az2)*D);
+      b.dur = 1e9;
+    } else if(b.crawl || b.hop){
+      var a = Math.random()*Math.PI*2, rr = Math.sqrt(Math.random()) * A.R * 0.9;
+      b.pos = new THREE.Vector3(A.c.x + Math.cos(a)*rr, 0, A.c.z + Math.sin(a)*rr);
+      b.head = Math.random()*Math.PI*2;
+      if(bugBlocked(b.pos)){ b.mats.forEach(function(m){ m.dispose(); }); return; }        // pas d'apparition sous une pièce
+      if(b.trailKind){                                  // le corps suit la tête (traînée de points)
+        b.trail = [];
+        for(var i = 0; i < 80; i++) b.trail.push(new THREE.Vector3(b.pos.x - Math.cos(b.head)*i*0.004, 0, b.pos.z + Math.sin(b.head)*i*0.004));
+      }
+      if(b.hop){ b.state = "rest"; b.until = now + 0.6 + Math.random()*1.5; }
+    } else {
+      var az3 = Math.random()*Math.PI*2;
+      b.pos = new THREE.Vector3(A.c.x + Math.cos(az3)*(A.R + 3), b.yMax, A.c.z + Math.sin(az3)*(A.R + 3));
+      b.wp = bugWaypoint(b); b.wpT = now + 2 + Math.random()*3;
+    }
+    if(!b.trailKind) b.g.position.copy(b.pos);          // ver et chenille : leurs anneaux sont placés directement dans la scène
+    bugGroup.add(b.g); bugs.push(b);
+  }
+  function bugBlocked(p){
+    for(var i = 0; i < bugBoxes.length; i++){ var bx = bugBoxes[i]; if(p.x > bx.min.x - 0.05 && p.x < bx.max.x + 0.05 && p.z > bx.min.z - 0.05 && p.z < bx.max.z + 0.05 && bx.min.y < 0.3) return true; }
+    if(groundMode === "plateau" && (Math.abs(p.x) > gridWidthMM/200 - 0.05 || Math.abs(p.z) > gridDepthMM/200 - 0.05)) return true;
+    var A = bugArea(); if(Math.hypot(p.x - A.c.x, p.z - A.c.z) > A.R + 0.6) return true;
+    return false;
+  }
+  function bugRemove(b){ bugGroup.remove(b.g); b.mats.forEach(function(m){ m.dispose(); }); b.g.traverse(function(o){ if(o.geometry) o.geometry.dispose(); }); }
+  function bugsClear(){ bugs.forEach(bugRemove); bugs = []; }
+  // déplacement au sol (coccinelle, ver, chenille, robot) : marche sinueuse, contourne les pièces
+  function crawlStep(b, dt, now, leaving){
+    var spd = b.speed;
+    if(b.kind === "caterpillar") spd *= 0.15 + 0.85 * Math.max(0, Math.sin(now*3 + b.phase));      // avance en accordéon
+    if(b.kind === "rover" || b.kind === "ladybug") spd *= Math.sin(now*0.7 + b.phase) > 0.75 ? 0 : 1;  // petites pauses
+    b.head += (Math.sin(now*1.3 + b.phase) * (b.kind === "rover" ? 0.6 : 1.2) + Math.sin(now*0.37 + b.phase*2)) * dt;
+    var nx = b.pos.x + Math.cos(b.head) * spd * dt, nz = b.pos.z - Math.sin(b.head) * spd * dt;
+    if(!leaving && bugBlocked(new THREE.Vector3(nx, 0, nz))) b.head += Math.PI * (0.6 + Math.random()*0.4);
+    else { b.pos.x = nx; b.pos.z = nz; }
+    b.moved = spd * dt;
+  }
+  function bugsFrame(dt, now){
+    var on = simMode && !exportClean;
+    bugGroup.visible = on;
+    if(!simMode){ if(bugs.length) bugsClear(); return; }
+    if(!on || !dt) return;
+    if(now > bugBoxT){
+      bugBoxT = now + 0.5;
+      bugBoxes = objects.map(function(o){
+        var bx = new THREE.Box3().setFromObject(o.mesh);
+        if(o.water === "pool"){ bx.expandByScalar(WALL_T + 0.04); }      // les parois de l'aquarium comptent aussi
+        return bx;
+      });
+    }
+    var maxN = bugTheme() === "tech" ? 7 : 9;
+    if(now > bugNext && bugs.length < maxN){ spawnBug(now); bugNext = now + 1.0 + Math.random()*2.4; }
+    bugs = bugs.filter(function(b){
+      var age = now - b.t0, leaving = age > b.dur, done = false;
+      var op = Math.min(1, age / 1.2);
+      if(b.crawl){
+        if(b.kind === "ladybug" && leaving){            // ouvre ses élytres et s'envole
+          b.pos.y += dt * 0.6; b.pos.x += Math.cos(b.head) * dt * 0.3; b.pos.z -= Math.sin(b.head) * dt * 0.3;
+          op = Math.max(0, 1 - (age - b.dur) / 1.5);
+          b.g.children[0].rotation.z = Math.sin(now*40) * 0.15;
+        } else {
+          crawlStep(b, dt, now, leaving);
+          if(leaving){
+            op = Math.max(0, 1 - (age - b.dur) / 2);
+            if(b.kind === "worm") b.pos.y = -0.03 * (1 - op);          // le ver rentre sous terre
+          } else b.pos.y = 0.002;
+        }
+        if(b.trailKind){
+          var head = new THREE.Vector3(b.pos.x, 0, b.pos.z);
+          if(head.distanceTo(b.trail[0]) > 0.004){ b.trail.unshift(head); if(b.trail.length > 120) b.trail.pop(); }
+          var step = Math.max(1, Math.round(b.spacing / 0.004));
+          b.segs.forEach(function(sg, k){
+            var p = b.trail[Math.min(b.trail.length - 1, k*step)];
+            var y = sg.r * 0.85 + b.pos.y;
+            if(b.kind === "caterpillar") y += 0.028 * Math.max(0, Math.sin(now*3 + b.phase - k*0.55 + 1.2));     // bosse qui ondule
+            var sc = b.kind === "worm" ? 1 + 0.18*Math.sin(now*7 - k*0.9) : 1;                                   // contractions du ver
+            sg.m.position.set(p.x, y, p.z);
+            if(b.kind === "worm") sg.m.scale.set(sg.r*1.15*sc, sg.r/sc, sg.r/sc);
+          });
+          if(b.kind === "caterpillar"){ var h0 = b.segs[0].m; h0.rotation.y = b.head; }
+        } else {
+          b.g.position.copy(b.pos); b.g.rotation.set(0, b.head, 0);
+          if(b.wheels) b.wheels.forEach(function(w){ w.rotation.z -= (b.moved || 0) / 0.024; });
+        }
+        if(b.blink) b.blink.visible = Math.sin(now*5 + b.phase) > 0;
+      } else if(b.hop){                                     // sauterelle : repos, puis bond
+        if(b.state === "rest"){
+          if(now > b.until){
+            var tries = 0, ok = false, d = 0;
+            while(tries++ < 8 && !ok){
+              b.head = leaving ? b.head : b.head + (Math.random() - 0.5) * 2.2;
+              d = leaving ? 1.6 : 0.3 + Math.random()*0.45;
+              b.to = new THREE.Vector3(b.pos.x + Math.cos(b.head)*d, 0, b.pos.z - Math.sin(b.head)*d);
+              ok = leaving || !bugBlocked(b.to);
+            }
+            if(ok){ b.state = "jump"; b.from = b.pos.clone(); b.jt = now; b.jd = leaving ? 0.8 : 0.4 + d*0.25; b.jh = leaving ? 0.6 : 0.15 + d*0.35; }
+            else b.until = now + 0.5;
+          }
+          b.legs.forEach(function(l){ l.rotation.z = 0.45; });
+        } else {
+          var u = Math.min(1, (now - b.jt) / b.jd);
+          b.pos.lerpVectors(b.from, b.to, u); b.pos.y = 4 * b.jh * u * (1 - u);
+          b.legs.forEach(function(l){ l.rotation.z = u < 0.25 ? 0.45 - u*5 : -0.6 + u*0.6; });
+          if(u >= 1){ b.state = "rest"; b.until = now + 0.8 + Math.random()*2.2; b.pos.y = 0; }
+        }
+        if(leaving) op = Math.max(0, 1 - (age - b.dur) / 1.5);
+        b.g.position.set(b.pos.x, b.pos.y + 0.002, b.pos.z);
+        b.g.rotation.set(0, b.head, b.state === "jump" ? -0.35 * (1 - 2*Math.min(1, (now - b.jt) / b.jd)) : 0);
+      } else {                                              // tout ce qui vole
+        if(b.cross){
+          op = Math.min(1, age / 1.5);
+          if(b.pos.distanceTo(b.wp) < 1.2){ op = 0; done = true; }
+          else if(b.pos.distanceTo(b.wp) < 3) op = Math.min(op, (b.pos.distanceTo(b.wp) - 1.2) / 1.8);
+        } else if(leaving){ if(!b.out){ b.out = true; var A = bugArea(), az = Math.atan2(b.pos.z - A.c.z, b.pos.x - A.c.x); b.wp = new THREE.Vector3(A.c.x + Math.cos(az)*(A.R + 6), b.yMax + 1, A.c.z + Math.sin(az)*(A.R + 6)); } op = Math.max(0, 1 - (age - b.dur) / 3); }
+        else if(now > b.wpT || b.pos.distanceTo(b.wp) < 0.12){
+          b.wp = bugWaypoint(b);
+          b.wpT = now + (b.kind === "dragonfly" ? 0.8 + Math.random()*1.6 : (b.kind === "bee" || b.kind === "quad") ? 1 + Math.random()*1.8 : 2.5 + Math.random()*3);
+        }
+        var want = b.wp.clone().sub(b.pos), dist = want.length();
+        var spd = b.cross ? b.speed : b.speed * Math.min(1, dist / 0.4 + 0.15);
+        if((b.kind === "dragonfly" || b.kind === "quad") && dist < 0.2) spd = 0;            // vol stationnaire
+        want.setLength(spd);
+        var k = b.kind === "butterfly" ? 1.6 : b.cross ? 1 : 4;
+        b.vel.lerp(want, Math.min(1, dt * k));
+        b.pos.addScaledVector(b.vel, dt);
+        var bob = b.kind === "butterfly" ? Math.sin(now*6 + b.phase) * 0.06 : b.kind === "bee" ? Math.sin(now*9 + b.phase) * 0.02
+                : b.kind === "bird" ? Math.sin(now*1.5 + b.phase) * 0.15 : Math.sin(now*3 + b.phase) * 0.012;
+        b.g.position.set(b.pos.x, b.pos.y + bob, b.pos.z);
+        if(b.vel.lengthSq() > 1e-4){
+          var yaw = Math.atan2(-b.vel.z, b.vel.x), cur = b.g.rotation.y, dd = yaw - cur;
+          while(dd > Math.PI) dd -= 2*Math.PI; while(dd < -Math.PI) dd += 2*Math.PI;
+          b.g.rotation.y = cur + dd * Math.min(1, dt * (b.props ? 3 : 6));
+        }
+        if(b.props){                                      // drones : hélices, inclinaison dans le sens de la marche, feu clignotant
+          b.props.forEach(function(p){ p.p.rotation.y += p.dir * dt * 60; });
+          var fwd = b.vel.length();
+          b.tilt.rotation.z = -Math.min(0.35, fwd * 0.22);
+          b.blink.visible = Math.sin(now*6 + b.phase) > 0.2;
+        } else {
+          var fl;
+          if(b.kind === "butterfly") fl = 0.15 + 1.15 * Math.abs(Math.sin(now * b.flap + b.phase));
+          else if(b.kind === "bird") fl = Math.sin(now*0.9 + b.phase) > 0.2 ? 0.08 + 0.05*Math.sin(now*2) : 0.65 * Math.sin(now * b.flap + b.phase);   // battements puis vol plané
+          else fl = 0.35 + 0.45 * Math.sin(now * b.flap + b.phase);
+          b.wr.rotation.x = -fl; b.wl.rotation.x = fl;
+        }
+      }
+      b.mats.forEach(function(m){ m.opacity = op; m.visible = op > 0.01; });
+      if(done || (leaving && op <= 0)){ bugRemove(b); return false; }
+      return true;
+    });
+  }
+
   document.querySelectorAll("#groundModes button").forEach(function(b){
     b.addEventListener("click", function(){ setGroundMode(b.getAttribute("data-g")); });
   });
@@ -7790,6 +8722,7 @@
     if(simMode) simWaveFrame();
     simVisualFrame();
     groundFrame();
+    decorFrame();
     if(!exportClean){ updateHandles(); renderer.render(scene, camera); }
     renderAxesGizmo();
   })();
