@@ -3276,8 +3276,8 @@
             }
           }
           dedupe(f); dedupe(b);
-          if(f.length>=3){ var pf=new Poly(f); if(isValidPoly(pf)) front.push(pf); }
-          if(b.length>=3){ var pb=new Poly(b); if(isValidPoly(pb)) back.push(pb); }
+          if(f.length>=3){ var pf=new Poly(f); pf.fromB = poly.fromB; if(isValidPoly(pf)) front.push(pf); }
+          if(b.length>=3){ var pb=new Poly(b); pb.fromB = poly.fromB; if(isValidPoly(pb)) back.push(pb); }
           break;
       }
     };
@@ -3313,7 +3313,7 @@
       var n = raw.clone().normalize();
       this.plane = new Pln(n, n.dot(v[0].pos));
     }
-    Poly.prototype.clone = function(){ return new Poly(this.v.map(function(x){return x.clone();})); };
+    Poly.prototype.clone = function(){ var p = new Poly(this.v.map(function(x){return x.clone();})); p.fromB = this.fromB; return p; };
     Poly.prototype.flip = function(){ this.v.reverse(); this.v.forEach(function(x){x.flip();}); this.plane.flip(); };
     function isValidPoly(poly){
       // écarte les polygones dégénérés (aire quasi nulle) qui peuvent apparaître
@@ -3379,10 +3379,34 @@
       return polys;
     }
 
+    // triangle « aiguille » (hauteur quasi nulle) : il ne représente aucune surface, mais ses arêtes
+    // apparaissaient comme de petits bouts de trait flottants après une soustraction
+    var _na = new THREE.Vector3(), _nb = new THREE.Vector3();
+    function needle(a, b, c){
+      var area2 = _na.subVectors(b, a).cross(_nb.subVectors(c, a)).length();
+      var L = Math.max(a.distanceTo(b), b.distanceTo(c), c.distanceTo(a)) || 1;
+      return area2 / L < 2e-5;
+    }
+    // Soustraction A − B : le résultat est forcément DANS A. Les morceaux de faces de B qui restent
+    // hors de A (fuites numériques du découpage) sont des « petits bouts » du cube qui a servi à soustraire.
+    function insideTester(meshA){
+      var tm = new THREE.Mesh(meshA.geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+      tm.matrixWorld.copy(meshA.matrixWorld); tm.matrixAutoUpdate = false;
+      var box = new THREE.Box3().setFromObject(meshA).expandByScalar(1e-3);
+      var rc = new THREE.Raycaster(), dir = new THREE.Vector3(0.5773, 0.5774, 0.5775).normalize();
+      var fn = function(p){
+        if(!box.containsPoint(p)) return false;
+        rc.set(p, dir); var hits = rc.intersectObject(tm, false), n = 0, last = -1;
+        hits.forEach(function(h){ if(h.distance - last > 1e-6){ n++; last = h.distance; } });
+        return n % 2 === 1;
+      };
+      fn.box = box; return fn;
+    }
     function polysToGeometry(polys){
       var positions = [], normals = [];
       polys.forEach(function(poly){
         for(var i=2;i<poly.v.length;i++){       // triangulation en éventail
+          if(needle(poly.v[0].pos, poly.v[i-1].pos, poly.v[i].pos)) continue;   // éclat d'épaisseur nulle : on le jette
           [poly.v[0], poly.v[i-1], poly.v[i]].forEach(function(v){
             positions.push(v.pos.x, v.pos.y, v.pos.z);
             normals.push(poly.plane.n.x, poly.plane.n.y, poly.plane.n.z); // ombrage à facettes
@@ -3414,10 +3438,19 @@
       return polysToGeometry(a.allPolys());
     }
     function subtract(meshA, meshB){
-      var a = new Node(meshToPolys(meshA)), b = new Node(meshToPolys(meshB));
+      var pb = meshToPolys(meshB); pb.forEach(function(p){ p.fromB = true; });
+      var a = new Node(meshToPolys(meshA)), b = new Node(pb);
       a.invert(); a.clipTo(b); b.clipTo(a); b.invert(); b.clipTo(a); b.invert();
       a.build(b.allPolys()); a.invert();
-      return polysToGeometry(a.allPolys());
+      var inA = insideTester(meshA), c = new THREE.Vector3();
+      var out = a.allPolys().filter(function(p){
+        if(!p.fromB) return true;
+        if(p.v.some(function(v){ return !inA.box.containsPoint(v.pos); })) return false;
+        c.set(0, 0, 0); p.v.forEach(function(v){ c.add(v.pos); }); c.multiplyScalar(1 / p.v.length);
+        c.addScaledVector(p.plane.n, -2e-4);            // un pas vers l'intérieur de la matière
+        return inA(c);
+      });
+      return polysToGeometry(out);
     }
     return { union: union, subtract: subtract, volumeOfGeometry: volumeOfGeometry };
   })();
