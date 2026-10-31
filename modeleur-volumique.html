@@ -1142,8 +1142,8 @@
   .spp-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; } .spp-head b{ font-size:14px; color:#ffd23f; }
   .spp-sw, .spp-chk{ display:flex; align-items:center; gap:6px; cursor:pointer; color: var(--text-dim); }
   .spp-lbl{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color: var(--text-faint); margin:8px 0 5px; font-weight:700; }
-  #spColors{ display:flex; flex-wrap:wrap; gap:6px; }
-  .sp-sw{ width:24px; height:24px; border-radius:50%; border:2px solid rgba(255,255,255,0.35); cursor:pointer; padding:0; font-size:13px; line-height:20px; }
+  #spColors{ display:grid; grid-template-columns: repeat(11, 1fr); gap:4px; }
+  .sp-sw{ width:100%; aspect-ratio:1; height:auto; border-radius:50%; border:2px solid rgba(255,255,255,0.35); cursor:pointer; padding:0; font-size:13px; line-height:20px; }
   .sp-sw.active{ border-color:#fff; box-shadow: 0 0 0 2px #ffd23f; transform: scale(1.12); }
   .sp-multi{ background: conic-gradient(#ff3b3b, #ffe14d, #3dff7a, #3df5d6, #3d7bff, #a24dff, #ff3b3b); }
   .spp-pick{ display:flex; align-items:center; gap:8px; margin-top:7px; color: var(--text-dim); cursor:pointer; }
@@ -1162,6 +1162,41 @@
   html.kid #spFx button{ background:var(--bg-panel-2); border-color:#a3add3; color:#23305a; }
   html.kid #spFx button.active{ background:#f2dc93; border-color:#ffc400; color:#9a6200; }
   html.kid .sp-sw{ border-color:#a3add3; }
+
+  /* ---------- drones (bouton à côté des spots) ---------- */
+  #droneBtn{ position:absolute; left:244px; bottom:24px; z-index:12; width:54px; height:58px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    border-radius:14px; cursor:pointer; border:2px solid #3df5d6; color:#3df5d6; background: rgba(31,24,80,0.88); font-family: var(--mono); font-size:8.6px; font-weight:700;
+    box-shadow: 0 0 14px rgba(61,245,214,0.3); transition: transform .18s cubic-bezier(.3,1.6,.5,1); }
+  #droneBtn svg{ width:28px; height:26px; } #droneBtn:hover{ transform: translateY(-2px) scale(1.06); } #droneBtn.active{ background: rgba(61,245,214,0.18); }
+  #droneBtn.off{ border-color: var(--line); color: var(--text-faint); box-shadow:none; }
+  html.kid #droneBtn.off{ color:#9aa3c0; border-color:#a3add3; box-shadow: 0 4px 0 #a3add3; }
+  #dronePanel{ position:absolute; left:96px; bottom:96px; z-index:30; display:none; width:330px; padding:12px 14px; max-height: calc(100vh - 190px); overflow:auto;
+    background: rgba(24,18,66,0.97); border:2px solid #3df5d6; border-radius:16px; color: var(--text); font-size:12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45), 0 0 20px rgba(61,245,214,0.2); animation: popIn .22s ease; }
+  #dronePanel.show{ display:block; }
+  #dronePanel .spp-head b{ color:#3df5d6; }
+  .dr-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:5px; }
+  .dr-grid button{ font-family:inherit; font-size:11.5px; font-weight:700; padding:6px 6px; border-radius:9px; cursor:pointer; text-align:left; display:flex; align-items:center; gap:5px;
+    background: var(--bg-panel-2); border:2px solid var(--line-soft); color: var(--text-faint); }
+  .dr-grid button .dr-e{ font-size:15px; filter: grayscale(1); opacity:.6; }
+  .dr-grid button.on{ border-color:#3df5d6; color:#3df5d6; background: color-mix(in srgb, #3df5d6 14%, var(--bg-panel-2)); }
+  .dr-grid button.on .dr-e{ filter:none; opacity:1; }
+  .dr-grid button small{ display:block; font-weight:500; font-size:9.5px; opacity:.8; }
+  .dr-all{ display:flex; gap:6px; margin-top:8px; } .dr-all button{ flex:1; font-family:inherit; font-weight:700; font-size:11px; padding:5px; border-radius:9px; cursor:pointer; background: var(--bg-panel-2); border:2px solid var(--line-soft); color: var(--text-dim); }
+  .dr-note{ font-size:10.5px; color: var(--text-faint); margin-top:6px; line-height:1.35; }
+  #app.mobile #droneBtn{ left:auto; right:12px; bottom:150px; }
+  html.kid #droneBtn{ background:var(--bg-panel); color:#0f9f8f; border:3px solid #3dd6c0; box-shadow: 0 4px 0 #22a896; }
+  html.kid #dronePanel{ background:var(--bg-panel); border:3px solid #3dd6c0; border-radius:22px; box-shadow: 0 6px 0 rgba(35,48,90,0.12), 0 12px 26px rgba(35,48,90,0.12); }
+  html.kid #dronePanel .spp-head b{ color:#0f9f8f; }
+  html.kid .dr-grid button, html.kid .dr-all button{ background:var(--bg-panel-2); border-color:#a3add3; color:#56638f; }
+  html.kid .dr-grid button.on{ background:#c9f2ea; border-color:#22a896; color:#0b6f63; }
+  /* ---------- palette de couleurs de la pièce ---------- */
+  #colorPal{ display:grid; grid-template-columns: repeat(10, 1fr); gap:3px; margin-top:7px; }
+  #colorPal button{ width:100%; aspect-ratio:1; border-radius:5px; border:1.5px solid rgba(255,255,255,0.25); padding:0; cursor:pointer; font-size:11px; line-height:1; }
+  #colorPal button:hover{ transform: scale(1.18); z-index:1; }
+  #colorPal button.active{ border-color:#fff; box-shadow: 0 0 0 2px var(--cyan); }
+  #colorPal .cp-more{ background: conic-gradient(#ff3b3b, #ffe14d, #3dff7a, #3df5d6, #3d7bff, #a24dff, #ff3b3b); }
+  html.kid #colorPal button{ border-radius:7px; border-color:#a3add3; }
 
   /* ---------- dupliquer ---------- */
   #dupToolBtn{ --c:#7cf06b; }
@@ -1330,7 +1365,7 @@
   #gcMascot{ width:72px; height:78px; flex-shrink:0; animation: cuboFloat 3s ease-in-out infinite; }
   .g-head{ align-items:center; } .gc-hello{ display:block; margin-top:3px; }
   .gb-win{ display:flex; align-items:center; justify-content:center; gap:12px; } .gb-cubo{ width:64px; height:70px; display:inline-block; }
-  #kidMascot{ position:absolute; left:248px; bottom:10px; z-index:11; display:none; align-items:flex-end; gap:4px; pointer-events:none; }
+  #kidMascot{ position:absolute; left:306px; bottom:10px; z-index:11; display:none; align-items:flex-end; gap:4px; pointer-events:none; }
   html.kid #kidMascot{ display:flex; }
   html.kid #app:has(#guidePanel.show) #kidMascot, #app.mobile #kidMascot{ display:none; }
   #kidFig{ order:1; width:76px; height:82px; pointer-events:auto; cursor:pointer; animation: cuboFloat 3s ease-in-out infinite; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35)); }
@@ -1675,6 +1710,19 @@
     <div class="spp-row"><span>Vitesse</span><input type="range" id="spSpd" min="0.2" max="3" step="0.1"></div>
     <label class="spp-chk"><input type="checkbox" id="spBeams"> Faisceaux visibles</label>
   </div>
+  <button id="droneBtn" title="Drones : choisir ceux qui apparaissent en simulation">
+    <svg viewBox="0 0 28 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><ellipse cx="5" cy="5" rx="4" ry="1.3"/><ellipse cx="23" cy="5" rx="4" ry="1.3"/><path d="M5 6.3v2.2M23 6.3v2.2M5 9l6 2.5M23 9l-6 2.5"/><rect x="9.5" y="10" width="9" height="6" rx="2.5" fill="currentColor" fill-opacity=".35"/><circle cx="14" cy="13" r="1.4" fill="currentColor"/><path d="M11 16l-1.5 3M17 16l1.5 3"/></svg>
+    <span>Drones</span>
+  </button>
+  <div id="dronePanel">
+    <div class="spp-head"><b>🛸 Drones</b><label class="spp-sw"><input type="checkbox" id="drSol"> aussi en mode sol</label></div>
+    <div class="spp-lbl">Drones</div>
+    <div class="dr-grid" id="drFun"></div>
+    <div class="spp-lbl">Avec une fonction</div>
+    <div class="dr-grid" id="drJob"></div>
+    <div class="dr-all"><button id="drAll">✅ Tous</button><button id="drNone">⛔ Aucun</button></div>
+    <div class="dr-note">Les drones apparaissent pendant la simulation sur la grille infinie et le plateau (et en mode sol si la case est cochée). Ils contournent les pièces et les plans d'eau.</div>
+  </div>
   <div id="guidePanel">
     <div class="gp-head"><span id="gpEmoji"></span><b id="gpTitle"></b><button id="gpMin" title="Réduire / agrandir">▁</button><button id="gpClose" title="Quitter le mode guidé (les notes sont gardées)">✕</button></div>
     <div id="gpDots"></div>
@@ -1803,6 +1851,7 @@
       <span class="lbl">🎨 COULEUR</span>
       <button id="transpBtn" title="Rendre la pièce transparente (on voit sa couleur et au travers)">👻 Transparent</button>
     </div>
+    <div id="colorPal"></div>
     <div id="foldRow">
       <button id="matFold" title="Afficher / masquer le choix de la matière">🪵 Matière <span>▸</span></button>
       <button id="physFold" title="Afficher / masquer les caractéristiques (masse, densité, frottement…)">⚖️ Caractéristiques <span>▸</span></button>
@@ -4698,7 +4747,7 @@
     document.getElementById("rotX").value = THREE.MathUtils.radToDeg(o.mesh.rotation.x);
     document.getElementById("rotY").value = THREE.MathUtils.radToDeg(o.mesh.rotation.z);
     document.getElementById("rotZ").value = THREE.MathUtils.radToDeg(o.mesh.rotation.y);
-    document.getElementById("colorPick").value = o.colorHex;
+    document.getElementById("colorPick").value = o.colorHex; if(window._colorPalSync) window._colorPalSync();
     updateMatGrid(o);
     document.getElementById("transpBtn").classList.toggle("active", !!o.transparent);
     if(!document.getElementById("physRow").classList.contains("folded")) physPanel(document.getElementById("inspPhys"), selectionObjs());
@@ -4797,6 +4846,20 @@
     (o._origMat || o.mesh.material).color.set(this.value);
     refreshList();
   });
+
+  // palette de couleurs : des carrés qui tiennent dans la largeur du panneau, + « autre couleur »
+  (function(){
+    var PAL = ["#ff3b5c", "#ff7a3d", "#ffb340", "#ffe14d", "#b8f04a", "#3dd66b", "#2bb3a0", "#3df5d6", "#5ec2ff", "#3d7bff",
+               "#5b4dff", "#a24dff", "#ff4fc3", "#ff9fd0", "#ffffff", "#c8ccd8", "#8a90a8", "#3a3f55", "#8b5a2b"];
+    var box = document.getElementById("colorPal"), pick = document.getElementById("colorPick");
+    PAL.forEach(function(c){ var b = document.createElement("button"); b.style.background = c; b.dataset.c = c; b.title = c; box.appendChild(b);
+      b.addEventListener("click", function(){ pick.value = c; pick.dispatchEvent(new Event("input", { bubbles: true })); if(typeof scheduleCommit === "function") scheduleCommit(); sync(); }); });
+    var more = document.createElement("button"); more.className = "cp-more"; more.title = "Autre couleur…"; box.appendChild(more);
+    more.addEventListener("click", function(){ pick.click(); });
+    function sync(){ var v = (pick.value || "").toLowerCase(); box.querySelectorAll("button[data-c]").forEach(function(b){ b.classList.toggle("active", b.dataset.c === v); }); }
+    pick.addEventListener("input", sync);
+    window._colorPalSync = sync;
+  })();
 
   document.getElementById("delBtn").addEventListener("click", function(){
     if(selectedId!==null) deleteSelection();
@@ -8129,7 +8192,7 @@
   }
   var AUV_COLORS = [0xffd23f, 0xff8a3d, 0xeef1f7, 0x3df5d6];
   function spawnCreature(o, now){
-    if(groundMode !== "sol") return spawnMachine(o, now);
+    if(groundMode !== "sol") return droneOn("marine") ? spawnMachine(o, now) : undefined;
     var F = o._fauna, r = Math.random(), c;
     if(r > 0.7 && r < 0.86){
       c = makeOcto();
@@ -9787,9 +9850,9 @@
   var SPOT_COLORS = ["#ffe2b8", "#ffffff", "#ff3b3b", "#ff9f1a", "#ffe14d", "#3dff7a", "#3df5d6", "#3d7bff", "#a24dff", "#ff4fc3"];
   var SPOT_MULTI = ["#ff3b3b", "#3d7bff", "#3dff7a", "#ffe14d", "#ff4fc3", "#3df5d6", "#ff9f1a", "#a24dff"];
   var SPOT_N = 8;
-  var spotCfg = { on: true, color: "#ffe2b8", multi: false, fx: "arcenciel", inten: 0.8, speed: 1, beams: true };
-  try{ var _sc = JSON.parse(localStorage.getItem("modeleur.spots2") || "null"); if(_sc) for(var _k in _sc) spotCfg[_k] = _sc[_k]; }catch(e){}
-  function spotSave(){ try{ localStorage.setItem("modeleur.spots2", JSON.stringify(spotCfg)); }catch(e){} }
+  var spotCfg = { on: false, color: "#ffe2b8", multi: false, fx: "arcenciel", inten: 0.8, speed: 1, beams: true };
+  try{ var _sc = JSON.parse(localStorage.getItem("modeleur.spots3") || "null"); if(_sc) for(var _k in _sc) spotCfg[_k] = _sc[_k]; }catch(e){}
+  function spotSave(){ try{ localStorage.setItem("modeleur.spots3", JSON.stringify(spotCfg)); }catch(e){} }
   var spots = [], spotRig = null, spotDisco = [], spotDiscoT = 0;
   // faisceaux : coupés sous la grille (altitude < 0), bords adoucis, et mélange « maximum » :
   // là où deux faisceaux (ou l'avant et l'arrière d'un même cône) se croisent, la lumière ne s'additionne pas -> pas d'intersection visible
@@ -9826,8 +9889,13 @@
         transparent: true, depthWrite: false, side: THREE.DoubleSide,
         blending: THREE.CustomBlending, blendEquation: THREE.MaxEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor }));
       beam.renderOrder = 50; spotRig.add(beam);
-      var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 1, 8), poleMat.clone()); spotRig.add(pole);
-      spots.push({ L: L, fix: fix, lens: lens, beam: beam, pole: pole, col: new THREE.Color(), aim: new THREE.Vector3() });
+      var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 1, 8), poleMat.clone()); spotRig.add(pole); pole.visible = false;
+      // en mode sol, chaque spot est porté par un gros drone en vol stationnaire (au lieu d'un poteau)
+      var car = makeQuad(false);
+      car.mats.forEach(function(m){ m.opacity = 1; m.transparent = false; if(m.depthWrite === false) m.transparent = true, m.opacity = 0.7; });
+      car.g.scale.setScalar(4.2); spotRig.add(car.g);
+      var cable = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1, 6), housingMat); spotRig.add(cable);
+      spots.push({ L: L, fix: fix, lens: lens, beam: beam, pole: pole, car: car, cable: cable, ph: i * 1.7, col: new THREE.Color(), aim: new THREE.Vector3() });
     }
   }
   var spotRay = new THREE.Raycaster();
@@ -9908,15 +9976,18 @@
       s.beam.material.uniforms.uColor.value.copy(s.col);
       s.beam.material.uniforms.uOp.value = 0.4 * k * Math.min(1.3, I);
       s.lens.material.color.copy(s.col).multiplyScalar(0.25 + 0.75 * k);
-      s.pole.visible = !onFrame;
-      if(!onFrame){
-        s.pole.scale.set(1, H - 0.15, 1); s.pole.position.set(s.fix.position.x, (H - 0.15) / 2, s.fix.position.z);
-        // le pied qui passe devant la conception s'estompe
-        var C = camera.position, dx = aim.x - C.x, dz = aim.z - C.z, L2 = dx*dx + dz*dz || 1;
-        var u = ((s.pole.position.x - C.x)*dx + (s.pole.position.z - C.z)*dz) / L2, uc = Math.max(0, Math.min(1, u));
-        var dd = Math.hypot(s.pole.position.x - (C.x + dx*uc), s.pole.position.z - (C.z + dz*uc));
-        var want = (u > 0 && u < 1 && dd < 1.0) ? 0.1 : 0.55;
-        s.pole.material.opacity += (want - s.pole.material.opacity) * 0.2;
+      // drone porteur (mode sol) : au-dessus du projecteur, il se balance à peine, hélices et feu clignotant
+      var carOn = !onFrame && s.fix.visible;
+      s.car.g.visible = carOn; s.cable.visible = carOn;
+      if(carOn){
+        var bob = Math.sin(t * 1.3 + s.ph) * 0.03;
+        s.car.g.position.set(s.fix.position.x + Math.sin(t * 0.7 + s.ph) * 0.02, s.fix.position.y + 0.62 + bob, s.fix.position.z);
+        s.car.g.rotation.set(0, Math.atan2(-(aim.z - s.fix.position.z), aim.x - s.fix.position.x), 0);
+        s.car.tilt.rotation.z = Math.sin(t * 0.9 + s.ph) * 0.04;
+        s.car.props.forEach(function(p){ p.p.rotation.y += p.dir * 0.9; });
+        s.car.blink.visible = Math.sin(t * 6 + s.ph) > 0.2;
+        var top = s.car.g.position.y - 0.1, bot = s.fix.position.y + 0.12;
+        s.cable.scale.set(1, Math.max(0.01, top - bot), 1); s.cable.position.set(s.fix.position.x, (top + bot) / 2, s.fix.position.z);
       }
     });
   }
@@ -10227,10 +10298,10 @@
     var m = new THREE.Mesh(new THREE.TorusGeometry(r*0.3, r*0.05, 6, 16, Math.PI), smile); m.rotation.set(0, Math.PI/2, Math.PI); m.position.set(r*0.95, y - r*0.2, 0); parent.add(m);
     return { mats: mats, pupils: pupils };
   }
-  function makeFunDrone(){
+  function makeFunDrone(kind){
     var r = Math.random(), b, sg = new THREE.SphereGeometry(1, 18, 12);
     var acc = DRONE_ACCENTS[Math.floor(Math.random()*DRONE_ACCENTS.length)];
-    if(r < 0.2){
+    if(kind === "eye"){
       // drone-œil : un gros œil qui suit la caméra, une seule hélice
       b = funBase(1, 0, 0x33384d); b.kind = "quad"; b.funKind = "eye";
       var shell = new THREE.MeshStandardMaterial(bugMat({ color: acc, metalness: 0.3, roughness: 0.3 }));
@@ -10245,7 +10316,7 @@
       var pp = new THREE.Mesh(sg, pup); pp.scale.set(0.008, 0.015, 0.015); pp.position.x = 0.062; eye.add(pp);
       var stick = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.03, 6), b.dark); stick.position.y = 0.0; b.tilt.add(stick);
       b.eye = eye; b.lid = lid; b.blink.position.set(0, -0.11, 0); b.g.scale.setScalar(1.3);
-    } else if(r < 0.4){
+    } else if(kind === "hat"){
       // boule souriante avec un chapeau à hélice et des petits bras qui s'agitent
       b = funBase(1, 0, 0xff3b3b); b.funKind = "hat";
       var col = [0xffd23f, 0x7cf0a0, 0xff9fd0, 0x8fd3ff][Math.floor(Math.random()*4)];
@@ -10260,7 +10331,7 @@
         var arm = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.05, 6), skin); arm.position.z = s*0.025; arm.rotation.x = Math.PI/2; a.add(arm);
         var hand = new THREE.Mesh(sg, skin); hand.scale.setScalar(0.012); hand.position.z = s*0.052; a.add(hand); a.userData.s = s; b.arms.push(a); });
       b.blink.position.set(0, 0.025, 0); b.speed = 0.7; b.g.scale.setScalar(1.25);
-    } else if(r < 0.6){
+    } else if(kind === "duck"){
       // drone livreur… de canard en plastique, qui se balance au bout de sa ficelle
       b = funBase(4, 0.075); b.funKind = "duck";
       var shell2 = new THREE.MeshStandardMaterial(bugMat({ color: acc, metalness: 0.3, roughness: 0.3 }));
@@ -10279,7 +10350,7 @@
       [-1, 1].forEach(function(s){ var e = new THREE.Mesh(sg, blk); e.scale.setScalar(0.005); e.position.set(0.046, 0.048, s*0.014); duck.add(e); });
       b.swing = sw; b.duck = duck; b.blink.position.set(-0.048, 0, 0); b.speed = 0.8;
       b.yMin = 0.7; b.yMax = 1.9; b.g.scale.setScalar(1.4);
-    } else if(r < 0.8){
+    } else if(kind === "disco"){
       // drone disco : 6 hélices et une boule à facettes qui tourne en lançant des couleurs
       b = funBase(6, 0.08); b.funKind = "disco";
       var shell3 = new THREE.MeshStandardMaterial(bugMat({ color: 0x2a2f45, metalness: 0.6, roughness: 0.3 }));
@@ -10347,6 +10418,205 @@
     }
   }
 
+  // ---- drones avec une fonction : nettoyeur, photographe, scanner laser, arroseur ----
+  function makeJobDrone(kind){
+    var b = funBase(4, 0.075), sg = new THREE.SphereGeometry(1, 14, 10);
+    b.job = kind; b.inspect = kind === "water" ? 0 : 0.9; b.g.scale.setScalar(1.45);
+    var col = { clean: 0xffd23f, photo: 0xff5ca8, scan: 0x3dff7a, water: 0x4da3ff }[kind];
+    var shell = new THREE.MeshStandardMaterial(bugMat({ color: 0xeef1f7, metalness: 0.2, roughness: 0.35 }));
+    var acc = new THREE.MeshStandardMaterial(bugMat({ color: col, metalness: 0.2, roughness: 0.35, emissive: col, emissiveIntensity: 0.2 }));
+    b.mats.push(shell, acc);
+    var body = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.032, 0.07), shell); b.tilt.add(body);
+    var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.092, 0.01, 0.072), acc); stripe.position.y = 0.012; b.tilt.add(stripe);
+    var face = funFace(b.tilt, 0.03, 0); b.mats = b.mats.concat(face.mats);
+    b.tilt.children.slice(-5).forEach(function(m){ m.position.x += 0.02; m.scale.multiplyScalar(0.8); });
+    b.blink.position.set(-0.048, 0.01, 0);
+    if(kind === "clean"){
+      // brosse ronde qui tourne + petit réservoir de produit
+      var bristle = new THREE.MeshStandardMaterial(bugMat({ color: 0xffe14d, roughness: 0.9 }));
+      b.mats.push(bristle);
+      var brush = new THREE.Group(); brush.position.y = -0.04; b.tilt.add(brush);
+      var disk = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.008, 16), acc); brush.add(disk);
+      for(var k = 0; k < 12; k++){ var a = k / 12 * Math.PI * 2, br = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.002, 0.02, 4), bristle); br.position.set(Math.cos(a)*0.032, -0.012, Math.sin(a)*0.032); brush.add(br); }
+      var stick = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.03, 6), b.dark); stick.position.y = -0.025; b.tilt.add(stick);
+      var tank = new THREE.Mesh(sg, acc); tank.scale.set(0.018, 0.022, 0.018); tank.position.set(-0.03, 0.03, 0); b.tilt.add(tank);
+      b.brush = brush;
+    } else if(kind === "photo"){
+      var dark = new THREE.MeshStandardMaterial(bugMat({ color: 0x1a1d2b, metalness: 0.5, roughness: 0.3 }));
+      var glass = new THREE.MeshBasicMaterial(bugMat({ color: 0x6fb3ff }));
+      b.mats.push(dark, glass);
+      var cam = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, 0.035), dark); cam.position.set(0.035, -0.03, 0); b.tilt.add(cam);
+      var lens = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.014, 0.025, 12), dark); lens.rotation.z = Math.PI/2; lens.position.set(0.065, -0.03, 0); b.tilt.add(lens);
+      var gl = new THREE.Mesh(new THREE.CircleGeometry(0.01, 12), glass); gl.rotation.y = Math.PI/2; gl.position.set(0.078, -0.03, 0); b.tilt.add(gl);
+      var flashM = new THREE.SpriteMaterial(bugMat({ map: fxDot(), color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false }));
+      b.mats.push(flashM); flashM.userData.fx = true;
+      var flash = new THREE.Sprite(flashM); flash.position.set(0.08, -0.03, 0); flash.scale.setScalar(0.01); b.tilt.add(flash);
+      b.flash = flash; b.flashM = flashM; b.nextShot = 0;
+    } else if(kind === "scan"){
+      var em = new THREE.Mesh(sg, acc); em.scale.setScalar(0.012); em.position.y = -0.025; b.tilt.add(em);
+      var fg = new THREE.BufferGeometry();
+      fg.setAttribute("position", new THREE.Float32BufferAttribute([0, 0, 0, -0.5, -1, 0, 0.5, -1, 0], 3));
+      var fanM = new THREE.MeshBasicMaterial(bugMat({ color: 0x3dff7a, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }));
+      b.mats.push(fanM); fanM.userData.fx = true;
+      var fan = new THREE.Mesh(fg, fanM); fan.position.y = -0.03; b.g.add(fan);   // pas incliné avec le drone : toujours vertical
+      var lineM = new THREE.MeshBasicMaterial(bugMat({ color: 0xb6ffcf, blending: THREE.AdditiveBlending, depthWrite: false }));
+      b.mats.push(lineM); lineM.userData.fx = true;
+      var ln = new THREE.Mesh(new THREE.BoxGeometry(1, 0.004, 0.004), lineM); ln.position.y = -1; fan.add(ln);
+      b.fan = fan; b.fanM = fanM;
+    } else if(kind === "water"){
+      var tankM = new THREE.MeshStandardMaterial(bugMat({ color: 0x8fd3ff, roughness: 0.1, metalness: 0.1 }));
+      b.mats.push(tankM); tankM.userData.base = 0.75;
+      var tank2 = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.04, 14), tankM); tank2.position.y = -0.035; b.tilt.add(tank2);
+      var noz = new THREE.Mesh(new THREE.ConeGeometry(0.008, 0.02, 8), b.dark); noz.rotation.x = Math.PI; noz.position.y = -0.065; b.tilt.add(noz);
+      b.yMin = 0.6; b.yMax = 1.3;
+    }
+    return b;
+  }
+  // ---- petites particules : étincelles du nettoyeur, gouttes de l'arroseur ----
+  var fxParts = [], fxDotTex = null, FX_SPARK = new THREE.OctahedronGeometry(0.012), FX_DROP = new THREE.SphereGeometry(0.007, 6, 4);
+  function fxDot(){
+    if(fxDotTex) return fxDotTex;
+    var c = document.createElement("canvas"); c.width = c.height = 64; var x = c.getContext("2d");
+    var g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.35, "rgba(255,255,255,0.8)"); g.addColorStop(1, "rgba(255,255,255,0)");
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64); fxDotTex = new THREE.CanvasTexture(c); return fxDotTex;
+  }
+  function fxEmit(kind, pos, vel, life, color){
+    if(fxParts.length > 90) return;
+    var m = new THREE.MeshBasicMaterial({ color: color, transparent: true, depthWrite: false, blending: kind === "spark" ? THREE.AdditiveBlending : THREE.NormalBlending });
+    var mesh = new THREE.Mesh(kind === "spark" ? FX_SPARK : FX_DROP, m); mesh.position.copy(pos); bugGroup.add(mesh);
+    fxParts.push({ m: mesh, v: vel, life: life, max: life, kind: kind });
+  }
+  function fxGroundAt(p){
+    var y = 0;
+    for(var i = 0; i < bugBoxes.length; i++){ var bx = bugBoxes[i]; if(p.x > bx.min.x && p.x < bx.max.x && p.z > bx.min.z && p.z < bx.max.z && bx.max.y <= p.y + 0.05) y = Math.max(y, bx.max.y); }
+    return y;
+  }
+  function fxFrame(dt){
+    fxParts = fxParts.filter(function(p){
+      p.life -= dt;
+      if(p.kind === "drop") p.v.y -= 4 * dt; else { p.v.multiplyScalar(1 - dt * 1.5); p.m.rotation.y += dt * 6; }
+      p.m.position.addScaledVector(p.v, dt);
+      var dead = p.life <= 0 || (p.kind === "drop" && p.m.position.y < fxGroundAt(p.m.position));
+      p.m.material.opacity = Math.max(0, Math.min(1, p.life / p.max * 2));
+      if(dead){ bugGroup.remove(p.m); p.m.material.dispose(); return false; }
+      return true;
+    });
+  }
+  function fxClear(){ fxParts.forEach(function(p){ bugGroup.remove(p.m); p.m.material.dispose(); }); fxParts = []; }
+  // le travail de chaque drone « à fonction » (appelé par funFrame)
+  var _jv = new THREE.Vector3();
+  function jobFrame(b, now, dt){
+    var hover = b.wp && b.pos.distanceTo(b.wp) < 0.3 && b.vel.length() < 0.35;
+    var s = b.g.scale.x;
+    if(b.job === "clean"){
+      b.brush.rotation.y += dt * (hover ? 30 : 6);
+      if(hover && Math.random() < dt * 14){
+        b.brush.getWorldPosition(_jv); _jv.y -= 0.04 * s;
+        fxEmit("spark", _jv.clone().add(new THREE.Vector3((Math.random()-0.5)*0.12*s, 0, (Math.random()-0.5)*0.12*s)),
+          new THREE.Vector3((Math.random()-0.5)*0.4, 0.15 + Math.random()*0.35, (Math.random()-0.5)*0.4), 0.8 + Math.random()*0.5,
+          [0xffffff, 0xffe14d, 0x9ff7ff][Math.floor(Math.random()*3)]);
+      }
+    } else if(b.job === "photo"){
+      if(hover && now > b.nextShot){ b.nextShot = now + 1.2 + Math.random()*1.5; b.shotT = now; }
+      var f = b.shotT ? Math.max(0, 1 - (now - b.shotT) / 0.25) : 0;
+      b.flash.scale.setScalar(0.01 + f * 0.25); b.flashM.color.setScalar(f > 0 ? 1 : 0);
+    } else if(b.job === "scan"){
+      var on = hover;
+      b.fanW = (b.fanW || 0) + ((on ? 1 : 0) - (b.fanW || 0)) * Math.min(1, dt * 4);
+      var h = Math.max(0.05, b.pos.y - fxGroundAt(b.pos)) / s;      // le faisceau descend jusqu'à la surface en dessous
+      b.fan.scale.set(0.5 * h * b.fanW + 0.001, h, 1);
+      b.fan.rotation.y = Math.sin(now * 1.8 + b.phase) * 1.2 + b.g.rotation.y * 0;
+      b.fan.visible = b.fanW > 0.03;
+      b.fanM.userData.k = 0.35 * b.fanW;
+    } else if(b.job === "water"){
+      if(Math.random() < dt * 30){
+        _jv.set(0, -0.07, 0); b.tilt.localToWorld(_jv);
+        fxEmit("drop", _jv.clone(), new THREE.Vector3((Math.random()-0.5)*0.5, -0.3 - Math.random()*0.3, (Math.random()-0.5)*0.5).add(b.vel.clone().multiplyScalar(0.5)), 2, 0x6fc3ff);
+      }
+    }
+  }
+
+  // ---- le menu « Drones » : choisir ceux qui apparaissent ----
+  var DRONE_LIST = [
+    ["quad", "🛸", "Mini drone", "inspecte les pièces"], ["cargo", "📦", "Drone porteur", "traverse le ciel"], ["rover", "🤖", "Robot rouleur", "roule au sol"],
+    ["eye", "👁️", "Drone-œil", "te suit du regard"], ["hat", "🧢", "Chapeau-hélice", "agite les bras"], ["duck", "🦆", "Livreur de canard", "en plastique !"],
+    ["disco", "🪩", "Drone disco", "boule à facettes"], ["banner", "🚩", "Avion banderole", "messages rigolos"], ["marine", "🚤", "Drones marins", "dans les plans d'eau"]];
+  var DRONE_JOBS = [["clean", "🧹", "Nettoyeur", "époussette les pièces"], ["photo", "📸", "Photographe", "prend des photos"],
+    ["scan", "📡", "Scanner laser", "scanne les pièces"], ["water", "💦", "Arroseur", "arrose le sol"]];
+  var DRONE_W = { quad: 0.22, cargo: 0.1, rover: 0.1, eye: 0.07, hat: 0.07, duck: 0.07, disco: 0.07, banner: 0.06, clean: 0.09, photo: 0.08, scan: 0.08, water: 0.07 };
+  var droneCfg = { sol: false, off: {} };
+  DRONE_LIST.concat(DRONE_JOBS).forEach(function(d){ droneCfg.off[d[0]] = true; });        // par défaut : aucun drone
+  try{ var _dc = JSON.parse(localStorage.getItem("modeleur.drones2") || "null"); if(_dc){ droneCfg.sol = !!_dc.sol; droneCfg.off = _dc.off || {}; } }catch(e){}
+  function droneOn(k){ return !droneCfg.off[k]; }
+  function pickDrone(){
+    var T = Object.keys(DRONE_W).filter(droneOn);
+    if(!T.length) return null;
+    var tot = T.reduce(function(s, k){ return s + DRONE_W[k]; }, 0), x = Math.random() * tot, k = T[T.length - 1];
+    for(var i = 0; i < T.length; i++){ x -= DRONE_W[T[i]]; if(x <= 0){ k = T[i]; break; } }
+    if(k === "quad") return makeQuad(false);
+    if(k === "cargo") return makeQuad(true);
+    if(k === "rover") return makeRover();
+    if(DRONE_JOBS.some(function(j){ return j[0] === k; })) return makeJobDrone(k);
+    return makeFunDrone(k);
+  }
+  (function(){
+    var btn = document.getElementById("droneBtn"), pan = document.getElementById("dronePanel");
+    function save(){ try{ localStorage.setItem("modeleur.drones2", JSON.stringify(droneCfg)); }catch(e){} }
+    function fill(box, list){
+      list.forEach(function(d){
+        var b = document.createElement("button"); b.dataset.k = d[0];
+        b.innerHTML = '<span class="dr-e">' + d[1] + '</span><span>' + d[2] + '<small>' + d[3] + '</small></span>';
+        b.addEventListener("click", function(){ droneCfg.off[d[0]] = droneOn(d[0]); save(); sync(); dronesChanged(d[0]); });
+        box.appendChild(b);
+      });
+    }
+    fill(document.getElementById("drFun"), DRONE_LIST); fill(document.getElementById("drJob"), DRONE_JOBS);
+    function sync(){
+      pan.querySelectorAll(".dr-grid button").forEach(function(b){ b.classList.toggle("on", droneOn(b.dataset.k)); });
+      document.getElementById("drSol").checked = droneCfg.sol;
+      btn.classList.toggle("off", !DRONE_LIST.concat(DRONE_JOBS).some(function(d){ return droneOn(d[0]); }));
+    }
+    document.getElementById("drAll").addEventListener("click", function(){ droneCfg.off = {}; save(); sync(); });
+    document.getElementById("drNone").addEventListener("click", function(){ DRONE_LIST.concat(DRONE_JOBS).forEach(function(d){ droneCfg.off[d[0]] = true; }); save(); sync(); dronesChanged(null); });
+    document.getElementById("drSol").addEventListener("change", function(){ droneCfg.sol = this.checked; save(); });
+    btn.addEventListener("click", function(e){ e.stopPropagation(); pan.classList.toggle("show"); btn.classList.toggle("active", pan.classList.contains("show"));
+      var sp = document.getElementById("spotPanel"); if(sp.classList.contains("show")){ sp.classList.remove("show"); document.getElementById("spotBtn").classList.remove("active"); } });
+    document.getElementById("spotBtn").addEventListener("click", function(){ if(pan.classList.contains("show")){ pan.classList.remove("show"); btn.classList.remove("active"); } });
+    document.addEventListener("pointerdown", function(e){ if(pan.classList.contains("show") && !pan.contains(e.target) && !btn.contains(e.target)){ pan.classList.remove("show"); btn.classList.remove("active"); } });
+    sync();
+  })();
+  // un type décoché : ceux déjà en vol s'en vont tout de suite
+  function dronesChanged(k){
+    bugs.forEach(function(b){ var bk = b.funKind || b.job || (b.kind === "bigdrone" ? "cargo" : b.kind); if(!droneOn(bk) && b.dur > 0) b.dur = Math.min(b.dur, (performance.now()/1000) - b.t0); });
+    if(k === "marine" || k === null) objects.forEach(function(o){ if(o._fauna && groundMode !== "sol") faunaClear(o); });
+  }
+  // ---- les drones et les animaux volants contournent les pièces et les plans d'eau ----
+  var _la = new THREE.Vector3();
+  function bugAvoid(b, dt){
+    var m = 0.05 * (b.g.scale.x || 1) + 0.05;
+    for(var i = 0; i < bugBoxes.length; i++){
+      var bx = bugBoxes[i];
+      // le point d'arrivée est dans une pièce : on le place au-dessus
+      if(b.wp && b.wp.x > bx.min.x - m && b.wp.x < bx.max.x + m && b.wp.z > bx.min.z - m && b.wp.z < bx.max.z + m && b.wp.y < bx.max.y + m && b.wp.y > bx.min.y - m) b.wp.y = bx.max.y + m + 0.12;
+      // anticipation : une pièce droit devant -> on monte et on ralentit
+      _la.copy(b.pos).addScaledVector(b.vel, 0.45);
+      if(_la.x > bx.min.x - m && _la.x < bx.max.x + m && _la.z > bx.min.z - m && _la.z < bx.max.z + m && _la.y < bx.max.y + m && _la.y > bx.min.y - m){
+        b.vel.y += 5 * dt; b.vel.x *= 1 - Math.min(0.9, 3 * dt); b.vel.z *= 1 - Math.min(0.9, 3 * dt);
+      }
+      // jamais à l'intérieur : on ressort par la face la plus proche (ou par le dessus)
+      var p = b.pos;
+      if(p.x > bx.min.x - m && p.x < bx.max.x + m && p.z > bx.min.z - m && p.z < bx.max.z + m && p.y < bx.max.y + m && p.y > bx.min.y - m){
+        var d = [p.x - (bx.min.x - m), (bx.max.x + m) - p.x, p.z - (bx.min.z - m), (bx.max.z + m) - p.z, ((bx.max.y + m) - p.y) * 0.7];
+        var k = 0; for(var q = 1; q < 5; q++) if(d[q] < d[k]) k = q;
+        if(k === 0){ p.x = bx.min.x - m; b.vel.x = Math.min(0, b.vel.x); }
+        else if(k === 1){ p.x = bx.max.x + m; b.vel.x = Math.max(0, b.vel.x); }
+        else if(k === 2){ p.z = bx.min.z - m; b.vel.z = Math.min(0, b.vel.z); }
+        else if(k === 3){ p.z = bx.max.z + m; b.vel.z = Math.max(0, b.vel.z); }
+        else { p.y = bx.max.y + m; b.vel.y = Math.max(0, b.vel.y); }
+      }
+    }
+  }
+
   function bugTheme(){ return groundMode === "sol" ? "nature" : "tech"; }
   function bugPools(){ return objects.filter(function(o){ return o.water === "pool"; }); }
   function bugArea(){
@@ -10360,7 +10630,7 @@
       var bb = new THREE.Box3().setFromObject(pools[Math.floor(Math.random()*pools.length)].mesh);
       return new THREE.Vector3(bb.min.x + Math.random()*(bb.max.x-bb.min.x), bb.max.y + 0.15 + Math.random()*0.35, bb.min.z + Math.random()*(bb.max.z-bb.min.z));
     }
-    if((b.kind === "bee" || b.kind === "quad") && objects.length && Math.random() < 0.6){     // butiner / inspecter les pièces
+    if((b.kind === "bee" || b.kind === "quad") && objects.length && Math.random() < (b.inspect != null ? b.inspect : 0.6)){     // butiner / inspecter les pièces
       var ob = new THREE.Box3().setFromObject(objects[Math.floor(Math.random()*objects.length)].mesh);
       return new THREE.Vector3((ob.min.x + ob.max.x)/2 + (Math.random()-0.5)*0.3, ob.max.y + 0.15 + Math.random()*0.25, (ob.min.z + ob.max.z)/2 + (Math.random()-0.5)*0.3);
     }
@@ -10369,12 +10639,8 @@
   }
   function pickBug(){
     var r = Math.random(), pools = bugPools().length;
-    if(bugTheme() === "tech"){
-      if(r < 0.28) return makeQuad(false);
-      if(r < 0.4) return makeQuad(true);
-      if(r < 0.52) return makeRover();
-      return makeFunDrone();                                 // drones rigolos
-    }
+    if(bugTheme() === "tech") return pickDrone();          // les drones cochés dans le menu « Drones »
+    if(droneCfg.sol && Math.random() < 0.35){ var dr = pickDrone(); if(dr) return dr; }
     var T = [["butterfly", 0.2], ["bee", 0.12], ["dragonfly", pools ? 0.12 : 0.05], ["ladybug", 0.1], ["worm", 0.13], ["caterpillar", 0.13], ["grasshopper", 0.15], ["bird", 0.1]];
     var tot = T.reduce(function(s, t){ return s + t[1]; }, 0), x = r * tot;
     for(var i = 0; i < T.length; i++){ x -= T[i][1]; if(x <= 0) break; }
@@ -10384,6 +10650,7 @@
   }
   function spawnBug(now){
     var b = pickBug(), A = bugArea();
+    if(!b) return;
     b.theme = bugTheme();
     b.t0 = now; b.dur = 16 + Math.random()*14; b.phase = Math.random()*10; b.vel = new THREE.Vector3();
     if(b.cross){                                        // oiseau, drone porteur : traverse le ciel de part en part
@@ -10432,8 +10699,9 @@
   function bugsFrame(dt, now){
     var on = simMode && !exportClean;
     bugGroup.visible = on;
-    if(!simMode){ if(bugs.length) bugsClear(); return; }
+    if(!simMode){ if(bugs.length) bugsClear(); if(fxParts.length) fxClear(); return; }
     if(!on || !dt) return;
+    fxFrame(dt);
     if(now > bugBoxT){
       bugBoxT = now + 0.5;
       bugBoxes = objects.map(function(o){
@@ -10485,7 +10753,7 @@
               b.head = leaving ? b.head : b.head + (Math.random() - 0.5) * 2.2;
               d = leaving ? 1.6 : 0.3 + Math.random()*0.45;
               b.to = new THREE.Vector3(b.pos.x + Math.cos(b.head)*d, 0, b.pos.z - Math.sin(b.head)*d);
-              ok = leaving || !bugBlocked(b.to);
+              ok = leaving || (!bugBlocked(b.to) && [0.25, 0.5, 0.75].every(function(u){ return !bugBlocked(new THREE.Vector3().lerpVectors(b.pos, b.to, u)); }));
             }
             if(ok){ b.state = "jump"; b.from = b.pos.clone(); b.jt = now; b.jd = leaving ? 0.8 : 0.4 + d*0.25; b.jh = leaving ? 0.6 : 0.15 + d*0.35; }
             else b.until = now + 0.5;
@@ -10508,7 +10776,7 @@
         } else if(leaving){ if(!b.out){ b.out = true; var A = bugArea(), az = Math.atan2(b.pos.z - A.c.z, b.pos.x - A.c.x); b.wp = new THREE.Vector3(A.c.x + Math.cos(az)*(A.R + 6), b.yMax + 1, A.c.z + Math.sin(az)*(A.R + 6)); } op = Math.max(0, 1 - (age - b.dur) / 3); }
         else if(now > b.wpT || b.pos.distanceTo(b.wp) < 0.12){
           b.wp = bugWaypoint(b);
-          b.wpT = now + (b.kind === "dragonfly" ? 0.8 + Math.random()*1.6 : (b.kind === "bee" || b.kind === "quad") ? 1 + Math.random()*1.8 : 2.5 + Math.random()*3);
+          b.wpT = now + (b.kind === "dragonfly" ? 0.8 + Math.random()*1.6 : (b.kind === "bee" || b.kind === "quad") ? (b.job ? 6 + Math.random()*3 : 1 + Math.random()*1.8) : 2.5 + Math.random()*3);
         }
         var want = b.wp.clone().sub(b.pos), dist = want.length();
         var spd = b.cross ? b.speed : b.speed * Math.min(1, dist / 0.4 + 0.15);
@@ -10517,6 +10785,7 @@
         var k = b.kind === "butterfly" ? 1.6 : b.cross ? 1 : 4;
         b.vel.lerp(want, Math.min(1, dt * k));
         b.pos.addScaledVector(b.vel, dt);
+        bugAvoid(b, dt);                                     // ne traverse ni les pièces ni les plans d'eau
         var bob = b.kind === "butterfly" ? Math.sin(now*6 + b.phase) * 0.06 : b.kind === "bee" ? Math.sin(now*9 + b.phase) * 0.02
                 : b.kind === "bird" ? Math.sin(now*1.5 + b.phase) * 0.15 : Math.sin(now*3 + b.phase) * 0.012;
         b.g.position.set(b.pos.x, b.pos.y + bob, b.pos.z);
@@ -10528,6 +10797,7 @@
         if(b.props){                                      // drones : hélices, inclinaison dans le sens de la marche, feu clignotant
           b.props.forEach(function(p){ if(p.axisX) p.p.rotation.x += dt * 60; else p.p.rotation.y += p.dir * dt * 60; });
           if(b.fun) funFrame(b, now, dt);
+          if(b.job) jobFrame(b, now, dt);
           var fwd = b.vel.length();
           b.tilt.rotation.z = -Math.min(0.35, fwd * 0.22);
           b.blink.visible = Math.sin(now*6 + b.phase) > 0.2;
@@ -10539,7 +10809,7 @@
           b.wr.rotation.x = -fl; b.wl.rotation.x = fl;
         }
       }
-      b.mats.forEach(function(m){ m.opacity = op; m.visible = op > 0.01; });
+      b.mats.forEach(function(m){ m.opacity = op * (m.userData.k != null ? m.userData.k : (m.userData.base || 1)); m.visible = op > 0.01; });
       if(done || (leaving && op <= 0)){ bugRemove(b); return false; }
       return true;
     });
