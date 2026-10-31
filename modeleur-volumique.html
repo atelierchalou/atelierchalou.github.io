@@ -985,7 +985,7 @@
   #sketchEditor .se-tools svg{ width:22px; height:22px; }
   #simTypes .ic{ font-size:19px; }
   #simTypes button{ font-size:10.5px; }
-  .mat-sw{ width:40px; height:40px; }
+  .mat-sw{ width:100%; height:auto; aspect-ratio:1; min-width:0; }
   #boolPanel button svg{ width:18px; height:18px; }
   #boolPanel button{ font-size:11.5px; }
   .empty-illu{ width:108px; }
@@ -1112,8 +1112,12 @@
   #gbBody h2{ font-size:15px; color:#7cf06b; margin:16px 0 6px; } #gbBody p{ font-size:13px; color: var(--text-dim); margin:4px 0; }
   #gbBody table{ width:100%; border-collapse:collapse; font-size:12.5px; } #gbBody td, #gbBody th{ border-bottom:1px solid var(--line-soft); padding:4px 6px; text-align:left; }
   #gbBody .t{ background: rgba(255,210,63,0.1); padding:7px 10px; border-radius:8px; }
+  .gb-shot{ margin:8px 0 4px; text-align:center; } .gb-shot img{ max-width:100%; width:420px; border-radius:12px; border:3px solid var(--line-soft); box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+  .gb-shot figcaption{ font-size:12px; color: var(--text-dim); margin-top:4px; }
   .gb-win{ font-size:18px; font-weight:800; text-align:center; padding:12px; margin-bottom:8px; border-radius:14px; background: linear-gradient(135deg, rgba(255,210,63,0.25), rgba(124,240,107,0.2)); }
-  .gb-actions{ margin-top:14px; text-align:right; }
+  .gb-actions{ margin-top:14px; text-align:right; position:sticky; bottom:0; }
+  .gb-hint{ display:block; font-size:13px; font-weight:600; opacity:.85; margin-top:4px; }
+  .gb-actions .gb-pdf{ background: linear-gradient(135deg, #ff5c8a, #ff3f8e) !important; color:#fff !important; border-color: transparent !important; box-shadow: 0 4px 0 #b8245f; font-size:14px; padding:9px 16px; }
   html.kid #guidePanel, html.kid .g-card{ background:var(--bg-panel); border:3px solid #7ed957; border-radius:22px; box-shadow: 0 6px 0 rgba(35,48,90,0.12), 0 12px 26px rgba(35,48,90,0.12); }
   html.kid #gpTitle{ color:#2bb24c; } html.kid #gbBody h2{ color:#2bb24c; } html.kid #gbBody h1{ color:#ff3f8e; }
   html.kid #gpStatus.ok{ background:#e2f8e7; color:#1f8a3c; } html.kid #gpStatus.wait{ background:#f2dc93; color:#9a6200; }
@@ -1191,8 +1195,8 @@
   html.kid .dr-grid button, html.kid .dr-all button{ background:var(--bg-panel-2); border-color:#a3add3; color:#56638f; }
   html.kid .dr-grid button.on{ background:#c9f2ea; border-color:#22a896; color:#0b6f63; }
   /* ---------- palette de couleurs de la pièce ---------- */
-  #colorPal{ display:grid; grid-template-columns: repeat(10, 1fr); gap:3px; margin-top:7px; }
-  #colorPal button{ width:100%; aspect-ratio:1; border-radius:5px; border:1.5px solid rgba(255,255,255,0.25); padding:0; cursor:pointer; font-size:11px; line-height:1; }
+  #colorPal{ display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; margin-top:8px; }
+  #colorPal button{ width:100%; min-width:0; aspect-ratio:1; border-radius:7px; border:1.5px solid rgba(255,255,255,0.25); padding:0; cursor:pointer; font-size:11px; line-height:1; }
   #colorPal button:hover{ transform: scale(1.18); z-index:1; }
   #colorPal button.active{ border-color:#fff; box-shadow: 0 0 0 2px var(--cyan); }
   #colorPal .cp-more{ background: conic-gradient(#ff3b3b, #ffe14d, #3dff7a, #3df5d6, #3d7bff, #a24dff, #ff3b3b); }
@@ -1386,6 +1390,9 @@
   html.kid #topActions::before{ content:""; position:absolute; left:-58px; top:-6px; width:46px; height:28px; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2050%2030%27%3E%3Cpath%20d%3D%27M12%2026a8%208%200%200%201%201-16%2011%2011%200%200%201%2021-1%209%209%200%200%201%204%2017z%27%20fill%3D%27%23fff%27%20stroke%3D%27%239fd4ff%27%20stroke-width%3D%272.5%27%2F%3E%3C%2Fsvg%3E") no-repeat center/contain; pointer-events:none; animation: cuboFloat 4s ease-in-out infinite; }
   html.kid .tool-btn:hover svg, html.kid .icon-btn:hover svg{ animation: wiggle .5s; }
   html.kid #objlist .obj-row .dot{ width:12px; height:12px; box-shadow: 0 0 0 2px #fff, 0 0 0 3px #a3add3; }
+  /* aucun ascenseur horizontal dans les panneaux et menus */
+  #inspector, #objlist, #simPanel, #toolbar, #sketchEditor, .help-card, .mech-card, .g-card, #gpBody, #dronePanel, #spotPanel, #guideBook, #gbBody{ overflow-x:hidden !important; }
+  #matGrid, #colorPal, #spColors, .dr-grid, #spFx{ min-width:0; }
 </style>
 </head>
 <body>
@@ -1742,7 +1749,7 @@
   <div id="guideBook" class="g-modal"><div class="g-card">
     <div class="g-head"><div><b>📒 Mon carnet de sciences</b><span>Tes prédictions, observations, mesures et conclusions.</span></div><button id="gbClose" title="Fermer">✕</button></div>
     <div id="gbBody"></div>
-    <div class="gb-actions"><button id="gbDownload">📄 Télécharger mon carnet</button></div>
+    <div class="gb-actions"><button id="gbDownload" title="Le carnet en page web (.html)">🌐 Page web</button> <button id="gbPdf" class="gb-pdf" title="Enregistrer le bilan en PDF : tu choisis le nom du fichier et le dossier">📄 Enregistrer le bilan en PDF</button></div>
   </div></div>
   <div id="alignPanel">
     <div class="bp-title">🎯 Centrer les pièces <span id="alNames"></span></div>
@@ -4850,7 +4857,7 @@
   // palette de couleurs : des carrés qui tiennent dans la largeur du panneau, + « autre couleur »
   (function(){
     var PAL = ["#ff3b5c", "#ff7a3d", "#ffb340", "#ffe14d", "#b8f04a", "#3dd66b", "#2bb3a0", "#3df5d6", "#5ec2ff", "#3d7bff",
-               "#5b4dff", "#a24dff", "#ff4fc3", "#ff9fd0", "#ffffff", "#c8ccd8", "#8a90a8", "#3a3f55", "#8b5a2b"];
+               "#5b4dff", "#a24dff", "#ff4fc3", "#ff9fd0", "#ffd9a8", "#ffffff", "#c8ccd8", "#8a90a8", "#3a3f55", "#8b5a2b"];
     var box = document.getElementById("colorPal"), pick = document.getElementById("colorPick");
     PAL.forEach(function(c){ var b = document.createElement("button"); b.style.background = c; b.dataset.c = c; b.title = c; box.appendChild(b);
       b.addEventListener("click", function(){ pick.value = c; pick.dispatchEvent(new Event("input", { bubbles: true })); if(typeof scheduleCommit === "function") scheduleCommit(); sync(); }); });
@@ -6295,8 +6302,10 @@
     ] },
   // ---------------------------------------------------------------- 3. la quille
   { id:"quille", emoji:"⚓", title:"Une quille pour tenir debout", goal:"Ajouter une quille lourde sous une coque instable pour qu'elle ne chavire plus.", time:"30 min",
-    watch: function(){ if(!simAt(3.5)) return; var n = N(), h = narrowHull(); if(!h) return; var r = rollDeg(h);
-      if(keelJoint()) n.res.withKeel = r; else n.res.noKeel = r; guideSave(); },
+    watch: function(){ if(!simAt(3.5)) return; var n = N(), H = narrowHulls(); if(!H.length) return;
+      H.forEach(function(h){ var r = rollDeg(h); if(jointKeel(h)) n.res.withKeel = r; else n.res.noKeel = r; });
+      if(H.length >= 2 && keelJoint()) n.res.duo = true;
+      guideSave(); },
     steps: [
     { title:"Une coque étroite sur l'eau",
       html:"<p>Crée un <b>plan d'eau</b> : longueur (X) au moins <b>600 mm</b>, largeur (Y) <b>400 mm</b>, hauteur (Z) <b>150 mm</b>.</p><p>Puis une <b>coque étroite</b> : un cube de</p><ul class='gp-dims'><li><b>longueur (X)</b> : <b>250 mm</b></li><li><b>largeur (Y)</b> : <b>40 mm</b></li><li><b>hauteur (Z)</b> : <b>90 mm</b></li></ul><p>rendu <b>creux et ouvert en haut</b> (◻️ Pièce creuse). Place-la au-dessus de l'eau et penche-la à peine : <b>Rotation X = 5</b>.</p>",
@@ -6307,10 +6316,19 @@
       enter: function(){ setSpeed(0.6); },
       check: function(){ var n = N(); if(n.res.noKeel == null) return { ok:false, msg:"Lance la simulation et attends quelques secondes." };
         return n.res.noKeel > 45 ? { ok:true, msg:"Elle chavire ! Elle est trop étroite pour tenir debout toute seule." } : { ok:false, msg:"Elle ne chavire pas encore : réinitialise, penche-la un peu plus (10°) et relance." }; } },
+    { title:"Copie la coque",
+      html:"<p>Pour bien comparer, on va garder <b>une coque sans quille</b> à côté de celle qui en aura une.</p><p>Clique <b>⟲ Réinitialiser</b> puis <b>✏️ Concevoir</b>. Sélectionne la <b>coque</b> et clique <b>✨ Dupliquer</b> (en bas du panneau de la pièce).</p><p>Place la <b>copie à côté</b> de la première, elle aussi <b>au-dessus du plan d'eau</b>, sans qu'elles se touchent (décale-la en <b>Y</b> d'environ <b>120 mm</b>).</p>",
+      check: function(){ var P = gPool(), H = narrowHulls(); if(H.length < 2) return { ok:false, msg:H.length + " / 2 coques étroites : duplique la coque." };
+        if(!P || !H.every(function(h){ return inXZ(h, P); })) return { ok:false, msg:"Les deux coques doivent être au-dessus du plan d'eau." };
+        var a = new THREE.Box3().setFromObject(H[0].mesh), b = new THREE.Box3().setFromObject(H[1].mesh);
+        return a.intersectsBox(b) ? { ok:false, msg:"Les deux coques se touchent : écarte la copie." } : { ok:true, msg:"Deux coques identiques côte à côte sur l'eau." }; },
+      auto: function(){ if(needDesign()) return; if(narrowHulls().length >= 2) return done(); var h = narrowHulls()[0], P = gPool(); if(!h) return;
+        var b = mmBox(h), pb = P ? mmBox(P) : null, y = b.c.z + 120; if(pb && y + 30 > pb.max.z) y = b.c.z - 120;
+        mkHull("Coque étroite (copie)", b.c.x, y, 240, 250, 40, 90, 5); done(); } },
     { title:"Conçois une quille",
-      html:"<p>Clique <b>⟲ Réinitialiser</b> puis <b>✏️ Concevoir</b>.</p><p>Ajoute sous la coque une <b>plaque lourde</b> en <b>Acier</b> (🪵 Matière) :</p><ul class='gp-dims'><li><b>longueur (X)</b> : <b>120 mm</b></li><li><b>largeur (Y)</b> : <b>8 mm</b> (une plaque fine)</li><li><b>hauteur (Z)</b> : <b>50 mm</b></li></ul><p>collée <b>juste sous le fond</b> de la coque, au milieu.</p><p class='gp-tip'>💡 Utilise 🎯 <b>Centrer</b> (axes X et Y) pour la placer bien au milieu, et 📏 la <b>Règle</b> pour vérifier qu'elle touche le fond.</p>",
+      html:"<p>Ajoute sous <b>une seule des deux coques</b> une <b>plaque lourde</b> en <b>Acier</b> (🪵 Matière) :</p><ul class='gp-dims'><li><b>longueur (X)</b> : <b>120 mm</b></li><li><b>largeur (Y)</b> : <b>8 mm</b> (une plaque fine)</li><li><b>hauteur (Z)</b> : <b>50 mm</b></li></ul><p>collée <b>juste sous le fond</b> de la coque, au milieu.</p><p class='gp-tip'>💡 Utilise 🎯 <b>Centrer</b> (axes X et Y) pour la placer bien au milieu, et 📏 la <b>Règle</b> pour vérifier qu'elle touche le fond.</p>",
       check: function(){ var k = keelPiece(); return k ? { ok:true, msg:"Quille en " + matName(k).toLowerCase() + " bien placée sous la coque." } : { ok:false, msg:"Il faut une pièce lourde (métal) juste sous le fond de la coque, au milieu." }; },
-      auto: function(){ if(needDesign()) return; var h = narrowHull(); if(!h) return; var b = mmBox(h), x = b.c.x, y = b.c.z;
+      auto: function(){ if(needDesign()) return; var h = narrowHulls()[0]; if(!h) return; var b = mmBox(h), x = b.c.x, y = b.c.z;
         h.mesh.rotation.set(5 * Math.PI/180, 0, 0); setAltitudeMM(h, 240); b = mmBox(h);
         var long = hullLongAxisX(h);
         exPrim("cube", { x:x, y:y, z:0, w: long ? 120 : 8, d: long ? 8 : 120, h:50 }, { mat:"steel", name:"Quille", rot:[5, 0, 0] });
@@ -6319,13 +6337,14 @@
       html:"<p>Sélectionne la <b>coque</b>, puis <b>Maj + clic</b> sur la <b>quille</b>. Clique <b>⚙️ Simuler</b>, puis la liaison <b>🔩 Fixe</b> : les deux pièces sont soudées.</p>",
       check: function(){ return keelJoint() ? { ok:true, msg:"La quille est soudée à la coque." } : { ok:false, msg:"Il manque une liaison 🔩 Fixe entre la coque et la quille." }; },
       auto: function(){ if(needDesign()) return; var h = narrowHull(), k = keelPiece(); if(!h || !k) return; exJoint("fixed", h, k, { anchor: objCenter(k) }); if(!simMode) enterSim(); else simOnSceneChange(); scheduleCommit(); } },
-    { title:"Teste avec la quille",
-      html:"<p>Clique <b>▶ Lancer</b>. Est-ce que la coque tient debout maintenant ?</p>",
-      enter: function(){ setSpeed(0.6); },
-      check: function(){ var n = N(); if(n.res.withKeel == null) return { ok:false, msg:"Lance la simulation et attends quelques secondes." };
-        return n.res.withKeel < 25 ? { ok:true, msg:"Elle tient debout ! La quille a gagné. 🎉" } : { ok:false, msg:"Elle chavire encore : rends la quille plus lourde ou plus longue vers le bas." }; } },
+    { title:"Teste les deux coques",
+      html:"<p>Clique <b>▶ Lancer</b> et regarde les <b>deux coques côte à côte</b> : celle <b>avec</b> la quille et celle <b>sans</b>. Laquelle tient debout ?</p>",
+      enter: function(){ setSpeed(0.6); var n = N(); n.res.duo = false; },
+      check: function(){ var n = N(); if(n.res.withKeel == null || !n.res.duo) return { ok:false, msg:"Lance la simulation et attends quelques secondes." };
+        if(n.res.withKeel >= 25) return { ok:false, msg:"Celle avec la quille chavire encore : rends la quille plus lourde ou plus longue vers le bas." };
+        return { ok:true, msg:"Avec quille : debout (" + Math.round(n.res.withKeel) + "°). Sans quille : " + (n.res.noKeel > 45 ? "chavirée" : "penchée") + " (" + Math.round(n.res.noKeel || 0) + "°). 🎉" }; } },
     { title:"Conclus",
-      html:"<p>Compare tes deux essais.</p>",
+      html:"<p>Compare tes deux coques.</p>",
       extra: function(body){
         qcm(body, "why", "Pourquoi la quille empêche-t-elle la coque de chavirer ?", ["Elle rend le bateau plus léger", "Elle met du poids tout en bas, ce qui abaisse le centre de gravité", "Elle pousse l'eau plus vite", "Elle rend le bateau plus large"], 1,
             "Exact ! Le poids placé très bas (le <b>centre de gravité</b> descend) tire le bateau vers le bas comme un balancier : il revient toujours debout.");
@@ -6389,16 +6408,22 @@
   function iBase(){ return objects.find(function(o){ if(o.type !== "cube") return false; var d = localSizeMM(o); return Math.abs(d.x - 120) <= 3 && Math.abs(d.z - 120) <= 3 && Math.abs(d.y - 10) <= 2; }) || null; }
   function iUnion(){ return objects.find(function(o){ return o.type === "solid" && o.name.indexOf(" + ") >= 0; }) || null; }
   // ---- repérage des pièces (activités 3 et 4) ----
-  function narrowHull(){ var H = hulls().filter(function(o){ return hullWidth(o) <= 62; }); return H[0] || null; }
-  function keelPiece(){
-    var h = narrowHull(); if(!h) return null; var hb = mmBox(h);
+  // coques étroites : il y en a deux dans l'activité « quille » (l'originale et sa copie)
+  function narrowHulls(){ return hulls().filter(function(o){ return hullWidth(o) <= 62; }); }
+  function keelOf(h){
+    var hb = mmBox(h);
     return solids().filter(function(o){
-      if(o === h || physDens(o) < 2) return false;
+      if(o === h || o.hollow && o.hollow.on || physDens(o) < 2) return false;
       var b = mmBox(o);
       return b.max.y <= hb.min.y + 15 && b.max.y >= hb.min.y - 25 && Math.abs(b.c.x - hb.c.x) < hb.size.x/2 && Math.abs(b.c.z - hb.c.z) < hb.size.z/2;
     })[0] || null;
   }
-  function keelJoint(){ var h = narrowHull(), k = keelPiece(); if(!h || !k) return null; return simJoints.find(function(j){ return j.type === "fixed" && ((j.a === h.id && j.b === k.id) || (j.a === k.id && j.b === h.id)); }) || null; }
+  function keelHull(){ return narrowHulls().find(function(h){ return !!keelOf(h); }) || null; }
+  function bareHull(){ var kh = keelHull(); return narrowHulls().find(function(h){ return h !== kh && !keelOf(h); }) || null; }
+  function narrowHull(){ return keelHull() || narrowHulls()[0] || null; }
+  function keelPiece(){ var h = keelHull(); return h ? keelOf(h) : null; }
+  function jointKeel(h){ var k = keelOf(h); if(!k) return null; return simJoints.find(function(j){ return j.type === "fixed" && ((j.a === h.id && j.b === k.id) || (j.a === k.id && j.b === h.id)); }) || null; }
+  function keelJoint(){ var h = keelHull(); return h ? jointKeel(h) : null; }
   function chassis(){ var C = solids().filter(function(o){ if(o.mech) return false; var s = mmBox(o).size; return Math.max(s.x, s.z) >= 145 && Math.min(s.x, s.z) >= 75 && s.y <= 42; });
     C.sort(function(a, b){ var A = mmBox(a).size, B = mmBox(b).size; return B.x*B.z - A.x*A.z; }); return C[0] || null; }
   function axleAxis(w){ var s = mmBox(w).size; return s.x < s.z ? "x" : "y"; }      // axe de l'interface le plus fin = l'essieu
@@ -6474,10 +6499,35 @@
     var mood = r.ok ? (G.step === a.steps.length - 1 ? "wow" : "happy") : "think", mm = document.getElementById("gpMascot");
     if(mm.dataset.mood !== mood){ mm.dataset.mood = mood; mm.innerHTML = mascotSVG(mood); mm.classList.remove("hop"); void mm.offsetWidth; if(r.ok) mm.classList.add("hop"); }
     st.innerHTML = (r.ok ? "✅ " : "⏳ ") + r.msg;
-    var last = G.step === a.steps.length - 1, nx = document.getElementById("gpNext");
+    var last = G.step === a.steps.length - 1;
+    // une étape de test réussie pendant la simulation : on garde la photo du résultat (la dernière l'emporte)
+    if(r.ok && simBuilt && simTime > 2 && !last && N().shotStep !== G.step){ var nn = N(); nn.shotMsg = r.msg.replace(/<[^>]+>/g, ""); guideShot(nn); }
+    var nx = document.getElementById("gpNext");
     nx.disabled = !r.ok;
     nx.textContent = last ? "🏆 Terminer" : "Suivant ▶";
     if(s.mark) markTable(s.mark);
+  }
+  // illustration du résultat pour le carnet : une photo de la scène, cadrée sur les pièces
+  function guideShot(n){
+    try{
+      if(!objects.length) return;
+      var box = sceneBox(); if(box.isEmpty()) return;
+      var W = renderer.domElement.width, H = renderer.domElement.height; if(!W || !H) return;
+      var sph = box.getBoundingSphere(new THREE.Sphere());
+      var cam = camera.clone(); cam.aspect = W / H; cam.updateProjectionMatrix();
+      var dir = camera.position.clone().sub(target); if(dir.lengthSq() < 1e-6) dir.set(1, 1, 1); dir.normalize();
+      if(dir.y < 0.25){ dir.y = 0.25; dir.normalize(); }
+      var fov = Math.min(cam.fov, cam.fov * cam.aspect) * Math.PI / 180;
+      var dist = sph.radius / Math.sin(fov / 2) * 1.02;
+      cam.position.copy(sph.center).addScaledVector(dir, dist); cam.lookAt(sph.center); cam.updateMatrixWorld(true);
+      var sel = objects.map(function(o){ return o.outline && o.outline.visible; }); objects.forEach(function(o){ if(o.outline) o.outline.visible = false; });
+      renderer.render(scene, cam);
+      var w = 520, h = Math.round(520 * H / W), cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      cv.getContext("2d").drawImage(renderer.domElement, 0, 0, w, h);          // lu tout de suite, avant que l'image ne soit effacée
+      objects.forEach(function(o, i){ if(o.outline) o.outline.visible = sel[i]; });
+      renderer.render(scene, camera);
+      n.shot = cv.toDataURL("image/jpeg", 0.78); n.shotStep = G.step; guideSave();
+    }catch(e){}
   }
   function guideTick(){
     if(!G.act) return;
@@ -6488,7 +6538,7 @@
   function guideNext(){
     var a = G.act; if(!a) return;
     if(G.step < a.steps.length - 1){ G.step++; guideRender(true); document.getElementById("gpBody").scrollTop = 0; }
-    else { N().finished = true; guideSave(); guideBookOpen(true); }
+    else { var nf = N(); if(!nf.shot) guideShot(nf); nf.finished = true; guideSave(); guideBookOpen(true); }
   }
   // ---- carnet de notes (consultable, téléchargeable) ----
   function bookHTML(forFile){
@@ -6509,6 +6559,7 @@
       }
       if(a.id === "quille" && (n.res.noKeel != null || n.res.withKeel != null)) out.push('<p>Sans quille : ' + (n.res.noKeel > 45 ? "elle chavire" : "elle tient") + ' · Avec quille : ' + (n.res.withKeel == null ? "—" : n.res.withKeel < 25 ? "elle tient debout" : "elle chavire") + '</p>');
       if(a.id === "voiture" && n.res.dist) out.push('<p>Distance parcourue : ' + Math.round(n.res.dist / 10) + ' cm</p>');
+      if(n.finished && n.shot) out.push('<figure class="gb-shot"><img src="' + n.shot + '" alt="Résultat"><figcaption>📸 Mon résultat' + (n.shotMsg ? " — " + esc(n.shotMsg) : "") + '</figcaption></figure>');
       Object.keys(n.text || {}).forEach(function(k){ if(n.text[k]) out.push('<p class="t">✏️ ' + esc(n.text[k]) + '</p>'); });
     });
     if(out.length === 1) out.push("<p>Le carnet est encore vide : commence une activité !</p>");
@@ -6516,12 +6567,153 @@
   }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }); }
   function guideBookOpen(finished){
-    document.getElementById("gbBody").innerHTML = (finished ? '<div class="gb-win"><span class="gb-cubo">' + mascotSVG("wow") + '</span><span>🏆 Bravo' + (G.st.name ? " " + esc(G.st.name) : "") + ' ! Activité terminée.</span></div>' : "") + bookHTML(false);
+    document.getElementById("gbBody").innerHTML = (finished ? '<div class="gb-win"><span class="gb-cubo">' + mascotSVG("wow") + '</span><span>🏆 Bravo' + (G.st.name ? " " + esc(G.st.name) : "") + ' ! Activité terminée.<small class="gb-hint">Pense à enregistrer ton bilan : bouton « 📄 Enregistrer le bilan en PDF » en bas.</small></span></div>' : "") + bookHTML(false);
     gBook.classList.add("show");
   }
+  // ---- bilan en PDF : l'élève choisit le nom et l'emplacement du fichier ----
+  function bookBlocks(){
+    var B = [], date = new Date().toLocaleDateString("fr-FR");
+    B.push({ t: "h1", s: "📒 Carnet de sciences" + (G.st.name ? " de " + G.st.name : "") });
+    B.push({ t: "d", s: date });
+    GUIDES.forEach(function(a){
+      var n = G.st.notes[a.id]; if(!n || n.lastStep == null) return;
+      B.push({ t: "h2", s: a.emoji + " " + a.title + (n.finished ? "  ✅" : "  (en cours)") });
+      var ids = {}; ["pred","obs","mass","vol","dens"].forEach(function(c){ Object.keys(n[c] || {}).forEach(function(k){ ids[k] = 1; }); }); Object.keys(n.res || {}).forEach(function(k){ if(/^\d+$/.test(k)) ids[k] = 1; });
+      var rows = Object.keys(ids).map(function(k){ return findObj(+k); }).filter(Boolean);
+      if(rows.length){
+        var dens = a.id === "densite";
+        var head = dens ? ["Pièce", "Je pense", "J'observe", "Masse (g)", "Volume (cm³)", "Densité"] : ["Pièce", "Largeur (mm)", "J'observe"];
+        B.push({ t: "table", head: head, rows: rows.map(function(o){ return dens
+          ? [matName(o), n.pred[o.id] || "", n.obs[o.id] || "", n.mass[o.id] || "", n.vol[o.id] || "", n.dens[o.id] || ""]
+          : [o.name, String(Math.round(hullWidth(o))), n.obs[o.id] || ""]; }) });
+      }
+      if(a.id === "quille" && (n.res.noKeel != null || n.res.withKeel != null)) B.push({ t: "p", s: "Sans quille : " + (n.res.noKeel > 45 ? "elle chavire" : "elle tient") + " · Avec quille : " + (n.res.withKeel == null ? "—" : n.res.withKeel < 25 ? "elle tient debout" : "elle chavire") });
+      if(a.id === "voiture" && n.res.dist) B.push({ t: "p", s: "Distance parcourue : " + Math.round(n.res.dist / 10) + " cm" });
+      Object.keys(n.text || {}).forEach(function(k){ if(n.text[k]) B.push({ t: "note", s: "✏️ " + n.text[k] }); });
+      if(n.finished && n.shot) B.push({ t: "img", src: n.shot, cap: "📸 Mon résultat" + (n.shotMsg ? " — " + n.shotMsg : "") });
+    });
+    if(B.length <= 2) B.push({ t: "p", s: "Le carnet est encore vide : commence une activité !" });
+    return B;
+  }
+  function loadImg(src){ return new Promise(function(res){ var im = new Image(); im.onload = function(){ res(im); }; im.onerror = function(){ res(null); }; im.src = src; }); }
+  async function bookPages(){
+    var PW = 1240, PH = 1754, M = 96, FW = PW - 2*M, FONT = '"Fredoka", "Segoe UI", Arial, sans-serif';
+    var pages = [], cv, cx, y = 0, pageNo = 0;
+    function newPage(){
+      cv = document.createElement("canvas"); cv.width = PW; cv.height = PH; cx = cv.getContext("2d");
+      cx.fillStyle = "#ffffff"; cx.fillRect(0, 0, PW, PH);
+      cx.fillStyle = "#ff3f8e"; cx.fillRect(0, 0, PW, 14);
+      pageNo++; cx.fillStyle = "#7d8bb8"; cx.font = "22px " + FONT; cx.textAlign = "right"; cx.fillText("Carnet de sciences · page " + pageNo, PW - M, PH - 50); cx.textAlign = "left";
+      pages.push(cv); y = M;
+    }
+    function need(h){ if(y + h > PH - M - 20) newPage(); }
+    function wrap(text, maxW){
+      var words = String(text).split(/\s+/), lines = [], cur = "";
+      words.forEach(function(w){ var t = cur ? cur + " " + w : w; if(cx.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; });
+      if(cur) lines.push(cur); return lines.length ? lines : [""];
+    }
+    function para(text, size, color, weight, lh, indent){
+      cx.font = (weight || "") + " " + size + "px " + FONT; cx.fillStyle = color;
+      wrap(text, FW - (indent || 0)).forEach(function(l){ need(lh); cx.font = (weight || "") + " " + size + "px " + FONT; cx.fillStyle = color; cx.fillText(l, M + (indent || 0), y + size); y += lh; });
+    }
+    newPage();
+    var blocks = bookBlocks();
+    for(var i = 0; i < blocks.length; i++){
+      var b = blocks[i];
+      if(b.t === "h1"){ para(b.s, 50, "#ff3f8e", "bold", 64); }
+      else if(b.t === "d"){ para(b.s, 24, "#7d8bb8", "", 34); y += 10; }
+      else if(b.t === "h2"){ y += 24; need(70); cx.fillStyle = "#eaf3ff"; cx.fillRect(M - 12, y - 6, FW + 24, 56); para(b.s, 34, "#1e5bd6", "bold", 56); y += 10; }
+      else if(b.t === "p"){ para(b.s, 26, "#23305a", "", 38); }
+      else if(b.t === "note"){
+        cx.font = "26px " + FONT; var L = wrap(b.s, FW - 40), h = L.length * 38 + 24; need(h);
+        cx.fillStyle = "#fff7d6"; cx.fillRect(M, y, FW, h); cx.fillStyle = "#ffc400"; cx.fillRect(M, y, 6, h);
+        cx.fillStyle = "#5a4300"; L.forEach(function(l, k){ cx.fillText(l, M + 24, y + 12 + 26 + k*38); }); y += h + 12;
+      }
+      else if(b.t === "table"){
+        var nC = b.head.length, cw = FW / nC, rh = 46;
+        cx.font = "bold 22px " + FONT; need(rh * 2);
+        cx.fillStyle = "#f2f7ff"; cx.fillRect(M, y, FW, rh); cx.fillStyle = "#1e5bd6";
+        b.head.forEach(function(h, k){ cx.fillText(wrap(h, cw - 14)[0], M + k*cw + 8, y + 30); }); y += rh;
+        b.rows.forEach(function(r){
+          cx.font = "22px " + FONT;
+          var cells = r.map(function(c){ return wrap(c, cw - 14); }), lines = Math.max.apply(null, cells.map(function(c){ return c.length; })), h = Math.max(rh, lines * 30 + 16);
+          need(h);
+          cx.strokeStyle = "#cfe2ff"; cx.lineWidth = 2; cx.strokeRect(M, y, FW, h);
+          cx.fillStyle = "#23305a"; cx.font = "22px " + FONT;
+          cells.forEach(function(c, k){ c.forEach(function(l, j){ cx.fillText(l, M + k*cw + 8, y + 30 + j*30); }); });
+          y += h;
+        });
+        y += 14;
+      }
+      else if(b.t === "img"){
+        var im = await loadImg(b.src); if(!im) continue;
+        var iw = Math.min(FW, 820), ih = iw * im.height / im.width; need(ih + 60);
+        var ix = M + (FW - iw) / 2;
+        cx.fillStyle = "#dfe8ff"; cx.fillRect(ix - 6, y - 6, iw + 12, ih + 12);
+        cx.drawImage(im, ix, y, iw, ih); y += ih + 14;
+        cx.font = "22px " + FONT; cx.fillStyle = "#4b5a8c"; cx.textAlign = "center";
+        wrap(b.cap, FW).forEach(function(l){ cx.fillText(l, PW / 2, y + 22); y += 30; }); cx.textAlign = "left"; y += 10;
+      }
+    }
+    return pages;
+  }
+  // un PDF minimal : une image JPEG par page A4
+  function pagesToPDF(pages){
+    var enc = new TextEncoder(), parts = [], offs = [], len = 0;
+    function add(x){ var u = typeof x === "string" ? enc.encode(x) : x; parts.push(u); len += u.length; }
+    function b64ToBytes(d){ var bin = atob(d.split(",")[1]), u = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+    var n = pages.length, objN = 2 + n * 3;
+    add("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+    function obj(id, body){ offs[id] = len; add(id + " 0 obj\n"); if(Array.isArray(body)) body.forEach(add); else add(body); add("\nendobj\n"); }
+    obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+    var kids = []; for(var i = 0; i < n; i++) kids.push((3 + i*3) + " 0 R");
+    obj(2, "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + n + " >>");
+    pages.forEach(function(cv, i){
+      var p = 3 + i*3, c = p + 1, im = p + 2, W = 595.28, H = 841.89;
+      var jpg = b64ToBytes(cv.toDataURL("image/jpeg", 0.88));
+      var cs = "q " + W + " 0 0 " + H + " 0 0 cm /Im0 Do Q";
+      obj(p, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] /Resources << /XObject << /Im0 " + im + " 0 R >> >> /Contents " + c + " 0 R >>");
+      obj(c, "<< /Length " + cs.length + " >>\nstream\n" + cs + "\nendstream");
+      obj(im, ["<< /Type /XObject /Subtype /Image /Width " + cv.width + " /Height " + cv.height + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + jpg.length + " >>\nstream\n", jpg, "\nendstream"]);
+    });
+    var xref = len, x = "xref\n0 " + (objN + 1) + "\n0000000000 65535 f \n";
+    for(var k = 1; k <= objN; k++) x += String(offs[k]).padStart(10, "0") + " 00000 n \n";
+    add(x + "trailer\n<< /Size " + (objN + 1) + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF");
+    return new Blob(parts, { type: "application/pdf" });
+  }
+  function bookFileBase(){ return "bilan-sciences" + (G.st.name ? "-" + G.st.name.replace(/[^\wÀ-ÿ-]+/g, "_") : ""); }
+  async function saveBookPDF(){
+    var handle = null;
+    if(window.showSaveFilePicker){
+      // la fenêtre « Enregistrer sous » s'ouvre d'abord : l'élève choisit le dossier et le nom du fichier
+      try{ handle = await window.showSaveFilePicker({ suggestedName: bookFileBase() + ".pdf", types: [{ description: "Document PDF", accept: { "application/pdf": [".pdf"] } }] }); }
+      catch(err){ if(err && err.name === "AbortError") return; handle = null; }
+    }
+    if(!handle){ printBook(); return; }
+    toast("📄 Fabrication du PDF…");
+    try{
+      var pdf = pagesToPDF(await bookPages());
+      var w = await handle.createWritable(); await w.write(pdf); await w.close();
+      toast("✅ Bilan enregistré : " + handle.name);
+    }catch(e){ toast("Le PDF n'a pas pu être enregistré"); }
+  }
+  // navigateurs sans fenêtre « Enregistrer sous » : la fenêtre d'impression, avec « Enregistrer au format PDF »
+  function printBook(){
+    var w = window.open("", "_blank");
+    if(!w){ toast("Autorise les fenêtres surgissantes pour enregistrer le PDF"); return; }
+    w.document.write('<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>' + bookFileBase() + '</title><style>body{font-family:Arial,sans-serif;max-width:820px;margin:20px auto;color:#23305a}h1{color:#ff3f8e}h2{color:#1e88ff;margin-top:24px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #cfe2ff;padding:6px 8px;text-align:left}th{background:#f2f7ff}.d{color:#7d8bb8}.t{background:#fff7d6;padding:8px;border-radius:8px}figure{text-align:center;margin:10px 0;break-inside:avoid}figure img{max-width:100%;width:480px;border-radius:12px}.tip{background:#e0f1ff;border:2px solid #3d9bff;padding:10px;border-radius:10px}@media print{.tip{display:none}}</style></head><body><p class="tip">🖨️ Dans la fenêtre qui s\'ouvre, choisis <b>« Enregistrer au format PDF »</b> comme imprimante, puis <b>Enregistrer</b> : tu pourras choisir le nom du fichier et le dossier.</p>' + bookHTML(true) + '</body></html>');
+    w.document.close();
+    setTimeout(function(){ try{ w.focus(); w.print(); }catch(e){} }, 600);
+  }
+  document.getElementById("gbPdf").addEventListener("click", saveBookPDF);
   document.getElementById("gbDownload").addEventListener("click", function(){
-    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Carnet de sciences</title><style>body{font-family:Arial,sans-serif;max-width:820px;margin:30px auto;color:#23305a}h1{color:#ff3f8e}h2{color:#1e88ff;margin-top:28px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #cfe2ff;padding:6px 8px;text-align:left}th{background:#f2f7ff}.d{color:#7d8bb8}.t{background:#fff7d6;padding:8px;border-radius:8px}</style></head><body>' + bookHTML(true) + '</body></html>';
-    downloadBlob(new Blob([html], { type: "text/html" }), "carnet-sciences" + (G.st.name ? "-" + G.st.name.replace(/[^\wÀ-ÿ-]+/g, "_") : "") + ".html");
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Carnet de sciences</title><style>body{font-family:Arial,sans-serif;max-width:820px;margin:30px auto;color:#23305a}h1{color:#ff3f8e}h2{color:#1e88ff;margin-top:28px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #cfe2ff;padding:6px 8px;text-align:left}th{background:#f2f7ff}.d{color:#7d8bb8}.t{background:#fff7d6;padding:8px;border-radius:8px}figure{text-align:center;margin:10px 0}figure img{max-width:100%;width:480px;border-radius:12px}figcaption{color:#4b5a8c;font-size:13px}</style></head><body>' + bookHTML(true) + '</body></html>';
+    var hb = new Blob([html], { type: "text/html" }), hn = bookFileBase() + ".html";
+    if(window.showSaveFilePicker){
+      window.showSaveFilePicker({ suggestedName: hn, types: [{ description: "Page web", accept: { "text/html": [".html"] } }] })
+        .then(function(h){ return h.createWritable().then(function(w){ return w.write(hb).then(function(){ return w.close(); }); }).then(function(){ toast("✅ Carnet enregistré : " + h.name); }); })
+        .catch(function(err){ if(!err || err.name !== "AbortError") downloadBlob(hb, hn); });
+    } else downloadBlob(hb, hn);
   });
   document.getElementById("gbClose").addEventListener("click", function(){ gBook.classList.remove("show"); if(G.act && N().finished){ guideStop(); guideOpenChooser(); } });
   document.getElementById("guideToggle").addEventListener("click", function(){ if(G.act && !gPanel.classList.contains("show")) gPanel.classList.add("show"); else guideOpenChooser(); });
