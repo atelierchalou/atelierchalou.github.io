@@ -45,7 +45,7 @@
     try { d = JSON.parse(get('cmi.suspend_data') || 'null'); } catch (e) {}
     if (!d || !d.m) return null;
     const missions = {};
-    for (const [id, v] of Object.entries(d.m)) missions[id] = { done: !!v[0], points: Number(v[1]) || 0, hints: v[2] || 0, fails: v[3] || 0, solution: !!v[4] };
+    for (const [id, v] of Object.entries(d.m)) missions[id] = { done: !!v[0], points: Number(v[1]) || 0, hints: v[2] || 0, fails: v[3] || 0, solution: !!v[4], seq: typeof v[5] === 'string' ? v[5] : undefined };
     return { cur: d.c || 0, finished: !!d.f, missions: missions };
   }
   function save(c, st, sm) {
@@ -53,7 +53,7 @@
     const m = {};
     for (const [id, v] of Object.entries(st.missions)) {
       if (!v.done && !v.hints && !v.fails && !v.solution) continue;
-      m[id] = [v.done ? 1 : 0, v.done ? v.points || 0 : 0, v.hints || 0, v.fails || 0, v.solution ? 1 : 0];
+      m[id] = [v.done ? 1 : 0, v.done ? v.points || 0 : 0, v.hints || 0, v.fails || 0, v.solution ? 1 : 0, v.seq || ''];
     }
     set('cmi.suspend_data', JSON.stringify({ c: st.cur, f: st.finished ? 1 : 0, m: m }));
     set('cmi.core.lesson_location', String(st.cur + 1));

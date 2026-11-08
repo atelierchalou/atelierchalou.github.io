@@ -28,6 +28,10 @@
   const SENS = { fwd: 8, side: 2.2 };             // capteurs de ligne : 8 cm devant l'essieu, à 2,2 cm de l'axe
   const VMAX = 35, DEAD = 20;                     // 35 cm/s à 100 % ; en dessous de 20 % les moteurs calent
   const START = () => ({ x: TRACK.cx - 25, y: TRACK.cy - TRACK.r, th: 0 });
+  /* Décor de la piste selon le parcours guidé : 'mars' (sol martien, rochers, pas de ligne), 'route' (route et carton), sinon atelier. */
+  const theme = () => { const G = root.GuideMode; return (G && G.active && G.course && G.course.theme) || ''; };
+  /* nombres pseudo-aléatoires fixes : le décor ne « saute » pas d'une image à l'autre */
+  const rnd = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
   function distToTrack(x, y) {
     const dx = x - TRACK.cx, dy = y - TRACK.cy;
@@ -57,6 +61,7 @@
       this.loopOn = false;
     }
     reset() {
+      this.tracks = [];
       this.m = { l: 0, r: 0 };
       this.ledOn = 0;
       this.clicks = 0;
@@ -88,7 +93,7 @@
       const p = this.pose, s = side === 'L' ? SENS.side : -SENS.side;
       return { x: p.x + SENS.fwd * Math.cos(p.th) - s * Math.sin(p.th), y: p.y + SENS.fwd * Math.sin(p.th) + s * Math.cos(p.th) };
     }
-    seesBlack(side) { const q = this.sensorPoint(side); return distToTrack(q.x, q.y) <= TAPE; }
+    seesBlack(side) { if (theme() === 'mars') return false; const q = this.sensorPoint(side); return distToTrack(q.x, q.y) <= TAPE; }   // sur Mars, pas de ligne au sol
     line(side, color) { this.advance(); return this.seesBlack(side) === (color === 'BLACK'); }
     distance() {
       this.advance();
@@ -113,8 +118,16 @@
       n.y = p.y + v * Math.sin(p.th + w * dt / 2) * dt;
       // bords de l'aire et obstacle : le robot bute dessus
       const rad = 8;
-      n.x = Math.max(rad, Math.min(W - rad, n.x));
-      n.y = Math.max(rad, Math.min(H - rad, n.y));
+      // tout le robot (caisse + roues) reste dans l'aire visible, quelle que soit son orientation
+      const c = Math.cos(n.th), si = Math.sin(n.th), hw = BODY.wid / 2 + 2.2;
+      let x0 = 0, x1 = 0, y0 = 0, y1 = 0;
+      for (const [a, b] of [[-BODY.len / 2 + 2, -hw], [-BODY.len / 2 + 2, hw], [BODY.len / 2 + (theme() === 'mars' ? 3.5 : 2), -hw], [BODY.len / 2 + (theme() === 'mars' ? 3.5 : 2), hw]]) {
+        const cx = a * c - b * si, cy = a * si + b * c;
+        x0 = Math.min(x0, cx); x1 = Math.max(x1, cx); y0 = Math.min(y0, cy); y1 = Math.max(y1, cy);
+      }
+      const M = theme() === 'mars' ? 3 : 0;   // sur Mars, petite marge ; ailleurs la piste passe près du bord : pas de marge
+      n.x = Math.max(M - x0, Math.min(W - M - x1, n.x));
+      n.y = Math.max(M - y0, Math.min(H - M - y1, n.y));
       if (this.box.on && Math.abs(n.x - this.box.x) < this.box.w / 2 + rad && Math.abs(n.y - this.box.y) < this.box.h / 2 + rad) { n.x = p.x; n.y = p.y; }
       this.pose = n;
     }
@@ -200,6 +213,108 @@
       this.info.textContent = 'Moteurs : gauche ' + this.m.l + ' %, droit ' + this.m.r + ' %  ·  Ligne : gauche ' + L + ', droit ' + R
         + '  ·  Distance : ' + (d === 999 ? 'rien devant' : d + ' cm');
     }
+    /* ---------- décors ---------- */
+    paintMars(g, k, X, Y) {
+      const cv = this.canvas;
+      const grd = g.createLinearGradient(0, 0, cv.width, cv.height);
+      grd.addColorStop(0, '#d9783f'); grd.addColorStop(0.55, '#c45e2e'); grd.addColorStop(1, '#a9471f');
+      g.fillStyle = grd; g.fillRect(0, 0, cv.width, cv.height);
+      // taches de poussière
+      for (let i = 0; i < 26; i++) {
+        g.fillStyle = 'rgba(' + (rnd(i) > 0.5 ? '255,190,140' : '120,40,15') + ',' + (0.08 + rnd(i + 50) * 0.08) + ')';
+        g.beginPath(); g.ellipse(X(rnd(i + 1) * W), Y(rnd(i + 2) * H), (6 + rnd(i + 3) * 16) * k, (3 + rnd(i + 4) * 8) * k, rnd(i + 5) * 3, 0, 7); g.fill();
+      }
+      // cratères
+      const craters = [[150, 95, 12], [35, 22, 9], [120, 18, 6], [60, 100, 7], [165, 40, 5], [95, 52, 4]];
+      for (const [cx, cy, r] of craters) {
+        g.fillStyle = 'rgba(90,30,10,.35)'; g.beginPath(); g.arc(X(cx), Y(cy), r * k, 0, 7); g.fill();
+        g.fillStyle = 'rgba(255,200,150,.25)'; g.beginPath(); g.arc(X(cx - r * 0.15), Y(cy + r * 0.15), r * 0.8 * k, 0, 7); g.fill();
+        g.strokeStyle = 'rgba(255,215,170,.45)'; g.lineWidth = 1.2 * k; g.beginPath(); g.arc(X(cx), Y(cy), r * k, Math.PI * 0.9, Math.PI * 1.9); g.stroke();
+      }
+      // petits cailloux
+      for (let i = 0; i < 60; i++) {
+        g.fillStyle = rnd(i + 200) > 0.5 ? 'rgba(70,25,10,.55)' : 'rgba(250,200,160,.5)';
+        g.beginPath(); g.arc(X(rnd(i + 100) * W), Y(rnd(i + 150) * H), (0.4 + rnd(i + 175) * 0.9) * k, 0, 7); g.fill();
+      }
+      // le module d'atterrissage, à gauche
+      const lx = 10, ly = 60;
+      g.save(); g.translate(X(lx), Y(ly));
+      g.strokeStyle = '#d8d8d8'; g.lineWidth = 1.2 * k;
+      for (const a of [0.6, 2.5, 3.8, 5.6]) { g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a) * 8 * k, Math.sin(a) * 8 * k); g.stroke(); }
+      g.fillStyle = '#e9e9ef'; g.strokeStyle = '#8b8fa3'; g.lineWidth = 1.5;
+      g.beginPath(); g.arc(0, 0, 5 * k, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = '#f2b134'; g.beginPath(); g.arc(0, 0, 2 * k, 0, 7); g.fill();
+      g.restore();
+      // traces de roues derrière le rover
+      if (!this.tracks) this.tracks = [];
+      const p = this.pose, last = this.tracks[this.tracks.length - 1];
+      if (!last || Math.hypot(last.x - p.x, last.y - p.y) > 1.5) { this.tracks.push({ x: p.x, y: p.y, th: p.th }); if (this.tracks.length > 400) this.tracks.shift(); }
+      g.fillStyle = 'rgba(80,25,8,.22)';
+      for (const t of this.tracks) for (const sgn of [-1, 1]) {
+        const ox = -Math.sin(t.th) * sgn * (BODY.wid / 2 + 1), oy = Math.cos(t.th) * sgn * (BODY.wid / 2 + 1);
+        g.beginPath(); g.arc(X(t.x + ox), Y(t.y + oy), 0.7 * k, 0, 7); g.fill();
+      }
+    }
+    paintRock(g, k, X, Y, b) {
+      const pts = 9, R = b.w / 2 + 1;
+      g.save(); g.translate(X(b.x), Y(b.y));
+      g.fillStyle = 'rgba(60,20,5,.35)'; g.beginPath(); g.ellipse(1.5 * k, 1.8 * k, R * 1.05 * k, R * 0.8 * k, 0, 0, 7); g.fill();
+      g.beginPath();
+      for (let i = 0; i <= pts; i++) { const a = i / pts * Math.PI * 2, r = R * (0.78 + rnd(i + 7) * 0.3); const px = Math.cos(a) * r * k, py = Math.sin(a) * r * k; if (i) g.lineTo(px, py); else g.moveTo(px, py); }
+      const gr = g.createRadialGradient(-R * 0.3 * k, -R * 0.4 * k, 1, 0, 0, R * k);
+      gr.addColorStop(0, '#b0715a'); gr.addColorStop(1, '#5d2e1f');
+      g.fillStyle = gr; g.fill(); g.strokeStyle = '#3c1a10'; g.lineWidth = 1.5; g.stroke();
+      g.strokeStyle = 'rgba(255,220,190,.35)'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(-R * 0.4 * k, -R * 0.2 * k); g.lineTo(R * 0.1 * k, -R * 0.45 * k); g.stroke();
+      g.restore();
+      g.fillStyle = '#fff4e8'; g.font = '600 ' + Math.max(9, 3 * k) + 'px Fredoka, sans-serif'; g.textAlign = 'center';
+      g.fillText('rocher', X(b.x), Y(b.y - b.h / 2 - 4));
+    }
+    paintRoad(g, k, X, Y, trackPath) {
+      const cv = this.canvas;
+      g.fillStyle = '#8cc36a'; g.fillRect(0, 0, cv.width, cv.height);
+      for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(40,110,40,.18)'; g.beginPath(); g.arc(X(rnd(i + 300) * W), Y(rnd(i + 340) * H), (2 + rnd(i + 380) * 4) * k, 0, 7); g.fill(); }
+      // arbres et maisons hors de la route
+      const trees = [[8, 10], [172, 112], [8, 110], [172, 8], [90, 60], [75, 62], [105, 58]];
+      for (const [tx, ty] of trees) {
+        g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.arc(X(tx + 1), Y(ty - 1), 5 * k, 0, 7); g.fill();
+        g.fillStyle = '#2f8a3a'; g.beginPath(); g.arc(X(tx), Y(ty), 5 * k, 0, 7); g.fill();
+        g.fillStyle = '#49ad52'; g.beginPath(); g.arc(X(tx - 1.2), Y(ty + 1.2), 3 * k, 0, 7); g.fill();
+      }
+      // route : bande grise avec bords blancs, la ligne noire au milieu sert au suivi
+      g.lineJoin = 'round';
+      g.strokeStyle = '#ffffff'; g.lineWidth = 26 * k; trackPath(); g.stroke();
+      g.strokeStyle = '#5b6170'; g.lineWidth = 24 * k; trackPath(); g.stroke();
+      g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 0.8 * k; g.setLineDash([4 * k, 4 * k]);
+      // pointillés de bord de voie
+      for (const off of [-8.5, 8.5]) {
+        g.beginPath();
+        const r = TRACK.r + off;
+        g.moveTo(X(TRACK.cx - TRACK.a), Y(TRACK.cy - r));
+        g.lineTo(X(TRACK.cx + TRACK.a), Y(TRACK.cy - r));
+        g.arc(X(TRACK.cx + TRACK.a), Y(TRACK.cy), r * k, Math.PI / 2, -Math.PI / 2, true);
+        g.lineTo(X(TRACK.cx - TRACK.a), Y(TRACK.cy + r));
+        g.arc(X(TRACK.cx - TRACK.a), Y(TRACK.cy), r * k, -Math.PI / 2, Math.PI / 2, true);
+        g.closePath(); g.stroke();
+      }
+      g.setLineDash([]);
+    }
+    paintRoadblock(g, k, X, Y, b) {
+      g.save(); g.translate(X(b.x), Y(b.y));
+      g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(-b.w / 2 * k + 1.5 * k, -b.h / 2 * k + 1.5 * k, b.w * k, b.h * k);
+      g.fillStyle = '#c98b4b'; g.strokeStyle = '#7a4f22'; g.lineWidth = 2;
+      g.fillRect(-b.w / 2 * k, -b.h / 2 * k, b.w * k, b.h * k); g.strokeRect(-b.w / 2 * k, -b.h / 2 * k, b.w * k, b.h * k);
+      g.strokeStyle = 'rgba(122,79,34,.6)'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(-b.w / 2 * k, 0); g.lineTo(b.w / 2 * k, 0); g.stroke();
+      // cône orange posé dessus
+      g.fillStyle = '#ff7a1a'; g.beginPath(); g.arc(0, 0, 3.6 * k, 0, 7); g.fill();
+      g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 0, 2.2 * k, 0, 7); g.fill();
+      g.fillStyle = '#ff7a1a'; g.beginPath(); g.arc(0, 0, 1 * k, 0, 7); g.fill();
+      g.restore();
+      g.fillStyle = '#1d2433'; g.font = '700 ' + Math.max(9, 3 * k) + 'px Fredoka, sans-serif'; g.textAlign = 'center';
+      g.fillText('travaux', X(b.x), Y(b.y - b.h / 2 - 3.5));
+    }
+
     paint() {
       const cv = this.canvas;
       if (!cv || !cv.isConnected) return;
@@ -207,28 +322,39 @@
       if (cv.width !== Math.round(cssW * dpr)) { cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr); cv.style.height = cssH + 'px'; }
       const k = cv.width / W, g = cv.getContext('2d');
       const X = (x) => x * k, Y = (y) => (H - y) * k;
-      g.fillStyle = '#f6f1e7'; g.fillRect(0, 0, cv.width, cv.height);
-      // carrelage léger
-      g.strokeStyle = 'rgba(0,0,0,.05)'; g.lineWidth = 1;
-      for (let x = 0; x <= W; x += 30) { g.beginPath(); g.moveTo(X(x), 0); g.lineTo(X(x), cv.height); g.stroke(); }
-      for (let y = 0; y <= H; y += 30) { g.beginPath(); g.moveTo(0, Y(y)); g.lineTo(cv.width, Y(y)); g.stroke(); }
-      // piste
-      g.strokeStyle = '#141414'; g.lineWidth = 2 * TAPE * k; g.lineJoin = 'round';
-      g.beginPath();
-      g.moveTo(X(TRACK.cx - TRACK.a), Y(TRACK.cy - TRACK.r));
-      g.lineTo(X(TRACK.cx + TRACK.a), Y(TRACK.cy - TRACK.r));
-      g.arc(X(TRACK.cx + TRACK.a), Y(TRACK.cy), TRACK.r * k, Math.PI / 2, -Math.PI / 2, true);
-      g.lineTo(X(TRACK.cx - TRACK.a), Y(TRACK.cy + TRACK.r));
-      g.arc(X(TRACK.cx - TRACK.a), Y(TRACK.cy), TRACK.r * k, -Math.PI / 2, Math.PI / 2, true);
-      g.closePath(); g.stroke();
+      const th = theme();
+      const trackPath = () => {
+        g.beginPath();
+        g.moveTo(X(TRACK.cx - TRACK.a), Y(TRACK.cy - TRACK.r));
+        g.lineTo(X(TRACK.cx + TRACK.a), Y(TRACK.cy - TRACK.r));
+        g.arc(X(TRACK.cx + TRACK.a), Y(TRACK.cy), TRACK.r * k, Math.PI / 2, -Math.PI / 2, true);
+        g.lineTo(X(TRACK.cx - TRACK.a), Y(TRACK.cy + TRACK.r));
+        g.arc(X(TRACK.cx - TRACK.a), Y(TRACK.cy), TRACK.r * k, -Math.PI / 2, Math.PI / 2, true);
+        g.closePath();
+      };
+      if (th === 'mars') this.paintMars(g, k, X, Y);
+      else if (th === 'route') this.paintRoad(g, k, X, Y, trackPath);
+      else {
+        g.fillStyle = '#f6f1e7'; g.fillRect(0, 0, cv.width, cv.height);
+        // carrelage léger
+        g.strokeStyle = 'rgba(0,0,0,.05)'; g.lineWidth = 1;
+        for (let x = 0; x <= W; x += 30) { g.beginPath(); g.moveTo(X(x), 0); g.lineTo(X(x), cv.height); g.stroke(); }
+        for (let y = 0; y <= H; y += 30) { g.beginPath(); g.moveTo(0, Y(y)); g.lineTo(cv.width, Y(y)); g.stroke(); }
+      }
+      // piste (ligne noire) : pas sur Mars
+      if (th !== 'mars') { g.strokeStyle = '#141414'; g.lineWidth = 2 * TAPE * k; g.lineJoin = 'round'; trackPath(); g.stroke(); }
       // obstacle
       if (this.box.on) {
         const b = this.box;
-        g.fillStyle = '#c98b4b'; g.strokeStyle = '#7a4f22'; g.lineWidth = 2;
-        g.fillRect(X(b.x - b.w / 2), Y(b.y + b.h / 2), b.w * k, b.h * k);
-        g.strokeRect(X(b.x - b.w / 2), Y(b.y + b.h / 2), b.w * k, b.h * k);
-        g.fillStyle = '#4a2f12'; g.font = '600 ' + Math.max(9, 3.2 * k) + 'px Fredoka, sans-serif'; g.textAlign = 'center';
-        g.fillText('obstacle', X(b.x), Y(b.y) + 3.5 * k / 3);
+        if (th === 'mars') this.paintRock(g, k, X, Y, b);
+        else if (th === 'route') this.paintRoadblock(g, k, X, Y, b);
+        else {
+          g.fillStyle = '#c98b4b'; g.strokeStyle = '#7a4f22'; g.lineWidth = 2;
+          g.fillRect(X(b.x - b.w / 2), Y(b.y + b.h / 2), b.w * k, b.h * k);
+          g.strokeRect(X(b.x - b.w / 2), Y(b.y + b.h / 2), b.w * k, b.h * k);
+          g.fillStyle = '#4a2f12'; g.font = '600 ' + Math.max(9, 3.2 * k) + 'px Fredoka, sans-serif'; g.textAlign = 'center';
+          g.fillText('obstacle', X(b.x), Y(b.y) + 3.5 * k / 3);
+        }
       }
       // faisceau ultrason
       const p = this.pose, d = this.distance();
@@ -247,6 +373,12 @@
       const rx = -BODY.len / 2 + 2, ry = -BODY.wid / 2;
       g.beginPath(); if (g.roundRect) g.roundRect(rx * k, ry * k, BODY.len * k, BODY.wid * k, 3 * k); else g.rect(rx * k, ry * k, BODY.len * k, BODY.wid * k);
       g.fill(); g.stroke();
+      if (th === 'mars') {   // le Cagett'bot en tenue de rover : panneau solaire et mât de caméra
+        g.fillStyle = '#23407a'; g.strokeStyle = '#9fb7e6'; g.lineWidth = 1;
+        g.fillRect((rx + 2) * k, (ry + 1.5) * k, (BODY.len - 9) * k, (BODY.wid - 3) * k);
+        for (let i = 1; i < 4; i++) { const xx = (rx + 2 + i * (BODY.len - 9) / 4) * k; g.beginPath(); g.moveTo(xx, (ry + 1.5) * k); g.lineTo(xx, (ry + BODY.wid - 1.5) * k); g.stroke(); }
+        g.fillStyle = '#f2f2f2'; g.beginPath(); g.arc((BODY.len / 2 - 3.5) * k, -3.2 * k, 1.5 * k, 0, 7); g.fill();
+      }
       // ultrasons (deux « yeux »)
       g.fillStyle = '#dfe6ee';
       for (const s of [-2.6, 2.6]) { g.beginPath(); g.arc((BODY.len / 2 + 1.2) * k, s * k, 1.8 * k, 0, 7); g.fill(); }

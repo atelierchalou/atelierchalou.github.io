@@ -15,7 +15,7 @@
     'continue switch case default true false setup loop delay delayMicroseconds pinMode digitalWrite digitalRead ' +
     'analogRead analogWrite millis micros tone noTone map random randomSeed min max abs pow sqrt constrain Serial ' +
     'Servo String class new delete this auto const static signed unsigned short register volatile struct union enum ' +
-    'typedef sizeof HIGH LOW INPUT OUTPUT INPUT_PULLUP PI pulseIn ultrasonic_cm servo_write buzzer_tone ledcAttach ledcWrite ledcWriteTone robot_moteur robot_moteurs robot_distance robot_mode_appui radio radio_recu radio_envoyer radio_valeur RADIO_ADRESSE').split(' '));
+    'typedef sizeof HIGH LOW INPUT OUTPUT INPUT_PULLUP PI pulseIn ultrasonic_cm servo_write buzzer_tone ledcAttach ledcWrite ledcWriteTone robot_moteur robot_moteurs robot_distance robot_mode_appui radio radio_recu radio_envoyer radio_valeur RADIO_ADRESSE ENA IN1 IN2 ENB IN3 IN4 TRIG ECHO LED_OBSTACLE LIGNE_G LIGNE_D BOUTON_MODE BOUTON TURBO LED_TURBO').split(' '));
 
   function safeName(name) {
     let s = String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9_]/g, '_');
@@ -31,7 +31,28 @@
     if (!gen.explicitPins_.has(pin) && !gen.autoModes_.has(pin)) gen.autoModes_.set(pin, mode);
   }
 
+  /* Broches du Cagett'bot et de sa télécommande : déclarées avec un nom, comme dans robot.ino et telecommande.ino */
+  const PIN_NAMES = [
+    ['ENA', 'const int ENA = 5;                    // vitesse du moteur gauche (PWM)'],
+    ['IN1', 'const int IN1 = 7;                    // sens du moteur gauche'],
+    ['IN2', 'const int IN2 = 8;'],
+    ['ENB', 'const int ENB = 6;                    // vitesse du moteur droit (PWM)'],
+    ['IN3', 'const int IN3 = 4;                    // sens du moteur droit'],
+    ['IN4', 'const int IN4 = 3;'],
+    ['TRIG', 'const int TRIG = 2;                   // capteur : émission'],
+    ['ECHO', 'const int ECHO = A0;                  // capteur : réception'],
+    ['LED_OBSTACLE', 'const int LED_OBSTACLE = A1;          // LED : obstacle devant'],
+    ['LIGNE_G', 'const int LIGNE_G = A2;               // capteur de ligne gauche'],
+    ['LIGNE_D', 'const int LIGNE_D = A3;               // capteur de ligne droit'],
+    ['BOUTON_MODE', 'const int BOUTON_MODE = A4;           // bouton MODE'],
+    ['BOUTON', 'const int BOUTON[4] = {2, 3, 4, 5};   // avant, arrière, gauche, droite'],
+    ['TURBO', 'const int TURBO = 6;                  // bouton turbo'],
+    ['LED_TURBO', 'const int LED_TURBO = 7;              // LED allumée en mode rapide'],
+  ];
+  const usePin = (name) => { gen.pinNames_.add(name); return name; };
+
   gen.init = function (workspace) {
+    this.pinNames_ = new Set();
     this.includes_ = [];
     this.globals_ = [];
     this.functions_ = new Map();
@@ -60,6 +81,8 @@
   gen.finish = function () {
     const out = ['// Programme généré par L\'atelier du codeur (' + (root.ArduinoBlocks ? root.ArduinoBlocks.board().name : 'Arduino Nano') + ')'];
     if (this.includes_.length) out.push(...this.includes_, '');
+    const pins = PIN_NAMES.filter(([k]) => this.pinNames_.has(k)).map(([, l]) => l);
+    if (pins.length) out.push(...pins, '');
     if (this.globals_.length) out.push(...this.globals_, '');
     for (const f of this.functions_.values()) out.push(f, '');
     const setup = [];
@@ -237,10 +260,10 @@
 
   /* ----- Robot « Cagett'bot » (câblage fixe) ----- */
   function robotMotors(g) {
-    for (const p of ['5', '7', '8', '6', '4', '3']) autoMode(p, 'OUTPUT');
+    for (const p of ['ENA', 'IN1', 'IN2', 'ENB', 'IN3', 'IN4']) autoMode(usePin(p), 'OUTPUT');
     g.functions_.set('robot_moteurs', [
       '// Cagett\'bot : moteurs pilotés par le L298N (vitesse de -100 à 100 %)',
-      'void robot_moteur(int en, int inA, int inB, long v) {',
+      'void robot_moteur(int inA, int inB, int en, long v) {',
       '  v = constrain(v, -100, 100);',
       '  digitalWrite(inA, v > 0 ? HIGH : LOW);',
       '  digitalWrite(inB, v < 0 ? HIGH : LOW);',
@@ -248,8 +271,8 @@
       '}',
       '',
       'void robot_moteurs(long gauche, long droit) {',
-      '  robot_moteur(5, 7, 8, gauche);   // ENA D5, IN1 D7, IN2 D8',
-      '  robot_moteur(6, 4, 3, droit);    // ENB D6, IN3 D4, IN4 D3',
+      '  robot_moteur(IN1, IN2, ENA, gauche);   // moteur gauche',
+      '  robot_moteur(IN3, IN4, ENB, droit);    // moteur droit',
       '}',
     ].join('\n'));
   }
@@ -264,16 +287,16 @@
   F.robot_stop = (b, g) => { robotMotors(g); return 'robot_moteurs(0, 0);\n'; };
   F.robot_motors = (b, g) => { robotMotors(g); return 'robot_moteurs(' + val(g, b, 'LEFT', '0') + ', ' + val(g, b, 'RIGHT', '0') + ');\n'; };
   F.robot_distance = (b, g) => {
-    autoMode('2', 'OUTPUT'); autoMode('A0', 'INPUT');
+    autoMode(usePin('TRIG'), 'OUTPUT'); autoMode(usePin('ECHO'), 'INPUT');
     g.functions_.set('robot_distance', [
       '// Cagett\'bot : distance mesurée par le HC-SR04 (TRIG D2, ECHO A0), 999 si rien devant',
       'long robot_distance() {',
-      '  digitalWrite(2, LOW);',
+      '  digitalWrite(TRIG, LOW);               // impulsion de 10 µs',
       '  delayMicroseconds(2);',
-      '  digitalWrite(2, HIGH);',
+      '  digitalWrite(TRIG, HIGH);',
       '  delayMicroseconds(10);',
-      '  digitalWrite(2, LOW);',
-      '  long duree_us = pulseIn(A0, HIGH, 25000UL);',
+      '  digitalWrite(TRIG, LOW);',
+      '  long duree_us = pulseIn(ECHO, HIGH, 25000UL);   // durée de l\'écho (µs)',
       '  if (duree_us == 0) return 999;',
       '  return duree_us / 58;',
       '}',
@@ -281,21 +304,21 @@
     return ['robot_distance()', ATOM];
   };
   F.robot_line = (b) => {
-    const p = b.getFieldValue('SIDE') === 'L' ? 'A2' : 'A3';
+    const p = usePin(b.getFieldValue('SIDE') === 'L' ? 'LIGNE_G' : 'LIGNE_D');
     autoMode(p, 'INPUT');
     // module TCRT5000 : sortie HAUTE au-dessus du noir (pas de reflet), BASSE au-dessus du blanc
     return ['(digitalRead(' + p + ') == ' + (b.getFieldValue('COLOR') === 'BLACK' ? 'HIGH' : 'LOW') + ')', ATOM];
   };
-  F.robot_led = (b) => { autoMode('A1', 'OUTPUT'); return 'digitalWrite(A1, ' + b.getFieldValue('STATE') + ');\n'; };
-  F.robot_mode = () => { autoMode('A4', 'INPUT_PULLUP'); return ['(digitalRead(A4) == LOW)', ATOM]; };
+  F.robot_led = (b) => { autoMode(usePin('LED_OBSTACLE'), 'OUTPUT'); return 'digitalWrite(LED_OBSTACLE, ' + b.getFieldValue('STATE') + ');\n'; };
+  F.robot_mode = () => { autoMode(usePin('BOUTON_MODE'), 'INPUT_PULLUP'); return ['(digitalRead(BOUTON_MODE) == LOW)', ATOM]; };
   F.robot_mode_click = (b, g) => {
-    autoMode('A4', 'INPUT_PULLUP');
+    autoMode(usePin('BOUTON_MODE'), 'INPUT_PULLUP');
     g.functions_.set('robot_mode_appui', [
       '// Cagett\'bot : vrai une seule fois par appui sur le bouton MODE (A4), avec anti-rebond',
       'bool robot_mode_appui() {',
       '  static bool avant = false;',
       '  static unsigned long t = 0;',
-      '  bool maintenant = digitalRead(A4) == LOW;',
+      '  bool maintenant = digitalRead(BOUTON_MODE) == LOW;',
       '  bool appui = maintenant && !avant && millis() - t > 50;',
       '  if (maintenant != avant) t = millis();',
       '  avant = maintenant;',
@@ -307,7 +330,7 @@
   function robotRadio(g) {
     addOnce(g.includes_, '#include <SPI.h>');
     addOnce(g.includes_, '#include <RF24.h>');
-    addOnce(g.globals_, 'RF24 radio(9, 10);                    // nRF24L01 : CE D9, CSN D10');
+    addOnce(g.globals_, 'RF24 radio(9, 10);                    // CE = D9, CSN = D10');
     const grp = root.ArduinoBlocks ? root.ArduinoBlocks.radioGroup() : 1, adr = root.ArduinoBlocks ? root.ArduinoBlocks.radioAddress() : 'ROB01';
     addOnce(g.globals_, 'const byte RADIO_ADRESSE[6] = "' + adr + '";  // groupe radio n° ' + grp + ' : le même numéro sur le robot et sa télécommande'); 
     addOnce(g.globals_, 'long radio_valeur = 0;');
@@ -340,7 +363,7 @@
   root.ArduinoGen = {
     generate: (ws) => gen.workspaceToCode(ws),
     /* pour les blocs ajoutés par d'autres fichiers (montages) */
-    gen: gen, helpers: { val: val, top: top, isNum: isNum, addOnce: addOnce, autoMode: autoMode, ATOM: ATOM, NONE: NONE },
+    gen: gen, helpers: { val: val, top: top, isNum: isNum, addOnce: addOnce, autoMode: autoMode, usePin: usePin, ATOM: ATOM, NONE: NONE },
     /* blocs posés en dehors des blocs « au démarrage » / « répéter indéfiniment » */
     usesRobot: (ws) => ws.getAllBlocks(false).some((b) => b.type.indexOf('robot_') === 0 && b.isEnabled()),
     orphanCount: (ws) => ws.getTopBlocks(false).filter((b) => HATS.indexOf(b.type) < 0 && b.isEnabled()).length,

@@ -5,6 +5,7 @@
   const Blockly = root.Blockly;
   const AB = root.ArduinoBlocks, AG = root.ArduinoGen;
   const { val, top, addOnce, autoMode, ATOM } = AG.helpers;
+  const H = AG.helpers;
   const F = AG.gen.forBlock;
 
   const COL = { ext: '#495057', duo: '#0B7285', robot: '#0B7285', radio: '#5F3DC4', tc: '#1098AD', laser: '#C92A2A', pl: '#C92A2A', cl: '#E8590C', cv: '#F08C00' };
@@ -115,11 +116,13 @@
     g.functions_.set('cible_broche', 'byte cible_broche(long n) { return CIBLES[constrain(n, 1, 5) - 1]; }');
   }
 
-  F.tc_button = (b) => { autoMode(PIN_OF(b), 'INPUT_PULLUP'); return ['(digitalRead(' + PIN_OF(b) + ') == LOW)', ATOM]; };
-  F.tc_click = (b, g) => { autoMode(PIN_OF(b), 'INPUT_PULLUP'); clickHelper(g); return ['vient_appuye(' + PIN_OF(b) + ')', ATOM]; };
-  F.tc_led = (b) => { autoMode('7', 'OUTPUT'); return 'digitalWrite(7, ' + b.getFieldValue('STATE') + ');\n'; };
-  F.pl_button = F.tc_button;
-  F.pl_click = F.tc_click;
+  /* télécommande : broches nommées comme dans telecommande.ino (BOUTON[0..3] = D2..D5, TURBO = D6, LED_TURBO = D7) */
+  const TC_PIN = (b) => { const p = PIN_OF(b); return p === '6' ? H.usePin('TURBO') : (H.usePin('BOUTON'), 'BOUTON[' + (Number(p) - 2) + ']'); };
+  F.tc_button = (b) => { const p = TC_PIN(b); autoMode(p, 'INPUT_PULLUP'); return ['(digitalRead(' + p + ') == LOW)', ATOM]; };
+  F.tc_click = (b, g) => { const p = TC_PIN(b); autoMode(p, 'INPUT_PULLUP'); clickHelper(g); return ['vient_appuye(' + p + ')', ATOM]; };
+  F.tc_led = (b) => { autoMode(H.usePin('LED_TURBO'), 'OUTPUT'); return 'digitalWrite(LED_TURBO, ' + b.getFieldValue('STATE') + ');\n'; };
+  F.pl_button = (b) => { autoMode(PIN_OF(b), 'INPUT_PULLUP'); return ['(digitalRead(' + PIN_OF(b) + ') == LOW)', ATOM]; };
+  F.pl_click = (b, g) => { autoMode(PIN_OF(b), 'INPUT_PULLUP'); clickHelper(g); return ['vient_appuye(' + PIN_OF(b) + ')', ATOM]; };
   F.pl_shoot = () => { autoMode('9', 'OUTPUT'); return 'digitalWrite(9, HIGH);   // tir laser\ndelay(200);\ndigitalWrite(9, LOW);\n'; };
   F.pl_laser = (b) => { autoMode('9', 'OUTPUT'); return 'digitalWrite(9, ' + b.getFieldValue('STATE') + ');\n'; };
   F.pl_ammo = (b, g) => { ledsHelper(g, 'LEDS_MUNITIONS', ['2', '3', '4', '7', '8']); return 'afficher_leds(LEDS_MUNITIONS, ' + top(g, b, 'N', '0') + ');\n'; };

@@ -214,7 +214,7 @@
   ];
 
   root.GuideVoiture = {
-    id: 'voiture', robot: true, icon: '🚗', title: 'Voiture autonome',
+    id: 'voiture', robot: true, theme: 'route', icon: '🚗', title: 'Voiture autonome', level: '4e',
     description: 'Le Cagett\'bot suit la route et s\'arrête devant un obstacle.',
     finish: 'Ta voiture autonome suit la route, ralentit, freine devant les obstacles et repart toute seule !',
     missions: missions,

@@ -256,10 +256,12 @@
 <script src="sim-montages.js"></script>
 <script src="sim-arduino.js"></script>
 <script src="scorm.js"></script>
+<script src="guide-intro.js"></script>
 <script src="guide.js"></script>
 <script src="guide-kit.js"></script>
 <script src="guide-robot.js"></script>
 <script src="guide-voiture.js"></script>
+<script src="guide-mars.js"></script>
 <script src="guide-montages.js"></script>
 <script src="setup.js"></script>
 <script>
@@ -511,8 +513,8 @@
     /* ---------- Mode guidé (parcours du robot) ---------- */
     GuideMode.init({
       ws: ws, sim: sim, fullToolbox: ArduinoBlocks.TOOLBOX, loadState: loadState, snapshot: snapshot, showTab: showTab,
-      say: say, log: log, setBoard: (id) => showBoard(id, false), panel: $('guidePanel'), button: $('btnGuide'),
-      courses: [GuideMontages.led, GuideRobot, GuideVoiture, GuideMontages.telecommande, GuideMontages.pistolet, GuideMontages.cible, GuideMontages.volets],
+      say: say, log: log, setBoard: (id) => showBoard(id, false), panel: $('guidePanel'), button: $('btnGuide'), barAfter: $('srvPill'),
+      courses: [GuideMontages.led, GuideMontages.barriere, GuideRobot, GuideMars, GuideVoiture, GuideMontages.pistolet, GuideMontages.cible, GuideMontages.volets, GuideMontages.telecommande],
       ...(window.AtelierScorm ? AtelierScorm.guideOptions() : {}),
     });
     /* Paquetage SCORM (Éléa / Moodle) : ?parcours=<id> lance directement ce parcours */

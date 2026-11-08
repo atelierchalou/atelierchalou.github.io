@@ -127,44 +127,47 @@
       },
     },
     /* 3 */ {
-      id: 'carre', title: 'Dessiner un carré',
-      goal: 'Fais faire au robot <b>un carré</b> : 4 fois « avancer 1 seconde, puis tourner d\'un quart de tour », et il revient à son point de départ.',
-      explain: 'Au lieu d\'écrire 4 fois les mêmes blocs, on utilise une <b>boucle</b> « répéter 4 fois ». Pour pivoter sur place, une roue avance et l\'autre recule.',
-      criteria: ['Une boucle « répéter 4 fois »', 'Le robot avance et pivote', 'Il revient près de son point de départ et s\'arrête'],
+      id: 'slalom', title: 'Le slalom',
+      goal: 'Fais faire au robot un <b>slalom</b> : 4 fois « tourner à gauche 1 seconde, puis tourner à droite 1 seconde », puis il s\'arrête.',
+      explain: 'Au lieu d\'écrire 4 fois les mêmes blocs, on utilise une <b>boucle</b> « répéter 4 fois ». En tournant (sans pivoter sur place), le robot continue d\'avancer : il zigzague, comme un skieur entre les piquets. Pas besoin d\'angle précis !',
+      criteria: ['Une boucle « répéter 4 fois »', 'Le robot tourne à gauche puis à droite, chacun 1 seconde', 'Il avance en zigzaguant, puis s\'arrête'],
       blocks: BASE.concat(['robot_move', 'robot_stop', 'wait_time', 'controls_repeat_ext']),
       hints: [
         'Prends « répéter 10 fois » dans la catégorie <b>Boucles</b> et remplace 10 par <b>4</b>.',
-        'Dans la boucle : « avancer à 60 % », « attendre 1 seconde », « pivoter sur place à droite à 60 % », « attendre … ».',
-        'À 60 %, un quart de tour prend environ <b>0,5 seconde</b>. Après la boucle, ajoute « s\'arrêter ». Le tout va dans « au démarrage ».'],
+        'Dans la boucle : « tourner à gauche à 60 % », « attendre 1 seconde », « tourner à droite à 60 % », « attendre 1 seconde ».',
+        'Choisis bien « tourner » et pas « pivoter sur place ». Après la boucle, ajoute « s\'arrêter ». Le tout va dans « au démarrage ».'],
       start: empty,
-      solution: () => prog([{ type: 'controls_repeat_ext', inputs: { TIMES: sh(4), DO: { block: chain([move('FWD', 60), wait(1), move('SPIN_R', 60), wait(0.5)]) } } }, stop], []),
+      solution: () => prog([{ type: 'controls_repeat_ext', inputs: { TIMES: sh(4), DO: { block: chain([move('LEFT', 60), wait(1), move('RIGHT', 60), wait(1)]) } } }, stop], []),
       async check(T) {
         const rep = T.blocks('controls_repeat_ext');
         if (!rep.length) return ko('Utilise une boucle « répéter … fois » (catégorie Boucles).', 0);
-        if (!rep.some((b) => T.numIn(b, 'TIMES') === 4)) return ko('Un carré a 4 côtés : la boucle doit se répéter <b>4</b> fois.'.replace(/<\/?b>/g, ''), 0);
-        if (!T.has('robot_move', (b) => b.getFieldValue('DIR') === 'FWD')) return ko('Dans la boucle, le robot doit « avancer ».', 1);
-        if (!T.has('robot_move', (b) => /SPIN|LEFT|RIGHT/.test(b.getFieldValue('DIR')))) return ko('Dans la boucle, le robot doit aussi tourner : « pivoter sur place à droite ».', 1);
+        if (!rep.some((b) => T.numIn(b, 'TIMES') === 4)) return ko('Le slalom passe 4 fois de chaque côté : la boucle doit se répéter 4 fois.', 0);
+        if (!T.has('robot_move', (b) => b.getFieldValue('DIR') === 'LEFT') || !T.has('robot_move', (b) => b.getFieldValue('DIR') === 'RIGHT'))
+          return ko('Dans la boucle, le robot doit « tourner à gauche » puis « tourner à droite » (pas pivoter sur place).', 1);
         if (T.orphans()) return ko(orphanMsg, 0);
-        await T.start({ robot: { x: 60, y: 70, th: 0 }, obstacle: false });
-        T.caption('Test : le robot doit dessiner un carré et revenir à son départ…');
-        // on suit le trajet : un vrai carré est aussi large que haut (des virages de 180° feraient un aller-retour)
-        const box = { x0: 60, x1: 60, y0: 70, y1: 70 };
+        await T.start({ robot: { x: 18, y: 32, th: 0 }, obstacle: false });
+        T.caption('Test : le robot doit zigzaguer 4 fois de chaque côté, puis s\'arrêter…');
+        // on note les changements de sens de rotation : gauche, droite, gauche… (8 virages = 7 changements)
+        let lastTh = T.pose().th, side = 0, switches = 0, turns = 0;
         const t = await T.until(() => {
           const q = T.pose();
-          box.x0 = Math.min(box.x0, q.x); box.x1 = Math.max(box.x1, q.x); box.y0 = Math.min(box.y0, q.y); box.y1 = Math.max(box.y1, q.y);
+          let d = q.th - lastTh; lastTh = q.th;
+          while (d > Math.PI) d -= 2 * Math.PI;
+          while (d < -Math.PI) d += 2 * Math.PI;
+          const sgn = Math.abs(d) < 0.004 ? 0 : Math.sign(d);
+          if (sgn && sgn !== side) { if (side) switches++; side = sgn; turns++; }
           return q.l === 0 && q.r === 0;
-        }, 12000, 50);
+        }, 14000, 40);
         const p = T.pose();
-        if (t < 0) return ko('Le robot ne s\'arrête jamais : ajoute « s\'arrêter » après la boucle, et mets le tout dans « au démarrage ».', 2, turnHelp(T));
+        if (t < 0) return ko('Le robot ne s\'arrête jamais : ajoute « s\'arrêter » après la boucle, et mets le tout dans « au démarrage ».', 2);
         await T.wait(800);
         const q = T.pose();
-        if (q.l !== 0 || q.r !== 0) return ko('Le robot repart : tes blocs doivent être dans « au démarrage », pas dans « répéter indéfiniment ».', 2, turnHelp(T));
-        const w = box.x1 - box.x0, h = box.y1 - box.y0;
-        if (Math.max(w, h) < 8) return ko('Le robot a à peine bougé : vérifie la vitesse et la durée de « avancer ».', 1, turnHelp(T));
-        if (Math.min(w, h) < 0.6 * Math.max(w, h)) return ko('Le trajet ne forme pas un carré (' + Math.round(w) + ' cm sur ' + Math.round(h) + ' cm) : les virages ne font pas un quart de tour (90°). Regarde le tableau ci-dessous.', 2, turnHelp(T));
-        const dist = Math.hypot(p.x - 60, p.y - 70);
-        if (dist > 18) return ko('Le robot finit à ' + Math.round(dist) + ' cm de son départ : ses virages ne font pas tout à fait un quart de tour (90°). Regarde le tableau ci-dessous.', 2, turnHelp(T));
-        return ok('Superbe carré ! La boucle « répéter 4 fois » t\'a évité d\'écrire 16 blocs.');
+        if (q.l !== 0 || q.r !== 0) return ko('Le robot repart : tes blocs doivent être dans « au démarrage », pas dans « répéter indéfiniment ».', 2);
+        const ahead = p.x - 18;
+        if (turns < 2) return ko('Le robot ne zigzague pas : il doit tourner à gauche, puis à droite, dans la boucle.', 1);
+        if (switches < 6) return ko('Je n\'ai compté que ' + (switches + 1) + ' virage' + (switches ? 's' : '') + ' : il en faut 8 (4 à gauche, 4 à droite). Vérifie les « attendre » et le nombre de répétitions.', 1);
+        if (ahead < 25) return ko('Le robot zigzague sur place : choisis « tourner à gauche / à droite » et pas « pivoter sur place ».', 1);
+        return ok('Joli slalom ! La boucle « répéter 4 fois » t\'a évité d\'écrire 16 blocs.');
       },
     },
     /* 4 */ {
@@ -346,7 +349,7 @@
   ];
 
   root.GuideRobot = {
-    id: 'robot', robot: true, icon: '🤖', title: 'Cagett\'bot',
+    id: 'robot', robot: true, icon: '🤖', title: 'Cagett\'bot', level: 'initiation',
     description: 'Avancer, tourner, éviter les obstacles, suivre une ligne, obéir à la radio.',
     finish: 'Ton Cagett\'bot sait avancer, éviter les obstacles, suivre une ligne et obéir à la télécommande !',
     missions: missions,

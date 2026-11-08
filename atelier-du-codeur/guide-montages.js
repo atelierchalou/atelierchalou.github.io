@@ -15,7 +15,7 @@
     write(FEU.orange, true), wait(1), write(FEU.orange, false),
     write(FEU.rouge, true), wait(3), write(FEU.rouge, false)]);
   const ledCourse = {
-    id: 'led', icon: '💡', title: 'La LED de la carte',
+    id: 'led', icon: '💡', title: 'La LED de la carte', level: 'initiation',
     description: 'Allumer, faire clignoter, compter, réagir à un bouton, feu tricolore.',
     finish: 'Tu sais commander des LED, utiliser le temps, les boucles et un bouton !',
     missions: [
@@ -174,7 +174,7 @@
   const TC_NAME = { 2: 'avant', 3: 'arrière', 4: 'gauche', 5: 'droite', 6: 'turbo' };
   async function holdAndRead(T, key, ms) { T.hold(key, true); await T.wait(ms || 400); const v = T.sent(); T.hold(key, false); return v; }
   const tcCourse = {
-    id: 'telecommande', icon: '🎮', title: 'Télécommande du robot',
+    id: 'telecommande', icon: '🎮', title: 'Télécommande du robot', level: 'plus',
     description: 'Lire les boutons et envoyer des ordres par radio au Cagett\'bot.',
     finish: 'Ta télécommande envoie les bons codes par radio : il ne reste qu\'à programmer le robot pour qu\'il les reçoive (parcours Cagett\'bot, mission 8) !',
     missions: [
@@ -317,7 +317,7 @@
     return c.stop();
   }
   const plCourse = {
-    id: 'pistolet', icon: '🔫', title: 'Pistolet laser',
+    id: 'pistolet', icon: '🔫', title: 'Pistolet laser', level: '3e',
     description: 'Tirer, afficher et compter les munitions, recharger.',
     finish: 'Ton pistolet tire, compte ses munitions et se recharge. Essaie-le avec la cible LED ou les cibles à volets !',
     missions: [
@@ -445,7 +445,7 @@
     ifB([[raz, [set(VIES, n(5)), lives(get(VIES))]]])], [['vies', 'cl_vies']]);
   async function fire(T, i, after) { T.shoot(i); await T.wait(after || 700); }
   const clCourse = {
-    id: 'cible', icon: '🎯', title: 'Cible LED',
+    id: 'cible', icon: '🎯', title: 'Cible LED', level: '3e',
     description: 'Une cible à 5 vies qui détecte le laser.',
     finish: 'Ta cible compte les tirs reçus et se remet à zéro. Prête pour un duel avec le pistolet laser !',
     missions: [
@@ -569,7 +569,7 @@
   const cvHit = (i) => ({ type: 'cv_hit', fields: { SEUIL: 300 }, inputs: { N: nb(i) } });
   const openAll = () => [1, 2, 3, 4, 5].map((i) => flap(i, true));
   const cvCourse = {
-    id: 'volets', icon: '🎪', title: 'Cibles à volets',
+    id: 'volets', icon: '🎪', title: 'Cibles à volets', level: '3e',
     description: '5 cibles dont le volet se ferme quand on les touche.',
     finish: 'Ton stand de tir est complet : les volets se ferment quand on touche les cibles, et RAZ relance la partie !',
     missions: [
@@ -683,5 +683,137 @@
     ],
   };
 
-  root.GuideMontages = { led: ledCourse, telecommande: tcCourse, pistolet: plCourse, cible: clCourse, volets: cvCourse };
+  /* =============== 6. Barrière de parking =============== */
+  const BP = { bouton: '2', led: '7', servo: '9' };
+  const FERMEE = 0, OUVERTE = 90;
+  const servo = (a) => ({ type: 'servo_write', fields: { PIN: BP.servo }, inputs: { ANGLE: { block: n(a) } } });
+  const flash = (times) => repeat(times, [write(BP.led, true), wait(0.5), write(BP.led, false), wait(0.5)]);
+  const BCOL = { [BP.led]: 'orange' };
+  const bpSetup = () => [mode(BP.bouton, 'INPUT'), mode(BP.led, 'OUTPUT'), servo(FERMEE)];
+  async function pushButton(T, ms) { T.setButton(BP.bouton, true); await T.wait(ms || 300); T.setButton(BP.bouton, false); }
+  const angleIs = (T, a) => { const x = T.angle(BP.servo); return x != null && Math.abs(x - a) <= 5; };
+  const bpCourse = {
+    id: 'barriere', icon: '🚧', title: 'Barrière de parking', level: 'initiation',
+    description: 'Un bouton poussoir, une LED orange et un servo-moteur.',
+    finish: 'Ta barrière de parking s\'ouvre avec le bouton, prévient avec sa LED orange et se referme toute seule !',
+    missions: [
+      {
+        id: 'b_fermer', title: 'Barrière fermée', ledColors: BCOL,
+        goal: 'Au démarrage, la barrière doit être <b>fermée</b> : le servo-moteur (broche <b>D9</b>) se place à <b>0°</b>.',
+        explain: 'Un <b>servo-moteur</b> ne tourne pas en continu comme un moteur : on lui donne un angle (de 0 à 180°) et il s\'y place. Ici, 0° = barrière baissée (fermée), 90° = barrière levée (ouverte).',
+        criteria: ['Le servo de la broche D9 est à 0°'],
+        blocks: BASE.concat(['servo_write', 'math_number']),
+        hints: [
+          'Le bloc « servo-moteur broche … angle … » est dans la catégorie <b>Capteurs et actionneurs</b>.',
+          'Choisis la broche <b>D9</b> et l\'angle <b>0</b>.',
+          'Place-le dans « au démarrage ».'],
+        start: K.empty,
+        solution: () => prog([servo(FERMEE)], []),
+        async check(T) {
+          if (!T.has('servo_write')) return ko('Il faut le bloc « servo-moteur broche … angle … ».', 0);
+          if (!T.has('servo_write', (b) => b.getFieldValue('PIN') === BP.servo)) return ko('Le servo de la barrière est branché sur la broche D9.', 1);
+          if (T.orphans()) return ko(orphanMsg, 0);
+          await T.start();
+          T.caption('Test : au démarrage, la barrière doit être fermée (0°)');
+          await T.wait(800);
+          if (!angleIs(T, FERMEE)) return ko('Le servo est à ' + T.angle(BP.servo) + '° : pour une barrière fermée, il faut 0°.', 1);
+          return ok('Barrière fermée : aucune voiture ne passe !');
+        },
+      },
+      {
+        id: 'b_ouvrir', title: 'Ouvrir avec le bouton', ledColors: BCOL,
+        goal: 'La barrière s\'<b>ouvre</b> (90°) <b>tant qu\'on appuie</b> sur le bouton poussoir <b>D2</b>, et se <b>ferme</b> (0°) quand on le relâche.',
+        explain: 'Le bouton est une <b>entrée</b> : le programme le lit à chaque tour de boucle et choisit l\'angle du servo avec « si … sinon ».',
+        criteria: ['Bouton relâché : barrière fermée', 'Bouton appuyé : barrière ouverte (90°)'],
+        blocks: BASE.concat(['pin_mode', 'digital_read', 'controls_if', 'servo_write', 'math_number']),
+        hints: [
+          'Dans « au démarrage » : D2 en entrée et barrière fermée.',
+          'Dans « répéter indéfiniment » : « si lire la broche D2 » (clique sur <b>+</b> pour avoir « sinon »).',
+          'Faire : servo D9 à 90. Sinon : servo D9 à 0.'],
+        start: () => prog([mode(BP.bouton, 'INPUT'), servo(FERMEE)], []),
+        solution: () => prog([mode(BP.bouton, 'INPUT'), servo(FERMEE)], [ifB([[read(BP.bouton), [servo(OUVERTE)]]], [servo(FERMEE)])]),
+        async check(T) {
+          if (!T.has('digital_read')) return ko('Il faut lire le bouton : « lire la broche D2 ».', 1);
+          if (T.orphans()) return ko(orphanMsg, 0);
+          await T.start();
+          T.setButton(BP.bouton, false);
+          T.caption('Test 1 / 3 : personne n\'appuie → barrière fermée');
+          await T.wait(700);
+          if (!angleIs(T, FERMEE)) return ko('Sans appui, la barrière doit être fermée (0°). Elle est à ' + T.angle(BP.servo) + '°.', 0);
+          T.caption('Test 2 / 3 : j\'appuie sur le bouton → barrière ouverte');
+          T.setButton(BP.bouton, true); await T.wait(700);
+          if (!angleIs(T, OUVERTE)) { T.setButton(BP.bouton, false); return ko('J\'appuie sur le bouton mais la barrière ne s\'ouvre pas (servo à ' + T.angle(BP.servo) + '°). Il faut 90° sur la broche D9.', 1); }
+          T.caption('Test 3 / 3 : je relâche → barrière fermée');
+          T.setButton(BP.bouton, false); await T.wait(700);
+          if (!angleIs(T, FERMEE)) return ko('Après le relâchement, la barrière doit se refermer : ajoute « sinon → servo à 0 ».', 2);
+          return ok('La barrière obéit au bouton !');
+        },
+      },
+      {
+        id: 'b_temps', title: 'Ouverte 5 secondes', ledColors: BCOL,
+        goal: 'Un <b>simple appui</b> sur le bouton ouvre la barrière ; elle reste ouverte <b>5 secondes</b> pour laisser passer la voiture, puis elle se referme toute seule.',
+        explain: 'Le conducteur ne va pas garder le doigt sur le bouton ! Après l\'ouverture, le bloc « attendre » laisse le temps de passer, puis le programme referme la barrière.',
+        criteria: ['Un appui court ouvre la barrière', 'Elle reste ouverte environ 5 s', 'Puis elle se referme'],
+        blocks: BASE.concat(['pin_mode', 'digital_read', 'controls_if', 'servo_write', 'math_number', 'wait_time']),
+        hints: [
+          'Dans le « si bouton appuyé » : servo à 90, puis « attendre 5 secondes », puis servo à 0.',
+          'Tu n\'as plus besoin du « sinon » : enlève-le avec le bouton <b>−</b> du bloc « si ».',
+          'La barrière doit être fermée au démarrage.'],
+        start: () => prog([mode(BP.bouton, 'INPUT'), servo(FERMEE)], [ifB([[read(BP.bouton), [servo(OUVERTE)]]], [servo(FERMEE)])]),
+        solution: () => prog([mode(BP.bouton, 'INPUT'), servo(FERMEE)], [ifB([[read(BP.bouton), [servo(OUVERTE), wait(5), servo(FERMEE)]]])]),
+        async check(T) {
+          if (!T.has('wait_time')) return ko('Il faut un bloc « attendre » pour laisser la barrière ouverte.', 0);
+          if (T.orphans()) return ko(orphanMsg, 0);
+          await T.start();
+          await T.wait(500);
+          if (!angleIs(T, FERMEE)) return ko('Au démarrage, la barrière doit être fermée (0°).', 2);
+          T.caption('Test : un appui court sur le bouton…');
+          await pushButton(T, 300);
+          const t0 = T.now();
+          await T.wait(400);
+          if (!angleIs(T, OUVERTE)) return ko('Après un appui, la barrière doit s\'ouvrir (90°).', 0);
+          T.caption('La barrière doit rester ouverte environ 5 secondes…');
+          const closed = await T.until(() => angleIs(T, FERMEE), 8000, 50);
+          const dur = (T.now() - t0 + 300) / 1000;
+          if (closed < 0) return ko('La barrière ne se referme jamais : après « attendre 5 secondes », remets le servo à 0.', 2);
+          if (dur < 4) return ko('La barrière se referme trop vite (au bout de ' + K.fr(dur) + ' s) : elle doit rester ouverte 5 secondes. Le « sinon » la referme peut-être dès que tu lâches le bouton.', 1);
+          if (dur > 6.5) return ko('La barrière reste ouverte ' + K.fr(dur) + ' s : il faut 5 secondes.', 1);
+          return ok('La voiture a eu ' + K.fr(dur) + ' s pour passer, puis la barrière s\'est refermée.');
+        },
+      },
+      {
+        id: 'b_feu', title: 'Feu orange clignotant', ledColors: BCOL,
+        goal: 'Pour la sécurité, la <b>LED orange</b> (broche <b>D7</b>) <b>clignote</b> pendant que la barrière est ouverte (0,5 s allumée, 0,5 s éteinte, 5 fois), puis la barrière se referme et la LED reste éteinte.',
+        explain: 'Le gyrophare orange prévient les piétons que la barrière bouge. On remplace « attendre 5 secondes » par une boucle « répéter 5 fois » : chaque tour fait un clignotement d\'une seconde. Total : toujours 5 secondes !',
+        criteria: ['Un appui ouvre la barrière', 'La LED orange clignote pendant l\'ouverture', 'La barrière se referme, LED éteinte'],
+        blocks: BASE.concat(['pin_mode', 'digital_read', 'digital_write', 'controls_if', 'controls_repeat_ext', 'servo_write', 'math_number', 'wait_time']),
+        hints: [
+          'Au démarrage : D7 en <b>sortie</b>.',
+          'Dans le « si », remplace « attendre 5 secondes » par « répéter 5 fois » (catégorie Boucles).',
+          'Dans la boucle : D7 à HAUT, attendre 0.5 s, D7 à BAS, attendre 0.5 s.'],
+        start: () => prog([mode(BP.bouton, 'INPUT'), servo(FERMEE)], [ifB([[read(BP.bouton), [servo(OUVERTE), wait(5), servo(FERMEE)]]])]),
+        solution: () => prog(bpSetup(), [ifB([[read(BP.bouton), [servo(OUVERTE), flash(5), servo(FERMEE)]]])]),
+        async check(T) {
+          if (!T.has('digital_write', (b) => b.getFieldValue('PIN') === BP.led)) return ko('Il faut commander la LED orange : « mettre la broche D7 à … ».', 0);
+          if (T.orphans()) return ko(orphanMsg, 0);
+          await T.start();
+          await T.wait(500);
+          if (T.pin(BP.led)) return ko('Avant l\'appui, la LED orange doit être éteinte.', 2);
+          T.caption('Test : un appui sur le bouton → barrière ouverte et LED orange qui clignote');
+          await pushButton(T, 300);
+          const s = await T.sample(() => [angleIs(T, OUVERTE) ? 1 : 0, T.pin(BP.led)], 6500, 25);
+          const open = s.filter(([, v]) => v[0]);
+          if (!open.length) return ko('Après l\'appui, la barrière doit s\'ouvrir (servo D9 à 90°).', 0);
+          const flashes = K.segments(open.map(([t, v]) => [t, v[1]])).filter((x) => x.v === 1).length;
+          if (flashes < 3) return ko(flashes ? 'La LED n\'a clignoté que ' + flashes + ' fois pendant l\'ouverture : il en faut 5.' : 'La LED orange ne clignote pas pendant que la barrière est ouverte. Mets la boucle « répéter 5 fois » entre l\'ouverture et la fermeture.', 1);
+          await T.wait(300);
+          if (!angleIs(T, FERMEE)) return ko('Après les clignotements, la barrière doit se refermer (0°).', 2);
+          if (T.pin(BP.led)) return ko('La barrière est fermée : la LED orange doit être éteinte.', 2);
+          return ok('Parfait : la LED orange a clignoté ' + flashes + ' fois pendant l\'ouverture. Ta barrière est prête !');
+        },
+      },
+    ],
+  };
+
+  root.GuideMontages = { led: ledCourse, barriere: bpCourse, telecommande: tcCourse, pistolet: plCourse, cible: clCourse, volets: cvCourse };
 })(typeof window !== 'undefined' ? window : globalThis);
