@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pose longue</title>
+<title>L'atelier du light painting</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Unbounded:wght@500;700&display=swap">
 <style>
@@ -145,7 +145,7 @@ input[type=range]{accent-color:var(--accent);width:100%;min-width:0;height:28px;
 <body>
 <div class="app">
   <header class="top">
-    <h1 class="brand"><span class="brand-dot"></span>Pose longue</h1>
+    <h1 class="brand"><span class="brand-dot"></span>L'atelier du light painting</h1>
     <div class="tabs" role="tablist" aria-label="Mode">
       <button type="button" role="tab" id="tab-atelier" aria-selected="true" aria-controls="view-atelier">Atelier</button>
       <button type="button" role="tab" id="tab-wand" aria-selected="false" aria-controls="view-wand">Baguette</button>
@@ -319,8 +319,15 @@ input[type=range]{accent-color:var(--accent);width:100%;min-width:0;height:28px;
   <div class="modal-card">
     <h2 id="photo-title">Ta pose</h2>
     <img id="photo-img" alt="Peinture de lumière exportée">
-    <p>Appuie longuement sur l'image, ou fais un clic droit, pour l'enregistrer.</p>
-    <button type="button" class="go" id="photo-close">Fermer</button>
+    <label class="field"><span class="field-lbl">Nom du fichier</span><input id="photo-name" class="text-in" type="text" autocomplete="off" spellcheck="false" maxlength="80"></label>
+    <div class="seg" id="photo-fmt" role="radiogroup" aria-label="Format de l'image">
+      <button type="button" role="radio" data-pfmt="png" aria-checked="true">PNG</button>
+      <button type="button" role="radio" data-pfmt="jpeg" aria-checked="false">JPEG</button>
+    </div>
+    <button type="button" class="go" id="photo-save">Enregistrer sous…</button>
+    <p id="photo-status" class="note" aria-live="polite"></p>
+    <p class="note" id="photo-note"></p>
+    <button type="button" class="ghost" id="photo-close">Fermer</button>
   </div>
 </div>
 
@@ -546,13 +553,65 @@ function savePhoto() {
   const o = out.getContext('2d'); o.fillStyle = '#000'; o.fillRect(0, 0, out.width, out.height);
   if (decorOn) o.drawImage(sceneC, 0, 0);
   o.globalCompositeOperation = 'screen'; o.drawImage(paintC, 0, 0);
-  openPhoto(out.toDataURL('image/png'));
+  openPhoto(out);
 }
-function openPhoto(url) {
-  $('#photo-img').src = url;
-  $('#photo-modal').hidden = false; $('#photo-close').focus();
+let photoCv = null, photoFmt = 'png';
+function defaultName() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return 'pose-longue-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
 }
-function closePhoto() { $('#photo-modal').hidden = true; $('#photo-img').removeAttribute('src'); }
+function openPhoto(cv) {
+  const c = document.createElement('canvas'); c.width = cv.width; c.height = cv.height;
+  c.getContext('2d').drawImage(cv, 0, 0); photoCv = c;
+  $('#photo-img').src = c.toDataURL('image/png');
+  $('#photo-name').value = defaultName();
+  $('#photo-status').textContent = '';
+  $('#photo-note').textContent = mqWide.matches
+    ? "Le bouton ouvre la fenêtre d'enregistrement pour choisir le dossier (selon ton navigateur)."
+    : "Si l'enregistrement ne démarre pas, appuie longuement sur l'image pour la garder.";
+  $('#photo-modal').hidden = false; $('#photo-name').focus(); $('#photo-name').select();
+}
+function closePhoto() { $('#photo-modal').hidden = true; $('#photo-img').removeAttribute('src'); photoCv = null; }
+async function saveFile() {
+  if (!photoCv) return;
+  const status = $('#photo-status');
+  const type = photoFmt === 'jpeg' ? 'image/jpeg' : 'image/png', ext = photoFmt === 'jpeg' ? 'jpg' : 'png';
+  let base = ($('#photo-name').value || '').trim().replace(/\.(png|jpe?g)$/i, '').replace(/[\\/:*?"<>|]+/g, '-');
+  if (!base) base = defaultName();
+  const fname = base + '.' + ext;
+  const blob = await new Promise(r => photoCv.toBlob(r, type, 0.93));
+  if (!blob) { status.textContent = "Impossible de créer l'image."; return; }
+  // 1. Page publiée dans Claude : le viewer confirme le nom et l'enregistrement
+  try {
+    const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+    if (dl) { await dl.save({ filename: fname, data: blob }); status.textContent = 'Enregistré : ' + fname; return; }
+  } catch (e) {
+    if (e && e.code === 'declined') { status.textContent = 'Enregistrement annulé.'; return; }
+  }
+  // 2. Navigateurs de bureau : choix du dossier et du nom
+  if (window.showSaveFilePicker) {
+    try {
+      const h = await window.showSaveFilePicker({ suggestedName: fname, types: [{ description: photoFmt === 'jpeg' ? 'Image JPEG' : 'Image PNG', accept: { [type]: ['.' + ext] } }] });
+      const w = await h.createWritable(); await w.write(blob); await w.close();
+      status.textContent = 'Enregistré : ' + h.name; return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') { status.textContent = 'Enregistrement annulé.'; return; }
+    }
+  }
+  // 3. Téléchargement classique avec le nom choisi
+  try {
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    status.textContent = 'Téléchargement lancé : ' + fname;
+  } catch (_) { status.textContent = "Appuie longuement sur l'image pour l'enregistrer."; }
+}
+$('#photo-save').addEventListener('click', saveFile);
+$('#photo-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveFile(); });
+$('#photo-fmt').addEventListener('click', e => {
+  const b = e.target.closest('button[data-pfmt]'); if (!b) return;
+  photoFmt = b.dataset.pfmt; markSeg('#photo-fmt', 'pfmt', photoFmt);
+});
 
 /* ---------- Démo au chargement ---------- */
 function runPath(pts) {
@@ -945,7 +1004,24 @@ function camRender() {
   }
   camCtx.putImageData(cam.out, 0, 0);
 }
+let audioCtx = null;
+function audioInit() {
+  try {
+    if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (_) {}
+}
+function beep(freq, dur) {
+  if (!audioCtx) return;
+  try {
+    const t = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + dur + 0.02);
+  } catch (_) {}
+}
 function camStartExposure() {
+  beep(1320, 0.4);
   camSetState('exposing');
   cam.frames = 0; cam.acc.fill(0); cam.sum.fill(0);
   const now = performance.now();
@@ -987,7 +1063,11 @@ function camFrame(now) {
   if ((s === 'live' || s === 'countdown') && vid.readyState >= 2) camCtx.drawImage(vid, 0, 0, cam.w, cam.h);
   if (s === 'countdown') {
     const left = Math.ceil((cam.cdEnd - now) / 1000);
-    if (left <= 0) camStartExposure(); else $('#cam-count').textContent = left;
+    if (left <= 0) camStartExposure();
+    else {
+      $('#cam-count').textContent = left;
+      if (left <= 5 && left !== cam.lastBeep) { beep(880, 0.14); cam.lastBeep = left; }
+    }
   } else if (s === 'exposing') {
     if (!vid.requestVideoFrameCallback && vid.readyState >= 2 && now - cam.lastStack >= 28) { camStack(); cam.lastStack = now; }
     if (now - cam.lastRender >= 100 && cam.frames > 0) { camRender(); cam.lastRender = now; }
@@ -1018,6 +1098,7 @@ $('#cam-gain').addEventListener('input', e => {
   if (cam.state === 'done') camRender();
 });
 $('#cam-go').addEventListener('click', () => {
+  audioInit(); cam.lastBeep = -1;
   switch (cam.state) {
     case 'off': if (cam.source === 'camera') camStart(); else $('#cam-file').click(); break;
     case 'live':
@@ -1036,7 +1117,7 @@ $('#cam-file').addEventListener('change', e => {
   camLoadFile(cam.fileUrl); e.target.value = '';
 });
 $('#cam-flip').addEventListener('click', () => { cam.facing = cam.facing === 'environment' ? 'user' : 'environment'; camStart(); });
-$('#cam-save').addEventListener('click', () => openPhoto(camCv.toDataURL('image/png')));
+$('#cam-save').addEventListener('click', () => openPhoto(camCv));
 vid.addEventListener('ended', () => { if (cam.state === 'exposing') camFinish(); });
 camSetState('off');
 
