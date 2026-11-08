@@ -34,7 +34,7 @@
   header .badge{width:36px;height:36px;border-radius:8px;background:var(--panel-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--amber);}
   header h1{font-size:18px; letter-spacing:0.3px;}
   header p{margin:2px 0 0; color:var(--muted); font-size:12px;}
-  header .actions{display:flex; gap:8px; flex-wrap:wrap;}
+  header .actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
 
   button.btn{
     background:var(--panel-2); border:1px solid var(--border); color:var(--text);
@@ -50,6 +50,7 @@
   button.btn.primary{background:var(--amber-soft); border-color:var(--amber); color:var(--amber);}
   button.btn.primary:hover{background:#5a4326;}
   button.btn:disabled{opacity:.45; cursor:not-allowed;}
+  .btn-group[hidden]{display:none;}
   .btn-group{display:inline-flex; align-items:center; gap:5px;}
 
   /* Tabs */
@@ -66,6 +67,11 @@
   }
   .lvl-tab:hover{color:var(--text); border-color:var(--border);}
   .lvl-tab.active{background:var(--panel-2); color:var(--amber); border-color:var(--amber); }
+  .step-dots{display:flex; gap:6px; align-items:center; margin-right:6px;}
+  .step-dots:empty{display:none;}
+  .sdot{width:28px; height:28px; border-radius:50%; border:2px solid var(--green); background:#000; color:var(--green); font:700 13px 'Space Grotesk',sans-serif; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;}
+  .sdot.done{background:var(--green); color:#06241a;}
+  .sdot.current{box-shadow:0 0 0 2px var(--bg,#0b1220), 0 0 0 4px var(--amber);}
   .view-tabs{display:flex; gap:6px; padding-bottom:8px;}
   .view-tab{
     background:transparent; border:1px solid var(--border); color:var(--muted);
@@ -113,13 +119,29 @@
   ol.instr b{color:var(--cyan);}
   .expert-note{font-size:13px; line-height:1.6; color:var(--violet); background:var(--violet-soft); border-radius:8px; padding:10px 11px; margin-bottom:10px;}
   .checks{list-style:none; margin:0; padding:0;}
-  .checks li{display:flex; gap:9px; align-items:flex-start; font-size:12.5px; line-height:1.5; padding:5px 0; color:var(--muted);}
+  .checks li{display:flex; gap:9px; align-items:center; font-size:12.5px; line-height:1.5; padding:5px 0; color:var(--muted);}
   .checks li .ico{
-    width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:1px;border:1.5px solid var(--border);
-    display:flex;align-items:center;justify-content:center;font-size:11px;
+    width:24px;height:24px;border-radius:50%;flex-shrink:0;border:2px solid var(--green); background:#000; color:var(--green);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
   }
   .checks li.ok{color:var(--text);}
-  .checks li.ok .ico{background:var(--green); border-color:var(--green); color:#06241a; font-weight:700;}
+  .checks li.ok .ico{background:var(--green); border-color:var(--green); color:#06241a;}
+  .quit-test{font-weight:700;}
+  ol.instr{list-style:none; padding-left:0;}
+  ol.instr li{display:flex; gap:9px; align-items:flex-start; margin-bottom:8px;}
+  ol.instr li .ico{width:24px;height:24px;border-radius:50%;flex-shrink:0;border:2px solid var(--green); background:#000; color:var(--green); display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:1px;}
+  ol.instr li.ok .ico{background:var(--green); color:#06241a;}
+  ol.instr li .txt{flex:1;}
+  .mascot-row{display:flex; gap:10px; align-items:flex-start; margin-bottom:12px;}
+  .mascot{flex:0 0 58px; animation:mbob 3s ease-in-out infinite;}
+  .mascot svg{display:block;}
+  @keyframes mbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  .bubble{position:relative; flex:1; background:var(--panel-2); border:1px solid var(--cyan); border-radius:12px; padding:10px 12px; font-size:13px; line-height:1.55;}
+  .bubble:before{content:''; position:absolute; left:-7px; top:18px; width:12px; height:12px; background:var(--panel-2); border-left:1px solid var(--cyan); border-bottom:1px solid var(--cyan); transform:rotate(45deg);}
+  .bubble .b-title{font-weight:700; font-size:14px; margin-bottom:4px;}
+  .bubble p{margin:0 0 6px;}
+  .bubble.happy{border-color:var(--green); background:var(--green-soft); color:#c8ffe4;}
+  .bubble.happy:before{background:var(--green-soft); border-color:var(--green);}
   .hint-box{font-size:12.5px; line-height:1.6; color:#ffe6c2; background:var(--amber-soft); border-radius:8px; padding:10px 11px; margin-top:10px;}
   .success-box{font-size:13px; line-height:1.55; color:#c8ffe4; background:var(--green-soft); border:1px solid var(--green); border-radius:8px; padding:10px 11px; margin-top:12px;}
   .card-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
@@ -296,6 +318,10 @@
     </div>
   </div>
   <div class="actions">
+    <div class="step-dots" id="stepDots" aria-label="Progression des étapes"></div>
+    <button class="btn" id="btnSave" title="Enregistrer mon travail dans un fichier (tu choisis le nom et l’emplacement)">💾 Enregistrer</button>
+    <button class="btn" id="btnOpen" title="Rouvrir un travail enregistré">📂 Ouvrir</button>
+    <input type="file" id="fileOpen" accept=".json,application/json" hidden>
     <button class="btn" id="btnTuto">📘 Tutoriel</button>
     <button class="btn" id="btnGloss">📖 Glossaire</button>
   </div>
@@ -469,7 +495,7 @@
   let currentLevel = '5e', currentView = 'act', currentWsKey = 'reseau';
   const levelState = {};
   ['5e','4e','3e'].forEach(lv => {
-    levelState[lv] = {stepIndex:0, done:{}, ws:{}, hint:{}, full:{}, quiz:null, best:0, tries:0, ack:{}, caseSolved:false, dossierSeen:false};
+    levelState[lv] = {stepIndex:0, done:{}, ws:{}, hint:{}, full:{}, quiz:null, best:0, tries:0, ack:{}, tests:[], caseSolved:false, dossierSeen:false};
   });
 
   // Mode IP : en 5ème, les adresses sont données automatiquement (visibles, non modifiables) aux étapes 1-2 ;
@@ -716,10 +742,13 @@
     const b = $('resultBanner'); b.className = 'result-banner show ' + kind; b.innerHTML = html;
     highlightCables = new Set(path || []); highlightColor = kind;
   }
+  // Un test n'est compté que si l'élève l'a réellement lancé (bouton « Tester une connexion »).
+  const ran = (a, b, ok) => (levelState[currentLevel].tests || []).some(t => ((t.a === a.id && t.b === b.id) || (t.a === b.id && t.b === a.id)) && (ok === undefined || t.ok === ok));
   function runTest(aId, bId){
     if(ipModeNow()) applyDhcp();
     const A = getDevice(aId), B = getDevice(bId);
     const r = evalPing(A, B);
+    const tl = levelState[currentLevel].tests; tl.push({a:A.id, b:B.id, ok:r.kind === 'ok'}); if(tl.length > 80) tl.shift();
     devices.forEach(d => d.ledState = null);
     if(r.kind === 'ok' || r.kind === 'fail'){ A.ledState = r.kind; B.ledState = r.kind; }
     showResult(r.kind, r.msg, r.path);
@@ -1021,6 +1050,7 @@
       return !!r && (r.ip || '').trim() === CASE.router.ip && (r.ip2 || '').trim() === CASE.router.ip2 &&
         (r.mask || '').trim() === CASE.mask && (r.mask2 || '').trim() === CASE.mask;
     })();
+  const caseTested = () => { const srv = byName('Serveur-Fichiers'); return !!srv && CASE.devices.filter(x => x.type === 'pc').every(x => { const d = byName(x.name); return !!d && ran(d, srv, true); }); };
   const caseNetOk = () => {
     const srv = byName('Serveur-Fichiers'); if(!srv) return false;
     return CASE.devices.filter(x => x.type === 'pc').every(x => { const d = byName(x.name); return d && evalPing(d, srv).kind === 'ok'; });
@@ -1128,8 +1158,8 @@
         {label:`Les deux PC sont reliés au commutateur par un câble`, test:() => pcs().filter(onSwitch).length >= 2},
         {label:`Les deux PC ont une adresse IP du même réseau, différentes l'une de l'autre`, ipOnly:true,
           test:() => switches().some(sw => { const l = neighbors(sw).filter(n => n.type === 'pc'); return l.length >= 2 && allSameSubnet(l) && allUnique(l); })},
-        {label:`Le test de connexion entre les 2 PC réussit`,
-          test:() => { const l = pcs().filter(onSwitch); return l.some((a, i) => l.some((b, j) => i < j && evalPing(a, b).kind === 'ok')); }}
+        {label:`Tu as lancé le test 🧪 entre les 2 PC et il réussit`,
+          test:() => { const l = pcs().filter(onSwitch); return l.some((a, i) => l.some((b, j) => i < j && evalPing(a, b).kind === 'ok' && ran(a, b, true))); }}
       ]
     });
 
@@ -1157,8 +1187,9 @@
           test:() => { const s = servers().find(onSwitch); if(!s) return false; const c = compOf(s); return c.some(d => d.type === 'switch') && c.filter(d => d.type === 'pc').length >= A.n; }},
         {label:`Tous les appareils ${A.of} ont une adresse du même réseau, toutes différentes`, ipOnly:true,
           test:() => { const s = servers().find(onSwitch); if(!s) return false; const t = terminals(compOf(s)); return allSameSubnet(t) && allUnique(t); }},
-        {label:`Chaque PC ${A.of} joint le serveur (test de connexion)`,
-          test:() => { const s = servers().find(onSwitch); if(!s) return false; const p = compOf(s).filter(d => d.type === 'pc'); return p.length >= A.n && p.every(x => evalPing(x, s).kind === 'ok'); }}
+        {label:`Chaque PC ${A.of} joint le serveur, et tu as lancé les tests 🧪 (PC → PC, puis PC → serveur)`,
+          test:() => { const s = servers().find(onSwitch); if(!s) return false; const p = compOf(s).filter(d => d.type === 'pc');
+            return p.length >= A.n && p.every(x => evalPing(x, s).kind === 'ok') && p.some((x, i) => p.some((y, j) => i < j && ran(x, y, true))) && p.some(x => ran(x, s, true)); }}
       ]
     });
 
@@ -1186,12 +1217,12 @@
         {label:`Le 2e réseau a ses propres adresses, différentes de celles ${A.of}`, ipOnly:true,
           test:() => { const {main, second} = twoNets(); if(!main || !second) return false; const t = terminals(second);
             const s = netSubnet(second), m = netSubnet(main); return allSameSubnet(t) && allUnique(t) && s !== null && s !== m; }},
-        {label:`Les PC du 2e réseau communiquent entre eux`,
+        {label:`Les PC du 2e réseau communiquent entre eux (test 🧪 lancé)`,
           test:() => { const {second} = twoNets(); if(!second) return false; const p = second.filter(d => d.type === 'pc');
-            return p.length >= 2 && p.every((a, i) => p.every((b, j) => i === j || evalPing(a, b).kind === 'ok')); }},
-        {label:`Les deux réseaux ne sont pas encore reliés (${B.tag}-1 ne joint pas ${A.tag}-1)`,
+            return p.length >= 2 && p.every((a, i) => p.every((b, j) => i === j || evalPing(a, b).kind === 'ok')) && p.some((a, i) => p.some((b, j) => i < j && ran(a, b, true))); }},
+        {label:`Tu as testé ${B.tag}-1 → ${A.tag}-1 🧪 : le test échoue, les deux réseaux ne sont pas encore reliés`,
           test:() => { const {main, second} = twoNets(); if(!main || !second) return false;
-            const a = main.find(d => d.type === 'pc'), b = second.find(d => d.type === 'pc'); return !!a && !!b && evalPing(a, b).kind !== 'ok'; }}
+            const a = main.find(d => d.type === 'pc'), b = second.find(d => d.type === 'pc'); return !!a && !!b && evalPing(a, b).kind !== 'ok' && main.filter(d => d.type === 'pc').some(x => second.filter(d => d.type === 'pc').some(y => ran(x, y, false))); }}
       ]
     });
 
@@ -1231,12 +1262,12 @@
             return t1.length > 0 && t2.length > 0 && validIp(r.ip) && validIp(r.ip2) &&
               t1.every(d => (d.gateway || '').trim() === r.ip.trim()) && t2.every(d => (d.gateway || '').trim() === r.ip2.trim());
           })},
-        {label:`Un PC ${A.of} joint un PC ${B.of} (test réussi)`,
+        {label:`Tu as lancé le test 🧪 : un PC ${A.of} joint un PC ${B.of}`,
           test:() => { const {main, second} = twoNets(); if(!main || !second) return false;
-            const A = main.filter(d => d.type === 'pc'), B = second.filter(d => d.type === 'pc'); return A.some(a => B.some(b => evalPing(a, b).kind === 'ok')); }},
-        {label:`Le serveur ${A.of} joint un PC ${B.of}`,
+            const A = main.filter(d => d.type === 'pc'), B = second.filter(d => d.type === 'pc'); return A.some(a => B.some(b => evalPing(a, b).kind === 'ok' && ran(a, b, true))); }},
+        {label:`Tu as lancé le test 🧪 : le serveur ${A.of} joint un PC ${B.of}`,
           test:() => { const {main, second} = twoNets(); if(!main || !second) return false;
-            const s = main.find(d => d.type === 'serveur'); return !!s && second.filter(d => d.type === 'pc').some(b => evalPing(s, b).kind === 'ok'); }}
+            const s = main.find(d => d.type === 'serveur'); return !!s && second.filter(d => d.type === 'pc').some(b => evalPing(s, b).kind === 'ok' && ran(s, b, true)); }}
       ]
     });
 
@@ -1257,8 +1288,8 @@
         checks: [
           {label:`Le nuage Internet est posé`, test:() => devices.some(d => d.type === 'internet')},
           {label:`Le port 3 du routeur est relié à Internet`, test:() => routers().some(r => { const n = neighborViaPort(r, 3); return !!n && n.type === 'internet'; })},
-          {label:`Un PC ${A.of} accède à Internet (test réussi)`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!main && !!net && main.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }},
-          {label:`Un PC ${B.of} accède à Internet (test réussi)`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }}
+          {label:`Tu as lancé le test 🧪 : un PC ${A.of} accède à Internet`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!main && !!net && main.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok' && ran(p, net, true)); }},
+          {label:`Tu as lancé le test 🧪 : un PC ${B.of} accède à Internet`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok' && ran(p, net, true)); }}
         ]
       });
     }
@@ -1278,9 +1309,9 @@
           {label:`Le serveur ${A.of} est réglé en proxy`, test:() => { const {main} = twoNets(); return !!main && main.some(d => d.type === 'serveur' && d.proxyServer); }},
           {label:`Exactement ${Z.allow} PC ${A.of} sont autorisés`, test:() => { const {main} = twoNets(); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && main.filter(d => d.type === 'pc' && (sv.proxyAllow || []).includes(d.id)).length === Z.allow && main.filter(d => d.type === 'pc').length > Z.allow; }},
           {label:`Tous les PC ${A.of} ont l'adresse du proxy`, test:() => { const {main} = twoNets(); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && validIp(sv.ip) && main.filter(d => d.type === 'pc').every(p => (p.proxy || '').trim() === sv.ip.trim()); }},
-          {label:`Un PC autorisé accède à Internet`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && !!net && main.filter(d => d.type === 'pc' && (sv.proxyAllow || []).includes(d.id)).some(p => evalPing(p, net).kind === 'ok'); }},
-          {label:`Un PC non autorisé est bien bloqué (test : « accès bloqué »)`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!net && !!main && main.filter(d => d.type === 'pc').some(p => evalInternet(p).blocked === true); }},
-          {label:`${B.The} (non filtrée) accède toujours à Internet`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok'); }}
+          {label:`Tu as lancé le test 🧪 : un PC autorisé accède à Internet`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); const sv = main && main.find(d => d.type === 'serveur' && d.proxyServer); return !!sv && !!net && main.filter(d => d.type === 'pc' && (sv.proxyAllow || []).includes(d.id)).some(p => evalPing(p, net).kind === 'ok' && ran(p, net, true)); }},
+          {label:`Tu as testé 🧪 un PC non autorisé : « accès bloqué »`, test:() => { const {main} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!net && !!main && main.filter(d => d.type === 'pc').some(p => evalInternet(p).blocked === true && ran(p, net)); }},
+          {label:`Tu as testé 🧪 ${B.the} (non filtré) : l'accès à Internet fonctionne toujours`, test:() => { const {second} = twoNets(); const net = devices.find(d => d.type === 'internet'); return !!second && !!net && second.filter(d => d.type === 'pc').some(p => evalPing(p, net).kind === 'ok' && ran(p, net, true)); }}
         ]
       });
     }
@@ -1302,7 +1333,7 @@
         checks: [
           {label:`Les appareils du plan sont posés et nommés exactement comme dans le dossier`, test:caseNamesOk},
           {label:`Adresses, masques et passerelles conformes aux règles d'adressage`, ipOnly:true, test:() => caseNamesOk() && caseIpOk()},
-          {label:`Le réseau fonctionne : chaque PC joint le Serveur-Fichiers`, test:() => caseNamesOk() && caseNetOk()},
+          {label:`Le réseau fonctionne : tu as lancé le test 🧪 de chaque PC vers le Serveur-Fichiers`, test:() => caseNamesOk() && caseNetOk() && caseTested()},
           {label:`Le coupable est démasqué`, test:() => levelState['3e'].caseSolved}
         ]
       });
@@ -1330,52 +1361,54 @@
     const req = steps.filter(s => !s.expert), exp = steps.filter(s => s.expert);
     const reqDone = req.filter(s => L.done[s.n]).length, expDone = exp.filter(s => L.done[s.n]).length;
 
-    const SP = scoreParts(currentLevel);
-    let h = `<div class="progress-line">Niveau <b>${lv.label}</b> — étapes obligatoires : <b>${reqDone}/${req.length}</b>${exp.length ? ` · défis experts ⭐ : <b>${expDone}/${exp.length}</b>` : ''}</div>`;
-    if(reqDone === req.length){
-      h += `<div class="bravo">🎉 Parcours obligatoire terminé ! ${exp.length ? `Les étapes ⭐ sont des défis en <b>mode expert</b> : à toi de jouer.` : ''} Pense à faire le <b>quiz</b>.</div>`;
-    }
-    h += `<div class="score-line">Note de conception : <b>${fmt(SP.design)} / 20</b> — parcours obligatoire ${fmt(SP.p1)}/${SCORE_PTS.req} · défis experts ${fmt(SP.p2)}/${SCORE_PTS.exp}</div>`;
-    if(window.ENQUETE_ONLY) h = '';
-    h += `<div class="pills">` + steps.map((s, i) => {
-      const unlocked = isUnlocked(steps, i, L);
-      const cls = ['pill', i === L.stepIndex ? 'current' : '', L.done[s.n] ? 'done' : '', unlocked ? '' : 'locked', s.expert ? 'expert' : ''].join(' ');
-      return `<button class="${cls}" data-action="goto" data-i="${i}" ${unlocked ? '' : 'disabled'}><span class="num">${L.done[s.n] ? '✓' : s.n}</span><span class="lbl">${esc(s.pill)}</span>${s.expert ? `<span class="tag">⭐ expert</span>` : ''}</button>`;
-    }).join('') + `</div>`;
-
-    h += `<div class="step-card"><span class="step-badge ${st.expert ? 'expert' : 'required'}">${st.expert ? '⭐ Mode expert' : 'Étape guidée'}</span>`;
-    h += `<h2>${st.kind === 'enquete' ? '' : 'Étape ' + st.n + ' : '}${esc(st.title)}</h2><p class="goal">${st.goal}</p>`;
-
+    const MASCOT = (happy) => `<svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><line x1="32" y1="7" x2="32" y2="15" stroke="#5ad1e6" stroke-width="2.5" stroke-linecap="round"/><circle cx="32" cy="6" r="3.2" fill="#f3a94a"/><rect x="11" y="15" width="42" height="31" rx="11" fill="#5ad1e6"/><rect x="16" y="20" width="32" height="21" rx="8" fill="#0a1120"/><circle cx="26" cy="28" r="3.6" fill="#4ddc9a"/><circle cx="38" cy="28" r="3.6" fill="#4ddc9a"/><path d="${happy ? 'M25 34 Q32 41 39 34' : 'M27 35 Q32 38 37 35'}" fill="none" stroke="#4ddc9a" stroke-width="2.4" stroke-linecap="round"/><rect x="19" y="47" width="26" height="12" rx="5" fill="#13233d" stroke="#5ad1e6" stroke-width="2"/><circle cx="26" cy="53" r="2" fill="#f3a94a"/><circle cx="32" cy="53" r="2" fill="#4ddc9a"/><circle cx="38" cy="53" r="2" fill="#5ad1e6"/><rect x="5" y="25" width="5" height="11" rx="2.5" fill="#5ad1e6"/><rect x="54" y="25" width="5" height="11" rx="2.5" fill="#5ad1e6"/></svg>`;
+    let h = `<div class="mascot-row"><div class="mascot">${MASCOT(false)}</div><div class="bubble"><div class="b-title">${st.kind === 'enquete' ? '' : 'Étape ' + st.n + ' : '}${esc(st.title)}</div><p>${st.goal}</p>`;
+    const okAt = st.checks.map(c => (!c.ipOnly || ipActive(currentLevel, st.n)) ? safe(c.test) : true);
+    const MAP = {
+      '5e1':[[1],[2],[3],[5],[5],[5]], '5e2':[[1],[2],[3],[4],[6],[6]], '5e3':[[1],[3],[2],[4],[5,6]], '5e4':[[1],[2],[3],[4],[5,6]],
+      'x1':[[1],[2],[3],[4],[4],[5],[5]], 'x2':[[1],[2],[3],[4],[5],[6]], 'x3':[[1],[3],[2],[4],[5,6]], 'x4':[[1],[2],[3],[4],[5,6]],
+      'x5':[[1],[2],[2],[3,4]], 'x6':[[1],[2],[3],[4,5,6]], 'x7':[[],[1],[2],[2],[3],[4]]
+    };
+    const mp = MAP[(currentLevel === '5e' && st.n <= 4 ? '5e' : 'x') + st.n] || [];
+    const instrOk = (i) => {
+      let m = mp[i];
+      if(!m) m = [Math.min(st.checks.length, Math.max(1, Math.round((i + 1) * st.checks.length / st.instr.length)))];
+      if(!m.length) return st.kind === 'enquete' ? !!L.dossierSeen : true;
+      return m.every(k => okAt[k - 1] !== false);
+    };
     if(!st.expert || L.full[st.n]){
-      h += `<h4>Instructions pas à pas</h4><ol class="instr">${st.instr.map(t => `<li>${t}</li>`).join('')}</ol>`;
+      h += `<ol class="instr">${st.instr.map((t, i) => `<li class="${instrOk(i) ? 'ok' : ''}"><span class="ico">${i + 1}</span><span class="txt">${t}</span></li>`).join('')}</ol>`;
     } else {
-      h += `<div class="expert-note">⭐ Ici, plus d'instructions détaillées : atteins l'objectif en validant toute la liste ci-dessous.</div>`;
+      h += `<p style="color:var(--violet)">⭐ Mode expert : à toi de trouver comment faire ! Voici ce que tu dois réussir :</p><ol class="instr">${st.checks.map((c, i) => `<li class="${okAt[i] ? 'ok' : ''}"><span class="ico">${i + 1}</span><span class="txt">${c.label}</span></li>`).join('')}</ol>`;
     }
-    h += `<h4>Vérifications</h4><ul class="checks">${results.map(r => `<li class="${r.ok ? 'ok' : ''}"><span class="ico">${r.ok ? '✓' : ''}</span><span>${r.label}</span></li>`).join('')}</ul>`;
+    h += `</div></div>`;
     if(L.hint[st.n]) h += `<div class="hint-box">💡 ${st.hint}</div>`;
 
     h += `<div class="card-actions">`;
     if(st.kind === 'enquete') h += `<button class="btn" data-action="dossier">📂 Dossier d'enquête</button><button class="btn primary" data-action="accuse">🚔 Accuser un suspect</button>`;
     h += `<button class="btn ghost" data-action="hint">💡 ${L.hint[st.n] ? 'Masquer le coup de pouce' : 'Coup de pouce'}</button>`;
-    if(st.expert && !L.full[st.n]) h += `<button class="btn ghost" data-action="full">📖 Voir les instructions</button>`;
+    if(st.expert && !L.full[st.n]) h += `<button class="btn ghost" data-action="full">📖 Voir les consignes</button>`;
     h += `</div>`;
 
     if(L.done[st.n]){
       const next = steps[L.stepIndex + 1];
-      h += `<div class="success-box">✅ <b>${st.kind === 'enquete' ? 'Enquête terminée !' : 'Étape réussie !'}</b> ${next ? `Tu peux passer à l'étape suivante${next.expert ? ' (⭐ mode expert)' : ''}.` : (window.ENQUETE_ONLY ? `Bravo détective, l'affaire est classée !` : `Bravo, tu as terminé ce niveau. Tente le quiz !`)}</div>`;
+      h += `<div class="mascot-row" style="margin-top:14px"><div class="mascot">${MASCOT(true)}</div><div class="bubble happy"><b>${st.kind === 'enquete' ? 'Enquête terminée !' : 'Bravo, étape réussie !'}</b> ${next ? `Tu peux passer à la suivante${next.expert ? ' (⭐ mode expert)' : ''}.` : (window.ENQUETE_ONLY ? `Bravo détective, l'affaire est classée !` : `Tu as terminé ce niveau. Tente le quiz !`)}</div></div>`;
       if(next) h += `<div class="card-actions"><button class="btn primary" data-action="next">Étape suivante →</button></div>`;
     }
-    h += `</div>`;
     $('guidePanel').innerHTML = h;
+    const sd = $('stepDots');
+    if(sd) sd.innerHTML = (window.ENQUETE_ONLY || window.SCORM_PART === 'quiz') ? '' : steps.map((s, i) => {
+      return `<button type="button" class="sdot ${L.done[s.n] ? 'done' : ''} ${i === L.stepIndex ? 'current' : ''}" data-i="${i}" aria-label="Étape ${s.n}${L.done[s.n] ? ' validée' : ''}">${s.n}</button>`;
+    }).join('');
     updateScore();
   }
 
-  function isUnlocked(steps, i, L){ return i === 0 || !!L.done[steps[i - 1].n] || (steps[i].expert && steps.filter(x => !x.expert).every(x => L.done[x.n])); }
+  function isUnlocked(steps, i, L){ return true || i === 0 || !!L.done[steps[i - 1].n] || (steps[i].expert && steps.filter(x => !x.expert).every(x => L.done[x.n])); }
   function goToStep(i){
     const steps = getSteps(currentLevel), L = levelState[currentLevel];
     if(i < 0 || i >= steps.length) return;
     if(!isUnlocked(steps, i, L)) return;
-    for(let j = L.stepIndex; j < i; j++){ if(L.done[steps[j].n] && !L.ack[steps[j].n]){ showFiche(steps[j]); return; } }
+    if(i === L.stepIndex + 1){ const j = L.stepIndex; if(L.done[steps[j].n] && !L.ack[steps[j].n]){ showFiche(steps[j]); return; } }
     const key = steps[i].kind === 'enquete' ? 'enquete' : 'reseau';
     L.stepIndex = i;
     if(key !== currentWsKey){ saveWorkspace(); loadWorkspace(key); }
@@ -1393,6 +1426,8 @@
     if(st.n >= 4) types.push('routeur');
     if(currentLevel !== '5e' && st.kind !== 'enquete' && st.n >= 5) types.push('internet');
     if(placingType && types.indexOf(placingType) < 0) placingType = null;
+    $('btnTest').parentElement.hidden = testMode;
+    if(testMode){ $('paletteBar').innerHTML = `<span class="pal-label">🧪 Mode test : clique sur deux appareils</span><button type="button" class="btn primary quit-test" id="btnQuitTest">✖ Quitter le mode test</button>`; return; }
     $('paletteBar').innerHTML = `<span class="pal-label">Éléments</span>` + types.map(t =>
       `<div class="chip${placingType === t ? ' active' : ''}" data-type="${t}">${ICONS[t]}<span>${TYPE_LABEL[t]}</span>${infoBtn(t)}</div>`).join('') +
       `<div class="chip${cablingMode ? ' active' : ''}" data-type="cable" title="Clique sur le câble, puis sur deux appareils pour les relier">${ICONS.cable}<span>Câble RJ45</span>${infoBtn('rj45')}</div>`;
@@ -1459,70 +1494,70 @@
   // =====================================================================
   const QUIZ = {
     '5e': [
-      {q:`Un réseau informatique, c'est…`, o:[`plusieurs appareils reliés entre eux pour échanger des informations`,`un seul ordinateur très puissant`,`un logiciel pour dessiner`,`une prise électrique spéciale`], a:0, why:`Un réseau relie des appareils (PC, serveurs…) pour qu'ils partagent des données et des ressources.`},
-      {q:`Quel câble utilise-t-on pour relier un PC à un commutateur ?`, o:[`Un câble HDMI`,`Un câble RJ45 (câble réseau)`,`Un câble d'alimentation`,`Un câble de souris`], a:1, why:`Le câble RJ45, aussi appelé câble Ethernet, transporte les données du réseau.`},
-      {q:`Comment reconnaît-on un connecteur RJ45 ?`, o:[`Petite prise rectangulaire en plastique avec 8 contacts métalliques`,`Prise ronde avec 3 grosses broches`,`Connecteur plat à 4 contacts seulement`,`Fiche ronde de casque audio`], a:0, why:`Le RJ45 est une petite prise rectangulaire à 8 contacts, avec une languette qui la verrouille.`},
-      {q:`Quel est le rôle d'un commutateur (switch) ?`, o:[`Relier plusieurs appareils d'un même réseau pour qu'ils communiquent`,`Imprimer des documents`,`Protéger l'ordinateur des virus`,`Fabriquer de l'électricité`], a:0, why:`Le commutateur est le « carrefour » du réseau : tous les appareils y sont branchés.`},
-      {q:`Quel est le rôle d'un serveur ?`, o:[`Fournir des services ou des fichiers aux autres ordinateurs`,`Afficher l'image sur l'écran`,`Remplacer le commutateur`,`Servir uniquement à jouer`], a:0, why:`Un serveur rend des services aux autres machines : stockage de fichiers, pages web, messagerie…`},
-      {q:`Au CDI, plusieurs PC doivent accéder aux mêmes documents. Où les placer ?`, o:[`Sur le serveur`,`Sur la souris de chaque PC`,`Dans le câble RJ45`,`Dans le commutateur`], a:0, why:`Un serveur de fichiers centralise les documents : tous les PC y accèdent par le réseau.`},
+      {q:`Un réseau informatique, c'est…`, o:[`plusieurs appareils reliés pour échanger des informations`,`un seul ordinateur très puissant relié à un immense écran géant`,`un logiciel de dessin installé sur tous les PC`,`une prise électrique spéciale pour les salles info`], a:0, why:`Un réseau relie des appareils (PC, serveurs…) pour qu'ils partagent des données et des ressources.`},
+      {q:`Quel câble utilise-t-on pour relier un PC à un commutateur ?`, o:[`Un câble HDMI (câble vidéo)`,`Un câble RJ45 (câble réseau)`,`Un câble d'alimentation`,`Un câble USB de souris`], a:1, why:`Le câble RJ45, aussi appelé câble Ethernet, transporte les données du réseau.`},
+      {q:`Comment reconnaît-on un connecteur RJ45 ?`, o:[`Petite prise rectangulaire à 8 contacts métalliques`,`Prise ronde de grande taille avec 3 grosses broches en métal`,`Connecteur plat à 4 contacts seulement, très fin`,`Fiche ronde de casque audio à 2 contacts`], a:0, why:`Le RJ45 est une petite prise rectangulaire à 8 contacts, avec une languette qui la verrouille.`},
+      {q:`Quel est le rôle d'un commutateur (switch) ?`, o:[`Relier les appareils d'un même réseau entre eux`,`Protéger les ordinateurs contre les virus`,`Imprimer les documents des élèves en réseau`,`Fournir l'électricité aux appareils reliés`], a:0, why:`Le commutateur est le « carrefour » du réseau : tous les appareils y sont branchés.`},
+      {q:`Quel est le rôle d'un serveur ?`, o:[`Fournir des services ou des fichiers aux autres PC`,`Afficher les images et le son sur l'écran de chaque PC`,`Remplacer le commutateur quand il tombe en panne`,`Servir uniquement à lancer des jeux en ligne`], a:0, why:`Un serveur rend des services aux autres machines : stockage de fichiers, pages web, messagerie…`},
+      {q:`Au CDI, plusieurs PC doivent accéder aux mêmes documents. Où les placer ?`, o:[`Sur le serveur de fichiers du CDI`,`Dans la souris de chaque PC`,`Dans le câble RJ45 du commutateur`,`Dans le commutateur lui-même`], a:0, why:`Un serveur de fichiers centralise les documents : tous les PC y accèdent par le réseau.`},
       {q:`Combien de câbles RJ45 faut-il pour relier 6 PC à un commutateur ?`, o:[`1`,`3`,`6`,`12`], a:2, why:`Il faut un câble par appareil : 6 PC = 6 câbles.`},
-      {q:`Le câble d'un PC est débranché du commutateur. Que se passe-t-il ?`, o:[`Ce PC ne peut plus communiquer avec le réseau`,`Tout le réseau s'arrête`,`Rien ne change`,`Le commutateur s'éteint`], a:0, why:`Seul le PC dont le câble est débranché est coupé du réseau.`},
+      {q:`Le câble d'un PC est débranché du commutateur. Que se passe-t-il ?`, o:[`Seul ce PC perd la connexion au réseau`,`Tout le réseau s'arrête de fonctionner`,`Le commutateur s'éteint automatiquement`,`Les autres PC perdent leur adresse IP`], a:0, why:`Seul le PC dont le câble est débranché est coupé du réseau.`},
       {q:`Un commutateur possède 8 ports. Combien d'appareils peut-on y brancher au maximum ?`, o:[`2`,`4`,`8`,`16`], a:2, why:`Un port = un appareil : 8 ports permettent de brancher 8 appareils.`},
-      {q:`Dans un réseau en étoile, tous les appareils sont reliés…`, o:[`à un appareil central : le commutateur`,`les uns derrière les autres, en ligne`,`uniquement au serveur`,`sans aucun câble`], a:0, why:`Dans une étoile, chaque appareil a son propre câble vers le commutateur central.`},
-      {q:`Dans un réseau en étoile, un seul câble est débranché. Qui est touché ?`, o:[`Seulement l'appareil relié par ce câble`,`Tous les appareils`,`Seulement le serveur`,`Personne`], a:0, why:`Chaque appareil a son câble : une panne de câble ne touche qu'un appareil.`},
-      {q:`Pourquoi renomme-t-on les PC (CDI-1, CDI-2…) ?`, o:[`Pour les reconnaître facilement`,`Pour les rendre plus rapides`,`Pour changer leur couleur`,`Parce que c'est obligatoire pour les allumer`], a:0, why:`Un nom clair permet de savoir de quel appareil on parle.`},
-      {q:`Quelle différence entre un PC et un serveur ?`, o:[`Le PC est utilisé par une personne ; le serveur offre des services aux autres machines`,`Le serveur n'a pas besoin d'électricité`,`Le PC est toujours plus puissant`,`Il n'y en a aucune`], a:0, why:`Le serveur travaille pour les autres machines et reste allumé en permanence.`},
-      {q:`Un câble RJ45 se branche dans…`, o:[`un port RJ45 d'un appareil ou du commutateur`,`une prise électrique murale`,`une prise casque`,`une clé USB`], a:0, why:`Les ports RJ45 sont les prises réseau des PC, serveurs et commutateurs.`},
-      {q:`À quoi sert le test de connexion dans l'atelier ?`, o:[`À vérifier que deux appareils peuvent communiquer`,`À éteindre un PC`,`À supprimer un câble`,`À changer le nom d'un PC`], a:0, why:`Le test montre si deux appareils se « voient » sur le réseau.`},
+      {q:`Dans un réseau en étoile, tous les appareils sont reliés…`, o:[`à un appareil central : le commutateur`,`les uns derrière les autres, en ligne`,`uniquement au serveur par un seul câble`,`entre eux, sans aucun appareil central`], a:0, why:`Dans une étoile, chaque appareil a son propre câble vers le commutateur central.`},
+      {q:`Dans un réseau en étoile, un seul câble est débranché. Qui est touché ?`, o:[`Seulement l'appareil relié par ce câble`,`Tous les appareils du réseau`,`Seulement le serveur de fichiers`,`Tous les appareils sauf le serveur de fichiers du CDI`], a:0, why:`Chaque appareil a son câble : une panne de câble ne touche qu'un appareil.`},
+      {q:`Pourquoi renomme-t-on les PC (CDI-1, CDI-2…) ?`, o:[`Pour les reconnaître facilement`,`Pour les rendre plus rapides`,`Pour changer leur couleur à l'écran`,`Parce que c'est obligatoire pour les allumer`], a:0, why:`Un nom clair permet de savoir de quel appareil on parle.`},
+      {q:`Quelle différence entre un PC et un serveur ?`, o:[`Le PC sert à une personne, le serveur aux autres machines`,`Le serveur n'a pas besoin d'électricité pour fonctionner`,`Le PC est toujours plus puissant que le serveur`,`Il n'y a aucune différence entre les deux`], a:0, why:`Le serveur travaille pour les autres machines et reste allumé en permanence.`},
+      {q:`Un câble RJ45 se branche dans…`, o:[`un port RJ45 d'un appareil ou du commutateur`,`une prise électrique murale du couloir`,`la prise casque d'un ordinateur portable ou d'une tablette`,`un port USB pour clé de stockage`], a:0, why:`Les ports RJ45 sont les prises réseau des PC, serveurs et commutateurs.`},
+      {q:`À quoi sert le test de connexion dans l'atelier ?`, o:[`À vérifier que deux appareils communiquent`,`À éteindre un PC à distance sans danger`,`À supprimer un câble devenu inutile`,`À changer le nom d'un PC du réseau`], a:0, why:`Le test montre si deux appareils se « voient » sur le réseau.`},
       {q:`Deux PC reliés au même commutateur par des câbles RJ45 peuvent…`, o:[`communiquer entre eux`,`seulement échanger des images`,`ne jamais communiquer`,`communiquer seulement avec une imprimante`], a:0, why:`Le commutateur fait circuler les données entre tous les appareils branchés dessus.`},
-      {q:`Le serveur du CDI tombe en panne. Que perdent les PC ?`, o:[`L'accès aux fichiers et services du serveur`,`Leur écran`,`Leur clavier`,`Leur câble RJ45`], a:0, why:`Les PC restent allumés, mais les services du serveur ne sont plus disponibles.`},
-      {q:`Quel appareil permet de relier plusieurs PC d'une même salle ?`, o:[`Le commutateur`,`L'écran`,`Le clavier`,`Le microphone`], a:0, why:`C'est le rôle du commutateur : relier les appareils d'un même réseau.`},
-      {q:`Un réseau local, c'est un réseau…`, o:[`limité à un lieu (une salle, un collège, une maison)`,`qui relie tous les pays du monde`,`sans aucun câble ni onde`,`qui ne contient jamais de serveur`], a:0, why:`« Local » signifie limité à un lieu : par exemple le réseau du collège.`},
-      {q:`Quel est l'intérêt d'un réseau au collège ?`, o:[`Partager des fichiers, des imprimantes et l'accès à Internet`,`Rendre les PC plus lourds`,`Remplacer les professeurs`,`Éviter d'utiliser l'électricité`], a:0, why:`Le réseau permet de partager des ressources entre tous les utilisateurs.`}
+      {q:`Le serveur du CDI tombe en panne. Que perdent les PC ?`, o:[`L'accès à ses fichiers et à ses services`,`Leur écran et leur clavier`,`Leur câble RJ45 et leur prise`,`Leur nom et leur couleur sur le plan de travail`], a:0, why:`Les PC restent allumés, mais les services du serveur ne sont plus disponibles.`},
+      {q:`Quel appareil permet de relier plusieurs PC d'une même salle ?`, o:[`Le commutateur`,`L'écran d'ordinateur`,`Le clavier sans fil`,`Le microphone du CDI`], a:0, why:`C'est le rôle du commutateur : relier les appareils d'un même réseau.`},
+      {q:`Un réseau local, c'est un réseau…`, o:[`limité à un lieu (une salle, un collège)`,`qui relie tous les pays du monde entier`,`sans aucun câble ni aucune onde radio`,`qui ne contient jamais de serveur ni de PC`], a:0, why:`« Local » signifie limité à un lieu : par exemple le réseau du collège.`},
+      {q:`Quel est l'intérêt d'un réseau au collège ?`, o:[`Partager fichiers, imprimantes et accès à Internet`,`Rendre tous les PC plus lourds, plus lents et plus chers`,`Remplacer les professeurs par des machines`,`Éviter d'utiliser de l'électricité en classe`], a:0, why:`Le réseau permet de partager des ressources entre tous les utilisateurs.`}
     ],
     '4e': [
-      {q:`À quoi sert une adresse IP ?`, o:[`À identifier un appareil sur un réseau`,`À allumer un PC`,`À relier deux câbles`,`À protéger du soleil`], a:0, why:`L'adresse IP est l'« adresse postale » d'un appareil sur le réseau.`},
-      {q:`Une adresse IP (version 4) est composée de…`, o:[`4 nombres séparés par des points`,`2 nombres séparés par deux-points`,`1 seul grand nombre`,`8 lettres`], a:0, why:`Exemple : 192.168.1.10 est composée de quatre nombres.`},
+      {q:`À quoi sert une adresse IP ?`, o:[`À identifier un appareil sur le réseau`,`À allumer un PC à distance sans bouton`,`À relier deux câbles RJ45 entre eux`,`À mesurer la vitesse de la connexion`], a:0, why:`L'adresse IP est l'« adresse postale » d'un appareil sur le réseau.`},
+      {q:`Une adresse IP (version 4) est composée de…`, o:[`4 nombres séparés par des points`,`2 nombres séparés par deux-points`,`1 seul grand nombre sans séparateur`,`8 lettres séparées par des tirets`], a:0, why:`Exemple : 192.168.1.10 est composée de quatre nombres.`},
       {q:`Quelle est la valeur maximale de chaque nombre d'une adresse IP (version 4) ?`, o:[`99`,`100`,`255`,`1000`], a:2, why:`Chaque nombre va de 0 à 255.`},
       {q:`Laquelle de ces adresses IP est valide ?`, o:[`192.168.1.10`,`192.168.1.300`,`192.168.1`,`192.168.1.10.5`], a:0, why:`300 dépasse 255, il manque un nombre dans la 3ème, et la 4ème en a un de trop.`},
-      {q:`Peut-on donner la même adresse IP à deux PC d'un même réseau ?`, o:[`Non : ce serait un conflit d'adresses`,`Oui, c'est même conseillé`,`Oui, s'ils ont le même nom`,`Oui, mais seulement pour les serveurs`], a:0, why:`Chaque adresse doit être unique dans un réseau, sinon on ne sait plus qui est qui.`},
+      {q:`Peut-on donner la même adresse IP à deux PC d'un même réseau ?`, o:[`Non : ce serait un conflit d'adresses`,`Oui, c'est conseillé pour aller plus vite`,`Oui, s'ils ont exactement le même nom`,`Oui, mais seulement pour deux serveurs`], a:0, why:`Chaque adresse doit être unique dans un réseau, sinon on ne sait plus qui est qui.`},
       {q:`Avec le masque 255.255.255.0, les adresses 192.168.1.10 et 192.168.1.11 sont…`, o:[`dans le même réseau`,`dans deux réseaux différents`,`identiques`,`invalides`], a:0, why:`Les trois premiers nombres (192.168.1) sont identiques : même réseau.`},
-      {q:`Avec le masque 255.255.255.0, les adresses 192.168.1.10 et 192.168.2.10 sont…`, o:[`dans deux réseaux différents`,`dans le même réseau`,`des adresses de serveurs`,`impossibles à configurer`], a:0, why:`Le 3ème nombre diffère (1 et 2) : ce sont deux réseaux différents.`},
-      {q:`Que fait le masque de sous-réseau 255.255.255.0 ?`, o:[`Il indique que les 3 premiers nombres désignent le réseau et le dernier l'appareil`,`Il cache le PC aux autres`,`Il donne la vitesse du réseau`,`Il protège contre les virus`], a:0, why:`Le masque sépare la partie « réseau » de la partie « appareil » dans l'adresse.`},
+      {q:`Avec le masque 255.255.255.0, les adresses 192.168.1.10 et 192.168.2.10 sont…`, o:[`dans deux réseaux différents`,`dans le même réseau local`,`des adresses de deux serveurs`,`des adresses invalides à corriger`], a:0, why:`Le 3ème nombre diffère (1 et 2) : ce sont deux réseaux différents.`},
+      {q:`Que fait le masque de sous-réseau 255.255.255.0 ?`, o:[`Il sépare la partie réseau de la partie appareil`,`Il cache le PC aux autres appareils pour les protéger`,`Il indique la vitesse maximale du réseau`,`Il protège le réseau contre les virus`], a:0, why:`Le masque sépare la partie « réseau » de la partie « appareil » dans l'adresse.`},
       {q:`Dans 192.168.1.10 avec le masque 255.255.255.0, quelle partie identifie le réseau ?`, o:[`192.168.1`,`10`,`192`,`l'adresse en entier`], a:0, why:`Les trois premiers nombres (192.168.1) identifient le réseau ; le dernier (10) identifie l'appareil.`},
-      {q:`Quel est le rôle d'un serveur de communication ?`, o:[`Organiser les échanges entre les appareils (messagerie, attribution d'adresses…)`,`Remplacer le câble RJ45`,`Imprimer les documents`,`Refroidir les PC`], a:0, why:`Il gère les communications du réseau, par exemple en distribuant les adresses IP.`},
-      {q:`Que fait un serveur DHCP ?`, o:[`Il attribue automatiquement les adresses IP aux appareils`,`Il supprime les adresses IP`,`Il fabrique des câbles`,`Il éteint les PC la nuit`], a:0, why:`DHCP distribue une adresse, un masque et une passerelle aux appareils qui se connectent.`},
-      {q:`Quel est l'avantage du DHCP ?`, o:[`Plus besoin de configurer chaque PC à la main, et moins de doublons`,`Les PC deviennent plus rapides`,`On n'a plus besoin de câbles`,`On n'a plus besoin de commutateur`], a:0, why:`DHCP automatise la configuration et évite les erreurs et les doublons d'adresses.`},
-      {q:`Un PC n'a aucune adresse IP configurée. Que peut-on dire ?`, o:[`Il ne pourra pas communiquer sur un réseau IP`,`Il communique normalement`,`Il devient un serveur`,`Il est le plus rapide du réseau`], a:0, why:`Sans adresse IP, un PC ne peut pas être identifié sur le réseau.`},
-      {q:`Dans l'atelier, un commutateur a-t-il besoin d'une adresse IP pour relier des PC ?`, o:[`Non`,`Oui, toujours`,`Oui, mais seulement 192.168.1.1`,`Seulement avec 6 PC branchés`], a:0, why:`Le commutateur relie les appareils sans avoir lui-même besoin d'adresse IP.`},
-      {q:`Les câbles sont bons mais PROF-1 ne joint pas le serveur. Cause probable ?`, o:[`Les adresses IP ne sont pas dans le même réseau`,`Le PC est trop vieux`,`Le nom du PC est trop court`,`Le câble est trop propre`], a:0, why:`Il faut vérifier les adresses : les trois premiers nombres doivent être identiques avec le masque 255.255.255.0.`},
-      {q:`Quelle adresse convient pour un serveur du réseau 192.168.1.0 (masque 255.255.255.0) ?`, o:[`192.168.1.1`,`192.168.2.1`,`10.0.0.300`,`192.168.1`], a:0, why:`Elle commence par 192.168.1 et se termine par un nombre libre.`},
-      {q:`À quoi sert un ping (test de connexion) ?`, o:[`À vérifier qu'un appareil répond sur le réseau`,`À changer l'adresse IP`,`À effacer des fichiers`,`À mesurer la longueur d'un câble`], a:0, why:`Le ping envoie un petit message et attend la réponse de l'autre appareil.`},
-      {q:`PROF-1 (192.168.10.10) et LABO-1 (192.168.20.10) sont sur deux commutateurs séparés. Pourquoi ne communiquent-ils pas ?`, o:[`Ils sont dans deux réseaux différents qui ne sont pas reliés`,`Ils ont le même nom`,`Les PC sont éteints`,`Les câbles sont jaunes`], a:0, why:`Pour relier deux réseaux, il faudra un routeur (c'est le défi expert !).`},
-      {q:`Pourquoi donne-t-on des adresses en 192.168.10.x à la salle des professeurs et 192.168.20.x au laboratoire ?`, o:[`Pour distinguer deux réseaux différents`,`Pour que les PC aillent plus vite`,`Pour économiser des câbles`,`Par hasard`], a:0, why:`Chaque réseau a son propre numéro de réseau (10 ou 20).`},
-      {q:`Qu'est-ce qu'Internet ?`, o:[`Un réseau mondial qui relie des millions de réseaux entre eux`,`Un seul très gros ordinateur`,`Un logiciel installé sur chaque PC`,`Un type de câble`], a:0, why:`Internet n'appartient à personne : c'est l'ensemble des réseaux du monde reliés entre eux. Un réseau local (comme celui du CDI) peut s'y connecter par son routeur.`}
+      {q:`Quel est le rôle d'un serveur de communication ?`, o:[`Gérer les échanges du réseau (messagerie, adresses…)`,`Remplacer les câbles RJ45 du réseau par des ondes`,`Imprimer les documents envoyés par tous les PC du réseau`,`Refroidir les PC d'une salle trop chaude`], a:0, why:`Il gère les communications du réseau, par exemple en distribuant les adresses IP.`},
+      {q:`Que fait un serveur DHCP ?`, o:[`Il attribue automatiquement les adresses IP`,`Il supprime les adresses IP inutilisées`,`Il fabrique des câbles RJ45 sur mesure`,`Il éteint tous les PC pendant la nuit`], a:0, why:`DHCP distribue une adresse, un masque et une passerelle aux appareils qui se connectent.`},
+      {q:`Quel est l'avantage du DHCP ?`, o:[`Plus besoin de configurer chaque PC à la main`,`Les PC deviennent beaucoup plus rapides et plus fiables`,`On n'a plus besoin de câbles du tout`,`On n'a plus besoin de commutateur`], a:0, why:`DHCP automatise la configuration et évite les erreurs et les doublons d'adresses.`},
+      {q:`Un PC n'a aucune adresse IP configurée. Que peut-on dire ?`, o:[`Il ne pourra pas communiquer sur le réseau`,`Il communique normalement avec tous les PC`,`Il devient automatiquement un serveur`,`Il est le plus rapide de tout le réseau`], a:0, why:`Sans adresse IP, un PC ne peut pas être identifié sur le réseau.`},
+      {q:`Dans l'atelier, un commutateur a-t-il besoin d'une adresse IP pour relier des PC ?`, o:[`Non, il relie sans adresse IP`,`Oui, sinon il ne s'allume pas`,`Oui, mais seulement 192.168.1.1`,`Seulement s'il a plus de 6 PC branchés`], a:0, why:`Le commutateur relie les appareils sans avoir lui-même besoin d'adresse IP.`},
+      {q:`Les câbles sont bons mais PROF-1 ne joint pas le serveur. Cause probable ?`, o:[`Les adresses IP ne sont pas du même réseau`,`Le PC est trop ancien pour le réseau`,`Le nom du PC est beaucoup trop court`,`Le câble est d'une couleur qui n'est pas conforme`], a:0, why:`Il faut vérifier les adresses : les trois premiers nombres doivent être identiques avec le masque 255.255.255.0.`},
+      {q:`Quelle adresse convient pour un serveur du réseau 192.168.1.0 (masque 255.255.255.0) ?`, o:[`192.168.1.1`,`192.168.2.1`,`10.10.10.300`,`192.168.1`], a:0, why:`Elle commence par 192.168.1 et se termine par un nombre libre.`},
+      {q:`À quoi sert un ping (test de connexion) ?`, o:[`À vérifier qu'un appareil répond`,`À changer l'adresse IP d'un appareil`,`À effacer les fichiers du serveur`,`À mesurer la longueur d'un câble`], a:0, why:`Le ping envoie un petit message et attend la réponse de l'autre appareil.`},
+      {q:`PROF-1 (192.168.10.10) et LABO-1 (192.168.20.10) sont sur deux commutateurs séparés. Pourquoi ne communiquent-ils pas ?`, o:[`Ils sont dans deux réseaux non reliés`,`Ils portent exactement le même nom`,`Leurs PC sont éteints depuis le matin`,`Leurs câbles RJ45 sont de couleur jaune`], a:0, why:`Pour relier deux réseaux, il faudra un routeur (c'est le défi expert !).`},
+      {q:`Pourquoi donne-t-on des adresses en 192.168.10.x à la salle des professeurs et 192.168.20.x au laboratoire ?`, o:[`Pour distinguer deux réseaux différents`,`Pour que les PC aillent plus vite`,`Pour économiser des câbles RJ45`,`Par pur hasard, sans aucune raison`], a:0, why:`Chaque réseau a son propre numéro de réseau (10 ou 20).`},
+      {q:`Qu'est-ce qu'Internet ?`, o:[`Un réseau mondial qui relie des millions de réseaux`,`Un seul très gros ordinateur installé aux États-Unis`,`Un logiciel installé sur chaque PC du monde`,`Un type de câble qui traverse les océans`], a:0, why:`Internet n'appartient à personne : c'est l'ensemble des réseaux du monde reliés entre eux. Un réseau local (comme celui du CDI) peut s'y connecter par son routeur.`}
     ],
     '3e': [
-      {q:`Quel est le rôle d'un routeur ?`, o:[`Relier des réseaux différents et diriger les données de l'un vers l'autre`,`Relier uniquement des PC d'un même réseau`,`Stocker les fichiers du collège`,`Donner un nom aux PC`], a:0, why:`Le routeur est le « passage » entre deux réseaux.`},
+      {q:`Quel est le rôle d'un routeur ?`, o:[`Relier des réseaux différents entre eux`,`Relier uniquement des PC d'un même réseau`,`Stocker les fichiers de tout le collège`,`Donner un nom à chaque PC du réseau`], a:0, why:`Le routeur est le « passage » entre deux réseaux.`},
       {q:`Combien d'interfaces faut-il au minimum à un routeur pour relier deux réseaux ?`, o:[`1`,`2`,`4`,`8`], a:1, why:`Une interface par réseau relié : deux réseaux = deux interfaces.`},
-      {q:`Pourquoi deux PC de réseaux différents ne communiquent-ils pas sans routeur ?`, o:[`Ils ne sont pas dans le même réseau et rien ne les relie`,`Leurs écrans sont différents`,`Ils n'ont pas de souris`,`Ils ont trop de câbles`], a:0, why:`Sans routeur, deux réseaux restent isolés l'un de l'autre.`},
-      {q:`Qu'est-ce que la passerelle d'un PC ?`, o:[`L'adresse du routeur à contacter pour sortir de son réseau`,`Le nom du PC`,`Le numéro du port du commutateur`,`Le masque de sous-réseau`], a:0, why:`La passerelle est l'adresse du routeur, côté réseau du PC.`},
-      {q:`Le routeur a l'adresse 192.168.40.254 côté atelier de technologie. Quelle passerelle donne-t-on à TECHNO-1 (192.168.40.10) ?`, o:[`192.168.40.254`,`192.168.30.254`,`192.168.40.10`,`255.255.255.0`], a:0, why:`La passerelle est l'adresse du routeur dans le réseau de TECHNO-1.`},
-      {q:`La passerelle de VS-1 est fausse, le reste est correct. Que se passe-t-il ?`, o:[`VS-1 communique dans son réseau mais pas avec les autres réseaux`,`VS-1 ne s'allume plus`,`Tout le réseau tombe en panne`,`VS-1 devient un routeur`], a:0, why:`Sans bonne passerelle, un PC ne sait pas sortir de son réseau.`},
+      {q:`Pourquoi deux PC de réseaux différents ne communiquent-ils pas sans routeur ?`, o:[`Aucun appareil ne relie leurs deux réseaux`,`Leurs écrans n'ont pas exactement la même taille`,`Ils n'ont pas de souris branchée`,`Ils ont trop de câbles RJ45 chacun`], a:0, why:`Sans routeur, deux réseaux restent isolés l'un de l'autre.`},
+      {q:`Qu'est-ce que la passerelle d'un PC ?`, o:[`L'adresse du routeur pour sortir du réseau`,`Le nom donné au PC sur le réseau local du collège`,`Le numéro du port sur le commutateur`,`Le masque de sous-réseau du PC`], a:0, why:`La passerelle est l'adresse du routeur, côté réseau du PC.`},
+      {q:`Le routeur a l'adresse 192.168.40.254 côté atelier de technologie. Quelle passerelle donne-t-on à TECHNO-1 (192.168.40.10) ?`, o:[`192.168.40.254`,`192.168.30.254`,`192.168.40.10`,`192.168.40.255`], a:0, why:`La passerelle est l'adresse du routeur dans le réseau de TECHNO-1.`},
+      {q:`La passerelle de VS-1 est fausse, le reste est correct. Que se passe-t-il ?`, o:[`VS-1 joint son réseau mais pas les autres`,`VS-1 s'éteint puis redémarre sans cesse`,`Tout le réseau de la vie scolaire tombe en panne`,`VS-1 devient lui-même un routeur`], a:0, why:`Sans bonne passerelle, un PC ne sait pas sortir de son réseau.`},
       {q:`L'interface 1 d'un routeur est reliée au réseau 192.168.1.0 (masque 255.255.255.0). Quelle adresse lui donner ?`, o:[`192.168.1.254`,`192.168.2.254`,`10.10.10.300`,`Aucune adresse`], a:0, why:`Chaque interface a une adresse dans le réseau auquel elle est reliée.`},
-      {q:`Quelle différence entre un commutateur et un routeur ?`, o:[`Le commutateur relie des appareils d'un même réseau, le routeur relie des réseaux entre eux`,`Aucune différence`,`Le routeur est toujours moins cher`,`Le commutateur relie seulement deux réseaux`], a:0, why:`Commutateur : à l'intérieur d'un réseau. Routeur : entre les réseaux.`},
-      {q:`Un PC veut joindre un appareil d'un autre réseau. Où envoie-t-il ses données ?`, o:[`À sa passerelle (le routeur)`,`Directement à l'appareil`,`À l'imprimante`,`À un autre PC au hasard`], a:0, why:`Le PC confie les données à sa passerelle, qui les fait suivre.`},
-      {q:`Par quel appareil le réseau du collège accède-t-il à Internet ?`, o:[`Le routeur (via son port WAN)`,`Le commutateur`,`Le câble RJ45 seul`,`L'écran du serveur`], a:0, why:`Le routeur est la porte de sortie du réseau local : son port WAN (port 3 dans l'atelier) est relié à Internet. Les PC doivent avoir la bonne passerelle pour l'atteindre.`},
-      {q:`Laquelle est une adresse privée, utilisée dans un réseau local ?`, o:[`192.168.1.10`,`8.8.8.8`,`256.1.1.1`,`1.1`], a:0, why:`Les adresses en 192.168.x.x sont réservées aux réseaux locaux.`},
+      {q:`Quelle différence entre un commutateur et un routeur ?`, o:[`Le commutateur relie des appareils, le routeur des réseaux`,`Le routeur relie des appareils, le commutateur des réseaux`,`Le commutateur est toujours plus puissant que le routeur`,`Il n'y a aucune différence entre les deux`], a:0, why:`Commutateur : à l'intérieur d'un réseau. Routeur : entre les réseaux.`},
+      {q:`Un PC veut joindre un appareil d'un autre réseau. Où envoie-t-il ses données ?`, o:[`À sa passerelle (le routeur)`,`Directement à l'appareil visé`,`À l'imprimante du réseau`,`À un autre PC choisi au hasard`], a:0, why:`Le PC confie les données à sa passerelle, qui les fait suivre.`},
+      {q:`Par quel appareil le réseau du collège accède-t-il à Internet ?`, o:[`Le routeur (via son port WAN)`,`Le commutateur (via ses 8 ports)`,`Le câble RJ45 seul`,`L'écran du serveur de fichiers`], a:0, why:`Le routeur est la porte de sortie du réseau local : son port WAN (port 3 dans l'atelier) est relié à Internet. Les PC doivent avoir la bonne passerelle pour l'atteindre.`},
+      {q:`Laquelle est une adresse privée, utilisée dans un réseau local ?`, o:[`192.168.1.10`,`203.0.113.45`,`8.8.8.8`,`192.169.1.10`], a:0, why:`Les adresses en 192.168.x.x sont réservées aux réseaux locaux.`},
       {q:`À la maison, la box Internet joue notamment le rôle de…`, o:[`routeur`,`imprimante`,`écran`,`clavier`], a:0, why:`La box relie le réseau de la maison à Internet : c'est un routeur.`},
-      {q:`Que contient un journal (log) de serveur ?`, o:[`La trace des connexions : adresse IP, date, heure et action`,`Uniquement des mots de passe`,`Le plan des locaux`,`Rien du tout`], a:0, why:`Le journal garde en mémoire qui (quelle adresse) a fait quoi, et quand.`},
-      {q:`Pourquoi une adresse IP relevée dans un journal ne suffit-elle pas à accuser quelqu'un ?`, o:[`Elle identifie une machine : il faut la relier à un poste puis à son utilisateur`,`Elle est toujours fausse`,`Elle est secrète`,`Elle n'existe pas`], a:0, why:`On relie l'adresse au poste (plan, règles d'adressage), puis à la personne qui l'utilise.`},
-      {q:`Avec DHCP, l'adresse d'un PC peut changer. Pour retrouver qui utilisait une adresse à 14h32, on…`, o:[`croise les journaux (DHCP et serveur) avec l'heure`,`tire au sort`,`regarde la couleur du câble`,`redémarre le routeur`], a:0, why:`L'heure permet de savoir quel PC avait quelle adresse à ce moment-là.`},
-      {q:`Un test de connexion réussi entre VS-1 et TECHNO-1 montre que…`, o:[`le câblage, les adresses, le routeur et les passerelles fonctionnent`,`les deux PC ont le même nom`,`le routeur est éteint`,`le serveur est en panne`], a:0, why:`Pour réussir, tout doit être correct : câbles, adresses, interfaces du routeur et passerelles.`},
-      {q:`Le câble du port 2 du routeur est débranché. Quelles conséquences ?`, o:[`Les deux réseaux ne communiquent plus entre eux mais chacun fonctionne de son côté`,`Plus aucun PC ne fonctionne`,`Les PC changent d'adresse IP`,`Rien ne change`], a:0, why:`Chaque réseau reste en état de marche, mais le lien entre eux est coupé.`},
-      {q:`Pourquoi séparer les réseaux (vie scolaire, atelier, administration…) ?`, o:[`Pour organiser et mieux contrôler qui accède à quoi`,`Pour utiliser plus de câbles`,`Pour ralentir volontairement`,`Pour éviter d'avoir des adresses IP`], a:0, why:`Séparer les réseaux permet de mieux organiser et de mieux protéger.`},
-      {q:`Un serveur proxy sert à…`, o:[`faire passer et filtrer l'accès Internet des PC (autoriser ou bloquer)`,`attribuer une couleur à chaque PC`,`remplacer le commutateur`,`augmenter la taille de l'écran`], a:0, why:`Tout le trafic Internet passe par le proxy, qui peut autoriser certains PC, en bloquer d'autres et garder une trace des connexions.`},
-      {q:`TECHNO-1 joint TECHNO-2 mais pas VS-1. Quelle est la première vérification ?`, o:[`La passerelle de TECHNO-1 et le câble vers le routeur`,`La couleur de l'écran`,`Le nom de TECHNO-2`,`La longueur de la souris`], a:0, why:`Quand on joint son propre réseau mais pas les autres, on vérifie la passerelle et le routeur.`}
+      {q:`Que contient un journal (log) de serveur ?`, o:[`Les connexions : adresse IP, date, heure et action`,`Uniquement la liste des mots de passe de tous les élèves`,`Le plan des locaux et des salles`,`Les photos prises par les PC du réseau`], a:0, why:`Le journal garde en mémoire qui (quelle adresse) a fait quoi, et quand.`},
+      {q:`Pourquoi une adresse IP relevée dans un journal ne suffit-elle pas à accuser quelqu'un ?`, o:[`Elle identifie une machine, pas encore une personne`,`Elle est toujours fausse car les journaux sont truqués`,`Elle est secrète et ne peut pas être lue`,`Elle n'existe plus après la connexion`], a:0, why:`On relie l'adresse au poste (plan, règles d'adressage), puis à la personne qui l'utilise.`},
+      {q:`Avec DHCP, l'adresse d'un PC peut changer. Pour retrouver qui utilisait une adresse à 14h32, on…`, o:[`croise les journaux avec l'heure`,`tire au sort un des PC du réseau`,`regarde la couleur des câbles`,`redémarre le routeur et recommence`], a:0, why:`L'heure permet de savoir quel PC avait quelle adresse à ce moment-là.`},
+      {q:`Un test de connexion réussi entre VS-1 et TECHNO-1 montre que…`, o:[`tout le câblage et la configuration fonctionnent`,`les deux PC portent exactement le même nom sur le plan`,`le routeur est éteint depuis ce matin`,`le serveur est en panne depuis hier`], a:0, why:`Pour réussir, tout doit être correct : câbles, adresses, interfaces du routeur et passerelles.`},
+      {q:`Le câble du port 2 du routeur est débranché. Quelles conséquences ?`, o:[`Plus de lien entre réseaux, chacun marche seul`,`Plus aucun PC du collège ne peut s'allumer`,`Tous les PC changent automatiquement d'adresse IP`,`Rien ne change car le routeur compense la panne`], a:0, why:`Chaque réseau reste en état de marche, mais le lien entre eux est coupé.`},
+      {q:`Pourquoi séparer les réseaux (vie scolaire, atelier, administration…) ?`, o:[`Pour mieux organiser et contrôler les accès`,`Pour utiliser plus de câbles RJ45`,`Pour ralentir volontairement le réseau`,`Pour supprimer toutes les adresses IP inutilisées`], a:0, why:`Séparer les réseaux permet de mieux organiser et de mieux protéger.`},
+      {q:`Un serveur proxy sert à…`, o:[`filtrer l'accès Internet des PC`,`attribuer une couleur à chaque PC`,`remplacer le commutateur du réseau`,`agrandir l'écran des ordinateurs`], a:0, why:`Tout le trafic Internet passe par le proxy, qui peut autoriser certains PC, en bloquer d'autres et garder une trace des connexions.`},
+      {q:`TECHNO-1 joint TECHNO-2 mais pas VS-1. Quelle est la première vérification ?`, o:[`La passerelle de TECHNO-1 et le routeur`,`La couleur de l'écran et du clavier de TECHNO-1`,`Le nom exact de TECHNO-2`,`La longueur de la souris de TECHNO-1`], a:0, why:`Quand on joint son propre réseau mais pas les autres, on vérifie la passerelle et le routeur.`}
     ]
   };
 
@@ -1607,12 +1642,16 @@
   document.querySelectorAll('.lvl-tab').forEach(b => b.addEventListener('click', () => switchLevel(b.dataset.level)));
   $('tabAct').addEventListener('click', () => setView('act'));
   $('tabQuiz').addEventListener('click', () => setView('quiz'));
+  $('btnSave').addEventListener('click', saveToFile);
+  $('btnOpen').addEventListener('click', () => $('fileOpen').click());
+  $('fileOpen').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => openFromText(String(r.result)); r.readAsText(f); e.target.value = ''; });
   $('btnTuto').addEventListener('click', () => $('tutoOverlay').classList.add('show'));
   $('btnGloss').addEventListener('click', openGlossary);
   document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', () => $(btn.dataset.close).classList.remove('show')));
   document.querySelectorAll('.modal-overlay').forEach(ov => ov.addEventListener('click', e => { if(e.target === ov) ov.classList.remove('show'); }));
   $('btnValidateAccuse').addEventListener('click', validateAccusation);
 
+  $('stepDots').addEventListener('click', e => { const b = e.target.closest('.sdot'); if(b && !b.disabled){ if(currentView !== 'act') setView('act'); goToStep(Number(b.dataset.i)); } });
   $('guidePanel').addEventListener('click', e => {
     const b = e.target.closest('[data-action]'); if(!b) return;
     const L = levelState[currentLevel], st = getSteps(currentLevel)[L.stepIndex];
@@ -1642,6 +1681,7 @@
   });
 
   $('paletteBar').addEventListener('click', e => {
+    if(e.target.closest('#btnQuitTest')){ testMode = false; testFirst = null; $('btnTest').classList.remove('active'); hideResult(); renderPalette(); setStatus('Mode test arrêté.'); render(); return; }
     if(e.target.closest('.info-btn')) return;
     const chip = e.target.closest('.chip'); if(!chip) return;
     const t = chip.dataset.type;
@@ -1756,15 +1796,15 @@
     return a;
   }
   function scSet(k, v){ try{ return SC.api.SetValue(k, String(v)) === 'true' || true; }catch(_){ return false; } }
-  function packState(){
+  function packState(full){
     saveWorkspace();
     const o = {v:1, seq:idSeq, L:{}};
     Object.keys(levelState).forEach(lv => {
       const L = levelState[lv];
-      o.L[lv] = {d:Object.keys(L.done).filter(k => L.done[k]).map(Number), b:L.best || 0, q:L.tries || 0, a:Object.keys(L.ack || {}).filter(k => L.ack[k]).map(Number), c:L.caseSolved ? 1 : 0, i:L.stepIndex, s:L.dossierSeen ? 1 : 0, ws:L.ws};
+      o.L[lv] = {d:Object.keys(L.done).filter(k => L.done[k]).map(Number), b:L.best || 0, q:L.tries || 0, a:Object.keys(L.ack || {}).filter(k => L.ack[k]).map(Number), t:(L.tests || []).slice(-60).map(x => [x.a, x.b, x.ok ? 1 : 0]), c:L.caseSolved ? 1 : 0, i:L.stepIndex, s:L.dossierSeen ? 1 : 0, ws:L.ws};
     });
     let str = JSON.stringify(o);
-    if(str.length > 60000){ Object.keys(o.L).forEach(lv => { o.L[lv].ws = {}; }); str = JSON.stringify(o); }
+    if(!full && str.length > 60000){ Object.keys(o.L).forEach(lv => { o.L[lv].ws = {}; }); str = JSON.stringify(o); }
     return str;
   }
   function restoreState(str){
@@ -1772,13 +1812,41 @@
     Object.keys(o.L).forEach(lv => {
       const L = levelState[lv], r = o.L[lv]; if(!L) return;
       (r.d || []).forEach(n => { L.done[n] = true; });
-      L.best = r.b || 0; L.tries = r.q || 0; L.ack = {}; (r.a || r.d || []).forEach(n => { L.ack[n] = true; }); L.caseSolved = !!r.c; L.dossierSeen = !!r.s; L.ws = r.ws || {};
+      L.best = r.b || 0; L.tries = r.q || 0; L.ack = {}; (r.a || r.d || []).forEach(n => { L.ack[n] = true; }); L.tests = (r.t || []).map(x => ({a:x[0], b:x[1], ok:!!x[2]})); L.caseSolved = !!r.c; L.dossierSeen = !!r.s; L.ws = r.ws || {};
       const steps = getSteps(lv);
       L.stepIndex = Math.max(0, Math.min(r.i || 0, steps.length - 1));
     });
     let mx = o.seq || 1;
     Object.keys(levelState).forEach(lv => Object.keys(levelState[lv].ws).forEach(k => (levelState[lv].ws[k].devices || []).forEach(d => { const n = parseInt(String(d.id).slice(1), 10); if(n >= mx) mx = n + 1; })));
     idSeq = mx;
+  }
+  async function saveToFile(){
+    const lv = window.LOCK_LEVEL || currentLevel;
+    const blob = new Blob([JSON.stringify({app:'atelier-reseau', cur:currentLevel, state:packState(true)})], {type:'application/json'});
+    const sug = 'atelier-reseau-' + (LEVELS[lv] ? LEVELS[lv].label.replace('è', 'e') : lv) + '.json';
+    try{
+      if(window.showSaveFilePicker){
+        const h = await window.showSaveFilePicker({suggestedName: sug, types:[{description:'Travail Atelier Réseau', accept:{'application/json':['.json']}}]});
+        const w = await h.createWritable(); await w.write(blob); await w.close();
+        setStatus('💾 Travail enregistré : ' + h.name); return;
+      }
+    }catch(err){ if(err && err.name === 'AbortError') return; }
+    let name = prompt('Nom du fichier à enregistrer :', sug); if(!name) return;
+    if(!/\.json$/i.test(name)) name += '.json';
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    setStatus('💾 Fichier « ' + name + ' » enregistré (dossier de téléchargement, ou celui que ton navigateur t’a demandé).');
+  }
+  function openFromText(txt){
+    let o; try{ o = JSON.parse(txt); }catch(_){ o = null; }
+    if(!o || o.app !== 'atelier-reseau' || !o.state){ alert('Ce fichier n’est pas un travail Atelier Réseau.'); return; }
+    Object.keys(levelState).forEach(lv => { const L = levelState[lv]; L.done = {}; L.ack = {}; L.tests = []; L.ws = {}; L.best = 0; L.tries = 0; L.caseSolved = false; L.dossierSeen = false; L.hint = {}; L.full = {}; });
+    restoreState(o.state);
+    if(!window.LOCK_LEVEL && LEVELS[o.cur]){ currentLevel = o.cur; document.querySelectorAll('.lvl-tab').forEach(b => b.classList.toggle('active', b.dataset.level === currentLevel)); }
+    const st = getSteps(currentLevel)[levelState[currentLevel].stepIndex];
+    loadWorkspace(st.kind === 'enquete' ? 'enquete' : 'reseau');
+    setView('act'); renderPalette(); render(); updateScore(true);
+    setStatus('📂 Travail rouvert.');
   }
   function syncScorm(){
     if(!SC.ok || SC.ended) return;
@@ -1856,7 +1924,7 @@
     }
     const part = window.SCORM_PART;
     if(part === 'design'){ $('tabQuiz').style.display = 'none'; }
-    else if(part === 'quiz'){ $('tabAct').style.display = 'none'; $('tabQuiz').style.display = 'none'; setView('quiz'); }
+    else if(part === 'quiz'){ $('btnSave').style.display = 'none'; $('btnOpen').style.display = 'none'; $('tabAct').style.display = 'none'; $('tabQuiz').style.display = 'none'; setView('quiz'); }
     updateScore();
   })();
   /*__TEST_HOOK__*/
