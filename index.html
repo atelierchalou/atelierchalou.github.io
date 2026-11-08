@@ -40,7 +40,7 @@
   .deco.wood{background:repeating-linear-gradient(92deg, rgba(110,62,24,.13) 0 2px, transparent 2px 11px), linear-gradient(170deg, #dcaa70, var(--wood-2));}
 
   /* ===== Le robot (dimensions de base 760 × 560, mis à l'échelle de l'écran) ===== */
-  .shop{position:relative; width:760px; height:640px; transform-origin:top left;}
+  .shop{position:relative; width:760px; height:724px; transform-origin:top left;}
   .scaler{position:relative;}
   .part{position:absolute; display:flex; flex-direction:column; justify-content:center; gap:4px; padding:14px 18px; text-decoration:none; border-radius:14px; will-change:transform;}
   a.part{cursor:pointer; transition:filter .2s, box-shadow .2s;}
@@ -55,8 +55,8 @@
   #p-larm{left:18px; top:294px; width:196px; height:116px; border-radius:16px;}
   #p-rarm{left:546px; top:294px; width:196px; height:116px; border-radius:16px;}
   /* 2 jambes : enquête policière (gauche) et atelier du numérique (droite) */
-  #p-legs{left:190px; top:508px; width:186px; height:100px; border-radius:14px; padding:10px 14px;}
-  #p-rleg{left:384px; top:508px; width:186px; height:100px; border-radius:14px; padding:10px 14px;}
+  #p-legs{left:190px; top:592px; width:186px; height:100px; border-radius:14px; padding:10px 14px;}
+  #p-rleg{left:384px; top:592px; width:186px; height:100px; border-radius:14px; padding:10px 14px;}
   #p-legs .t, #p-rleg .t{font-size:.94rem; gap:6px;} #p-legs .t .e, #p-rleg .t .e{font-size:1.2rem;} #p-legs .d, #p-rleg .d{font-size:.76rem;} #p-legs .t small{display:block; font-size:.8em;}
   /* le buste est en 2 pièces : poitrine (outils) et ventre (progression) */
   /* chapeau : haut-de-forme en bois (la calotte est le bouton, le bord est un décor) */
@@ -88,9 +88,11 @@
   #d-rsh{left:518px; top:318px; width:40px; height:40px; border-radius:50%;}
   #d-lhand{left:2px; top:406px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0, 30% 0, 50% 45%, 70% 0, 100% 0, 100% 100%, 0 100%);}
   #d-rhand{left:702px; top:406px; width:56px; height:44px; border-radius:0 0 28px 28px; clip-path:polygon(0 0, 30% 0, 50% 45%, 70% 0, 100% 0, 100% 100%, 0 100%);}
-  #d-hips{left:270px; top:492px; width:220px; height:22px; border-radius:6px;}
-  #d-lfoot{left:214px; top:602px; width:140px; height:32px; border-radius:16px 16px 6px 6px;}
-  #d-rfoot{left:406px; top:602px; width:140px; height:32px; border-radius:16px 16px 6px 6px;}
+  #p-hips{left:244px; top:496px; width:272px; height:72px; border-radius:10px 10px 16px 16px; padding:8px 16px;}
+  #p-hips .t{font-size:.98rem;} #p-hips .t .e{font-size:1.25rem;} #p-hips .d{font-size:.76rem;}
+  #d-hips{left:272px; top:572px; width:216px; height:22px; border-radius:6px;}
+  #d-lfoot{left:214px; top:686px; width:140px; height:32px; border-radius:16px 16px 6px 6px;}
+  #d-rfoot{left:406px; top:686px; width:140px; height:32px; border-radius:16px 16px 6px 6px;}
   .bubble{
     position:absolute; left:520px; top:110px; padding:8px 14px; border-radius:16px; background:#fff8e8; color:#3b2412; font-weight:900; font-size:1rem;
     box-shadow:0 6px 16px rgba(0,0,0,.35); opacity:0; transform:scale(.6); transform-origin:left bottom; transition:opacity .3s, transform .35s cubic-bezier(.3,1.6,.6,1); pointer-events:none;
@@ -109,7 +111,7 @@
     .part{position:relative; left:auto !important; top:auto !important; width:auto !important; height:auto !important; padding:16px 18px;}
     #p-head{align-items:flex-start; text-align:left;}
     .eyes, .panel, .deco, .bubble{display:none;}
-    #p-legs .t, #p-rleg .t{font-size:1.05rem;} #p-legs .t .e, #p-rleg .t .e{font-size:1.4rem;} #p-legs .d, #p-rleg .d{font-size:.82rem;}
+    #p-legs .t, #p-rleg .t, #p-hips .t{font-size:1.05rem;} #p-legs .t .e, #p-rleg .t .e, #p-hips .t .e{font-size:1.4rem;} #p-legs .d, #p-rleg .d, #p-hips .d{font-size:.82rem;}
     #p-hat::after{display:none;} #p-hat{align-items:flex-start; text-align:left; padding:16px 18px;} #p-hat .t{font-size:1.05rem; white-space:normal;} #p-hat .t .e{font-size:1.4rem;} #p-hat .d{font-size:.82rem;}
   }
 
@@ -164,7 +166,7 @@
       <div class="deco wood" id="d-lfoot" aria-hidden="true"></div>
       <div class="deco wood" id="d-rfoot" aria-hidden="true"></div>
 
-      <!-- les 8 boutons sont les pièces du robot (et son chapeau) -->
+      <!-- les 9 boutons sont les pièces du robot (et son chapeau) -->
       <a class="part wood" id="p-hat" href="atelier-depannage.html">
         <span class="t"><span class="e">🛠️</span>Atelier de dépannage</span>
         <span class="d">Diagnostiquer et réparer.</span>
@@ -191,6 +193,10 @@
         <span class="t"><span class="e">🎲</span>Jeux sérieux</span>
         <span class="d">Apprendre en jouant.</span>
       </a>
+      <a class="part wood" id="p-hips" href="atelier-multimedia.html">
+        <span class="t"><span class="e">🎬</span>L'atelier multimédia</span>
+        <span class="d">Filmer, animer, monter, photographier.</span>
+      </a>
       <a class="part wood" id="p-legs" href="enquete-policiere.html">
         <span class="t"><span class="e">🔎</span><span>Enquête policière <small>(ou pas)</small></span></span>
         <span class="d">Démasquer le coupable.</span>
@@ -210,7 +216,7 @@
 (function(){
   var shop = document.getElementById('shop'), scaler = document.getElementById('scaler');
   /* ordre de montage : pieds, jambes, bassin, buste, épaules, bras, mains, cou, tête, antenne */
-  var ORDER = ['d-lfoot','d-rfoot','p-legs','p-rleg','d-hips','p-belly','p-torso','d-lsh','d-rsh','p-larm','p-rarm','d-lhand','d-rhand','d-neck','p-head','d-brim','p-hat','d-antenna','d-ball'];
+  var ORDER = ['d-lfoot','d-rfoot','p-legs','p-rleg','d-hips','p-hips','p-belly','p-torso','d-lsh','d-rsh','p-larm','p-rarm','d-lhand','d-rhand','d-neck','p-head','d-brim','p-hat','d-antenna','d-ball'];
   var parts = ORDER.map(function(id){ return document.getElementById(id); });
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var big = false, flyAnims = [];
@@ -218,15 +224,15 @@
   function fit(){                                                    // met l'atelier à l'échelle de l'écran
     big = window.innerWidth >= 600;
     if (!big) { shop.style.transform = ''; scaler.style.width = scaler.style.height = ''; return; }
-    var s = Math.min(1.15, (window.innerWidth - 32)/760, (window.innerHeight - 150)/640);
+    var s = Math.min(1.15, (window.innerWidth - 32)/760, (window.innerHeight - 150)/724);
     shop.style.transform = 'scale(' + s + ')';
-    scaler.style.width = (760*s) + 'px'; scaler.style.height = (640*s) + 'px';
+    scaler.style.width = (760*s) + 'px'; scaler.style.height = (724*s) + 'px';
   }
   /* position « en vrac » de chaque pièce sur l'établi (décalage depuis sa place dans le robot) */
   function scatter(el, i){
     var cx = el.offsetLeft + el.offsetWidth/2, cy = el.offsetTop + el.offsetHeight/2;
     var ang = (i/parts.length)*2*Math.PI + (Math.random() - .5)*.6;
-    var tx = 380 + Math.cos(ang)*(330 + Math.random()*60), ty = 330 + Math.sin(ang)*(210 + Math.random()*40);
+    var tx = 380 + Math.cos(ang)*(330 + Math.random()*60), ty = 370 + Math.sin(ang)*(210 + Math.random()*40);
     el.dataset.sx = (tx - cx).toFixed(0); el.dataset.sy = (ty - cy).toFixed(0);
     el.dataset.sr = ((Math.random()*2 - 1)*28).toFixed(0);
   }
