@@ -1,0 +1,3305 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lumino</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Disposition : mission + plateau à gauche, éditeur à droite, aide en dessous. */
+:root {
+  --bg: #EDF0FA; --panel: #FFFFFF; --panel2: #F4F6FC; --ink: #1A2047; --muted: #565E8C; --line: #D7DDF0;
+  --accent: #D97A06; --accent-ink: #FFFFFF; --accent-soft: #FFEFD2;
+  --robot: #14A394; --robot-dark: #0B6F65; --visor: #141A44; --eye: #FFE08A;
+  --ok: #17895A; --ok-soft: #DCF4E7; --bad: #CF3A45; --bad-soft: #FCE5E7; --hl: #FFF1CC;
+  --floor-a: #E4E9F9; --floor-b: #DAE1F5; --wall: #262E5F; --wall-top: #39438A; --lamp-off: #8E97C6; --glow: #FFB21F; --flag: #E5484D;
+  --c-kw: #7A3FD6; --c-cmd: #0B7F72; --c-str: #A84C08; --c-num: #BE1F58; --c-cmt: #7E87B3; --c-fn: #2158C2;
+  --font-display: 'Unbounded', 'Trebuchet MS', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11132B; --panel: #1A1D3F; --panel2: #151839; --ink: #ECEEFF; --muted: #9EA6DA; --line: #2D3268;
+  --accent: #FFC247; --accent-ink: #2A1C00; --accent-soft: #3A2F14;
+  --robot: #4FE3D0; --robot-dark: #1E9C8E; --visor: #0C1030; --eye: #FFE08A;
+  --ok: #52DA94; --ok-soft: #14352A; --bad: #FF7F87; --bad-soft: #3D1C2A; --hl: #2A2E63;
+  --floor-a: #222755; --floor-b: #1D2250; --wall: #0A0B1D; --wall-top: #2B3068; --lamp-off: #5B6299; --glow: #FFC247; --flag: #FF6B73;
+  --c-kw: #B79BFF; --c-cmd: #5EE6D3; --c-str: #FFB36B; --c-num: #FF8FB5; --c-cmt: #7C85C0; --c-fn: #86B4FF;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #11132B; --panel: #1A1D3F; --panel2: #151839; --ink: #ECEEFF; --muted: #9EA6DA; --line: #2D3268;
+  --accent: #FFC247; --accent-ink: #2A1C00; --accent-soft: #3A2F14;
+  --robot: #4FE3D0; --robot-dark: #1E9C8E; --visor: #0C1030; --eye: #FFE08A;
+  --ok: #52DA94; --ok-soft: #14352A; --bad: #FF7F87; --bad-soft: #3D1C2A; --hl: #2A2E63;
+  --floor-a: #222755; --floor-b: #1D2250; --wall: #0A0B1D; --wall-top: #2B3068; --lamp-off: #5B6299; --glow: #FFC247; --flag: #FF6B73;
+  --c-kw: #B79BFF; --c-cmd: #5EE6D3; --c-str: #FFB36B; --c-num: #FF8FB5; --c-cmt: #7C85C0; --c-fn: #86B4FF;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 48px;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, textarea:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.app { max-width: 1160px; margin: 0 auto; display: grid; gap: 22px; }
+
+/* En-tête */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand svg { flex: none; }
+.brand h1 { margin: 0; font-family: var(--font-display); font-size: 22px; letter-spacing: .04em; font-weight: 700; line-height: 1.1; }
+.brand p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+.tools { display: flex; align-items: center; gap: 10px; }
+.total { font-family: var(--font-mono); font-size: 14px; color: var(--muted); white-space: nowrap; }
+.total b { color: var(--accent); font-weight: 700; }
+.icon-btn { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 14px; font-size: 14px; font-weight: 600; }
+.icon-btn:hover { border-color: var(--muted); }
+
+.levels { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: thin; }
+.lvbtn { flex: none; width: 54px; padding: 6px 0 5px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--panel); text-align: center; line-height: 1.15; }
+.lvbtn .n { display: block; font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+.lvbtn .s { display: block; font-size: 11px; letter-spacing: .08em; color: var(--line); }
+.lvbtn .s i { font-style: normal; }
+.lvbtn .s i.on { color: var(--accent); }
+.lvbtn:hover { border-color: var(--muted); }
+.lvbtn[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.lvbtn[aria-current="true"] .s i { color: rgba(255,255,255,.45); }
+.lvbtn[aria-current="true"] .s i.on { color: #fff; }
+
+/* Corps */
+.stage { display: grid; gap: 20px 28px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "mission editor" "board editor" "help help"; align-items: start; }
+@media (max-width: 880px) { .stage { grid-template-columns: minmax(0, 1fr); grid-template-areas: "mission" "board" "editor" "help"; } }
+.mission { grid-area: mission; min-width: 0; }
+.chip { display: inline-block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 3px 10px; border-radius: 999px; }
+.mission h2 { margin: 8px 0 6px; font-family: var(--font-display); font-size: 26px; line-height: 1.15; font-weight: 700; text-wrap: balance; }
+.mission p { margin: 0; max-width: 62ch; }
+.goal { margin-top: 10px; font-size: 14px; color: var(--muted); }
+.goal b { color: var(--ink); }
+
+.board-card { grid-area: board; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 12px; }
+.board-wrap { display: flex; justify-content: center; border-radius: 10px; overflow: hidden; background: var(--wall); }
+canvas { display: block; max-width: 100%; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.run { border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 10px 22px; border-radius: 12px; font-size: 16px; min-width: 132px; }
+.run:hover { filter: brightness(1.06); }
+.run.stop { background: var(--bad); color: #fff; }
+.speed { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-left: auto; }
+.speed input { width: 96px; accent-color: var(--accent); }
+
+.feedback { border-radius: 12px; padding: 12px 14px; font-size: 15px; display: none; }
+.feedback.show { display: block; }
+.feedback.ok { background: var(--ok-soft); }
+.feedback.bad { background: var(--bad-soft); }
+.feedback.info { background: var(--panel2); border: 1px solid var(--line); }
+.feedback h3 { margin: 0 0 2px; font-size: 16px; }
+.feedback.ok h3 { color: var(--ok); }
+.feedback.bad h3 { color: var(--bad); }
+.feedback p { margin: 4px 0 0; }
+.stars-big { font-size: 26px; letter-spacing: .12em; color: var(--line); line-height: 1.1; }
+.stars-big i { font-style: normal; }
+.stars-big i.on { color: var(--accent); }
+.feedback .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.btn { border: 1.5px solid var(--ink); background: transparent; border-radius: 10px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
+.btn.solid { background: var(--ink); color: var(--bg); }
+.btn:hover { opacity: .85; }
+.console { margin: 8px 0 0; padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font-family: var(--font-mono); font-size: 13px; white-space: pre-wrap; max-height: 120px; overflow: auto; }
+
+/* Éditeur */
+.editor { grid-area: editor; min-width: 0; align-self: stretch; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.ed-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--line); font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.ed-head .file { display: inline-flex; align-items: center; gap: 8px; }
+.ed-head .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--robot); }
+.linkbtn { border: 0; background: none; padding: 2px 4px; font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.linkbtn:hover { color: var(--ink); }
+.code { position: relative; flex: 1; min-height: 300px; background: var(--panel2); --lh: 22px; --gw: 44px; }
+.layer, #code {
+  position: absolute; inset: 0; margin: 0; border: 0; font-family: var(--font-mono); font-size: 14px; line-height: var(--lh);
+  tab-size: 4; letter-spacing: 0; white-space: pre; word-spacing: 0;
+}
+.layer { overflow: hidden; padding: 12px 0; pointer-events: none; }
+.layer .ln { display: block; height: var(--lh); width: max-content; min-width: 100%; }
+.layer .ln i { position: sticky; left: 0; display: inline-block; width: var(--gw); margin-right: 8px; padding-right: 10px; text-align: right; font-style: normal; color: var(--c-cmt); background: var(--panel2); }
+.layer .ln.active { background: var(--hl); }
+.layer .ln.active i { background: var(--hl); color: var(--ink); }
+.layer .ln.err { background: var(--bad-soft); }
+.layer .ln.err i { background: var(--bad-soft); color: var(--bad); font-weight: 700; }
+#code { width: 100%; height: 100%; resize: none; padding: 12px 12px 12px calc(var(--gw) + 8px); background: transparent; color: transparent; caret-color: var(--ink); overflow: auto; outline-offset: -3px; }
+#code::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+.k { color: var(--c-kw); font-weight: 600; } .c { color: var(--c-cmd); font-weight: 600; } .s { color: var(--c-str); } .nu { color: var(--c-num); } .cm { color: var(--c-cmt); font-style: italic; } .f { color: var(--c-fn); }
+
+/* Aide */
+.help { grid-area: help; display: grid; gap: 20px 28px; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); padding-top: 18px; }
+@media (max-width: 880px) { .help { grid-template-columns: minmax(0, 1fr); } }
+.help h3 { margin: 0 0 8px; font-family: var(--font-display); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; }
+.help .sub { margin: -2px 0 10px; font-size: 13px; color: var(--muted); }
+.cmdlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cmdlist button { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; }
+.cmdlist button:hover { border-color: var(--robot); }
+.cmdlist code { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--c-cmd); }
+.cmdlist span { font-size: 13px; color: var(--muted); }
+pre.snip { margin: 8px 0 0; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; overflow-x: auto; }
+.note p { margin: 0; }
+details { margin-top: 12px; font-size: 14px; }
+summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+details .prev { margin-top: 8px; padding-left: 10px; border-left: 3px solid var(--line); }
+details .prev b { display: block; font-size: 13px; }
+.hints ol { margin: 0 0 10px; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+.hints .none { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+.hints .row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Modes */
+.modes { display: inline-flex; padding: 3px; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; }
+.modes button { border: 0; background: transparent; padding: 6px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--muted); }
+.modes button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.modes button:not([aria-pressed="true"]):hover { color: var(--ink); }
+
+/* Atelier */
+.dboard { grid-area: dboard; }
+.dhelp { grid-area: dhelp; }
+.stage[data-mode="draw"] { grid-template-areas: "dboard editor" "dhelp dhelp"; }
+@media (max-width: 880px) { .stage[data-mode="draw"] { grid-template-areas: "dboard" "editor" "dhelp"; } }
+.dhead h2 { margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 1.2; }
+.dhead p { margin: 2px 0 0; font-size: 14px; color: var(--muted); }
+.dwrap { display: flex; justify-content: center; }
+.dstage { display: inline-block; line-height: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.bg-check { background-color: var(--floor-a); background-image: linear-gradient(45deg, var(--floor-b) 25%, transparent 25%, transparent 75%, var(--floor-b) 75%), linear-gradient(45deg, var(--floor-b) 25%, transparent 25%, transparent 75%, var(--floor-b) 75%); background-size: 24px 24px; background-position: 0 0, 12px 12px; }
+.bg-space { background: #070A1E radial-gradient(1.2px 1.2px at 12% 18%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 63% 9%, #fff 50%, transparent 52%), radial-gradient(1.4px 1.4px at 82% 41%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 30% 66%, #fff 50%, transparent 52%), radial-gradient(1.2px 1.2px at 71% 83%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 9% 90%, #fff 50%, transparent 52%); }
+.bg-white { background: #FFFFFF; }
+.dopts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 14px; color: var(--muted); }
+.dopts label { display: inline-flex; align-items: center; gap: 6px; }
+.dopts select { font: inherit; font-size: 14px; color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; }
+.dopts input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+.dopts .btn { margin-left: auto; }
+.dmeta { margin: 0; font-family: var(--font-mono); font-size: 12px; color: var(--muted); min-height: 1.4em; }
+.dexport { margin: 0; display: flex; gap: 12px; align-items: center; padding: 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; font-size: 13px; color: var(--muted); }
+.dexport img { max-width: 96px; max-height: 96px; image-rendering: auto; background: repeating-conic-gradient(var(--floor-b) 0% 25%, var(--floor-a) 0% 50%) 0 0 / 14px 14px; border-radius: 6px; flex: none; }
+.slots { display: flex; gap: 4px; min-width: 0; overflow-x: auto; }
+.slots button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 3px 10px 3px 4px; font-size: 13px; font-weight: 600; font-family: var(--font-body); color: var(--muted); white-space: nowrap; }
+.slots button[aria-selected="true"] { border-color: var(--accent); color: var(--ink); background: var(--accent-soft); }
+.slots canvas { width: 26px; height: 26px; border-radius: 6px; background: var(--panel2); }
+@media (max-width: 880px) { .ed-head { flex-wrap: wrap; } .slots { order: 3; flex: 1 1 100%; } }
+.dhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+#code::placeholder { color: var(--c-cmt); opacity: 1; font-style: italic; }
+.tcard { max-width: 720px; }
+.tcard h2 { margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 1.2; }
+.tcard p { margin: 0; font-size: 15px; }
+.tdots { display: flex; gap: 6px; }
+.tdots i { width: 22px; height: 5px; border-radius: 3px; background: var(--line); }
+.tdots i.on { background: var(--accent); }
+.tdemo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+.tcol { display: grid; gap: 6px; min-width: 0; }
+.tlabel { margin: 4px 0 0 !important; font-size: 12px !important; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tlabel:empty { display: none; }
+.tcard .tdo { margin: 6px 0 0; font-size: 14px; font-weight: 600; }
+.tcard .tdo:empty { display: none; }
+.tin { width: 100%; min-height: 108px; resize: vertical; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; tab-size: 4; white-space: pre; background: var(--panel2); color: var(--ink); border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.tin:focus { border-color: var(--accent); }
+.tact { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.tact .btn { padding: 6px 14px; }
+.tdots i.done { background: var(--ok); }
+.tdemo pre.snip { margin: 0; }
+.gcard #tcv { width: 240px; height: 240px; aspect-ratio: auto; background: transparent; border-radius: 0; touch-action: auto; }
+.tbtns { align-items: center; }
+.tbtns .grow { flex: 1; }
+@media (max-width: 560px) { .tdemo { grid-template-columns: minmax(0, 1fr); } .tdemo .dstage { justify-self: center; } }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatches button { width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--line); padding: 0; }
+.swatches button:hover { border-color: var(--ink); }
+.h3sp { margin-top: 18px !important; }
+.tpls { display: flex; flex-wrap: wrap; gap: 6px; }
+.ideas { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+
+/* Test dans un jeu */
+.gameov { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(5, 7, 22, .78); overflow-y: auto; }
+.gcard { width: 100%; max-width: 520px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 10px; }
+.ghead { display: flex; flex-direction: column; gap: 2px; }
+.ghead span { font-size: 13px; color: var(--muted); }
+.gcard canvas { width: 100%; aspect-ratio: 4 / 3; border-radius: 10px; touch-action: none; background: #070A1E; }
+.gnote { margin: 0; font-size: 13px; color: var(--bad); }
+.gnote:empty { display: none; }
+.gcard .row { display: flex; gap: 8px; justify-content: flex-end; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+/* Mode Jeu */
+.gmission { grid-area: gmission; min-width: 0; }
+.gboard { grid-area: gboard; }
+.ghelp { grid-area: ghelp; }
+.stage[data-mode="game"] { grid-template-areas: "gboard editor" "gmission editor" "ghelp ghelp"; }
+@media (max-width: 880px) { .stage[data-mode="game"] { grid-template-areas: "gboard" "gmission" "editor" "ghelp"; } }
+.gwrap { border-radius: 10px; overflow: hidden; background: #070A1E; }
+#glcv { width: 100%; height: auto; aspect-ratio: 4 / 3; outline: none; touch-action: none; }
+#glcv:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.gimg { margin-left: auto; }
+.gsprites { margin: 0; font-size: 13px; color: var(--bad); }
+.gsprites:empty { display: none; }
+.gpad { display: none; grid-template-columns: repeat(4, 1fr) 1.4fr; gap: 6px; }
+@media (pointer: coarse) { .gpad { display: grid; } }
+.gpad button { border: 1.5px solid var(--line); background: var(--panel2); border-radius: 12px; padding: 12px 0; font-size: 18px; font-weight: 700; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.gpad button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.gpad .fire { font-size: 15px; }
+.gmission h2 { margin: 8px 0 6px; font-family: var(--font-display); font-size: 22px; line-height: 1.15; font-weight: 700; }
+.gmission > p { margin: 0 0 10px; max-width: 62ch; }
+.gmission code, .ghelp code, .gsp code { font-family: var(--font-mono); font-size: 13px; color: var(--c-cmd); font-weight: 600; }
+.goals { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.goals li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.goals .gm { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; background: var(--panel2); color: var(--muted); border: 1px solid var(--line); }
+.goals .gb { min-width: 0; }
+.goals .gb p { margin: 2px 0 0; font-size: 14px; color: var(--muted); }
+.goals li.cur { border-color: var(--accent); background: var(--accent-soft); }
+.goals li.cur .gm { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.goals li.done .gm { background: var(--ok); border-color: var(--ok); color: #fff; }
+.goals li.done .gb b { color: var(--muted); font-weight: 600; }
+.gall { margin: 10px 0 0 !important; padding: 10px 12px; border-radius: 12px; background: var(--ok-soft); color: var(--ok); font-weight: 600; }
+.ghelp .gsp { margin-top: 10px; font-size: 14px; color: var(--muted); }
+.ghelp .gfull { max-height: 320px; overflow: auto; }
+.ghelp .hints .row { margin-top: 8px; }
+@media (max-width: 520px) { .modes button { padding: 6px 11px; } .top .tools { flex-wrap: wrap; } }
+
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+        <circle cx="22" cy="18" r="16" fill="var(--glow)" opacity=".22"/>
+        <circle cx="22" cy="18" r="9" fill="var(--glow)"/>
+        <rect x="17" y="27" width="10" height="6" rx="2" fill="var(--lamp-off)"/>
+        <rect x="19" y="33" width="6" height="5" rx="2" fill="var(--wall-top)"/>
+      </svg>
+      <div>
+        <h1>LUMINO</h1>
+        <p>Programme un robot en Python et rallume la station.</p>
+      </div>
+    </div>
+    <div class="tools">
+      <div class="modes" role="group" aria-label="Mode de jeu">
+        <button id="mode-play" type="button" aria-pressed="true">Missions</button>
+        <button id="mode-draw" type="button" aria-pressed="false">Atelier</button>
+        <button id="mode-game" type="button" aria-pressed="false">Jeu</button>
+      </div>
+      <span class="total" id="total" aria-live="polite"></span>
+      <button class="icon-btn" id="theme" type="button">Jour / Nuit</button>
+    </div>
+  </header>
+
+  <nav class="levels" id="levels" aria-label="Niveaux"></nav>
+
+  <main class="stage">
+    <section class="mission" id="smission" aria-labelledby="title">
+      <span class="chip" id="concept"></span>
+      <h2 id="title"></h2>
+      <p id="story"></p>
+      <p class="goal" id="goal"></p>
+    </section>
+
+    <section class="board-card" id="sboard" aria-label="Plateau de jeu">
+      <div class="board-wrap" id="boardwrap"><canvas id="board" role="img" aria-label="Plateau du niveau"></canvas></div>
+      <div class="controls">
+        <button class="run" id="run" type="button">▶ Lancer</button>
+        <label class="speed">Vitesse <input type="range" id="speed" min="1" max="4" value="2" aria-label="Vitesse du robot"></label>
+      </div>
+      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="board-card dboard" id="dboard" aria-label="Zone de dessin" hidden>
+      <div class="dhead"><div><h2 id="dtitle"></h2><p id="drole"></p></div><button class="linkbtn" id="dtuto" type="button">Tutoriel</button></div>
+      <div class="dwrap" id="dwrap"><div class="dstage bg-check" id="dstage"><canvas id="dcv" role="img" aria-label="Ton dessin"></canvas></div></div>
+      <div class="controls">
+        <button class="run" id="drun" type="button">▶ Dessiner</button>
+        <button class="btn" id="dtest" type="button">Tester dans un jeu</button>
+        <button class="btn solid" id="dcoder" type="button" hidden>Coder mon jeu →</button>
+        <label class="speed">Vitesse <input type="range" id="dspeed" min="1" max="4" value="2" aria-label="Vitesse du dessin"></label>
+      </div>
+      <div class="dopts">
+        <label>Fond <select id="dbg"><option value="check">Damier</option><option value="space">Espace</option><option value="white">Blanc</option></select></label>
+        <label class="chk"><input type="checkbox" id="dgrid"> Grille</label>
+        <label>Image <select id="dsize"><option value="64">64 px</option><option value="128">128 px</option><option value="256">256 px</option><option value="512">512 px</option></select></label>
+        <button class="btn" id="dpng" type="button">Enregistrer en PNG</button>
+      </div>
+      <p class="dmeta" id="dmeta"></p>
+      <figure class="dexport" id="dexport" hidden><img id="dimg" alt="Ton image exportée"><figcaption id="dcap"></figcaption></figure>
+      <div class="feedback" id="dfb" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="board-card gboard" id="gboard" aria-label="Ton jeu" hidden>
+      <div class="gwrap"><canvas id="glcv" tabindex="-1" role="img" aria-label="Écran de ton jeu"></canvas></div>
+      <div class="controls">
+        <button class="run" id="grun" type="button">▶ Lancer</button>
+        <button class="btn" id="gstop" type="button" hidden>■ Arrêter</button>
+        <button class="linkbtn gimg" id="gimgs" type="button">Modifier mes images</button>
+      </div>
+      <div class="gpad" id="gpad" aria-label="Commandes tactiles">
+        <button type="button" data-k="gauche" aria-label="Gauche">◀</button>
+        <button type="button" data-k="droite" aria-label="Droite">▶</button>
+        <button type="button" data-k="haut" aria-label="Haut">▲</button>
+        <button type="button" data-k="bas" aria-label="Bas">▼</button>
+        <button type="button" data-k="espace" class="fire" aria-label="Tir">Tir</button>
+      </div>
+      <p class="gsprites" id="gsprites"></p>
+      <div class="feedback" id="gfb" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="gmission" id="gmission" aria-labelledby="gtitle" hidden>
+      <span class="chip" id="gchip"></span>
+      <h2 id="gtitle">Programme ton jeu</h2>
+      <p>Tes dessins prennent vie : c'est toi qui écris les règles. La fonction <code>jouer()</code> est lue 60 fois par seconde.</p>
+      <ol class="goals" id="glist"></ol>
+      <p class="gall" id="gall" hidden></p>
+    </section>
+
+    <section class="help ghelp" id="ghelp" aria-label="Aide au jeu" hidden>
+      <div>
+        <h3>Commandes du jeu</h3>
+        <p class="sub">Clique sur une commande pour l'ajouter au code.</p>
+        <ul class="cmdlist" id="gtools"></ul>
+      </div>
+      <div class="note">
+        <h3>Comment ça marche</h3>
+        <p>L'écran va de -240 à 240 en x et de -180 à 180 en y, avec le centre en (0, 0). Chaque objet a un numéro que tu gardes dans une variable.</p>
+        <pre class="snip">a = creer("asteroide", 0, 150)
+vitesse(a, 0, -2)   # il descend</pre>
+        <p class="gsp">Pour changer une variable créée hors de <code>jouer()</code> (un score, des vies), écris <code>global score</code> en haut de la fonction.</p>
+        <h3 class="h3sp">Pour aller plus loin</h3>
+        <ul class="ideas" id="gideas"></ul>
+      </div>
+      <div class="hints">
+        <h3>Besoin d'aide ?</h3>
+        <p class="none" id="ghintnone">Prochain objectif : essaie d'abord seul, puis demande un coup de pouce.</p>
+        <pre class="snip" id="ghint" hidden></pre>
+        <div class="row">
+          <button class="btn" id="ghintbtn" type="button">Un coup de pouce</button>
+          <button class="btn" id="gfullbtn" type="button">Voir le jeu complet</button>
+        </div>
+        <pre class="snip gfull" id="gfull" hidden></pre>
+        <div class="row"><button class="btn" id="gusefull" type="button" hidden>Copier dans l'éditeur</button></div>
+      </div>
+    </section>
+
+    <section class="editor" aria-label="Éditeur de code">
+      <div class="ed-head">
+        <span class="file" id="filelabel"><span class="dot"></span><span id="fname">programme.py</span></span>
+        <div class="slots" id="slots" role="tablist" aria-label="Images à dessiner" hidden></div>
+        <button class="linkbtn" id="clear" type="button">Effacer</button>
+      </div>
+      <div class="code">
+        <div class="layer" id="layer" aria-hidden="true"></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="Ton programme Python"></textarea>
+      </div>
+    </section>
+
+    <section class="help dhelp" id="dhelp" aria-label="Aide au dessin" hidden>
+      <div>
+        <h3>Commandes de dessin</h3>
+        <p class="sub">Clique sur une commande pour l'ajouter au code.</p>
+        <ul class="cmdlist" id="dtools"></ul>
+      </div>
+      <div>
+        <h3>Couleurs</h3>
+        <div class="swatches" id="swatches"></div>
+        <h3 class="h3sp">Modèles</h3>
+        <p class="sub">Charge un modèle dans l'onglet ouvert, puis modifie-le.</p>
+        <div class="tpls" id="tpls"></div>
+      </div>
+      <div class="note">
+        <h3>Le repère</h3>
+        <p>Le centre de l'image est le point (0, 0). Les valeurs vont de -200 à 200. Le cap 0 regarde vers le haut, 90 vers la droite.</p>
+        <pre class="snip">aller_a(0, 50)   # en haut
+aller_a(50, 0)   # à droite</pre>
+        <h3 class="h3sp">Idées de défis</h3>
+        <ul class="ideas" id="ideas"></ul>
+      </div>
+    </section>
+
+    <section class="help" id="shelp" aria-label="Aide">
+      <div>
+        <h3>Boîte à outils</h3>
+        <p class="sub">Clique sur une commande pour l'ajouter au code.</p>
+        <ul class="cmdlist" id="tools"></ul>
+      </div>
+      <div class="note">
+        <h3>À retenir</h3>
+        <p id="note"></p>
+        <pre class="snip" id="notecode"></pre>
+        <details id="older"><summary>Rappels des niveaux précédents</summary><div id="olderlist"></div></details>
+      </div>
+      <div class="hints">
+        <h3>Besoin d'aide ?</h3>
+        <ol id="hintlist"></ol>
+        <p class="none" id="hintnone">Essaie d'abord seul : tu progresseras plus vite.</p>
+        <div class="row">
+          <button class="btn" id="hintbtn" type="button">Un indice</button>
+          <button class="btn" id="solbtn" type="button" hidden>Voir la solution</button>
+        </div>
+        <pre class="snip" id="sol" hidden></pre>
+        <div class="row"><button class="btn" id="usesol" type="button" hidden>Copier dans l'éditeur</button></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="gameov" id="gameov" hidden role="dialog" aria-modal="true" aria-label="Test dans un jeu">
+  <div class="gcard">
+    <div class="ghead"><b>Test dans un jeu</b><span>Flèches ou ZQSD, ou glisse le doigt. La fusée tire toute seule.</span></div>
+    <canvas id="gcv"></canvas>
+    <p class="gnote" id="gnote"></p>
+    <div class="row"><button class="btn" id="gagain" type="button">Rejouer</button><button class="btn solid" id="gclose" type="button">Fermer</button></div>
+  </div>
+</div>
+
+<div class="gameov" id="tuto" hidden role="dialog" aria-modal="true" aria-labelledby="ttitle">
+  <div class="gcard tcard">
+    <div class="tdots" id="tdots" aria-hidden="true"></div>
+    <h2 id="ttitle"></h2>
+    <p id="ttext"></p>
+    <div class="tdemo" id="tdemo">
+      <div class="tcol">
+        <p class="tlabel">Exemple</p>
+        <pre class="snip" id="tcode"></pre>
+        <p class="tdo" id="tdo"></p>
+        <textarea id="tin" class="tin" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="Ton code" placeholder="Écris ton code ici"></textarea>
+        <div class="tact"><button class="btn solid" id="trun" type="button">▶ Dessiner</button><button class="linkbtn" id="tfill" type="button">Écrire l'exemple pour moi</button></div>
+      </div>
+      <div class="dstage bg-check" id="tstage"><canvas id="tcv"></canvas></div>
+    </div>
+    <div class="feedback" id="tfb" role="status" aria-live="polite"></div>
+    <div class="row tbtns">
+      <button class="linkbtn" id="tskip" type="button">Passer le tutoriel</button>
+      <span class="grow"></span>
+      <button class="btn" id="tprev" type="button">Précédent</button>
+      <button class="btn solid" id="tnext" type="button">Suivant</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+// ===== Mini interpréteur Python (sous-ensemble) + simulation du robot =====
+class PyError extends Error {
+  constructor(kind, msg, line) { super(msg); this.kind = kind; this.line = line; }
+}
+class BreakSig {}
+class ContinueSig {}
+class ReturnSig { constructor(v) { this.value = v; } }
+
+const KEYWORDS = new Set(['if','elif','else','while','for','in','def','return','pass','break','continue','and','or','not','True','False','None','global']);
+
+function tokenizeLine(text, line) {
+  const toks = [];
+  let i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (c === ' ') { i++; continue; }
+    if (c === '#') break;
+    if (c === '"' || c === "'") {
+      let j = i + 1, s = '';
+      while (j < text.length && text[j] !== c) {
+        if (text[j] === '\\' && j + 1 < text.length) {
+          const n = text[j + 1];
+          s += n === 'n' ? '\n' : n === 't' ? '\t' : n;
+          j += 2;
+        } else { s += text[j]; j++; }
+      }
+      if (j >= text.length) throw new PyError('SyntaxError', "Il manque un guillemet pour fermer le texte.", line);
+      toks.push({ t: 'str', v: s });
+      i = j + 1;
+      continue;
+    }
+    if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(text[i + 1] || ''))) {
+      const m = /^(\d+\.?\d*|\.\d+)/.exec(text.slice(i));
+      toks.push({ t: 'num', v: parseFloat(m[0]) });
+      i += m[0].length;
+      continue;
+    }
+    if (/[A-Za-z_À-ſ]/.test(c)) {
+      const m = /^[A-Za-z_0-9À-ſ]+/.exec(text.slice(i));
+      toks.push({ t: KEYWORDS.has(m[0]) ? 'kw' : 'name', v: m[0] });
+      i += m[0].length;
+      continue;
+    }
+    const two = text.substr(i, 2);
+    if (['**', '//', '==', '!=', '<=', '>=', '+=', '-=', '*=', '/=', '%='].includes(two)) {
+      toks.push({ t: 'op', v: two });
+      i += 2;
+      continue;
+    }
+    if ('+-*/%<>=()[],:.'.includes(c)) { toks.push({ t: 'op', v: c }); i++; continue; }
+    throw new PyError('SyntaxError', `Caractère inattendu « ${c} ».`, line);
+  }
+  return toks;
+}
+
+function lexLines(src) {
+  const raw = src.replace(/\r/g, '').replace(/\t/g, '    ').split('\n');
+  const lines = [];
+  raw.forEach((r, k) => {
+    const trimmed = r.trimStart();
+    const toks = tokenizeLine(trimmed, k + 1);
+    if (!toks.length) return;
+    lines.push({ indent: r.length - trimmed.length, toks, line: k + 1 });
+  });
+  return lines;
+}
+
+function showTok(t) {
+  if (!t) return 'la fin de la ligne';
+  if (t.t === 'str') return `"${t.v}"`;
+  return String(t.v);
+}
+
+// ---------- Flux de jetons + expressions ----------
+class TS {
+  constructor(toks, line) { this.toks = toks; this.i = 0; this.line = line; }
+  peek() { return this.toks[this.i]; }
+  next() { return this.toks[this.i++]; }
+  isOp(v) { const t = this.peek(); return !!t && t.t === 'op' && t.v === v; }
+  isKw(v) { const t = this.peek(); return !!t && t.t === 'kw' && t.v === v; }
+  err(msg) { return new PyError('SyntaxError', msg, this.line); }
+  expectOp(v, msg) {
+    if (!this.isOp(v)) throw this.err(msg || `Il manque « ${v} » ici.`);
+    this.next();
+  }
+  expectColon() {
+    const t = this.peek();
+    if (t && t.t === 'op' && t.v === '=') throw this.err("Pour comparer deux valeurs on écrit == (deux signes égal). Un seul = sert à donner une valeur à une variable.");
+    if (!this.isOp(':')) {
+      if (!t) throw this.err("Il manque « : » à la fin de la ligne.");
+      throw this.err(`Je ne comprends pas « ${showTok(t)} ». Il devrait y avoir un « : » à la fin de la ligne.`);
+    }
+    this.next();
+    if (this.peek()) throw this.err(`Après « : » il ne doit rien y avoir sur la même ligne (j'ai trouvé « ${showTok(this.peek())} »). Écris la suite à la ligne, décalée de 4 espaces.`);
+  }
+  expectEnd() {
+    if (this.peek()) {
+      const t = this.peek();
+      if (t.t === 'op' && t.v === ')') throw this.err("Il y a une parenthèse fermante « ) » en trop.");
+      throw this.err(`Je ne comprends pas « ${showTok(t)} » à cet endroit.`);
+    }
+  }
+  expr() { return this.orE(); }
+  orE() {
+    let l = this.andE();
+    while (this.isKw('or')) { this.next(); l = { k: 'bool', op: 'or', l, r: this.andE(), line: this.line }; }
+    return l;
+  }
+  andE() {
+    let l = this.notE();
+    while (this.isKw('and')) { this.next(); l = { k: 'bool', op: 'and', l, r: this.notE(), line: this.line }; }
+    return l;
+  }
+  notE() {
+    if (this.isKw('not')) { this.next(); return { k: 'not', e: this.notE(), line: this.line }; }
+    return this.cmp();
+  }
+  cmp() {
+    let l = this.arith();
+    const ops = ['==', '!=', '<', '>', '<=', '>='];
+    for (;;) {
+      const t = this.peek();
+      let op = null;
+      if (t && t.t === 'op' && ops.includes(t.v)) { op = t.v; this.next(); }
+      else if (t && t.t === 'kw' && t.v === 'in') { op = 'in'; this.next(); }
+      else if (t && t.t === 'kw' && t.v === 'not' && this.toks[this.i + 1] && this.toks[this.i + 1].v === 'in') { op = 'not in'; this.next(); this.next(); }
+      else break;
+      const r = this.arith();
+      l = { k: 'cmp', op, l, r, line: this.line };
+    }
+    return l;
+  }
+  arith() {
+    let l = this.term();
+    while (this.isOp('+') || this.isOp('-')) {
+      const op = this.next().v;
+      l = { k: 'bin', op, l, r: this.term(), line: this.line };
+    }
+    return l;
+  }
+  term() {
+    let l = this.unary();
+    while (this.isOp('*') || this.isOp('/') || this.isOp('//') || this.isOp('%')) {
+      const op = this.next().v;
+      l = { k: 'bin', op, l, r: this.unary(), line: this.line };
+    }
+    return l;
+  }
+  unary() {
+    if (this.isOp('-')) { this.next(); return { k: 'neg', e: this.unary(), line: this.line }; }
+    return this.power();
+  }
+  power() {
+    const base = this.postfix();
+    if (this.isOp('**')) { this.next(); return { k: 'bin', op: '**', l: base, r: this.unary(), line: this.line }; }
+    return base;
+  }
+  postfix() {
+    let e = this.atom();
+    for (;;) {
+      if (this.isOp('(')) {
+        this.next();
+        const args = [];
+        if (!this.isOp(')')) {
+          for (;;) {
+            args.push(this.expr());
+            if (this.isOp(',')) { this.next(); if (this.isOp(')')) break; continue; }
+            break;
+          }
+        }
+        this.expectOp(')', "Il manque une parenthèse fermante « ) ».");
+        e = { k: 'call', f: e, args, line: this.line };
+      } else if (this.isOp('[')) {
+        this.next();
+        const idx = this.expr();
+        this.expectOp(']', "Il manque un crochet fermant « ] ».");
+        e = { k: 'index', obj: e, idx, line: this.line };
+      } else if (this.isOp('.')) {
+        this.next();
+        const t = this.next();
+        if (!t || t.t !== 'name') throw this.err("Après le point il faut un nom.");
+        e = { k: 'attr', obj: e, name: t.v, line: this.line };
+      } else break;
+    }
+    return e;
+  }
+  atom() {
+    const t = this.next();
+    if (!t) throw this.err("Il manque quelque chose à la fin de la ligne.");
+    if (t.t === 'num') return { k: 'const', v: t.v, line: this.line };
+    if (t.t === 'str') return { k: 'const', v: t.v, line: this.line };
+    if (t.t === 'name') return { k: 'name', name: t.v, line: this.line };
+    if (t.t === 'kw') {
+      if (t.v === 'True') return { k: 'const', v: true, line: this.line };
+      if (t.v === 'False') return { k: 'const', v: false, line: this.line };
+      if (t.v === 'None') return { k: 'const', v: null, line: this.line };
+      throw this.err(`Le mot « ${t.v} » n'est pas à sa place ici.`);
+    }
+    if (t.t === 'op' && t.v === '(') {
+      const e = this.expr();
+      this.expectOp(')', "Il manque une parenthèse fermante « ) ».");
+      return e;
+    }
+    if (t.t === 'op' && t.v === '[') {
+      const items = [];
+      if (!this.isOp(']')) {
+        for (;;) {
+          items.push(this.expr());
+          if (this.isOp(',')) { this.next(); if (this.isOp(']')) break; continue; }
+          break;
+        }
+      }
+      this.expectOp(']', "Il manque un crochet fermant « ] ».");
+      return { k: 'list', items, line: this.line };
+    }
+    throw this.err(`Je ne comprends pas « ${showTok(t)} » à cet endroit.`);
+  }
+}
+
+// ---------- Analyse des lignes (blocs indentés) ----------
+class Parser {
+  constructor(lines) { this.lines = lines; this.p = 0; }
+  parseProgram() {
+    if (!this.lines.length) return [];
+    if (this.lines[0].indent !== 0) throw new PyError('IndentationError', "La première ligne ne doit pas être décalée vers la droite.", this.lines[0].line);
+    const stmts = this.parseBlock(0);
+    if (this.p < this.lines.length) throw new PyError('IndentationError', "Indentation incohérente : cette ligne ne s'aligne avec aucune ligne au-dessus.", this.lines[this.p].line);
+    return stmts;
+  }
+  parseBlock(indent) {
+    const stmts = [];
+    while (this.p < this.lines.length) {
+      const ln = this.lines[this.p];
+      if (ln.indent < indent) break;
+      if (ln.indent > indent) throw new PyError('IndentationError', "Cette ligne est trop décalée vers la droite (indentation inattendue).", ln.line);
+      stmts.push(this.parseStatement(ln, indent));
+    }
+    return stmts;
+  }
+  suite(header) {
+    const nxt = this.lines[this.p];
+    if (!nxt || nxt.indent <= header.indent) {
+      throw new PyError('IndentationError', `Il manque des instructions décalées de 4 espaces sous la ligne ${header.line}.`, header.line);
+    }
+    return this.parseBlock(nxt.indent);
+  }
+  parseStatement(ln, indent) {
+    this.p++;
+    const ts = new TS(ln.toks, ln.line);
+    const line = ln.line;
+    const t = ts.peek();
+    if (t.t === 'kw') {
+      switch (t.v) {
+        case 'if': {
+          ts.next();
+          const cond = ts.expr();
+          ts.expectColon();
+          const node = { k: 'if', line, cond, body: this.suite(ln), orelse: null };
+          let cur = node;
+          while (this.p < this.lines.length) {
+            const l2 = this.lines[this.p];
+            const f = l2.toks[0];
+            if (l2.indent !== indent || f.t !== 'kw' || (f.v !== 'elif' && f.v !== 'else')) break;
+            this.p++;
+            const ts2 = new TS(l2.toks, l2.line);
+            ts2.next();
+            if (f.v === 'elif') {
+              const c2 = ts2.expr();
+              ts2.expectColon();
+              const n2 = { k: 'if', line: l2.line, cond: c2, body: this.suite(l2), orelse: null };
+              cur.orelse = [n2];
+              cur = n2;
+            } else {
+              ts2.expectColon();
+              cur.orelse = this.suite(l2);
+              break;
+            }
+          }
+          return node;
+        }
+        case 'elif':
+        case 'else':
+          throw new PyError('SyntaxError', `« ${t.v} » doit suivre un « if » (au même niveau d'indentation).`, line);
+        case 'while': {
+          ts.next();
+          const cond = ts.expr();
+          ts.expectColon();
+          return { k: 'while', line, cond, body: this.suite(ln) };
+        }
+        case 'for': {
+          ts.next();
+          const v = ts.next();
+          if (!v || v.t !== 'name') throw ts.err("Après « for » il faut un nom de variable (par exemple : for i in range(3):).");
+          if (!ts.isKw('in')) throw ts.err("Il manque le mot « in » (par exemple : for i in range(3):).");
+          ts.next();
+          const iter = ts.expr();
+          ts.expectColon();
+          return { k: 'for', line, name: v.v, iter, body: this.suite(ln) };
+        }
+        case 'def': {
+          ts.next();
+          const nm = ts.next();
+          if (!nm || nm.t !== 'name') throw ts.err("Après « def » il faut le nom de ta fonction.");
+          ts.expectOp('(', "Il manque la parenthèse « ( » après le nom de la fonction.");
+          const params = [];
+          if (!ts.isOp(')')) {
+            for (;;) {
+              const p = ts.next();
+              if (!p || p.t !== 'name') throw ts.err("Les paramètres doivent être des noms.");
+              params.push(p.v);
+              if (ts.isOp(',')) { ts.next(); continue; }
+              break;
+            }
+          }
+          ts.expectOp(')', "Il manque la parenthèse fermante « ) ».");
+          ts.expectColon();
+          return { k: 'def', line, name: nm.v, params, body: this.suite(ln) };
+        }
+        case 'return': {
+          ts.next();
+          const e = ts.peek() ? ts.expr() : null;
+          ts.expectEnd();
+          return { k: 'return', line, e };
+        }
+        case 'global': {
+          ts.next();
+          const names = [];
+          for (;;) {
+            const g = ts.next();
+            if (!g || g.t !== 'name') throw ts.err("Après « global » il faut le nom d'une variable (par exemple : global score).");
+            names.push(g.v);
+            if (ts.isOp(',')) { ts.next(); continue; }
+            break;
+          }
+          ts.expectEnd();
+          return { k: 'global', line, names };
+        }
+        case 'pass': case 'break': case 'continue':
+          ts.next();
+          ts.expectEnd();
+          return { k: t.v, line };
+        default: break;
+      }
+    }
+    const e = ts.expr();
+    const nt = ts.peek();
+    if (nt && nt.t === 'op' && nt.v === '=') {
+      ts.next();
+      if (e.k !== 'name' && e.k !== 'index') throw ts.err("On ne peut donner une valeur qu'à une variable (par exemple : n = 5).");
+      const val = ts.expr();
+      ts.expectEnd();
+      return { k: 'assign', line, target: e, val };
+    }
+    if (nt && nt.t === 'op' && ['+=', '-=', '*=', '/=', '%='].includes(nt.v)) {
+      ts.next();
+      if (e.k !== 'name') throw ts.err("Cette opération ne marche que sur une variable.");
+      const val = ts.expr();
+      ts.expectEnd();
+      return { k: 'aug', line, op: nt.v[0], target: e, val };
+    }
+    ts.expectEnd();
+    return { k: 'expr', line, e };
+  }
+}
+
+// ---------- Valeurs ----------
+function truthy(v) {
+  if (v === null || v === false || v === 0 || v === '') return false;
+  if (Array.isArray(v) && v.length === 0) return false;
+  return true;
+}
+function repr(v) {
+  if (typeof v === 'string') return `'${v}'`;
+  return toStr(v);
+}
+function toStr(v) {
+  if (v === null) return 'None';
+  if (v === true) return 'True';
+  if (v === false) return 'False';
+  if (Array.isArray(v)) return '[' + v.map(repr).join(', ') + ']';
+  if (typeof v === 'function') return '<fonction>';
+  if (v && v.__fn) return `<fonction ${v.name}>`;
+  if (typeof v === 'number') return Number.isInteger(v) ? String(v) : String(Math.round(v * 1e10) / 1e10);
+  return String(v);
+}
+function typeName(v) {
+  if (typeof v === 'number') return Number.isInteger(v) ? 'un nombre entier' : 'un nombre décimal';
+  if (typeof v === 'string') return 'du texte';
+  if (typeof v === 'boolean') return 'un booléen (True/False)';
+  if (v === null) return 'None';
+  if (Array.isArray(v)) return 'une liste';
+  return 'une fonction';
+}
+function pyEq(a, b) {
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => pyEq(x, b[i]));
+  return a === b;
+}
+function lev(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+
+// ---------- Interprète ----------
+class Interp {
+  constructor(builtins, maxOps) {
+    this.B = builtins;
+    this.G = new Map();
+    this.ops = 0;
+    this.max = maxOps || 200000;
+    this.depth = 0;
+    this.curLine = 0;
+  }
+  tick(line) {
+    this.curLine = line;
+    if (++this.ops > this.max) throw new PyError('LoopError', "Ton programme tourne trop longtemps : il y a sûrement une boucle qui ne s'arrête jamais (un while dont la condition reste vraie ?).", line);
+  }
+  run(stmts) { this.execBlock(stmts, { vars: this.G }); }
+  execBlock(stmts, scope) { for (const s of stmts) this.exec(s, scope); }
+  nameMsg(name, scope) {
+    const cands = [...scope.vars.keys(), ...this.G.keys(), ...Object.keys(this.B)];
+    let best = null, bd = 99;
+    for (const c of cands) {
+      const d = lev(name.toLowerCase(), c.toLowerCase());
+      if (d < bd) { bd = d; best = c; }
+    }
+    let m = `Le nom « ${name} » n'existe pas.`;
+    if (best && bd <= 2 && name.length > 2) m += ` Tu voulais écrire « ${best} » ?`;
+    else m += " Vérifie l'orthographe, ou crée d'abord la variable avec = .";
+    return m;
+  }
+  setVar(scope, name, v, line) {
+    if (scope.glob && scope.glob.has(name)) { this.G.set(name, v); return; }
+    if (scope.vars !== this.G && !scope.vars.has(name) && this.G.has(name)) {
+      const gv = this.G.get(name);
+      if (!(gv && gv.__fn)) throw new PyError('NameError', `Pour modifier la variable « ${name} » dans une fonction, écris d'abord « global ${name} » tout en haut de la fonction.`, line);
+    }
+    scope.vars.set(name, v);
+  }
+  lookup(name, scope, line) {
+    if (scope.vars.has(name)) return scope.vars.get(name);
+    if (this.G.has(name)) return this.G.get(name);
+    if (Object.prototype.hasOwnProperty.call(this.B, name)) return this.B[name];
+    throw new PyError('NameError', this.nameMsg(name, scope), line);
+  }
+  exec(s, scope) {
+    this.tick(s.line);
+    switch (s.k) {
+      case 'expr': {
+        const v = this.ev(s.e, scope);
+        if (s.e.k === 'name' && (typeof v === 'function' || (v && v.__fn)))
+          throw new PyError('SyntaxError', `Tu as écrit « ${s.e.name} » sans parenthèses : pour exécuter la commande, écris ${s.e.name}()`, s.line);
+        return;
+      }
+      case 'assign': {
+        const v = this.ev(s.val, scope);
+        if (s.target.k === 'name') this.setVar(scope, s.target.name, v, s.line);
+        else {
+          const o = this.ev(s.target.obj, scope), i = this.ev(s.target.idx, scope);
+          if (!Array.isArray(o)) throw new PyError('TypeError', "On ne peut changer un élément que dans une liste.", s.line);
+          o[this.index(o, i, s.line)] = v;
+        }
+        return;
+      }
+      case 'aug': {
+        const cur = this.lookup(s.target.name, scope, s.line);
+        this.setVar(scope, s.target.name, this.binop(s.op, cur, this.ev(s.val, scope), s.line), s.line);
+        return;
+      }
+      case 'if':
+        if (truthy(this.ev(s.cond, scope))) this.execBlock(s.body, scope);
+        else if (s.orelse) this.execBlock(s.orelse, scope);
+        return;
+      case 'while':
+        while (truthy(this.ev(s.cond, scope))) {
+          try { this.execBlock(s.body, scope); }
+          catch (e) { if (e instanceof BreakSig) break; if (e instanceof ContinueSig) { this.tick(s.line); continue; } throw e; }
+          this.tick(s.line);
+        }
+        return;
+      case 'for': {
+        const it = this.iter(this.ev(s.iter, scope), s.line);
+        for (const x of it) {
+          scope.vars.set(s.name, x);
+          try { this.execBlock(s.body, scope); }
+          catch (e) { if (e instanceof BreakSig) break; if (e instanceof ContinueSig) continue; throw e; }
+          this.tick(s.line);
+        }
+        return;
+      }
+      case 'def':
+        scope.vars.set(s.name, { __fn: true, name: s.name, params: s.params, body: s.body });
+        return;
+      case 'return': throw new ReturnSig(s.e ? this.ev(s.e, scope) : null);
+      case 'global':
+        if (scope.vars !== this.G) { scope.glob = scope.glob || new Set(); s.names.forEach((n) => scope.glob.add(n)); }
+        return;
+      case 'pass': return;
+      case 'break': throw new BreakSig();
+      case 'continue': throw new ContinueSig();
+      default: throw new PyError('Error', 'Instruction inconnue', s.line);
+    }
+  }
+  iter(v, line) {
+    if (Array.isArray(v)) return v.slice();
+    if (typeof v === 'string') return v.split('');
+    throw new PyError('TypeError', `On ne peut pas parcourir ${typeName(v)} avec « for ».`, line);
+  }
+  index(o, i, line) {
+    if (typeof i !== 'number' || !Number.isInteger(i)) throw new PyError('TypeError', "L'indice doit être un nombre entier.", line);
+    const n = o.length;
+    const j = i < 0 ? n + i : i;
+    if (j < 0 || j >= n) throw new PyError('IndexError', `L'indice ${i} est en dehors de la liste (elle contient ${n} élément${n > 1 ? 's' : ''}, numérotés à partir de 0).`, line);
+    return j;
+  }
+  binop(op, a, b, line) {
+    const num = (x) => typeof x === 'number';
+    switch (op) {
+      case '+':
+        if (num(a) && num(b)) return a + b;
+        if (typeof a === 'string' && typeof b === 'string') return a + b;
+        if (Array.isArray(a) && Array.isArray(b)) return a.concat(b);
+        throw new PyError('TypeError', `Je ne peux pas additionner ${typeName(a)} et ${typeName(b)}. (Pour mélanger texte et nombre, utilise str(...).)`, line);
+      case '-': case '/': case '//': case '%': case '**':
+        if (!(num(a) && num(b))) throw new PyError('TypeError', `L'opération « ${op} » ne marche qu'avec des nombres (ici : ${typeName(a)} et ${typeName(b)}).`, line);
+        if ((op === '/' || op === '//' || op === '%') && b === 0) throw new PyError('ZeroDivisionError', "Division par zéro : c'est impossible en mathématiques !", line);
+        if (op === '-') return a - b;
+        if (op === '/') return a / b;
+        if (op === '//') return Math.floor(a / b);
+        if (op === '%') return ((a % b) + b) % b;
+        return Math.pow(a, b);
+      case '*':
+        if (num(a) && num(b)) return a * b;
+        if (typeof a === 'string' && num(b)) return a.repeat(Math.max(0, b));
+        if (Array.isArray(a) && num(b)) { let r = []; for (let k = 0; k < b; k++) r = r.concat(a); return r; }
+        throw new PyError('TypeError', `Je ne peux pas multiplier ${typeName(a)} par ${typeName(b)}.`, line);
+      default: throw new PyError('Error', 'Opération inconnue', line);
+    }
+  }
+  ev(n, scope) {
+    switch (n.k) {
+      case 'const': return n.v;
+      case 'name': return this.lookup(n.name, scope, n.line);
+      case 'list': return n.items.map((x) => this.ev(x, scope));
+      case 'neg': {
+        const v = this.ev(n.e, scope);
+        if (typeof v !== 'number') throw new PyError('TypeError', "Le signe moins ne marche qu'avec un nombre.", n.line);
+        return -v;
+      }
+      case 'not': return !truthy(this.ev(n.e, scope));
+      case 'bool': {
+        const l = this.ev(n.l, scope);
+        if (n.op === 'and') return truthy(l) ? this.ev(n.r, scope) : l;
+        return truthy(l) ? l : this.ev(n.r, scope);
+      }
+      case 'bin': return this.binop(n.op, this.ev(n.l, scope), this.ev(n.r, scope), n.line);
+      case 'cmp': {
+        const a = this.ev(n.l, scope), b = this.ev(n.r, scope);
+        switch (n.op) {
+          case '==': return pyEq(a, b);
+          case '!=': return !pyEq(a, b);
+          case 'in': case 'not in': {
+            let r;
+            if (Array.isArray(b)) r = b.some((x) => pyEq(x, a));
+            else if (typeof b === 'string' && typeof a === 'string') r = b.includes(a);
+            else throw new PyError('TypeError', "« in » s'utilise avec une liste ou du texte.", n.line);
+            return n.op === 'in' ? r : !r;
+          }
+          default: {
+            if (!((typeof a === 'number' && typeof b === 'number') || (typeof a === 'string' && typeof b === 'string')))
+              throw new PyError('TypeError', `Je ne peux pas comparer ${typeName(a)} et ${typeName(b)} avec « ${n.op} ».`, n.line);
+            if (n.op === '<') return a < b;
+            if (n.op === '>') return a > b;
+            if (n.op === '<=') return a <= b;
+            return a >= b;
+          }
+        }
+      }
+      case 'index': {
+        const o = this.ev(n.obj, scope), i = this.ev(n.idx, scope);
+        if (Array.isArray(o)) return o[this.index(o, i, n.line)];
+        if (typeof o === 'string') return o[this.index(o.split(''), i, n.line)];
+        throw new PyError('TypeError', `On ne peut pas utiliser [ ] sur ${typeName(o)}.`, n.line);
+      }
+      case 'attr':
+        throw new PyError('AttributeError', `« .${n.name} » doit être suivi de parenthèses, comme une commande.`, n.line);
+      case 'call': {
+        this.tick(n.line);
+        if (n.f.k === 'attr') {
+          const o = this.ev(n.f.obj, scope);
+          const args = n.args.map((a) => this.ev(a, scope));
+          if (Array.isArray(o) && n.f.name === 'append' && args.length === 1) { o.push(args[0]); return null; }
+          if (Array.isArray(o) && n.f.name === 'remove' && args.length === 1) {
+            const i = o.findIndex((q) => pyEq(q, args[0]));
+            if (i < 0) throw new PyError('ValueError', "Cette valeur n'est pas dans la liste : impossible de la retirer.", n.line);
+            o.splice(i, 1); return null;
+          }
+          if (Array.isArray(o) && n.f.name === 'pop' && args.length <= 1) {
+            if (!o.length) throw new PyError('IndexError', "La liste est vide : impossible d'en retirer un élément.", n.line);
+            return o.splice(args.length ? this.index(o, args[0], n.line) : o.length - 1, 1)[0];
+          }
+          throw new PyError('AttributeError', `Cet objet n'a pas de commande « ${n.f.name} » (ou elle n'est pas disponible ici).`, n.line);
+        }
+        const f = this.ev(n.f, scope);
+        const args = n.args.map((a) => this.ev(a, scope));
+        return this.call(f, args, n);
+      }
+      default: throw new PyError('Error', 'Expression inconnue', n.line);
+    }
+  }
+  call(f, args, n) {
+    if (typeof f === 'function') {
+      if (args.length > f.maxArgs) throw new PyError('TypeError', `« ${f.cname}() » n'accepte pas ${args.length} valeur${args.length > 1 ? 's' : ''} entre les parenthèses.`, n.line);
+      this.curLine = n.line;
+      return f(...args);
+    }
+    if (f && f.__fn) {
+      if (args.length !== f.params.length)
+        throw new PyError('TypeError', `La fonction « ${f.name} » attend ${f.params.length} valeur${f.params.length > 1 ? 's' : ''} entre les parenthèses, mais tu en as donné ${args.length}.`, n.line);
+      if (this.depth > 150) throw new PyError('RecursionError', "Ta fonction s'appelle elle-même sans jamais s'arrêter (trop d'appels imbriqués).", n.line);
+      const local = { vars: new Map() };
+      f.params.forEach((p, i) => local.vars.set(p, args[i]));
+      this.depth++;
+      try { this.execBlock(f.body, local); }
+      catch (e) { if (e instanceof ReturnSig) return e.value; throw e; }
+      finally { this.depth--; }
+      return null;
+    }
+    throw new PyError('TypeError', `Ce n'est pas une fonction : on ne peut pas écrire des parenthèses après ${typeName(f)}.`, n.line);
+  }
+}
+
+// ---------- Monde du robot ----------
+const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+const DIR_NAMES = ['le haut', 'la droite', 'le bas', 'la gauche'];
+
+function parseGrid(level) {
+  const rows = level.grid;
+  const H = rows.length, W = Math.max(...rows.map((r) => r.length));
+  const walls = new Set(), lamps = new Set();
+  let start = null, goal = null;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const c = rows[y][x] || '#';
+      const key = x + ',' + y;
+      if (c === '#') walls.add(key);
+      else if (c === 'L') lamps.add(key);
+      else if (c === 'S') start = { x, y };
+      else if (c === 'Z') { start = { x, y }; lamps.add(key); }
+      else if (c === 'G') goal = { x, y };
+    }
+  }
+  return { W, H, walls, lamps, start, goal };
+}
+
+function countCodeLines(code) {
+  return code.split('\n').filter((l) => l.trim() !== '' && !l.trim().startsWith('#')).length;
+}
+
+function simulate(code, level) {
+  const world = parseGrid(level);
+  const st = { x: world.start.x, y: world.start.y, d: level.dir, lit: new Set() };
+  const frames = [];
+  const snap = (type, extra) => frames.push(Object.assign({ type, line: interp.curLine, x: st.x, y: st.y, d: st.d, lit: [...st.lit] }, extra || {}));
+  const robotErr = (msg) => new PyError('RobotError', msg, interp.curLine);
+  const guard = () => { if (frames.length > 4000) throw new PyError('LoopError', "Le robot a fait beaucoup trop d'actions : ton programme ne s'arrête jamais ?", interp.curLine); };
+  const def = (name, maxArgs, fn) => { fn.maxArgs = maxArgs; fn.cname = name; return fn; };
+  const ahead = () => ({ x: st.x + DIRS[st.d][0], y: st.y + DIRS[st.d][1] });
+  const isWall = (p) => world.walls.has(p.x + ',' + p.y) || p.x < 0 || p.y < 0 || p.x >= world.W || p.y >= world.H;
+
+  const B = {
+    avancer: def('avancer', 1, (n) => {
+      if (n === undefined) n = 1;
+      if (typeof n !== 'number' || !Number.isInteger(n) || n < 1) throw new PyError('TypeError', "avancer(n) attend un nombre entier positif, par exemple avancer(3).", interp.curLine);
+      for (let k = 0; k < n; k++) {
+        const p = ahead();
+        if (isWall(p)) {
+          snap('bump');
+          throw robotErr(`Aïe ! Le robot a foncé dans un mur (il regardait vers ${DIR_NAMES[st.d]}). Vérifie ses virages avant d'avancer.`);
+        }
+        st.x = p.x; st.y = p.y;
+        snap('move');
+        guard();
+      }
+      return null;
+    }),
+    tourner_gauche: def('tourner_gauche', 0, () => { st.d = (st.d + 3) % 4; snap('turn'); guard(); return null; }),
+    tourner_droite: def('tourner_droite', 0, () => { st.d = (st.d + 1) % 4; snap('turn'); guard(); return null; }),
+    allumer: def('allumer', 0, () => {
+      const key = st.x + ',' + st.y;
+      if (!world.lamps.has(key)) throw robotErr("Il n'y a pas de lampe sous le robot : il ne peut rien allumer ici.");
+      st.lit.add(key);
+      snap('light');
+      guard();
+      return null;
+    }),
+    mur_devant: def('mur_devant', 0, () => isWall(ahead())),
+    lampe_ici: def('lampe_ici', 0, () => { const k = st.x + ',' + st.y; return world.lamps.has(k) && !st.lit.has(k); }),
+    arrive: def('arrive', 0, () => !!world.goal && st.x === world.goal.x && st.y === world.goal.y),
+    print: def('print', 20, (...a) => { snap('print', { text: a.map(toStr).join(' ') }); return null; }),
+    range: def('range', 3, (a, b, c) => {
+      const ints = [a, b, c].filter((v) => v !== undefined);
+      if (!ints.length || ints.some((v) => typeof v !== 'number' || !Number.isInteger(v))) throw new PyError('TypeError', "range() attend des nombres entiers, par exemple range(5).", interp.curLine);
+      let start = 0, stop, step = 1;
+      if (ints.length === 1) stop = ints[0]; else { start = ints[0]; stop = ints[1]; if (ints.length === 3) step = ints[2]; }
+      if (step === 0) throw new PyError('ValueError', "Le pas de range() ne peut pas être 0.", interp.curLine);
+      const r = [];
+      for (let v = start; step > 0 ? v < stop : v > stop; v += step) { r.push(v); if (r.length > 20000) throw new PyError('LoopError', "range() est trop grand.", interp.curLine); }
+      return r;
+    }),
+    len: def('len', 1, (v) => {
+      if (Array.isArray(v) || typeof v === 'string') return v.length;
+      throw new PyError('TypeError', `len() ne marche pas avec ${typeName(v)}.`, interp.curLine);
+    }),
+    str: def('str', 1, (v) => toStr(v)),
+    int: def('int', 1, (v) => {
+      const n = typeof v === 'string' ? parseFloat(v) : v;
+      if (typeof n !== 'number' || Number.isNaN(n)) throw new PyError('ValueError', `Impossible de transformer ${typeName(v)} en nombre entier.`, interp.curLine);
+      return Math.trunc(n);
+    }),
+    abs: def('abs', 1, (v) => Math.abs(v)),
+    min: def('min', 20, (...a) => Math.min(...(a.length === 1 && Array.isArray(a[0]) ? a[0] : a))),
+    max: def('max', 20, (...a) => Math.max(...(a.length === 1 && Array.isArray(a[0]) ? a[0] : a))),
+  };
+  const interp = new Interp(B, 200000);
+  snap('start', { line: 0 });
+
+  let error = null;
+  try {
+    const prog = new Parser(lexLines(code)).parseProgram();
+    interp.run(prog);
+  } catch (e) {
+    if (e instanceof PyError) error = e;
+    else if (e instanceof BreakSig || e instanceof ContinueSig) error = new PyError('SyntaxError', "« break » et « continue » ne s'utilisent que dans une boucle.", interp.curLine);
+    else if (e instanceof ReturnSig) error = new PyError('SyntaxError', "« return » ne s'utilise que dans une fonction.", interp.curLine);
+    else if (e instanceof RangeError) error = new PyError('RecursionError', "Ton programme est trop profond (une fonction s'appelle sans fin ?).", interp.curLine);
+    else throw e;
+  }
+
+  const lampsLeft = [...world.lamps].filter((k) => !st.lit.has(k)).length;
+  const onGoal = !!world.goal && st.x === world.goal.x && st.y === world.goal.y;
+  const needLamps = level.goal === 'lamps' || level.goal === 'both';
+  const needGoal = level.goal === 'arrive' || level.goal === 'both';
+  let status = 'win', message = '';
+  if (error) { status = 'error'; message = error.message; }
+  else if (needLamps && lampsLeft > 0) {
+    status = 'incomplete';
+    message = `Presque ! Il reste ${lampsLeft} lampe${lampsLeft > 1 ? 's' : ''} éteinte${lampsLeft > 1 ? 's' : ''}.`;
+  } else if (needGoal && !onGoal) {
+    status = 'incomplete';
+    message = "Presque ! Le robot n'est pas arrivé sur le drapeau.";
+  }
+  let reqFail = null;
+  if (status === 'win' && level.require) {
+    for (const r of level.require) if (!r.re.test(code)) { reqFail = r.label; break; }
+    if (reqFail) { status = 'incomplete'; message = `Le robot a réussi, mais la mission demande aussi : ${reqFail}.`; }
+  }
+  const lines = countCodeLines(code);
+  let stars = 0;
+  if (status === 'win') stars = lines <= level.par ? 3 : lines <= Math.ceil(level.par * 1.7) ? 2 : 1;
+  return { status, message, error, frames, lines, stars, lampsLeft, onGoal, world };
+}
+
+
+// ===== Niveaux de Lumino =====
+// Légende : # mur, . sol, S départ, Z départ sur une lampe, L lampe éteinte, G drapeau
+// dir : 0 haut, 1 droite, 2 bas, 3 gauche
+const CMD = {
+  avancer:  { code: 'avancer()',        desc: "avance d'une case" },
+  gauche:   { code: 'tourner_gauche()', desc: 'tourne à gauche (sur place)' },
+  droite:   { code: 'tourner_droite()', desc: 'tourne à droite (sur place)' },
+  allumer:  { code: 'allumer()',        desc: "allume la lampe sous le robot" },
+  mur:      { code: 'mur_devant()',     desc: 'True si un mur bloque le chemin' },
+  lampe:    { code: 'lampe_ici()',      desc: 'True si une lampe éteinte est sous le robot' },
+  arrive:   { code: 'arrive()',         desc: 'True si le robot est sur le drapeau' },
+};
+
+const LEVELS = [
+  {
+    id: 1, title: 'Réveil en douceur', concept: 'Séquence',
+    story: "Lumino vient de se réveiller dans la serre de la Station Aurore. Un programme, c'est une liste d'ordres exécutés de haut en bas. Amène-le jusqu'au drapeau.",
+    grid: ['#######', '#S...G#', '#######'], dir: 1, goal: 'arrive', par: 4,
+    cmds: ['avancer'],
+    notes: { text: "Chaque ligne est un ordre. Le robot les exécute dans l'ordre, de haut en bas. Les parenthèses sont obligatoires.", code: "avancer()\navancer()" },
+    hints: ["Le drapeau est à 4 cases de Lumino.", "Écris avancer() quatre fois, une par ligne.", "Attention aux parenthèses : avancer sans () ne fait rien."],
+    solution: "avancer()\navancer()\navancer()\navancer()",
+  },
+  {
+    id: 2, title: 'Le premier virage', concept: 'Tourner',
+    story: "Le couloir tourne ! Lumino ne peut avancer que tout droit, il doit donc pivoter avant de continuer.",
+    grid: ['#######', '#S....#', '#####.#', '#####G#', '#######'], dir: 1, goal: 'arrive', par: 7,
+    cmds: ['droite', 'gauche'],
+    notes: { text: "Le robot regarde dans une direction. tourner_droite() le fait pivoter d'un quart de tour sans bouger de case.", code: "avancer()\ntourner_droite()\navancer()" },
+    hints: ["Avance de 4 cases, jusqu'au coin du couloir.", "Au coin, Lumino regarde à droite de l'écran. Il doit regarder vers le bas : tourner_droite().", "Puis encore 2 fois avancer()."],
+    solution: "avancer()\navancer()\navancer()\navancer()\ntourner_droite()\navancer()\navancer()",
+  },
+  {
+    id: 3, title: 'La longue route', concept: 'Boucle for',
+    story: "Dix cases à parcourir ! Écrire dix lignes identiques, c'est long et risqué. Les programmeurs détestent se répéter : ils utilisent une boucle.",
+    grid: ['#############', '#S.........G#', '#############'], dir: 1, goal: 'arrive', par: 2,
+    require: [{ re: /for\s+\w+\s+in\s+range/, label: 'utiliser une boucle for' }],
+    cmds: [],
+    notes: { text: "for i in range(10): répète 10 fois les lignes qui suivent. Ces lignes doivent être décalées de 4 espaces (touche Tab).", code: "for i in range(3):\n    avancer()" },
+    hints: ["Il y a 10 cases entre Lumino et le drapeau.", "Écris for i in range(10): puis, à la ligne suivante décalée de 4 espaces, avancer().", "N'oublie pas le « : » à la fin de la ligne du for."],
+    solution: "for i in range(10):\n    avancer()",
+  },
+  {
+    id: 4, title: 'Allume-tout', concept: 'Boucle + action',
+    story: "Sept lampes sont alignées dans le couloir, toutes éteintes. Lumino doit en allumer une à chaque case. Dans une boucle, on peut répéter plusieurs ordres d'un coup.",
+    grid: ['###########', '#SLLLLLLL.#', '###########'], dir: 1, goal: 'lamps', par: 3,
+    require: [{ re: /for\s+\w+\s+in\s+range/, label: 'utiliser une boucle for' }],
+    cmds: ['allumer'],
+    notes: { text: "Dans une boucle, tout ce qui est décalé de 4 espaces est répété, ligne après ligne, à chaque tour.", code: "for i in range(5):\n    avancer()\n    allumer()" },
+    hints: ["Il y a 7 lampes, et Lumino commence juste à côté de la première.", "À chaque tour : avancer() puis allumer().", "Mets les deux ordres dans la boucle, avec le même décalage."],
+    solution: "for i in range(7):\n    avancer()\n    allumer()",
+  },
+  {
+    id: 5, title: 'Le tour du jardin', concept: 'Boucles imbriquées',
+    story: "Trois lampes aux coins d'un carré de verdure. Le même motif se répète : avancer de 4 cases, allumer, tourner. Une boucle peut en contenir une autre !",
+    grid: ['#######', '#S...L#', '#.###.#', '#.###.#', '#.###.#', '#L...L#', '#######'], dir: 1, goal: 'lamps', par: 5,
+    cmds: [],
+    notes: { text: "Une boucle peut contenir une autre boucle. La boucle intérieure est décalée de 4 espaces de plus.", code: "for i in range(3):\n    for j in range(2):\n        avancer()\n    tourner_droite()" },
+    hints: ["Chaque côté du carré : 4 fois avancer(), puis allumer(), puis tourner_droite().", "Il y a 3 côtés à parcourir : la grande boucle fait 3 tours.", "Boucle extérieure : for i in range(3). Boucle intérieure : for j in range(4) qui contient avancer()."],
+    solution: "for i in range(3):\n    for j in range(4):\n        avancer()\n    allumer()\n    tourner_droite()",
+  },
+  {
+    id: 6, title: 'La variable magique', concept: 'Variable',
+    story: "Un long couloir, puis un coude vers le bas. Pour ne pas répéter le nombre 7 partout, donne-lui un nom : c'est une variable, une petite boîte étiquetée qui garde une valeur.",
+    grid: ['##########', '#S.......#', '########.#', '########.#', '########.#', '########G#', '##########'], dir: 1, goal: 'arrive', par: 6,
+    require: [{ re: /^\s*[A-Za-z_]\w*\s*=(?!=)/m, label: 'créer une variable (avec le signe =)' }],
+    cmds: [],
+    notes: { text: "distance = 7 crée une variable qui contient 7. Tu peux ensuite l'utiliser à la place du nombre.", code: "distance = 7\nfor i in range(distance):\n    avancer()" },
+    hints: ["Crée une variable en première ligne, par exemple distance = 7.", "Utilise-la dans range(distance) pour la première boucle.", "Après le coin : tourner_droite() puis 4 fois avancer()."],
+    solution: "distance = 7\nfor i in range(distance):\n    avancer()\ntourner_droite()\nfor i in range(4):\n    avancer()",
+  },
+  {
+    id: 7, title: 'Sentinelle des lampes', concept: 'Condition if',
+    story: "Seules quelques lampes sont installées dans ce couloir, et Lumino ne sait pas lesquelles. Si on lui demande d'allumer une lampe qui n'existe pas, il proteste ! Il doit d'abord regarder avec lampe_ici().",
+    grid: ['#############', '#S.L..L.LL..#', '#############'], dir: 1, goal: 'lamps', par: 4,
+    require: [{ re: /\bif\b/, label: 'utiliser un if' }],
+    cmds: ['lampe'],
+    notes: { text: "if teste une condition. Les lignes décalées en dessous ne s'exécutent que si la condition est vraie (True).", code: "if lampe_ici():\n    allumer()" },
+    hints: ["Le couloir fait 10 cases de long : une boucle de 10 tours.", "À chaque tour : avancer(), puis tester s'il y a une lampe.", "if lampe_ici(): doit être suivi de allumer(), décalé de 4 espaces de plus."],
+    solution: "for i in range(10):\n    avancer()\n    if lampe_ici():\n        allumer()",
+  },
+  {
+    id: 8, title: 'Le serpent de pierre', concept: 'while + if / else',
+    story: "Un labyrinthe en spirale ! Impossible de compter les pas à l'avance. Lumino va répéter « tant que je ne suis pas arrivé » une règle simple : mur devant → je tourne, sinon j'avance.",
+    grid: ['#########', '#S......#', '#######.#', '#.....#.#', '#.###.#.#', '#.#G..#.#', '#.#####.#', '#.......#', '#########'], dir: 1, goal: 'arrive', par: 5,
+    require: [{ re: /\bwhile\b/, label: 'utiliser un while' }],
+    cmds: ['mur', 'arrive'],
+    notes: { text: "while répète tant que la condition est vraie. else s'exécute quand la condition du if est fausse. not inverse une condition.", code: "while not arrive():\n    if mur_devant():\n        tourner_droite()\n    else:\n        avancer()" },
+    hints: ["Tous les virages de ce labyrinthe vont dans le même sens : vers la droite.", "Répète while not arrive(): et, dedans, un if mur_devant().", "Si mur_devant(), tourner_droite(). Sinon (else), avancer()."],
+    solution: "while not arrive():\n    if mur_devant():\n        tourner_droite()\n    else:\n        avancer()",
+  },
+  {
+    id: 9, title: "L'escalier lumineux", concept: 'Fonction (def)',
+    story: "Un escalier avec une lampe à chaque marche. Chaque marche se monte de la même façon : tu peux donc inventer ta propre commande ! Une fonction regroupe plusieurs ordres sous un nom.",
+    grid: ['#######', '#####L#', '####L.#', '###L.##', '##L.###', '#S.####', '#######'], dir: 1, goal: 'lamps', par: 8,
+    require: [{ re: /def\s+\w+\s*\(/, label: 'définir ta propre fonction avec def' }],
+    cmds: [],
+    notes: { text: "def crée une nouvelle commande. Elle ne s'exécute que lorsqu'on l'appelle par son nom, avec des parenthèses.", code: "def saluer():\n    avancer()\n    tourner_droite()\n\nsaluer()" },
+    hints: ["Une marche : avancer, tourner à gauche, avancer, tourner à droite, allumer.", "Écris def marche(): puis ces 5 ordres, décalés de 4 espaces.", "Ensuite, une boucle de 4 tours qui appelle marche()."],
+    solution: "def marche():\n    avancer()\n    tourner_gauche()\n    avancer()\n    tourner_droite()\n    allumer()\n\nfor i in range(4):\n    marche()",
+  },
+  {
+    id: 10, title: 'Le grand jardin', concept: 'Tout ensemble',
+    story: "Dernière mission : un parterre de 5 × 3 lampes à allumer, toutes. Il faut parcourir la zone rangée par rangée, comme un serpent. Utilise tout ce que tu as appris !",
+    grid: ['#######', '#ZLLLL#', '#LLLLL#', '#LLLLL#', '#######'], dir: 1, goal: 'lamps', par: 14,
+    require: [{ re: /def\s+\w+\s*\(/, label: 'définir ta propre fonction avec def' }],
+    cmds: [],
+    notes: { text: "Découpe un gros problème en petits morceaux : une fonction pour une rangée, puis assemble-les.", code: "def rangee():\n    ...\n\nrangee()\ntourner_droite()" },
+    hints: ["Une fonction rangee() qui allume 5 lampes en avançant 4 fois.", "Après une rangée : tourner_droite(), avancer(), tourner_droite() pour passer à la rangée du dessous (au retour).", "Pour la troisième rangée, c'est l'inverse : tourner_gauche(), avancer(), tourner_gauche()."],
+    solution: "def rangee():\n    for i in range(4):\n        allumer()\n        avancer()\n    allumer()\n\nrangee()\ntourner_droite()\navancer()\ntourner_droite()\nrangee()\ntourner_gauche()\navancer()\ntourner_gauche()\nrangee()",
+  },
+];
+
+
+// ===== Atelier : tortue de dessin =====
+// Repère : centre (0, 0), x vers la droite, y vers le haut, de -200 à 200. Cap 0 = vers le haut.
+const PALETTE = {
+  rouge: '#E5484D', orange: '#F28C28', jaune: '#FFD23F', vert: '#3DBE6E', bleu: '#3B82F6', cyan: '#22D3EE',
+  violet: '#8B5CF6', rose: '#F472B6', blanc: '#FFFFFF', gris: '#9CA3AF', gris_fonce: '#4B5563', noir: '#111827',
+  marron: '#8B5A2B', or: '#F5C542', argent: '#CBD5E1',
+};
+
+function parseColor(v, line) {
+  if (typeof v === 'string') {
+    const k = v.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[ -]/g, '_');
+    if (PALETTE[k]) return PALETTE[k];
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return v;
+  }
+  throw new PyError('ValueError', `Couleur inconnue « ${toStr(v)} ». Essaie : rouge, orange, jaune, vert, bleu, cyan, violet, rose, blanc, gris, gris_fonce, noir, marron, or, argent, ou un code comme "#ff8800".`, line);
+}
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function simulateDraw(code) {
+  const ops = [], out = [];
+  const T = { x: 0, y: 0, h: 0, pen: true, stroke: PALETTE.orange, fill: PALETTE.orange, w: 3, path: null, pathAt: 0 };
+  const rand = mulberry32((Math.random() * 2147483647) | 0);
+  const def = (name, maxArgs, fn) => { fn.maxArgs = maxArgs; fn.cname = name; return fn; };
+  const L = () => interp.curLine;
+  const bad = (cmd, ex) => new PyError('TypeError', `${cmd}() attend un nombre, par exemple ${ex}.`, L());
+  const num = (v, cmd, ex) => {
+    if (typeof v !== 'number' || !Number.isFinite(v)) throw bad(cmd, ex);
+    return v;
+  };
+  const push = (op) => {
+    if (ops.length >= 30000) throw new PyError('LoopError', "Ton dessin contient beaucoup trop de traits : une boucle ne s'arrête sans doute jamais.", L());
+    op.tx = T.x; op.ty = T.y; op.th = T.h; op.line = L();
+    ops.push(op);
+  };
+  const moveTo = (nx, ny) => {
+    if (T.pen) push({ t: 'line', x1: T.x, y1: T.y, x2: nx, y2: ny, c: T.stroke, w: T.w });
+    T.x = nx; T.y = ny;
+    if (T.path) T.path.push([nx, ny]);
+    if (!T.pen) { const last = ops[ops.length - 1]; if (last) { last.tx = T.x; last.ty = T.y; } }
+  };
+  const fwd = (n) => {
+    const r = T.h * Math.PI / 180;
+    moveTo(T.x + n * Math.sin(r), T.y + n * Math.cos(r));
+  };
+  const turn = (a) => { T.h = (((T.h + a) % 360) + 360) % 360; };
+
+  const B = {
+    avancer: def('avancer', 1, (n) => { fwd(num(n, 'avancer', 'avancer(50)')); return null; }),
+    reculer: def('reculer', 1, (n) => { fwd(-num(n, 'reculer', 'reculer(50)')); return null; }),
+    tourner_gauche: def('tourner_gauche', 1, (a) => { turn(-num(a, 'tourner_gauche', 'tourner_gauche(90)')); return null; }),
+    tourner_droite: def('tourner_droite', 1, (a) => { turn(num(a, 'tourner_droite', 'tourner_droite(90)')); return null; }),
+    cap: def('cap', 1, (a) => { T.h = (((num(a, 'cap', 'cap(90)') % 360) + 360) % 360); return null; }),
+    aller_a: def('aller_a', 2, (x, y) => { moveTo(num(x, 'aller_a', 'aller_a(40, 20)'), num(y, 'aller_a', 'aller_a(40, 20)')); return null; }),
+    lever_crayon: def('lever_crayon', 0, () => { T.pen = false; return null; }),
+    baisser_crayon: def('baisser_crayon', 0, () => { T.pen = true; return null; }),
+    couleur: def('couleur', 2, (a, b) => {
+      T.stroke = parseColor(a, L());
+      T.fill = b === undefined ? T.stroke : parseColor(b, L());
+      return null;
+    }),
+    remplissage: def('remplissage', 1, (a) => { T.fill = parseColor(a, L()); return null; }),
+    epaisseur: def('epaisseur', 1, (n) => { T.w = Math.max(0.5, num(n, 'epaisseur', 'epaisseur(3)')); return null; }),
+    disque: def('disque', 1, (r) => { push({ t: 'disk', x: T.x, y: T.y, r: Math.abs(num(r, 'disque', 'disque(20)')), c: T.fill }); return null; }),
+    cercle: def('cercle', 1, (r) => { push({ t: 'circle', x: T.x, y: T.y, r: Math.abs(num(r, 'cercle', 'cercle(20)')), c: T.stroke, w: T.w }); return null; }),
+    commencer_remplissage: def('commencer_remplissage', 0, () => { T.path = [[T.x, T.y]]; T.pathAt = ops.length; return null; }),
+    finir_remplissage: def('finir_remplissage', 0, () => {
+      if (!T.path) throw new PyError('ValueError', "finir_remplissage() sans commencer_remplissage() avant.", L());
+      if (T.path.length >= 3) {
+        const op = { t: 'fill', pts: T.path, c: T.fill, tx: T.x, ty: T.y, th: T.h, line: L() };
+        ops.splice(T.pathAt, 0, op);
+      }
+      T.path = null;
+      return null;
+    }),
+    hasard: def('hasard', 2, (a, b) => {
+      num(a, 'hasard', 'hasard(1, 6)'); num(b, 'hasard', 'hasard(1, 6)');
+      if (Number.isInteger(a) && Number.isInteger(b)) { const lo = Math.min(a, b), hi = Math.max(a, b); return lo + Math.floor(rand() * (hi - lo + 1)); }
+      return a + rand() * (b - a);
+    }),
+    sin: def('sin', 1, (a) => Math.sin(num(a, 'sin', 'sin(30)') * Math.PI / 180)),
+    cos: def('cos', 1, (a) => Math.cos(num(a, 'cos', 'cos(60)') * Math.PI / 180)),
+    print: def('print', 20, (...a) => { out.push(a.map(toStr).join(' ')); return null; }),
+    range: def('range', 3, (a, b, c) => {
+      const v = [a, b, c].filter((q) => q !== undefined);
+      if (!v.length || v.some((q) => typeof q !== 'number' || !Number.isInteger(q))) throw new PyError('TypeError', 'range() attend des nombres entiers, par exemple range(5).', L());
+      let s = 0, e, st = 1;
+      if (v.length === 1) e = v[0]; else { s = v[0]; e = v[1]; if (v.length === 3) st = v[2]; }
+      if (st === 0) throw new PyError('ValueError', 'Le pas de range() ne peut pas être 0.', L());
+      const r = [];
+      for (let k = s; st > 0 ? k < e : k > e; k += st) { r.push(k); if (r.length > 20000) throw new PyError('LoopError', 'range() est trop grand.', L()); }
+      return r;
+    }),
+    len: def('len', 1, (v) => { if (Array.isArray(v) || typeof v === 'string') return v.length; throw new PyError('TypeError', `len() ne marche pas avec ${typeName(v)}.`, L()); }),
+    str: def('str', 1, (v) => toStr(v)),
+    int: def('int', 1, (v) => { const n = typeof v === 'string' ? parseFloat(v) : v; if (typeof n !== 'number' || Number.isNaN(n)) throw new PyError('ValueError', 'Impossible de transformer cette valeur en nombre entier.', L()); return Math.trunc(n); }),
+    abs: def('abs', 1, (v) => Math.abs(v)),
+    min: def('min', 20, (...a) => Math.min(...(a.length === 1 && Array.isArray(a[0]) ? a[0] : a))),
+    max: def('max', 20, (...a) => Math.max(...(a.length === 1 && Array.isArray(a[0]) ? a[0] : a))),
+  };
+  const interp = new Interp(B, 400000);
+  let error = null;
+  try {
+    interp.run(new Parser(lexLines(code)).parseProgram());
+  } catch (e) {
+    if (e instanceof PyError) error = e;
+    else if (e instanceof BreakSig || e instanceof ContinueSig) error = new PyError('SyntaxError', "« break » et « continue » ne s'utilisent que dans une boucle.", interp.curLine);
+    else if (e instanceof ReturnSig) error = new PyError('SyntaxError', "« return » ne s'utilise que dans une fonction.", interp.curLine);
+    else if (e instanceof RangeError) error = new PyError('RecursionError', "Ton programme est trop profond (une fonction s'appelle sans fin ?).", interp.curLine);
+    else throw e;
+  }
+  return { ops, out, error, final: { x: T.x, y: T.y, h: T.h } };
+}
+
+// ----- Rendu (canvas) -----
+function paintOps(g, ops, n, scale) {
+  g.save();
+  g.setTransform(scale, 0, 0, -scale, 200 * scale, 200 * scale);
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  const m = Math.min(n, ops.length);
+  for (let k = 0; k < m; k++) {
+    const o = ops[k];
+    if (o.t === 'line') {
+      g.strokeStyle = o.c; g.lineWidth = o.w;
+      g.beginPath(); g.moveTo(o.x1, o.y1); g.lineTo(o.x2, o.y2); g.stroke();
+    } else if (o.t === 'fill') {
+      g.fillStyle = o.c;
+      g.beginPath(); o.pts.forEach((p, i) => (i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.closePath(); g.fill();
+    } else if (o.t === 'disk') {
+      g.fillStyle = o.c; g.beginPath(); g.arc(o.x, o.y, o.r, 0, Math.PI * 2); g.fill();
+    } else if (o.t === 'circle') {
+      g.strokeStyle = o.c; g.lineWidth = o.w; g.beginPath(); g.arc(o.x, o.y, o.r, 0, Math.PI * 2); g.stroke();
+    }
+  }
+  g.restore();
+}
+
+// Dessin rogné sur son contenu, redimensionné pour que son plus grand côté mesure maxSide pixels.
+function renderSprite(ops, maxSide, quality) {
+  const S = quality || 3;
+  const c = document.createElement('canvas');
+  c.width = c.height = 400 * S;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  paintOps(g, ops, ops.length, S);
+  const d = g.getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) {
+    for (let x = 0; x < c.width; x++) {
+      if (d[(y * c.width + x) * 4 + 3] > 10) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+  }
+  if (x1 < 0) return null;
+  const pad = 2 * S;
+  x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(c.width - 1, x1 + pad); y1 = Math.min(c.height - 1, y1 + pad);
+  const w = x1 - x0 + 1, h = y1 - y0 + 1, k = maxSide / Math.max(w, h);
+  const o = document.createElement('canvas');
+  o.width = Math.max(1, Math.round(w * k)); o.height = Math.max(1, Math.round(h * k));
+  const og = o.getContext('2d');
+  og.imageSmoothingEnabled = true; og.imageSmoothingQuality = 'high';
+  og.drawImage(c, x0, y0, w, h, 0, 0, o.width, o.height);
+  return o;
+}
+
+// ===== Modèles de dessin (le centre de l'image est (0, 0)) =====
+const TEMPLATES = {
+  rocket: {
+    name: 'Fusée',
+    code: `# FUSÉE : le nez pointe vers le haut, le centre est en (0, 0)
+epaisseur(3)
+
+# Flammes (dessinées d'abord, elles passent derrière)
+couleur("orange")
+lever_crayon()
+aller_a(-10, -40)
+baisser_crayon()
+commencer_remplissage()
+aller_a(0, -74)
+aller_a(10, -40)
+finir_remplissage()
+couleur("jaune")
+lever_crayon()
+aller_a(-5, -40)
+baisser_crayon()
+commencer_remplissage()
+aller_a(0, -58)
+aller_a(5, -40)
+finir_remplissage()
+
+# Un aileron, répété des deux côtés (cote vaut 1 ou -1)
+def aileron(cote):
+    couleur("noir", "rouge")
+    lever_crayon()
+    aller_a(18 * cote, -30)
+    baisser_crayon()
+    commencer_remplissage()
+    aller_a(40 * cote, -55)
+    aller_a(40 * cote, -5)
+    aller_a(18 * cote, 10)
+    aller_a(18 * cote, -30)
+    finir_remplissage()
+
+aileron(1)
+aileron(-1)
+
+# Corps
+couleur("noir", "blanc")
+lever_crayon()
+aller_a(-18, -40)
+baisser_crayon()
+commencer_remplissage()
+aller_a(-18, 25)
+aller_a(18, 25)
+aller_a(18, -40)
+aller_a(-18, -40)
+finir_remplissage()
+
+# Nez
+couleur("noir", "rouge")
+lever_crayon()
+aller_a(-18, 25)
+baisser_crayon()
+commencer_remplissage()
+aller_a(0, 62)
+aller_a(18, 25)
+aller_a(-18, 25)
+finir_remplissage()
+
+# Hublot
+lever_crayon()
+aller_a(0, 2)
+couleur("noir", "cyan")
+disque(9)
+cercle(9)
+`,
+  },
+  asteroid: {
+    name: 'Astéroïde',
+    code: `# ASTÉROÏDE : une forme irrégulière, différente à chaque fois !
+# On tire 12 rayons au hasard, puis on relie les points autour du centre.
+rayons = []
+for k in range(12):
+    rayons.append(hasard(32, 48))
+
+couleur("gris_fonce", "gris")
+epaisseur(4)
+lever_crayon()
+aller_a(0, rayons[0])
+baisser_crayon()
+commencer_remplissage()
+for k in range(1, 13):
+    angle = k * 30
+    r = rayons[k % 12]
+    aller_a(r * sin(angle), r * cos(angle))
+finir_remplissage()
+
+# Cratères
+couleur("gris_fonce")
+for k in range(3):
+    lever_crayon()
+    aller_a(hasard(-20, 20), hasard(-20, 20))
+    disque(hasard(5, 9))
+`,
+  },
+  star: {
+    name: 'Étoile bonus',
+    code: `# ÉTOILE BONUS : à ramasser dans ton jeu
+couleur("orange", "jaune")
+epaisseur(4)
+lever_crayon()
+aller_a(-35, 11)
+cap(90)
+baisser_crayon()
+commencer_remplissage()
+for i in range(5):
+    avancer(70)
+    tourner_droite(144)
+finir_remplissage()
+`,
+  },
+  saucer: {
+    name: 'Soucoupe',
+    code: `# SOUCOUPE : un ennemi ou un bonus
+epaisseur(3)
+
+# Dôme (derrière)
+couleur("noir", "cyan")
+lever_crayon()
+aller_a(0, 10)
+disque(18)
+cercle(18)
+
+# Corps : une ellipse, point par point
+couleur("noir", "gris")
+lever_crayon()
+aller_a(0, 14)
+baisser_crayon()
+commencer_remplissage()
+for k in range(1, 37):
+    a = k * 10
+    aller_a(46 * sin(a), 14 * cos(a))
+finir_remplissage()
+
+# Lumières
+couleur("jaune")
+for x in [-26, 0, 26]:
+    lever_crayon()
+    aller_a(x, -2)
+    disque(4)
+`,
+  },
+  blank: { name: 'Page blanche', code: '' },
+};
+const DEFAULT_SLOTS = { rocket: 'rocket', asteroid: 'asteroid', free: 'star' };
+const SLOT_NAMES = { rocket: 'Ma fusée', asteroid: 'Mon astéroïde', free: 'Mon bonus' };
+const SLOT_ROLE = {
+  rocket: 'Elle sera pilotée dans le jeu. Dessine-la avec le nez vers le haut.',
+  asteroid: 'Il tombera du ciel : tire au sort sa forme avec hasard().',
+  free: "Un objet à ramasser : étoile, bouclier, cœur… (+50 points).",
+};
+
+// ===== Noyau du jeu : l'élève programme la logique en Python =====
+// Écran : x de -240 à 240, y de -180 à 180 (y vers le haut), comme dans l'Atelier.
+const GL_W = 480, GL_H = 360;
+const GL_IMG = { fusee: { side: 62, rf: 0.34 }, asteroide: { side: 54, rf: 0.42 }, bonus: { side: 32, rf: 0.45 }, tir: { side: 14, rf: 0.5 } };
+const GL_KEYS = ['gauche', 'droite', 'haut', 'bas', 'espace'];
+const plain = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+
+class GameCore {
+  constructor(code) {
+    this.ents = []; this.nextId = 1; this.frame = 0; this.texts = []; this.keys = new Set();
+    this.over = null; this.error = null; this.out = []; this.note = '';
+    this.flags = { moved: false, shot: false, rocks: false, hit: false, score: false, lost: false, bonus: false };
+    this.side = { left: false, right: false };
+    this.made = { asteroide: 0 };
+    this.build(code);
+  }
+  watch(e) {
+    if (e.img !== 'fusee') return;
+    if (e.x - e.x0 > 15) this.side.right = true;
+    if (e.x0 - e.x > 15) this.side.left = true;
+    if (this.side.left && this.side.right) this.flags.moved = true;
+  }
+  radius(e) { return e.img === 'tir' ? 5 : GL_IMG[e.img].side * GL_IMG[e.img].rf * e.scale; }
+  build(code) {
+    const self = this;
+    const def = (name, maxArgs, fn) => { fn.maxArgs = maxArgs; fn.cname = name; return fn; };
+    const L = () => self.interp.curLine;
+    const num = (v, cmd, ex) => {
+      if (typeof v !== 'number' || !Number.isFinite(v)) throw new PyError('TypeError', `${cmd}() attend des nombres, par exemple ${ex}.`, L());
+      return v;
+    };
+    const img = (v, cmd) => {
+      const k = plain(v);
+      if (!GL_IMG[k]) throw new PyError('ValueError', `${cmd}() : image « ${toStr(v)} » inconnue. Les images possibles sont : "fusee", "asteroide", "bonus", "tir".`, L());
+      return k;
+    };
+    const get = (id, cmd) => {
+      const e = self.ents.find((q) => q.id === id);
+      if (!e) throw new PyError('ValueError', `${cmd}() : l'objet n° ${toStr(id)} n'existe plus (il a été supprimé ou il est sorti de l'écran). Teste d'abord existe(...).`, L());
+      return e;
+    };
+    const B = {
+      creer: def('creer', 3, (name, x, y) => {
+        const k = img(name, 'creer');
+        num(x, 'creer', 'creer("fusee", 0, -130)'); num(y, 'creer', 'creer("fusee", 0, -130)');
+        if (self.ents.length >= 300) throw new PyError('ValueError', "Il y a trop d'objets à l'écran. Pense à supprimer(...) ceux dont tu n'as plus besoin.", L());
+        const e = { id: self.nextId++, img: k, x, y, x0: x, y0: y, vx: 0, vy: 0, rot: 0, vrot: 0, scale: 1, v: Math.floor(Math.random() * 6) };
+        self.ents.push(e);
+        if (k === 'tir') self.flags.shot = true;
+        if (k === 'asteroide' && ++self.made.asteroide >= 3) self.flags.rocks = true;
+        return e.id;
+      }),
+      pos_x: def('pos_x', 1, (id) => get(id, 'pos_x').x),
+      pos_y: def('pos_y', 1, (id) => get(id, 'pos_y').y),
+      placer: def('placer', 3, (id, x, y) => {
+        const e = get(id, 'placer');
+        e.x = num(x, 'placer', 'placer(a, 0, 100)'); e.y = num(y, 'placer', 'placer(a, 0, 100)');
+        self.watch(e);
+        return null;
+      }),
+      deplacer: def('deplacer', 3, (id, dx, dy) => {
+        const e = get(id, 'deplacer');
+        e.x += num(dx, 'deplacer', 'deplacer(fusee, 4, 0)'); e.y += num(dy, 'deplacer', 'deplacer(fusee, 4, 0)');
+        self.watch(e);
+        return null;
+      }),
+      vitesse: def('vitesse', 3, (id, vx, vy) => {
+        const e = get(id, 'vitesse');
+        e.vx = num(vx, 'vitesse', 'vitesse(a, 0, -2)'); e.vy = num(vy, 'vitesse', 'vitesse(a, 0, -2)');
+        return null;
+      }),
+      tourner: def('tourner', 2, (id, a) => { get(id, 'tourner').rot = num(a, 'tourner', 'tourner(a, 45)'); return null; }),
+      faire_tourner: def('faire_tourner', 2, (id, a) => { get(id, 'faire_tourner').vrot = num(a, 'faire_tourner', 'faire_tourner(a, 2)'); return null; }),
+      taille: def('taille', 2, (id, p) => { get(id, 'taille').scale = Math.max(0.1, Math.min(6, num(p, 'taille', 'taille(a, 150)') / 100)); return null; }),
+      supprimer: def('supprimer', 1, (id) => { const i = self.ents.findIndex((q) => q.id === id); if (i >= 0) self.ents.splice(i, 1); return null; }),
+      existe: def('existe', 1, (id) => self.ents.some((q) => q.id === id)),
+      toucher: def('toucher', 2, (a, b) => {
+        const ea = self.ents.find((q) => q.id === a), eb = self.ents.find((q) => q.id === b);
+        if (!ea || !eb) return false;
+        const hit = Math.hypot(ea.x - eb.x, ea.y - eb.y) < self.radius(ea) + self.radius(eb);
+        if (hit) {
+          const t = [ea.img, eb.img];
+          if (t.includes('tir') && t.includes('asteroide')) self.flags.hit = true;
+          if (t.includes('fusee') && t.includes('bonus')) self.flags.bonus = true;
+        }
+        return hit;
+      }),
+      touche: def('touche', 1, (name) => {
+        const k = plain(name);
+        if (!GL_KEYS.includes(k)) throw new PyError('ValueError', `touche() : touche « ${toStr(name)} » inconnue. Les touches possibles sont : "gauche", "droite", "haut", "bas", "espace".`, L());
+        return self.keys.has(k);
+      }),
+      tous: def('tous', 1, (name) => { const k = img(name, 'tous'); return self.ents.filter((q) => q.img === k).map((q) => q.id); }),
+      compteur: def('compteur', 0, () => self.frame),
+      ecrire: def('ecrire', 3, (t, x, y) => {
+        num(x, 'ecrire', 'ecrire("Score", -220, 160)'); num(y, 'ecrire', 'ecrire("Score", -220, 160)');
+        if (self.texts.length < 40) self.texts.push({ t: toStr(t), x, y });
+        return null;
+      }),
+      perdu: def('perdu', 1, (m) => { if (!self.over) { self.over = { win: false, msg: m === undefined ? '' : toStr(m) }; self.flags.lost = true; } return null; }),
+      gagne: def('gagne', 1, (m) => { if (!self.over) self.over = { win: true, msg: m === undefined ? '' : toStr(m) }; return null; }),
+      hasard: def('hasard', 2, (a, b) => {
+        num(a, 'hasard', 'hasard(1, 6)'); num(b, 'hasard', 'hasard(1, 6)');
+        if (Number.isInteger(a) && Number.isInteger(b)) { const lo = Math.min(a, b), hi = Math.max(a, b); return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+        return a + Math.random() * (b - a);
+      }),
+      print: def('print', 20, (...a) => { self.out.push(a.map(toStr).join(' ')); if (self.out.length > 30) self.out.shift(); return null; }),
+      range: def('range', 3, (a, b, c) => {
+        const v = [a, b, c].filter((q) => q !== undefined);
+        if (!v.length || v.some((q) => typeof q !== 'number' || !Number.isInteger(q))) throw new PyError('TypeError', 'range() attend des nombres entiers, par exemple range(5).', L());
+        let s = 0, e, st = 1;
+        if (v.length === 1) e = v[0]; else { s = v[0]; e = v[1]; if (v.length === 3) st = v[2]; }
+        if (st === 0) throw new PyError('ValueError', 'Le pas de range() ne peut pas être 0.', L());
+        const r = [];
+        for (let k = s; st > 0 ? k < e : k > e; k += st) { r.push(k); if (r.length > 20000) throw new PyError('LoopError', 'range() est trop grand.', L()); }
+        return r;
+      }),
+      len: def('len', 1, (v) => { if (Array.isArray(v) || typeof v === 'string') return v.length; throw new PyError('TypeError', `len() ne marche pas avec ${typeName(v)}.`, L()); }),
+      str: def('str', 1, (v) => toStr(v)),
+      int: def('int', 1, (v) => { const n = typeof v === 'string' ? parseFloat(v) : v; if (typeof n !== 'number' || Number.isNaN(n)) throw new PyError('ValueError', 'Impossible de transformer cette valeur en nombre entier.', L()); return Math.trunc(n); }),
+      abs: def('abs', 1, (v) => Math.abs(v)),
+      min: def('min', 20, (...a) => Math.min(...(a.length === 1 && Array.isArray(a[0]) ? a[0] : a))),
+      max: def('max', 20, (...a) => Math.max(...(a.length === 1 && Array.isArray(a[0]) ? a[0] : a))),
+    };
+    this.interp = new Interp(B, 120000);
+    this.guard(() => {
+      const prog = new Parser(lexLines(code)).parseProgram();
+      this.interp.ops = 0;
+      this.interp.run(prog);
+      const f = this.interp.G.get('jouer');
+      if (!f || !f.__fn) this.note = "Ton jeu n'a pas de fonction jouer() : ajoute « def jouer(): » pour que quelque chose bouge à chaque image.";
+      else if (f.params.length) this.fail(new PyError('TypeError', 'La fonction jouer() ne doit rien avoir entre les parenthèses : def jouer():', f.body[0] ? f.body[0].line : 0));
+    });
+  }
+  fail(e) { if (!this.error) this.error = e; }
+  guard(fn) {
+    try { fn(); } catch (e) {
+      if (e instanceof PyError) this.fail(e);
+      else if (e instanceof BreakSig || e instanceof ContinueSig) this.fail(new PyError('SyntaxError', "« break » et « continue » ne s'utilisent que dans une boucle.", this.interp.curLine));
+      else if (e instanceof ReturnSig) this.fail(new PyError('SyntaxError', "« return » ne s'utilise que dans une fonction.", this.interp.curLine));
+      else if (e instanceof RangeError) this.fail(new PyError('RecursionError', "Ton programme est trop profond (une fonction s'appelle sans fin ?).", this.interp.curLine));
+      else throw e;
+    }
+  }
+  step() {
+    if (this.over || this.error) return;
+    this.frame++; this.texts = [];
+    const f = this.interp.G.get('jouer');
+    if (f && f.__fn && !f.params.length) {
+      this.interp.ops = 0;
+      this.guard(() => this.interp.call(f, [], { line: f.body[0] ? f.body[0].line : 0 }));
+      if (this.error) return;
+    }
+    const sc = this.interp.G.get('score');
+    if (typeof sc === 'number' && sc > 0) this.flags.score = true;
+    this.ents.forEach((e) => { e.x += e.vx; e.y += e.vy; e.rot += e.vrot; this.watch(e); });
+    this.ents = this.ents.filter((e) => e.img === 'fusee' || (Math.abs(e.x) <= 420 && Math.abs(e.y) <= 330));
+  }
+}
+
+// ----- Code de départ, objectifs et jeu complet -----
+const GAME_STARTER = `# MON JEU : la fusée dans le champ d'astéroïdes
+# L'écran va de -240 à 240 en x, et de -180 à 180 en y.
+
+fusee = creer("fusee", 0, -130)
+
+def jouer():
+    # Cette fonction est appelée 60 fois par seconde.
+    if touche("gauche"):
+        deplacer(fusee, -4, 0)
+    # À toi : fais aussi aller la fusée vers la droite !
+`;
+const GAME_FULL = `# JEU COMPLET : fusée contre astéroïdes
+fusee = creer("fusee", 0, -130)
+score = 0
+vies = 3
+
+def jouer():
+    global score, vies
+
+    # Déplacements (sans sortir de l'écran)
+    if touche("gauche") and pos_x(fusee) > -220:
+        deplacer(fusee, -4, 0)
+    if touche("droite") and pos_x(fusee) < 220:
+        deplacer(fusee, 4, 0)
+
+    # Un tir toutes les 12 images quand on garde espace appuyé
+    if touche("espace") and compteur() % 12 == 0:
+        t = creer("tir", pos_x(fusee), pos_y(fusee) + 35)
+        vitesse(t, 0, 8)
+
+    # Un astéroïde toutes les 40 images, un bonus toutes les 300
+    if compteur() % 40 == 0:
+        a = creer("asteroide", hasard(-220, 220), 200)
+        vitesse(a, hasard(-1, 1), -hasard(1, 3))
+        faire_tourner(a, hasard(-3, 3))
+    if compteur() % 300 == 0:
+        b = creer("bonus", hasard(-220, 220), 200)
+        vitesse(b, 0, -2)
+
+    # Collisions
+    for a in tous("asteroide"):
+        for t in tous("tir"):
+            if existe(a) and toucher(a, t):
+                supprimer(a)
+                supprimer(t)
+                score = score + 10
+        if existe(a) and toucher(a, fusee):
+            supprimer(a)
+            vies = vies - 1
+            if vies == 0:
+                perdu("Score : " + str(score))
+    for b in tous("bonus"):
+        if toucher(b, fusee):
+            supprimer(b)
+            score = score + 50
+
+    ecrire("Score : " + str(score), -225, 160)
+    ecrire("Vies : " + str(vies), 140, 160)
+`;
+const GOALS = [
+  { k: 'moved', t: 'Piloter la fusée', d: 'La fusée va déjà vers la gauche. Avec touche("droite") et deplacer(), fais-la aller aussi vers la droite, puis pilote-la des deux côtés.',
+    hint: 'if touche("droite"):\n    deplacer(fusee, 4, 0)' },
+  { k: 'shot', t: 'Tirer avec la barre espace', d: 'Crée un tir au bout de la fusée avec creer("tir", …), puis donne-lui une vitesse vers le haut.',
+    hint: 'if touche("espace"):\n    t = creer("tir", pos_x(fusee), pos_y(fusee) + 35)\n    vitesse(t, 0, 8)' },
+  { k: 'rocks', t: 'Faire tomber des astéroïdes', d: 'Toutes les 40 images (compteur() % 40 == 0), crée un astéroïde en haut, à une place au hasard, avec une vitesse vers le bas.',
+    hint: 'if compteur() % 40 == 0:\n    a = creer("asteroide", hasard(-220, 220), 200)\n    vitesse(a, 0, -2)' },
+  { k: 'hit', t: 'Toucher un astéroïde avec un tir', d: 'Parcours tous("asteroide") et tous("tir"), teste toucher(a, t), puis supprime les deux.',
+    hint: 'for a in tous("asteroide"):\n    for t in tous("tir"):\n        if existe(a) and toucher(a, t):\n            supprimer(a)\n            supprimer(t)' },
+  { k: 'score', t: 'Compter les points', d: 'Crée une variable score avant jouer(), écris global score au début de jouer(), ajoute des points, et affiche-la avec ecrire().',
+    hint: 'score = 0\n\ndef jouer():\n    global score\n    score = score + 10\n    ecrire("Score : " + str(score), -225, 160)' },
+  { k: 'lost', t: 'Perdre la partie', d: "Quand un astéroïde touche la fusée, termine le jeu avec perdu(\"…\"). Avec une variable vies, tu peux en accorder plusieurs.",
+    hint: 'if toucher(a, fusee):\n    perdu("Touché !")' },
+  { k: 'bonus', t: 'Bonus : ramasser un objet', d: 'Fais tomber un « bonus » de temps en temps, et ajoute 50 points quand la fusée le touche.',
+    hint: 'for b in tous("bonus"):\n    if toucher(b, fusee):\n        supprimer(b)\n        score = score + 50' },
+];
+
+
+// ===== Sauvegarde =====
+const $ = (s) => document.querySelector(s);
+const SAVE_KEY = 'lumino.v1';
+let mem = { stars: {}, code: {}, hints: {}, speed: 2, theme: null, mode: 'play', slot: 'rocket', draw: {}, dbg: 'check', grid: true, size: 128, best: 0, tuto: false, game: null, goals: {} };
+let mode = 'play', slot = 'rocket', gameStop = null;
+try { const r = localStorage.getItem(SAVE_KEY); if (r) mem = Object.assign(mem, JSON.parse(r)); } catch (e) { /* stockage indisponible */ }
+let saveTimer = 0;
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(mem)); } catch (e) { /* ignoré */ } }, 250); }
+function flushSave() { clearTimeout(saveTimer); try { localStorage.setItem(SAVE_KEY, JSON.stringify(mem)); } catch (e) { /* ignoré */ } }
+window.addEventListener('pagehide', flushSave);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ===== Plateau =====
+const cv = $('#board');
+const ctx = cv.getContext('2d');
+let col = {};
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['ink', 'floor-a', 'floor-b', 'wall', 'wall-top', 'lamp-off', 'glow', 'flag', 'robot', 'robot-dark', 'visor', 'eye', 'accent'].forEach((k) => { col[k] = cs.getPropertyValue('--' + k).trim(); });
+}
+function hexA(hex, a) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+}
+let level = LEVELS[0], li = 0, world = parseGrid(level), cell = 40, dpr = 1;
+const R = { x: 0, y: 0, ang: 0, bump: 0, bumpD: 0, litP: new Map(), litT: new Set(), parts: [] };
+
+function resetBoard() {
+  R.x = world.start.x; R.y = world.start.y; R.ang = level.dir * Math.PI / 2;
+  R.bump = 0; R.bumpD = level.dir; R.litP = new Map(); R.litT = new Set(); R.parts = [];
+}
+function layout() {
+  const avail = $('#boardwrap').clientWidth || 320;
+  cell = Math.max(18, Math.min(72, Math.floor(avail / world.W), Math.floor(430 / world.H)));
+  dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(world.W * cell * dpr);
+  cv.height = Math.round(world.H * cell * dpr);
+  cv.style.width = world.W * cell + 'px';
+  cv.style.height = world.H * cell + 'px';
+  draw(performance.now());
+}
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h);
+}
+
+function drawFlag(gx, gy, t) {
+  const c = cell, cx = (gx + 0.5) * c, base = (gy + 0.84) * c, top = (gy + 0.18) * c;
+  ctx.strokeStyle = hexA(col.flag, 0.4); ctx.lineWidth = Math.max(1.5, c * 0.04); ctx.setLineDash([c * 0.07, c * 0.07]);
+  ctx.beginPath(); ctx.arc(cx, (gy + 0.55) * c, c * 0.42, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = col['lamp-off']; ctx.lineWidth = Math.max(2, c * 0.06); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx, base); ctx.lineTo(cx, top); ctx.stroke();
+  const w = Math.sin(t * 5) * c * 0.025;
+  ctx.fillStyle = col.flag;
+  ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx + c * 0.36, top + c * 0.12 + w); ctx.lineTo(cx, top + c * 0.27); ctx.closePath(); ctx.fill();
+}
+function drawLamp(x, y, p, t) {
+  const c = cell, cx = (x + 0.5) * c, cy = (y + 0.5) * c;
+  ctx.fillStyle = col['lamp-off'];
+  ctx.beginPath(); ctx.ellipse(cx, cy + 0.28 * c, 0.2 * c, 0.07 * c, 0, 0, Math.PI * 2); ctx.fill();
+  rr(cx - 0.05 * c, cy + 0.02 * c, 0.1 * c, 0.26 * c, 0.03 * c); ctx.fill();
+  if (p > 0) {
+    const pulse = 1 + 0.05 * Math.sin(t * 4 + x * 1.3 + y);
+    const g = ctx.createRadialGradient(cx, cy - 0.1 * c, 0, cx, cy - 0.1 * c, c * 0.66 * pulse);
+    g.addColorStop(0, hexA(col.glow, 0.75 * p)); g.addColorStop(0.45, hexA(col.glow, 0.28 * p)); g.addColorStop(1, hexA(col.glow, 0));
+    ctx.fillStyle = g; ctx.fillRect(cx - c, cy - c, c * 2, c * 2);
+  }
+  ctx.beginPath(); ctx.arc(cx, cy - 0.1 * c, 0.17 * c, 0, Math.PI * 2);
+  ctx.fillStyle = col['floor-b']; ctx.fill();
+  ctx.lineWidth = Math.max(1.5, c * 0.05); ctx.strokeStyle = col['lamp-off']; ctx.stroke();
+  if (p > 0) {
+    ctx.globalAlpha = p; ctx.fillStyle = col.glow; ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(cx - 0.05 * c, cy - 0.15 * c, 0.05 * c, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+function drawRobot() {
+  const c = cell, s = c * 0.7;
+  const off = R.bump > 0 ? Math.sin(R.bump * Math.PI) * 0.2 : 0;
+  const dx = DIRS[R.bumpD][0] * off, dy = DIRS[R.bumpD][1] * off;
+  const cx = (R.x + 0.5 + dx) * c, cy = (R.y + 0.5 + dy) * c;
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  ctx.beginPath(); ctx.ellipse(cx + 2, cy + s * 0.42, s * 0.46, s * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(R.ang);
+  ctx.fillStyle = col['robot-dark']; rr(-s / 2, -s / 2 + s * 0.07, s, s, s * 0.26); ctx.fill();
+  ctx.fillStyle = col.robot; rr(-s / 2, -s / 2, s, s, s * 0.26); ctx.fill();
+  ctx.fillStyle = col.visor; rr(-s * 0.36, -s * 0.4, s * 0.72, s * 0.3, s * 0.12); ctx.fill();
+  ctx.fillStyle = col.eye;
+  ctx.beginPath(); ctx.arc(-s * 0.15, -s * 0.25, s * 0.065, 0, Math.PI * 2); ctx.arc(s * 0.15, -s * 0.25, s * 0.065, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = col['robot-dark']; rr(-s * 0.22, s * 0.2, s * 0.44, s * 0.15, s * 0.05); ctx.fill();
+  ctx.fillStyle = col.accent; ctx.beginPath(); ctx.arc(0, -s * 0.0, s * 0.1, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function draw(now) {
+  const c = cell, t = (now || 0) / 1000;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, world.W * c, world.H * c);
+  for (let y = 0; y < world.H; y++) {
+    for (let x = 0; x < world.W; x++) {
+      if (world.walls.has(x + ',' + y)) {
+        ctx.fillStyle = col.wall; ctx.fillRect(x * c, y * c, c, c);
+        ctx.fillStyle = col['wall-top']; rr(x * c + 1, y * c + 1, c - 2, c * 0.82, c * 0.14); ctx.fill();
+      } else {
+        ctx.fillStyle = (x + y) % 2 ? col['floor-b'] : col['floor-a'];
+        ctx.fillRect(x * c, y * c, c, c);
+      }
+    }
+  }
+  if (world.goal) drawFlag(world.goal.x, world.goal.y, t);
+  world.lamps.forEach((k) => { const [x, y] = k.split(',').map(Number); drawLamp(x, y, R.litP.get(k) || 0, t); });
+  drawRobot();
+  R.parts.forEach((p) => {
+    ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+    ctx.fillStyle = p.col; ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s);
+  });
+  ctx.globalAlpha = 1;
+}
+function burst() {
+  if (reduceMotion) return;
+  const cols = [col.glow, col.robot, col.flag, col.accent, '#ffffff'];
+  const w = world.W * cell, h = world.H * cell;
+  for (let i = 0; i < 70; i++) {
+    R.parts.push({ x: w / 2, y: h / 2, vx: (Math.random() - 0.5) * 420, vy: -Math.random() * 380 - 60, s: 4 + Math.random() * 5, life: 1.3, col: cols[i % cols.length] });
+  }
+}
+function updateParts(dt) {
+  const s = dt / 1000;
+  R.parts.forEach((p) => { p.vy += 900 * s; p.x += p.vx * s; p.y += p.vy * s; p.life -= s * 0.8; });
+  R.parts = R.parts.filter((p) => p.life > 0);
+}
+
+// ===== Animation =====
+let raf = 0, lastT = 0, run = null;
+const BASE = { move: 340, turn: 230, light: 380, bump: 420, print: 140, start: 0 };
+const SPEEDS = [1.9, 1, 0.5, 0.16];
+function durOf(f) { return BASE[f.type] * SPEEDS[(mem.speed || 2) - 1] * (reduceMotion ? 0.5 : 1); }
+function kick() { if (!raf) { lastT = performance.now(); raf = requestAnimationFrame(loop); } }
+function loop(now) {
+  const dt = Math.min(50, now - lastT); lastT = now;
+  let busy = false;
+  if (run) { stepRun(now); busy = true; }
+  world.lamps.forEach((k) => {
+    const cur = R.litP.get(k) || 0, tgt = R.litT.has(k) ? 1 : 0;
+    if (cur !== tgt) { R.litP.set(k, cur < tgt ? Math.min(tgt, cur + dt / 260) : Math.max(tgt, cur - dt / 260)); busy = true; }
+  });
+  if (R.parts.length) { updateParts(dt); busy = true; }
+  draw(now);
+  raf = busy ? requestAnimationFrame(loop) : 0;
+}
+function ease(p) { return p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; }
+
+function stepRun(now) {
+  while (run) {
+    const f = run.frames[run.i + 1];
+    if (!f) { finishRun(); return; }
+    if (!run.began) { run.began = true; R.litT = new Set(f.lit); setActive(f.line); if (f.type === 'print') pushConsole(f.text); }
+    const d = durOf(f);
+    const p = d <= 0 ? 1 : (now - run.t0) / d;
+    if (p >= 1) {
+      const a = run.frames[run.i];
+      R.x = f.x; R.y = f.y; R.ang = f.a * Math.PI / 180; R.bump = 0; R.bumpD = a.d;
+      run.i++; run.began = false;
+      run.t0 = now - (run.t0 + d) > 120 ? now : run.t0 + d;
+      continue;
+    }
+    const a = run.frames[run.i], e = ease(Math.max(0, p));
+    R.x = a.x + (f.x - a.x) * e; R.y = a.y + (f.y - a.y) * e;
+    R.ang = (a.a + (f.a - a.a) * e) * Math.PI / 180;
+    R.bump = f.type === 'bump' ? Math.max(0, p) : 0; R.bumpD = a.d;
+    return;
+  }
+}
+
+// ===== Éditeur =====
+const ta = $('#code'), layer = $('#layer');
+const LH = 22;
+let activeLine = 0, errLine = 0, consoleLines = [];
+const KW = new Set(['if', 'elif', 'else', 'while', 'for', 'in', 'def', 'return', 'pass', 'break', 'continue', 'and', 'or', 'not', 'True', 'False', 'None', 'global']);
+const ROBOT = new Set(['avancer', 'tourner_gauche', 'tourner_droite', 'allumer', 'mur_devant', 'lampe_ici', 'arrive', 'reculer', 'aller_a', 'cap', 'lever_crayon', 'baisser_crayon', 'couleur', 'remplissage', 'epaisseur', 'disque', 'cercle', 'commencer_remplissage', 'finir_remplissage', 'hasard', 'creer', 'pos_x', 'pos_y', 'placer', 'deplacer', 'vitesse', 'tourner', 'faire_tourner', 'taille', 'supprimer', 'existe', 'toucher', 'touche', 'tous', 'compteur', 'ecrire', 'perdu', 'gagne']);
+const BUILTIN_EXTRA = ['sin', 'cos'];
+const BUILTIN = new Set(['print', 'range', 'len', 'str', 'int', 'abs', 'min', 'max', 'sin', 'cos']);
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function hlLine(line) {
+  const re = /(#.*$)|("(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?)|(\d+(?:\.\d+)?)|([A-Za-z_À-ſ][\wÀ-ſ]*)|(\s+)|([\s\S])/g;
+  let out = '', m, prev = '';
+  while ((m = re.exec(line))) {
+    if (m[1]) { out += `<span class="cm">${esc(m[1])}</span>`; prev = ''; }
+    else if (m[2]) { out += `<span class="s">${esc(m[2])}</span>`; prev = ''; }
+    else if (m[3]) { out += `<span class="nu">${m[3]}</span>`; prev = ''; }
+    else if (m[4]) {
+      const w = m[4];
+      const cls = KW.has(w) ? 'k' : ROBOT.has(w) ? 'c' : (prev === 'def' || BUILTIN.has(w)) ? 'f' : '';
+      out += cls ? `<span class="${cls}">${esc(w)}</span>` : esc(w);
+      prev = w;
+    }
+    else if (m[5]) out += m[5];
+    else { out += esc(m[6]); prev = ''; }
+  }
+  return out;
+}
+function renderCode() {
+  const lines = ta.value.split('\n');
+  layer.innerHTML = lines.map((l, k) => `<div class="ln"><i>${k + 1}</i>${hlLine(l) || '​'}</div>`).join('');
+  markLines();
+  syncScroll();
+}
+function markLines() {
+  Array.from(layer.children).forEach((d, k) => {
+    d.classList.toggle('active', k + 1 === activeLine);
+    d.classList.toggle('err', k + 1 === errLine);
+  });
+}
+function syncScroll() { layer.scrollTop = ta.scrollTop; layer.scrollLeft = ta.scrollLeft; }
+function scrollToLine(n) {
+  if (!n) return;
+  const top = (n - 1) * LH, view = ta.clientHeight;
+  if (top < ta.scrollTop) ta.scrollTop = top;
+  else if (top + LH + 24 > ta.scrollTop + view) ta.scrollTop = top + LH + 24 - view;
+  syncScroll();
+}
+function setActive(n) { activeLine = n; markLines(); scrollToLine(n); }
+function onEdit() {
+  renderCode();
+  if (errLine) { errLine = 0; markLines(); }
+  if (mode === 'draw') { mem.draw[slot] = ta.value; drawChanged(); } else if (mode === 'game') mem.game = ta.value; else mem.code[level.id] = ta.value;
+  save();
+}
+function insertText(text) {
+  ta.focus();
+  if (!document.execCommand('insertText', false, text)) { ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, 'end'); onEdit(); }
+}
+ta.addEventListener('input', onEdit);
+ta.addEventListener('scroll', syncScroll);
+ta.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); toggleRun(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf('\n', s - 1) + 1;
+      const n = Math.min(4, /^ */.exec(v.slice(ls))[0].length);
+      if (n) { ta.setSelectionRange(ls, ls + n); document.execCommand('delete'); }
+    } else insertText('    ');
+  } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    const ls = v.lastIndexOf('\n', s - 1) + 1;
+    const line = v.slice(ls, s);
+    insertText('\n' + /^ */.exec(line)[0] + (line.trimEnd().endsWith(':') ? '    ' : ''));
+  } else if (e.key === 'Backspace' && s === en && s > 0) {
+    const ls = v.lastIndexOf('\n', s - 1) + 1;
+    const before = v.slice(ls, s);
+    if (before.length && /^ +$/.test(before) && before.length % 4 === 0) {
+      e.preventDefault();
+      ta.setSelectionRange(s - 4, s);
+      document.execCommand('delete');
+    }
+  }
+});
+function insertCommand(code) {
+  ta.focus();
+  const v = ta.value, s = ta.selectionStart;
+  const ls = v.lastIndexOf('\n', s - 1) + 1;
+  let le = v.indexOf('\n', s); if (le < 0) le = v.length;
+  const line = v.slice(ls, le);
+  ta.setSelectionRange(le, le);
+  if (line.trim() === '') insertText(code);
+  else insertText('\n' + /^ */.exec(line)[0] + (line.trimEnd().endsWith(':') ? '    ' : '') + code);
+}
+
+// ===== Retour d'information =====
+const fb = $('#feedback');
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function showFeedback(kind, nodes) { fb.className = 'feedback show ' + kind; fb.replaceChildren(...nodes.filter(Boolean)); }
+function hideFeedback() { fb.className = 'feedback'; fb.replaceChildren(); }
+function consoleNode() { return consoleLines.length ? el('pre', 'console', consoleLines.map((l) => '› ' + l).join('\n')) : null; }
+function pushConsole(t) {
+  consoleLines.push(t);
+  showFeedback('info', [el('h3', '', 'Affichage du programme'), consoleNode()]);
+}
+const KIND = { SyntaxError: "Erreur d'écriture", IndentationError: "Erreur d'indentation", NameError: 'Nom inconnu', RobotError: 'Le robot est bloqué', TypeError: 'Erreur de type', LoopError: 'Ça tourne trop longtemps', IndexError: 'Indice hors de la liste', ZeroDivisionError: 'Division par zéro', RecursionError: 'Fonction sans fin', ValueError: 'Valeur incorrecte' };
+function starsNode(n, cls) {
+  const d = el('div', cls || 'stars-big');
+  d.setAttribute('aria-label', n + ' étoile' + (n > 1 ? 's' : '') + ' sur 3');
+  for (let k = 0; k < 3; k++) { const i = el('i', k < n ? 'on' : '', '★'); d.appendChild(i); }
+  return d;
+}
+function showResult(res) {
+  const cn = consoleNode();
+  if (res.status === 'error') {
+    const e = res.error;
+    showFeedback('bad', [el('h3', '', (KIND[e.kind] || 'Erreur') + (e.line ? ` · ligne ${e.line}` : '')), el('p', '', e.message), cn]);
+    return;
+  }
+  if (res.status === 'incomplete') {
+    showFeedback('info', [el('h3', '', 'Pas tout à fait'), el('p', '', res.message), el('p', '', 'Modifie ton code et relance : tu es tout près.'), cn]);
+    return;
+  }
+  const par = level.par;
+  const nodes = [el('h3', '', 'Mission réussie !'), starsNode(res.stars),
+    el('p', '', `Ton programme fait ${res.lines} ligne${res.lines > 1 ? 's' : ''}. ` + (res.stars === 3 ? 'Code concis : bravo !' : `Pour 3 étoiles, vise ${par} ligne${par > 1 ? 's' : ''} ou moins.`)), cn];
+  const row = el('div', 'row');
+  if (li < LEVELS.length - 1) {
+    const nb = el('button', 'btn solid', 'Niveau suivant →'); nb.type = 'button';
+    nb.addEventListener('click', () => loadLevel(li + 1));
+    row.appendChild(nb);
+  } else {
+    const total = LEVELS.reduce((a, L) => a + (mem.stars[L.id] || 0), 0);
+    nodes.push(el('p', '', `Tu as terminé Lumino avec ${total} étoile${total > 1 ? 's' : ''} sur ${LEVELS.length * 3}. La station est de nouveau éclairée !`));
+  }
+  nodes.push(row);
+  showFeedback('ok', nodes);
+}
+
+// ===== Lancement =====
+const runBtn = $('#run');
+function setRunning(on) {
+  runBtn.textContent = on ? '■ Arrêter' : '▶ Lancer';
+  runBtn.classList.toggle('stop', on);
+  ta.readOnly = on;
+}
+function startRun() {
+  const res = simulate(ta.value, level);
+  consoleLines = []; errLine = 0; activeLine = 0; markLines(); hideFeedback(); resetBoard();
+  const fr = res.frames;
+  fr[0].a = fr[0].d * 90;
+  for (let k = 1; k < fr.length; k++) {
+    const diff = (fr[k].d - fr[k - 1].d + 4) % 4;
+    fr[k].a = fr[k - 1].a + (((diff + 1) % 4) - 1) * 90;
+  }
+  run = { res, frames: fr, i: 0, t0: performance.now(), began: false };
+  setRunning(true);
+  kick();
+}
+function stopRun() {
+  run = null; setRunning(false); activeLine = 0; errLine = 0; markLines(); hideFeedback(); resetBoard(); kick();
+}
+function finishRun() {
+  const res = run.res;
+  run = null; setRunning(false); activeLine = 0;
+  if (res.error) { errLine = res.error.line || 0; scrollToLine(errLine); }
+  markLines();
+  if (res.status === 'win') {
+    mem.stars[level.id] = Math.max(mem.stars[level.id] || 0, res.stars);
+    save(); renderNav(); burst();
+  }
+  showResult(res);
+}
+function toggleRun() { if (mode === 'draw') { drawRun(false); return; } if (mode === 'game') { glStart(); return; } if (run) stopRun(); else startRun(); }
+runBtn.addEventListener('click', toggleRun);
+
+// ===== Niveaux, aide, navigation =====
+const nav = $('#levels');
+function renderNav() {
+  nav.replaceChildren(...LEVELS.map((L, i) => {
+    const b = el('button', 'lvbtn'); b.type = 'button';
+    const st = mem.stars[L.id] || 0;
+    b.setAttribute('aria-label', `Niveau ${L.id} : ${L.title}, ${st} étoile${st > 1 ? 's' : ''} sur 3`);
+    if (i === li) b.setAttribute('aria-current', 'true');
+    b.appendChild(el('span', 'n', String(L.id)));
+    const s = el('span', 's');
+    for (let k = 0; k < 3; k++) s.appendChild(el('i', k < st ? 'on' : '', '★'));
+    b.appendChild(s);
+    b.addEventListener('click', () => loadLevel(i));
+    return b;
+  }));
+  const sum = LEVELS.reduce((a, L) => a + (mem.stars[L.id] || 0), 0);
+  const t = $('#total'); t.textContent = '';
+  t.appendChild(el('b', '', '★ ' + sum)); t.appendChild(document.createTextNode(` / ${LEVELS.length * 3}`));
+}
+function renderTools() {
+  const seen = [];
+  for (let k = 0; k <= li; k++) LEVELS[k].cmds.forEach((c) => { if (!seen.includes(c)) seen.push(c); });
+  $('#tools').replaceChildren(...seen.map((k) => {
+    const item = el('li'); const b = el('button'); b.type = 'button';
+    b.appendChild(el('code', '', CMD[k].code)); b.appendChild(el('span', '', CMD[k].desc));
+    b.addEventListener('click', () => insertCommand(CMD[k].code));
+    item.appendChild(b); return item;
+  }));
+}
+function renderNotes() {
+  $('#note').textContent = level.notes.text;
+  $('#notecode').textContent = level.notes.code;
+  const older = $('#older');
+  older.hidden = li === 0;
+  $('#olderlist').replaceChildren(...LEVELS.slice(0, li).map((L) => {
+    const d = el('div', 'prev'); d.appendChild(el('b', '', `Niveau ${L.id} · ${L.concept}`));
+    d.appendChild(el('span', '', L.notes.text)); d.appendChild(el('pre', 'snip', L.notes.code)); return d;
+  }));
+}
+let solShown = false;
+function renderHints() {
+  const n = mem.hints[level.id] || 0, total = level.hints.length;
+  $('#hintlist').replaceChildren(...level.hints.slice(0, n).map((h) => el('li', '', h)));
+  $('#hintnone').hidden = n > 0;
+  const hb = $('#hintbtn');
+  hb.hidden = n >= total; hb.textContent = `Un indice (${n}/${total})`;
+  $('#solbtn').hidden = n < total || solShown;
+  $('#sol').hidden = !solShown; $('#sol').textContent = level.solution;
+  $('#usesol').hidden = !solShown;
+}
+$('#hintbtn').addEventListener('click', () => { mem.hints[level.id] = (mem.hints[level.id] || 0) + 1; save(); renderHints(); });
+$('#solbtn').addEventListener('click', () => { solShown = true; renderHints(); });
+$('#usesol').addEventListener('click', () => { ta.value = level.solution; onEdit(); });
+const starter = (L) => `# Niveau ${L.id} : écris ton programme ci-dessous\n`;
+let clearTimer = 0;
+$('#clear').addEventListener('click', (e) => {
+  const b = e.currentTarget;
+  if (b.dataset.sure) { ta.value = mode === 'draw' ? TEMPLATES.blank.code : mode === 'game' ? GAME_STARTER : starter(level); onEdit(); b.textContent = 'Effacer'; delete b.dataset.sure; clearTimeout(clearTimer); return; }
+  b.dataset.sure = '1'; b.textContent = 'Confirmer ?';
+  clearTimer = setTimeout(() => { b.textContent = 'Effacer'; delete b.dataset.sure; }, 3000);
+});
+
+function loadLevel(i) {
+  if (run) { run = null; setRunning(false); }
+  li = i; level = LEVELS[i]; world = parseGrid(level); solShown = false;
+  activeLine = 0; errLine = 0; consoleLines = [];
+  $('#concept').textContent = `Niveau ${level.id} · ${level.concept}`;
+  $('#title').textContent = level.title;
+  $('#story').textContent = level.story;
+  const g = $('#goal'); g.replaceChildren(el('b', '', 'Objectif : '));
+  const parts = [];
+  if (level.goal === 'lamps' || level.goal === 'both') parts.push(`allumer ${world.lamps.size} lampe${world.lamps.size > 1 ? 's' : ''}`);
+  if (level.goal === 'arrive' || level.goal === 'both') parts.push('arriver sur le drapeau');
+  let txt = parts.join(' et ') + '.';
+  if (level.require) txt += ' Contrainte : ' + level.require.map((r) => r.label).join(', ') + '.';
+  txt += ` 3 étoiles si ton code tient en ${level.par} ligne${level.par > 1 ? 's' : ''} ou moins.`;
+  g.appendChild(document.createTextNode(txt));
+  cv.setAttribute('aria-label', `Plateau du niveau ${level.id}, ${world.W} cases sur ${world.H}`);
+  ta.value = mem.code[level.id] != null ? mem.code[level.id] : starter(level);
+  ta.scrollTop = 0; ta.scrollLeft = 0;
+  renderCode(); renderNav(); renderTools(); renderNotes(); renderHints(); hideFeedback();
+  setRunning(false); resetBoard(); layout(); kick();
+  const btn = nav.querySelector('[aria-current]');
+  if (btn && btn.scrollIntoView) btn.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+
+// ===== Réglages, thème, démarrage =====
+const speed = $('#speed');
+speed.value = String(mem.speed || 2);
+speed.addEventListener('input', () => { mem.speed = Number(speed.value); save(); });
+const darkMQ = window.matchMedia('(prefers-color-scheme: dark)');
+function effectiveDark() {
+  const t = document.documentElement.getAttribute('data-theme');
+  return t ? t === 'dark' : darkMQ.matches;
+}
+if (mem.theme) document.documentElement.setAttribute('data-theme', mem.theme);
+$('#theme').addEventListener('click', () => {
+  mem.theme = effectiveDark() ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', mem.theme);
+  save(); readColors(); redrawAll();
+});
+darkMQ.addEventListener('change', () => { readColors(); redrawAll(); });
+if (window.ResizeObserver) new ResizeObserver(() => layout()).observe($('#boardwrap'));
+window.addEventListener('resize', () => layout());
+
+readColors();
+let first = LEVELS.findIndex((L) => !mem.stars[L.id]);
+if (first < 0) first = LEVELS.length - 1;
+loadLevel(first);
+
+// ===== Mini-jeu pour tester ses sprites =====
+function openGame(spr, note, returnFocus) {
+  if (gameStop) gameStop();
+  const ov = $('#gameov'), cvg = $('#gcv'), g = cvg.getContext('2d');
+  const W = 480, H = 360, S = 2;
+  cvg.width = W * S; cvg.height = H * S;
+  ov.hidden = false;
+  $('#gnote').textContent = note || '';
+  const fit = (c, side) => { const k = side / Math.max(c.width, c.height); return { c, w: c.width * k, h: c.height * k }; };
+  const P = { ship: fit(spr.rocket, 62), rocks: spr.asteroid.map((c) => fit(c, 54)), bonus: fit(spr.bonus, 32) };
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  let st, raf = 0, last = 0, ptr = null;
+  const keys = new Set();
+  const fresh = () => ({
+    score: 0, lives: 3, over: false, inv: 0, ship: { x: W / 2, y: H - 64 }, bullets: [], rocks: [], bonus: [], parts: [],
+    stars: Array.from({ length: 70 }, () => ({ x: Math.random() * W, y: Math.random() * H, z: rnd(0.2, 1.1) })),
+    tRock: 0.8, tBonus: rnd(4, 7), tFire: 0, newBest: false,
+  });
+  st = fresh();
+  const boom = (x, y, n, cols) => { for (let i = 0; i < n; i++) st.parts.push({ x, y, vx: rnd(-150, 150), vy: rnd(-150, 150), life: rnd(0.4, 0.9), s: rnd(2, 5), c: cols[i % cols.length] }); };
+  const FIRE = ['#FFD23F', '#F28C28', '#FFFFFF', '#E5484D'], GREY = ['#CBD5E1', '#9CA3AF', '#FFFFFF', '#6B7280'];
+
+  function update(dt) {
+    st.stars.forEach((s) => { s.y += 40 * s.z * dt; if (s.y > H) { s.y = 0; s.x = Math.random() * W; } });
+    st.parts.forEach((p) => { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; });
+    st.parts = st.parts.filter((p) => p.life > 0);
+    if (st.over) return;
+    const sh = st.ship;
+    if (ptr) { const k = Math.min(1, dt * 12); sh.x += (ptr.x - sh.x) * k; sh.y += (ptr.y - sh.y) * k; }
+    else {
+      const sp = 250 * dt;
+      if (keys.has('ArrowLeft') || keys.has('q') || keys.has('a')) sh.x -= sp;
+      if (keys.has('ArrowRight') || keys.has('d')) sh.x += sp;
+      if (keys.has('ArrowUp') || keys.has('z') || keys.has('w')) sh.y -= sp;
+      if (keys.has('ArrowDown') || keys.has('s')) sh.y += sp;
+    }
+    sh.x = Math.max(P.ship.w / 2, Math.min(W - P.ship.w / 2, sh.x));
+    sh.y = Math.max(P.ship.h / 2, Math.min(H - P.ship.h / 2, sh.y));
+    st.inv = Math.max(0, st.inv - dt);
+    st.tFire -= dt;
+    if (st.tFire <= 0) { st.bullets.push({ x: sh.x, y: sh.y - P.ship.h / 2 }); st.tFire = 0.26; }
+    st.bullets.forEach((b) => { b.y -= 480 * dt; });
+    st.bullets = st.bullets.filter((b) => b.y > -12);
+    st.tRock -= dt;
+    if (st.tRock <= 0) {
+      const sc = rnd(0.7, 1.5);
+      st.rocks.push({ x: rnd(30, W - 30), y: -40, vx: rnd(-35, 35), vy: rnd(55, 120) + st.score * 0.03, v: Math.floor(Math.random() * P.rocks.length), rot: rnd(0, 6.28), vr: rnd(-2.2, 2.2), s: sc, hp: sc > 1.15 ? 2 : 1 });
+      st.tRock = Math.max(0.3, 1.0 - st.score / 2600) + rnd(0, 0.35);
+    }
+    st.tBonus -= dt;
+    if (st.tBonus <= 0) { st.bonus.push({ x: rnd(30, W - 30), y: -20, rot: 0 }); st.tBonus = rnd(6, 10); }
+    st.rocks.forEach((r) => { r.x += r.vx * dt; r.y += r.vy * dt; r.rot += r.vr * dt; });
+    st.bonus.forEach((b) => { b.y += 85 * dt; b.rot += 1.6 * dt; });
+    const rr = (r) => (P.rocks[0].w / 2) * r.s * 0.82;
+    st.rocks.forEach((r) => {
+      st.bullets.forEach((b) => {
+        if (b.dead || r.hp <= 0) return;
+        if (Math.hypot(b.x - r.x, b.y - r.y) < rr(r)) { b.dead = true; r.hp--; boom(b.x, b.y, 4, GREY); if (r.hp <= 0) { st.score += r.s > 1.15 ? 20 : 10; boom(r.x, r.y, 14, GREY); } }
+      });
+    });
+    st.bullets = st.bullets.filter((b) => !b.dead);
+    st.rocks.forEach((r) => {
+      if (r.hp > 0 && st.inv <= 0 && Math.hypot(sh.x - r.x, sh.y - r.y) < rr(r) + Math.max(P.ship.w, P.ship.h) * 0.3) {
+        r.hp = 0; st.lives--; st.inv = 1.6; boom(sh.x, sh.y, 26, FIRE);
+        if (st.lives <= 0) {
+          st.over = true;
+          let best = 0; try { best = mem.best || 0; } catch (e) { /* ignoré */ }
+          if (st.score > best) { mem.best = st.score; st.newBest = true; save(); }
+        }
+      }
+    });
+    st.rocks = st.rocks.filter((r) => r.hp > 0 && r.y < H + 70 && r.x > -70 && r.x < W + 70);
+    st.bonus.forEach((b) => {
+      if (!b.dead && Math.hypot(sh.x - b.x, sh.y - b.y) < P.bonus.w / 2 + Math.max(P.ship.w, P.ship.h) * 0.35) { b.dead = true; st.score += 50; boom(b.x, b.y, 16, ['#FFD23F', '#FFFFFF', '#F5C542']); }
+    });
+    st.bonus = st.bonus.filter((b) => !b.dead && b.y < H + 40);
+  }
+  const spr1 = (p, x, y, rot, k) => {
+    g.save(); g.translate(x, y); if (rot) g.rotate(rot);
+    g.drawImage(p.c, -p.w * k / 2, -p.h * k / 2, p.w * k, p.h * k); g.restore();
+  };
+  function render(now) {
+    g.setTransform(S, 0, 0, S, 0, 0);
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#060818'); bg.addColorStop(1, '#141A47');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    st.stars.forEach((s) => { g.fillStyle = `rgba(255,255,255,${0.3 + s.z * 0.5})`; g.fillRect(s.x, s.y, s.z * 1.8, s.z * 1.8); });
+    st.bonus.forEach((b) => spr1(P.bonus, b.x, b.y, Math.sin(b.rot) * 0.4, 1));
+    st.rocks.forEach((r) => spr1(P.rocks[r.v], r.x, r.y, r.rot, r.s));
+    g.strokeStyle = '#7DF9FF'; g.lineWidth = 3; g.lineCap = 'round';
+    st.bullets.forEach((b) => { g.beginPath(); g.moveTo(b.x, b.y); g.lineTo(b.x, b.y + 12); g.stroke(); });
+    if (!st.over && (st.inv <= 0 || Math.floor(now / 90) % 2)) spr1(P.ship, st.ship.x, st.ship.y, 0, 1);
+    st.parts.forEach((p) => { g.globalAlpha = Math.min(1, p.life * 2); g.fillStyle = p.c; g.fillRect(p.x, p.y, p.s, p.s); });
+    g.globalAlpha = 1;
+    g.fillStyle = '#fff'; g.font = "700 16px Figtree, system-ui, sans-serif"; g.textAlign = 'left';
+    g.fillText('Score ' + st.score, 12, 24);
+    for (let i = 0; i < st.lives; i++) { const k = 20 / Math.max(P.ship.w, P.ship.h); g.drawImage(P.ship.c, W - 16 - (i + 1) * 26, 8, P.ship.w * k, P.ship.h * k); }
+    if (st.over) {
+      g.fillStyle = 'rgba(6,8,24,.72)'; g.fillRect(0, 0, W, H);
+      g.fillStyle = '#fff'; g.textAlign = 'center';
+      g.font = "700 30px Unbounded, Figtree, system-ui, sans-serif"; g.fillText('Fin de partie', W / 2, H / 2 - 20);
+      g.font = "600 18px Figtree, system-ui, sans-serif"; g.fillText('Score : ' + st.score + (st.newBest ? '  (nouveau record !)' : '  ·  record : ' + (mem.best || 0)), W / 2, H / 2 + 14);
+      g.font = "400 14px Figtree, system-ui, sans-serif"; g.fillText('Entrée ou bouton « Rejouer »', W / 2, H / 2 + 42);
+    }
+  }
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    update(dt); render(now);
+    raf = requestAnimationFrame(frame);
+  }
+  const rectPos = (e) => { const r = cvg.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H - 34 }; };
+  const onKey = (e) => {
+    if (e.key === 'Escape') { close(); return; }
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault();
+    if (e.type === 'keydown') {
+      keys.add(e.key.length === 1 ? e.key.toLowerCase() : e.key); ptr = null;
+      if (st.over && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); st = fresh(); }
+    } else keys.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key);
+  };
+  const pd = (e) => { ptr = rectPos(e); try { cvg.setPointerCapture(e.pointerId); } catch (err) { /* ignoré */ } };
+  const pm = (e) => { if (ptr) ptr = rectPos(e); };
+  const pu = () => { ptr = null; };
+  cvg.addEventListener('pointerdown', pd); cvg.addEventListener('pointermove', pm);
+  cvg.addEventListener('pointerup', pu); cvg.addEventListener('pointercancel', pu);
+  document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey);
+  const again = () => { st = fresh(); };
+  $('#gagain').onclick = again;
+  $('#gclose').onclick = () => close();
+  function close() {
+    cancelAnimationFrame(raf);
+    cvg.removeEventListener('pointerdown', pd); cvg.removeEventListener('pointermove', pm);
+    cvg.removeEventListener('pointerup', pu); cvg.removeEventListener('pointercancel', pu);
+    document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey);
+    ov.hidden = true; gameStop = null;
+    if (returnFocus && returnFocus.focus) returnFocus.focus();
+  }
+  gameStop = close;
+  last = performance.now();
+  raf = requestAnimationFrame(frame);
+  $('#gclose').focus();
+}
+
+// ===== Mode Jeu : l'élève programme la logique avec ses propres images =====
+const glcv = $('#glcv'), glg = glcv.getContext('2d');
+const GS = 2; // résolution interne ×2
+glcv.width = GL_W * GS; glcv.height = GL_H * GS;
+const GCMD = [
+  { g: 'Créer et placer' },
+  { c: 'fusee = creer("fusee", 0, -130)', d: 'crée un objet et garde son numéro' },
+  { c: 'placer(fusee, 0, -130)', d: 'téléporte l\'objet en (x, y)' },
+  { c: 'deplacer(fusee, 4, 0)', d: 'déplace de 4 vers la droite' },
+  { c: 'vitesse(a, 0, -2)', d: 'l\'objet avance seul à chaque image' },
+  { c: 'supprimer(a)', d: 'retire l\'objet du jeu' },
+  { g: 'Aspect' },
+  { c: 'tourner(a, 45)', d: 'oriente l\'objet (en degrés)' },
+  { c: 'faire_tourner(a, 2)', d: 'l\'objet tourne sur lui-même' },
+  { c: 'taille(a, 150)', d: 'taille en % (100 = normale)' },
+  { g: 'Tester' },
+  { c: 'touche("gauche")', d: 'vrai si la touche est enfoncée', inline: true },
+  { c: 'toucher(a, fusee)', d: 'vrai si deux objets se touchent', inline: true },
+  { c: 'existe(a)', d: 'vrai si l\'objet est encore là', inline: true },
+  { c: 'tous("asteroide")', d: 'liste de tous les astéroïdes', inline: true },
+  { c: 'pos_x(fusee)', d: 'position x de l\'objet', inline: true },
+  { c: 'pos_y(fusee)', d: 'position y de l\'objet', inline: true },
+  { c: 'compteur()', d: 'numéro de l\'image (0, 1, 2, …)', inline: true },
+  { c: 'hasard(-200, 200)', d: 'nombre entier au hasard', inline: true },
+  { g: 'Afficher et finir' },
+  { c: 'ecrire("Score : " + str(score), -225, 160)', d: 'écrit un texte à l\'écran' },
+  { c: 'perdu("Touché !")', d: 'termine la partie : perdue' },
+  { c: 'gagne("Bravo !")', d: 'termine la partie : gagnée' },
+];
+const GIDEAS = [
+  'Donne trois vies à la fusée avant de perdre.',
+  "Fais tomber les astéroïdes de plus en plus vite avec compteur().",
+  'Gagne la partie à 200 points avec gagne().',
+  'Un bonus qui rend une vie, ou qui fait des tirs doubles.',
+  'Limite le nombre de tirs, ou fais-les plus lents.',
+];
+
+// ----- Images : celles dessinées dans l'Atelier -----
+let glSpr = null, glNotes = [];
+function buildSprites() {
+  const notes = [], spr = {};
+  const make = (s, n) => {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const r = simulateDraw(slotCode(s));
+      const sp = r.error || !r.ops.length ? null : renderSprite(r.ops, 128);
+      if (!sp) {
+        notes.push(`${SLOT_NAMES[s]} ${r.error ? 'contient une erreur' : 'est vide'} : le jeu utilise un modèle à sa place.`);
+        return [renderSprite(simulateDraw(TEMPLATES[DEFAULT_SLOTS[s]].code).ops, 128)];
+      }
+      out.push(sp);
+    }
+    return out;
+  };
+  spr.fusee = make('rocket', 1);
+  spr.asteroide = make('asteroid', 6);
+  spr.bonus = make('free', 1);
+  glSpr = spr; glNotes = notes;
+  $('#gsprites').textContent = notes.join(' ');
+}
+function glImg(e) {
+  const list = glSpr[e.img];
+  const c = list[e.v % list.length];
+  const side = GL_IMG[e.img].side * e.scale, k = side / Math.max(c.width, c.height);
+  return { c, w: c.width * k, h: c.height * k };
+}
+
+// ----- Objectifs -----
+const goalDone = (k) => !!mem.goals[k];
+function renderGoals() {
+  const n = GOALS.filter((g) => goalDone(g.k)).length;
+  $('#gchip').textContent = `Mon jeu · ${n} / ${GOALS.length} objectifs`;
+  const cur = GOALS.findIndex((g) => !goalDone(g.k));
+  $('#glist').replaceChildren(...GOALS.map((g, i) => {
+    const li = el('li', goalDone(g.k) ? 'done' : i === cur ? 'cur' : '');
+    li.dataset.k = g.k;
+    li.appendChild(el('span', 'gm', goalDone(g.k) ? '✓' : String(i + 1)));
+    const b = el('div', 'gb'); b.appendChild(el('b', '', g.t));
+    if (i === cur) b.appendChild(el('p', '', g.d));
+    li.appendChild(b); return li;
+  }));
+  const all = $('#gall');
+  all.hidden = cur >= 0;
+  if (cur < 0) all.textContent = 'Tous les objectifs sont réussis : bravo ! Invente maintenant tes propres règles (voir les idées plus bas).';
+  renderGoalHelp();
+}
+let ghintOpen = false, gfullOpen = false, gsure = 0;
+function renderGoalHelp() {
+  const cur = GOALS.find((g) => !goalDone(g.k));
+  $('#ghintbtn').hidden = !cur;
+  $('#ghintbtn').textContent = ghintOpen ? 'Cacher le coup de pouce' : 'Un coup de pouce';
+  $('#ghint').hidden = !(cur && ghintOpen);
+  $('#ghint').textContent = cur ? cur.hint : '';
+  $('#ghintnone').textContent = cur ? `Objectif en cours : « ${cur.t} ». Essaie d'abord seul, puis demande un coup de pouce.` : 'Tous les objectifs sont faits. Le jeu complet reste disponible comme exemple.';
+  $('#ghintnone').hidden = ghintOpen && !!cur;
+  $('#gfull').hidden = !gfullOpen; $('#gfull').textContent = GAME_FULL;
+  $('#gfullbtn').textContent = gfullOpen ? 'Cacher le jeu complet' : 'Voir le jeu complet';
+  $('#gusefull').hidden = !gfullOpen;
+}
+$('#ghintbtn').addEventListener('click', () => { ghintOpen = !ghintOpen; renderGoalHelp(); });
+$('#gfullbtn').addEventListener('click', () => { gfullOpen = !gfullOpen; renderGoalHelp(); });
+$('#gusefull').addEventListener('click', (e) => {
+  const b = e.currentTarget;
+  if (!gsure) { gsure = 1; b.textContent = 'Écraser ton code ?'; setTimeout(() => { gsure = 0; b.textContent = 'Copier dans l\'éditeur'; }, 3000); return; }
+  gsure = 0; b.textContent = 'Copier dans l\'éditeur';
+  ta.value = GAME_FULL; onEdit(); ta.scrollTop = 0;
+});
+function renderGameHelp() {
+  $('#gtools').replaceChildren(...GCMD.map((c) => {
+    const item = el('li');
+    if (c.g) { item.appendChild(el('span', 'grp', c.g)); item.className = 'grp'; return item; }
+    const b = el('button'); b.type = 'button';
+    b.appendChild(el('code', '', c.c)); b.appendChild(el('span', '', c.d));
+    b.addEventListener('click', () => { if (c.inline) { ta.focus(); insertText(c.c); } else insertCommand(c.c); });
+    item.appendChild(b); return item;
+  }));
+  $('#gideas').replaceChildren(...GIDEAS.map((t) => el('li', '', t)));
+}
+
+// ----- Dessin de l'écran -----
+function glBackground(t) {
+  const bg = glg.createLinearGradient(0, 0, 0, GL_H); bg.addColorStop(0, '#060818'); bg.addColorStop(1, '#141A47');
+  glg.fillStyle = bg; glg.fillRect(0, 0, GL_W, GL_H);
+  for (let i = 0; i < 70; i++) {
+    const z = 0.2 + ((i * 37) % 10) / 10;
+    const x = (i * 97.3) % GL_W, y = ((i * 53.1) + t * 0.6 * z) % GL_H;
+    glg.fillStyle = `rgba(255,255,255,${0.3 + z * 0.5})`; glg.fillRect(x, y, z * 1.8, z * 1.8);
+  }
+}
+const gX = (x) => x + GL_W / 2, gY = (y) => GL_H / 2 - y;
+function glDrawEnt(e) {
+  const x = gX(e.x), y = gY(e.y);
+  if (e.img === 'tir') {
+    glg.save(); glg.translate(x, y); glg.rotate(e.rot * Math.PI / 180);
+    glg.strokeStyle = '#7DF9FF'; glg.lineWidth = 3 * e.scale; glg.lineCap = 'round';
+    glg.beginPath(); glg.moveTo(0, -7 * e.scale); glg.lineTo(0, 7 * e.scale); glg.stroke(); glg.restore(); return;
+  }
+  const im = glImg(e);
+  glg.save(); glg.translate(x, y); if (e.rot) glg.rotate(e.rot * Math.PI / 180);
+  glg.drawImage(im.c, -im.w / 2, -im.h / 2, im.w, im.h); glg.restore();
+}
+function glRender(core, t) {
+  glg.setTransform(GS, 0, 0, GS, 0, 0);
+  glBackground(t);
+  core.ents.forEach(glDrawEnt);
+  glg.fillStyle = '#fff'; glg.font = '700 16px Figtree, system-ui, sans-serif'; glg.textAlign = 'left'; glg.textBaseline = 'alphabetic';
+  core.texts.forEach((q) => glg.fillText(q.t, gX(q.x), gY(q.y)));
+  if (core.over) glBanner(core.over.win ? 'Gagné !' : 'Perdu', core.over.msg, 'Appuie sur Entrée ou sur « Lancer » pour rejouer');
+  else if (core.error) glBanner('Erreur dans ton programme', 'Regarde le message sous l\'écran', '');
+}
+function glBanner(t, s1, s2) {
+  glg.fillStyle = 'rgba(6,8,24,.72)'; glg.fillRect(0, 0, GL_W, GL_H);
+  glg.fillStyle = '#fff'; glg.textAlign = 'center';
+  glg.font = '700 28px Unbounded, Figtree, system-ui, sans-serif'; glg.fillText(t, GL_W / 2, GL_H / 2 - 18);
+  glg.font = '600 17px Figtree, system-ui, sans-serif'; if (s1) glg.fillText(s1, GL_W / 2, GL_H / 2 + 14);
+  glg.font = '400 14px Figtree, system-ui, sans-serif'; if (s2) glg.fillText(s2, GL_W / 2, GL_H / 2 + 42);
+}
+function glIdle() {
+  if (!glSpr) buildSprites();
+  glg.setTransform(GS, 0, 0, GS, 0, 0);
+  glBackground(0);
+  const demo = [{ img: 'asteroide', x: -140, y: 90, rot: 20, scale: 1.2, v: 0 }, { img: 'asteroide', x: 120, y: 40, rot: -30, scale: 0.9, v: 1 }, { img: 'bonus', x: 40, y: 110, rot: 0, scale: 1, v: 0 }, { img: 'fusee', x: 0, y: -130, rot: 0, scale: 1, v: 0 }];
+  glg.globalAlpha = 0.9; demo.forEach(glDrawEnt); glg.globalAlpha = 1;
+  glg.fillStyle = '#fff'; glg.textAlign = 'center'; glg.font = '600 16px Figtree, system-ui, sans-serif';
+  glg.fillText('Écris ton jeu, puis appuie sur « Lancer »', GL_W / 2, 30);
+}
+
+// ----- Boucle de jeu (60 images par seconde, pas de temps fixe) -----
+let glCore = null, glRaf = 0, glLast = 0, glAcc = 0, glToastUntil = 0, glToast = null, glOutKey = '';
+const glKeys = new Set();
+function glRunning() { return !!glRaf; }
+function glSetUi(on) {
+  $('#gstop').hidden = !on;
+  $('#grun').textContent = on ? '↻ Relancer' : '▶ Lancer';
+}
+function glFeedback() {
+  const c = glCore, f = $('#gfb');
+  if (!c) { fbFill(f, 'info', []); return; }
+  if (c.error) {
+    fbFill(f, 'bad', [el('h3', '', (KIND[c.error.kind] || 'Erreur') + (c.error.line ? ` · ligne ${c.error.line}` : '')), el('p', '', c.error.message)]);
+    return;
+  }
+  if (c.over) {
+    const row = el('div', 'row'); const b = el('button', 'btn solid', 'Rejouer'); b.type = 'button'; b.addEventListener('click', glStart); row.appendChild(b);
+    fbFill(f, c.over.win ? 'ok' : 'info', [el('h3', '', c.over.win ? 'Partie gagnée !' : 'Partie perdue'), c.over.msg ? el('p', '', c.over.msg) : null, row]);
+    return;
+  }
+  if (glToast && c.frame < glToastUntil) { fbFill(f, 'ok', [el('h3', '', '✓ Objectif réussi'), el('p', '', glToast)]); return; }
+  if (c.out.length) { fbFill(f, 'info', [el('h3', '', 'Affichage du programme'), el('pre', 'console', c.out.map((l) => '› ' + l).join('\n'))]); return; }
+  if (c.note) { fbFill(f, 'info', [el('p', '', c.note)]); return; }
+  fbFill(f, 'info', []);
+}
+function glCheckGoals(c) {
+  let any = false;
+  GOALS.forEach((g) => {
+    if (c.flags[g.k] && !mem.goals[g.k]) { mem.goals[g.k] = true; glToast = g.t; glToastUntil = c.frame + 240; any = true; }
+  });
+  if (any) { save(); renderGoals(); glFeedback(); }
+}
+function glFrame(now) {
+  glRaf = requestAnimationFrame(glFrame);
+  const c = glCore;
+  glAcc += Math.min(100, now - glLast); glLast = now;
+  let n = 0;
+  while (glAcc >= 1000 / 60 && n < 5) {
+    glAcc -= 1000 / 60; n++;
+    c.keys = glKeys;
+    const before = c.out.length + '|' + (c.out[c.out.length - 1] || '');
+    c.step();
+    if (c.error || c.over) break;
+    glCheckGoals(c);
+    const key = c.out.length + '|' + (c.out[c.out.length - 1] || '');
+    if (key !== before && c.frame % 6 === 0) glFeedback();
+    if (glToast && c.frame === glToastUntil) glFeedback();
+  }
+  glRender(c, c.frame);
+  if (c.error || c.over) {
+    glFinish();
+  }
+}
+function glFinish() {
+  const c = glCore;
+  cancelAnimationFrame(glRaf); glRaf = 0; glKeys.clear();
+  glCheckGoals(c);
+  if (c.error) { errLine = c.error.line || 0; markLines(); scrollToLine(errLine); }
+  glSetUi(false);
+  glRender(c, c.frame);
+  glFeedback();
+}
+function glStart() {
+  if (mode !== 'game') return;
+  cancelAnimationFrame(glRaf); glRaf = 0; glKeys.clear();
+  buildSprites();
+  errLine = 0; markLines(); glToast = null;
+  glCore = new GameCore(ta.value);
+  glFeedback();
+  if (glCore.error) { glFinish(); return; }
+  glSetUi(true);
+  glAcc = 0; glLast = performance.now();
+  glRaf = requestAnimationFrame(glFrame);
+  glcv.focus({ preventScroll: true });
+}
+function glStop() {
+  const was = glRaf || glCore;
+  cancelAnimationFrame(glRaf); glRaf = 0; glKeys.clear(); glCore = null;
+  if (mode === 'game') { glSetUi(false); fbFill($('#gfb'), 'info', []); if (was) glIdle(); }
+}
+
+// ----- Clavier et écran tactile -----
+const GKEYMAP = { ArrowLeft: 'gauche', q: 'gauche', a: 'gauche', ArrowRight: 'droite', d: 'droite', ArrowUp: 'haut', z: 'haut', w: 'haut', ArrowDown: 'bas', s: 'bas', ' ': 'espace' };
+function glKeyEvent(e) {
+  if (mode !== 'game' || !glRaf) return;
+  const t = e.target && e.target.tagName;
+  if (t === 'TEXTAREA' || t === 'INPUT' || t === 'SELECT') return;
+  const k = GKEYMAP[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+  if (!k) return;
+  e.preventDefault();
+  if (e.type === 'keydown') glKeys.add(k); else glKeys.delete(k);
+}
+document.addEventListener('keydown', (e) => {
+  if (mode === 'game' && e.key === 'Enter' && glCore && glCore.over && document.activeElement === glcv) { e.preventDefault(); glStart(); return; }
+  glKeyEvent(e);
+});
+document.addEventListener('keyup', glKeyEvent);
+window.addEventListener('blur', () => glKeys.clear());
+glcv.addEventListener('pointerdown', () => glcv.focus({ preventScroll: true }));
+$('#gpad').querySelectorAll('button').forEach((b) => {
+  const k = b.dataset.k;
+  const down = (e) => { e.preventDefault(); glKeys.add(k); b.classList.add('on'); try { b.setPointerCapture(e.pointerId); } catch (err) { /* ignoré */ } };
+  const up = () => { glKeys.delete(k); b.classList.remove('on'); };
+  b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up);
+  b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
+  b.addEventListener('contextmenu', (e) => e.preventDefault());
+});
+$('#grun').addEventListener('click', glStart);
+$('#gstop').addEventListener('click', () => { glStop(); });
+$('#gimgs').addEventListener('click', () => setMode('draw'));
+
+// ----- Entrée dans le mode -----
+function glEnter() {
+  errLine = 0; activeLine = 0;
+  ta.readOnly = false;
+  ta.value = mem.game != null ? mem.game : GAME_STARTER;
+  ta.scrollTop = 0; ta.scrollLeft = 0;
+  glCore = null; glToast = null;
+  renderCode(); renderGoals(); renderGameHelp(); glSetUi(false);
+  fbFill($('#gfb'), 'info', []);
+  buildSprites(); glIdle();
+}
+
+// ===== Atelier : dessiner ses images de jeu =====
+const dcv = $('#dcv'), dctx = dcv.getContext('2d');
+let dOps = [], dShown = 0, dAnim = 0, dLive = 0, dCursor = false;
+const loadedCode = {};
+const slotCode = (s) => (mem.draw[s] != null ? mem.draw[s] : '');
+const FILES = { rocket: 'fusee', asteroid: 'asteroide', free: 'bonus' };
+const DCMD = [
+  { g: 'Se déplacer' },
+  { c: 'avancer(50)', d: 'avance en traçant un trait' },
+  { c: 'reculer(50)', d: 'recule' },
+  { c: 'tourner_gauche(90)', d: 'tourne à gauche (en degrés)' },
+  { c: 'tourner_droite(90)', d: 'tourne à droite (en degrés)' },
+  { c: 'aller_a(40, 20)', d: 'va au point x = 40, y = 20' },
+  { c: 'cap(0)', d: 'regarde en haut (0), à droite (90)…' },
+  { g: 'Stylo' },
+  { c: 'lever_crayon()', d: 'se déplace sans tracer' },
+  { c: 'baisser_crayon()', d: 'recommence à tracer' },
+  { c: 'couleur("rouge")', d: 'couleur du trait et du remplissage' },
+  { c: 'couleur("noir", "rouge")', d: 'trait noir, remplissage rouge' },
+  { c: 'epaisseur(3)', d: 'épaisseur du trait' },
+  { g: 'Formes' },
+  { c: 'disque(20)', d: 'disque plein, centré sur le stylo' },
+  { c: 'cercle(20)', d: 'cercle vide, centré sur le stylo' },
+  { c: 'commencer_remplissage()', d: 'début d\'une forme à colorier' },
+  { c: 'finir_remplissage()', d: 'colorie la forme tracée' },
+  { g: 'Calculs' },
+  { c: 'hasard(1, 6)', d: 'nombre entier au hasard', inline: true },
+  { c: 'sin(30)', d: 'sinus (angle en degrés)', inline: true },
+  { c: 'cos(60)', d: 'cosinus (angle en degrés)', inline: true },
+];
+const IDEAS = [
+  "Dessine une fusée dont le nez pointe vers le haut : dans le jeu, elle sera pilotée depuis son centre (0, 0).",
+  "Ajoute des flammes sous la fusée pour montrer qu'elle avance.",
+  "Fais trois astéroïdes différents en changeant les nombres dans hasard().",
+  "Invente un bonus : bouclier, cœur, pièce, étoile à six branches.",
+  "Écris une fonction avec un paramètre pour dessiner deux ailerons symétriques.",
+  "Dessine une soucoupe ennemie, puis teste-la comme astéroïde dans le jeu.",
+];
+
+// ----- Taille et rendu -----
+function layoutDraw() {
+  const avail = $('#dwrap').clientWidth || 320;
+  const css = Math.max(180, Math.min(avail, 440));
+  const dpr = window.devicePixelRatio || 1;
+  dcv.style.width = css + 'px'; dcv.style.height = css + 'px';
+  dcv.width = dcv.height = Math.round(css * dpr);
+  paintDraw();
+}
+function gridColor(a) {
+  if (mem.dbg === 'space') return `rgba(255,255,255,${a})`;
+  if (mem.dbg === 'white') return `rgba(0,0,0,${a})`;
+  return hexA(col.ink, a);
+}
+function paintDraw() {
+  const k = dcv.width / 400;
+  dctx.setTransform(1, 0, 0, 1, 0, 0);
+  dctx.clearRect(0, 0, dcv.width, dcv.height);
+  if (mem.grid) {
+    dctx.lineWidth = Math.max(1, k * 0.6);
+    for (let v = -200; v <= 200; v += 50) {
+      dctx.strokeStyle = gridColor(v === 0 ? 0.45 : 0.16);
+      dctx.beginPath(); dctx.moveTo((200 + v) * k, 0); dctx.lineTo((200 + v) * k, dcv.height); dctx.stroke();
+      dctx.beginPath(); dctx.moveTo(0, (200 - v) * k); dctx.lineTo(dcv.width, (200 - v) * k); dctx.stroke();
+    }
+    dctx.fillStyle = gridColor(0.6); dctx.font = `${Math.round(10 * k)}px ${'JetBrains Mono, ui-monospace, monospace'}`;
+    [-150, -100, -50, 50, 100, 150].forEach((v) => {
+      dctx.fillText(String(v), (200 + v) * k + 2 * k, 200 * k + 11 * k);
+      dctx.fillText(String(v), 200 * k + 3 * k, (200 - v) * k - 2 * k);
+    });
+  }
+  paintOps(dctx, dOps, dShown, k);
+  if (dCursor && dShown > 0 && dOps[dShown - 1]) {
+    const o = dOps[dShown - 1], r = o.th * Math.PI / 180, s = 9 * k;
+    dctx.save();
+    dctx.translate((200 + o.tx) * k, (200 - o.ty) * k);
+    dctx.rotate(r);
+    dctx.fillStyle = col.accent; dctx.strokeStyle = '#000'; dctx.lineWidth = k;
+    dctx.beginPath(); dctx.moveTo(0, -s * 1.2); dctx.lineTo(s * 0.8, s * 0.8); dctx.lineTo(-s * 0.8, s * 0.8); dctx.closePath(); dctx.fill(); dctx.stroke();
+    dctx.restore();
+  }
+}
+function redrawAll() {
+  draw(performance.now());
+  if (mode === 'draw') paintDraw();
+}
+
+// ----- Exécution -----
+function cancelAnim() { cancelAnimationFrame(dAnim); dAnim = 0; dCursor = false; }
+function fbFill(node, kind, nodes) {
+  nodes = nodes.filter(Boolean);
+  if (!nodes.length) { node.className = 'feedback'; node.replaceChildren(); return; }
+  node.className = 'feedback show ' + kind; node.replaceChildren(...nodes);
+}
+function showDfb(res) {
+  if (res.error) fbFill($('#dfb'), 'bad', [el('h3', '', (KIND[res.error.kind] || 'Erreur') + (res.error.line ? ` · ligne ${res.error.line}` : '')), el('p', '', res.error.message)]);
+  else if (res.out.length) fbFill($('#dfb'), 'info', [el('h3', '', 'Affichage du programme'), el('pre', 'console', res.out.map((l) => '› ' + l).join('\n'))]);
+  else fbFill($('#dfb'), 'info', []);
+}
+function drawRun(instant) {
+  cancelAnim();
+  const res = simulateDraw(ta.value);
+  dOps = res.ops;
+  errLine = res.error ? res.error.line || 0 : 0; activeLine = 0; markLines();
+  if (res.error) scrollToLine(errLine);
+  showDfb(res);
+  updateThumb(slot, dOps);
+  updateCta();
+  const f = res.final;
+  $('#dmeta').textContent = `${dOps.length} tracé${dOps.length > 1 ? 's' : ''} · stylo en (${Math.round(f.x)}, ${Math.round(f.y)}), cap ${Math.round(f.h)}°`;
+  const per = [1, 2, 5, 1e9][(mem.speed || 2) - 1];
+  if (instant || reduceMotion || per >= 1e9 || !dOps.length) { dShown = dOps.length; paintDraw(); return; }
+  dShown = 0; dCursor = true;
+  let acc = 0;
+  const tick = () => {
+    acc += per; const step = Math.floor(acc); acc -= step;
+    dShown = Math.min(dOps.length, dShown + step);
+    const o = dOps[dShown - 1];
+    if (o) { activeLine = o.line; markLines(); scrollToLine(o.line); }
+    if (dShown >= dOps.length) { dCursor = false; activeLine = 0; markLines(); paintDraw(); dAnim = 0; return; }
+    paintDraw();
+    dAnim = requestAnimationFrame(tick);
+  };
+  dAnim = requestAnimationFrame(tick);
+}
+function drawChanged() {
+  clearTimeout(dLive);
+  cancelAnim();
+  dLive = setTimeout(() => { if (mode === 'draw') drawRun(true); }, 550);
+}
+
+// ----- Onglets et vignettes -----
+function updateThumb(s, ops) {
+  const b = document.querySelector(`#slots [data-slot="${s}"] canvas`);
+  if (!b) return;
+  const g = b.getContext('2d');
+  g.clearRect(0, 0, b.width, b.height);
+  if (!ops || !ops.length) return;
+  const sp = renderSprite(ops, 40, 1);
+  if (sp) g.drawImage(sp, (b.width - sp.width) / 2, (b.height - sp.height) / 2);
+}
+function renderSlots() {
+  const box = $('#slots');
+  box.replaceChildren(...Object.keys(SLOT_NAMES).map((s) => {
+    const b = el('button'); b.type = 'button'; b.dataset.slot = s; b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', String(s === slot));
+    const c = document.createElement('canvas'); c.width = c.height = 52; b.appendChild(c);
+    b.appendChild(document.createTextNode(SLOT_NAMES[s]));
+    b.addEventListener('click', () => { if (s !== slot) loadSlot(s); });
+    return b;
+  }));
+  Object.keys(SLOT_NAMES).forEach((s) => {
+    if (s === slot) return;
+    const r = simulateDraw(slotCode(s));
+    updateThumb(s, r.ops);
+  });
+}
+function loadSlot(s) {
+  cancelAnim(); clearTimeout(dLive);
+  slot = s; mem.slot = s; save();
+  errLine = 0; activeLine = 0;
+  ta.readOnly = false;
+  ta.value = slotCode(s);
+  if (loadedCode[s] == null && mem.draw[s] == null) loadedCode[s] = ta.value;
+  ta.scrollTop = 0; ta.scrollLeft = 0;
+  $('#dtitle').textContent = SLOT_NAMES[s];
+  $('#drole').textContent = SLOT_ROLE[s];
+  renderCode(); renderSlots(); layoutDraw();
+  drawRun(true);
+}
+
+// ----- Aide : commandes, couleurs, modèles, défis -----
+function renderDrawHelp() {
+  $('#dtools').replaceChildren(...DCMD.map((c) => {
+    const item = el('li');
+    if (c.g) { item.appendChild(el('span', 'grp', c.g)); item.className = 'grp'; return item; }
+    const b = el('button'); b.type = 'button';
+    b.appendChild(el('code', '', c.c)); b.appendChild(el('span', '', c.d));
+    b.addEventListener('click', () => { if (c.inline) { ta.focus(); insertText(c.c); } else insertCommand(c.c); });
+    item.appendChild(b); return item;
+  }));
+  $('#swatches').replaceChildren(...Object.keys(PALETTE).map((n) => {
+    const b = el('button'); b.type = 'button'; b.style.background = PALETTE[n]; b.title = n; b.setAttribute('aria-label', n);
+    b.addEventListener('click', () => { ta.focus(); insertText('"' + n + '"'); });
+    return b;
+  }));
+  const isTpl = (c) => Object.values(TEMPLATES).some((t) => t.code === c);
+  let sureKey = null, sureTimer = 0;
+  $('#tpls').replaceChildren(...Object.keys(TEMPLATES).map((k) => {
+    const b = el('button', 'btn', TEMPLATES[k].name); b.type = 'button';
+    b.addEventListener('click', () => {
+      const cur = ta.value;
+      if (cur !== loadedCode[slot] && !isTpl(cur) && cur.trim() !== '' && sureKey !== k) {
+        sureKey = k; b.textContent = 'Écraser ton code ?';
+        clearTimeout(sureTimer); sureTimer = setTimeout(() => { sureKey = null; b.textContent = TEMPLATES[k].name; }, 3000);
+        return;
+      }
+      sureKey = null; b.textContent = TEMPLATES[k].name;
+      ta.value = TEMPLATES[k].code; loadedCode[slot] = ta.value;
+      onEdit(); drawRun(false);
+    });
+    return b;
+  }));
+  $('#ideas').replaceChildren(...IDEAS.map((t) => el('li', '', t)));
+}
+
+// ----- Enregistrer en PNG -----
+function exportPng() {
+  const size = Number(mem.size) || 128;
+  const sp = dOps.length ? renderSprite(dOps, size, size > 256 ? 4 : 3) : null;
+  if (!sp) { fbFill($('#dfb'), 'info', [el('h3', '', 'Rien à enregistrer'), el('p', '', "Ton dessin est vide : lance-le d'abord avec « Dessiner ».")]); return; }
+  $('#dimg').src = sp.toDataURL('image/png');
+  $('#dcap').textContent = `${FILES[slot]}.png · ${sp.width} × ${sp.height} px · fond transparent. Si le téléchargement ne démarre pas, fais un clic droit (ou un appui long) sur l'image pour l'enregistrer.`;
+  $('#dexport').hidden = false;
+  sp.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = FILES[slot] + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }, 'image/png');
+}
+
+// ----- Tester dans un jeu -----
+function testGame() {
+  const notes = [], spr = { asteroid: [] };
+  const make = (s, n) => {
+    const code = s === slot ? ta.value : slotCode(s);
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const r = simulateDraw(code);
+      const sp = r.error ? null : renderSprite(r.ops, 128);
+      if (!sp) {
+        notes.push(r.error ? `${SLOT_NAMES[s]} contient une erreur : le jeu utilise un modèle à la place.` : `${SLOT_NAMES[s]} est vide : le jeu utilise un modèle à sa place.`);
+        const d = simulateDraw(TEMPLATES[DEFAULT_SLOTS[s]].code);
+        return [renderSprite(d.ops, 128)];
+      }
+      out.push(sp);
+    }
+    return out;
+  };
+  spr.rocket = make('rocket', 1)[0];
+  spr.asteroid = make('asteroid', 6);
+  spr.bonus = make('free', 1)[0];
+  openGame(spr, notes.join(' '), $('#dtest'));
+}
+
+// ----- Changement de mode -----
+function stopAll() {
+  if (run) { run = null; setRunning(false); }
+  cancelAnim(); clearTimeout(dLive);
+  glStop();
+  if (gameStop) gameStop();
+}
+function setMode(m) {
+  stopAll();
+  mode = m; mem.mode = m; save();
+  const p = m === 'play', d = m === 'draw', g = m === 'game';
+  $('#mode-play').setAttribute('aria-pressed', String(p));
+  $('#mode-draw').setAttribute('aria-pressed', String(d));
+  $('#mode-game').setAttribute('aria-pressed', String(g));
+  document.querySelector('.stage').dataset.mode = m;
+  ['#smission', '#sboard', '#shelp', '#levels'].forEach((q) => { $(q).hidden = !p; });
+  ['#dboard', '#dhelp', '#slots'].forEach((q) => { $(q).hidden = !d; });
+  ['#gboard', '#gmission', '#ghelp'].forEach((q) => { $(q).hidden = !g; });
+  $('#filelabel').hidden = d;
+  $('#fname').textContent = g ? 'mon_jeu.py' : 'programme.py';
+  hideFeedback();
+  ta.placeholder = d ? "Écris ton code ici. Le centre du dessin est le point (0, 0)." : '';
+  if (d) { renderDrawHelp(); loadSlot(mem.slot && SLOT_NAMES[mem.slot] ? mem.slot : 'rocket'); }
+  else if (g) glEnter();
+  else { errLine = 0; activeLine = 0; loadLevel(li); }
+}
+// Le bouton « Coder mon jeu » apparaît quand la fusée et l'astéroïde sont dessinés sans erreur.
+function slotOk(s) {
+  const r = simulateDraw(s === slot && mode === 'draw' ? ta.value : slotCode(s));
+  return !r.error && r.ops.length > 0;
+}
+function updateCta() { $('#dcoder').hidden = !(slotOk('rocket') && slotOk('asteroid')); }
+$('#mode-play').addEventListener('click', () => { if (mode !== 'play') setMode('play'); });
+$('#mode-draw').addEventListener('click', () => { if (mode !== 'draw') setMode('draw'); });
+$('#mode-game').addEventListener('click', () => { if (mode !== 'game') setMode('game'); });
+$('#dcoder').addEventListener('click', () => setMode('game'));
+$('#drun').addEventListener('click', () => drawRun(false));
+$('#dtest').addEventListener('click', testGame);
+$('#dpng').addEventListener('click', exportPng);
+const dspeed = $('#dspeed');
+dspeed.value = String(mem.speed || 2);
+dspeed.addEventListener('input', () => { mem.speed = Number(dspeed.value); speed.value = dspeed.value; save(); });
+speed.addEventListener('input', () => { dspeed.value = speed.value; });
+const dbg = $('#dbg'), dgrid = $('#dgrid'), dsize = $('#dsize');
+function applyBg() { $('#dstage').className = 'dstage bg-' + mem.dbg; dbg.value = mem.dbg; }
+dbg.addEventListener('change', () => { mem.dbg = dbg.value; save(); applyBg(); paintDraw(); });
+dgrid.checked = !!mem.grid;
+dgrid.addEventListener('change', () => { mem.grid = dgrid.checked; save(); paintDraw(); });
+dsize.value = String(mem.size);
+dsize.addEventListener('change', () => { mem.size = Number(dsize.value); save(); });
+applyBg();
+if (window.ResizeObserver) new ResizeObserver(() => { if (mode === 'draw') layoutDraw(); }).observe($('#dwrap'));
+
+// ----- Tutoriel interactif (passable) -----
+const near = (a, b, t) => Math.abs(a - b) <= (t || 5);
+const TUTO = [
+  { t: "Bienvenue dans l'Atelier", p: "Ici, tu dessines avec du Python les images de ton futur jeu de fusée et d'astéroïdes. Un stylo laisse un trait derrière lui quand il avance. Il démarre au centre, tourné vers le haut. Essayons.",
+    code: 'avancer(80)', todo: 'À toi : tape avancer(80), puis clique sur Dessiner.',
+    check: (r) => r.ops.some((o) => o.t === 'line') ? { ok: true, m: 'Bravo ! Le stylo a avancé vers le haut en laissant un trait.' } : { ok: false, m: "Aucun trait n'a été tracé. Écris avancer(80) avec les parenthèses." } },
+  { t: 'Avancer et tourner', p: "avancer(n) trace un trait de n pas. tourner_droite(90) fait pivoter le stylo d'un quart de tour. Répéter 4 fois « avancer, tourner » ferme un carré : c'est le travail d'une boucle for.",
+    code: 'for i in range(4):\n    avancer(80)\n    tourner_droite(90)', todo: 'À toi : écris la boucle qui dessine le carré (4 espaces avant chaque ligne dans la boucle).',
+    check: (r) => {
+      const n = r.ops.filter((o) => o.t === 'line').length;
+      if (n >= 4 && near(r.final.x, 0, 3) && near(r.final.y, 0, 3)) return { ok: true, m: 'Bravo, un carré parfait !' };
+      return { ok: false, m: n ? `Il y a ${n} trait${n > 1 ? 's' : ''}. Pour fermer le carré : 4 côtés égaux et 4 virages de 90°, pour revenir au point de départ.` : "Rien n'est tracé : écris la boucle for avec avancer(80) et tourner_droite(90)." };
+    } },
+  { t: 'Colorier', p: "couleur(trait, remplissage) choisit les couleurs. Entre commencer_remplissage() et finir_remplissage(), le stylo trace une forme qui sera coloriée. Un triangle équilatéral : 3 côtés et des virages de 120°.",
+    code: 'couleur("noir", "jaune")\nepaisseur(4)\ncommencer_remplissage()\nfor i in range(3):\n    avancer(90)\n    tourner_droite(120)\nfinir_remplissage()', todo: 'À toi : dessine le triangle jaune.',
+    check: (r) => r.ops.some((o) => o.t === 'fill') ? { ok: true, m: 'Bravo, ta forme est coloriée !' } : { ok: false, m: "La forme n'est pas coloriée. Il faut commencer_remplissage() avant de tracer et finir_remplissage() après." } },
+  { t: 'Se placer avec x et y', p: "aller_a(x, y) place le stylo où tu veux. Le centre est (0, 0) : l'axe x va vers la droite, l'axe y vers le haut, de -200 à 200. Regarde les deux points repères sur le dessin. lever_crayon() déplace le stylo sans tracer, baisser_crayon() le remet en route.",
+    axes: true, marks: [[-70, -50], [70, 60]],
+    code: 'lever_crayon()\naller_a(-70, -50)\nbaisser_crayon()\naller_a(70, 60)', todo: 'À toi : trace un trait du point (-70, -50) au point (70, 60).',
+    check: (r) => { const L = r.ops.filter((o) => o.t === 'line'); return (L.length === 1 && near(L[0].x1, -70) && near(L[0].y1, -50) && near(L[0].x2, 70) && near(L[0].y2, 60)) ? { ok: true, m: 'Bravo ! Le trait va bien de (-70, -50) à (70, 60).' } : { ok: false, m: "Le trait doit partir de (-70, -50) et arriver en (70, 60). Pense à lever_crayon() avant le premier aller_a, sinon un trait part du centre." }; } },
+  { t: 'À toi de jouer !', p: "Dessine ta fusée (le nez vers le haut), un astéroïde et un bonus dans les trois onglets. Les modèles sont là si tu cherches de l'inspiration. Ensuite, essaie tes images dans « Tester dans un jeu », enregistre-les en PNG, ou clique sur « Coder mon jeu » pour programmer toi-même les règles de ton jeu.", code: null },
+];
+const tIn = $('#tin'), tcv = $('#tcv');
+let tStep = 0, tAnim = 0, tReturn = null, tGuide = [], tOps = [];
+const tInput = [], tDone = [];
+function tutoPaint(n) {
+  const g = tcv.getContext('2d'), k = tcv.width / 400;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, tcv.width, tcv.height);
+  g.lineWidth = Math.max(1, k * 0.6);
+  for (let v = -200; v <= 200; v += 50) {
+    g.strokeStyle = hexA(col.ink, v === 0 ? 0.4 : 0.14);
+    g.beginPath(); g.moveTo((200 + v) * k, 0); g.lineTo((200 + v) * k, tcv.height); g.stroke();
+    g.beginPath(); g.moveTo(0, (200 - v) * k); g.lineTo(tcv.width, (200 - v) * k); g.stroke();
+  }
+  g.globalAlpha = 0.28; paintOps(g, tGuide, tGuide.length, k); g.globalAlpha = 1;
+  paintOps(g, tOps, n, k);
+  if (TUTO[tStep].axes) tutoAxes(g, k, TUTO[tStep].marks);
+}
+function tutoAxes(g, k, marks) {
+  const X = (v) => (200 + v) * k, Y = (v) => (200 - v) * k;
+  const fs = Math.round(17 * k);
+  g.save();
+  g.strokeStyle = col.ink; g.fillStyle = col.ink; g.lineWidth = Math.max(1.5, 1.4 * k); g.lineCap = 'round';
+  g.beginPath(); g.moveTo(X(-196), Y(0)); g.lineTo(X(196), Y(0)); g.moveTo(X(0), Y(-196)); g.lineTo(X(0), Y(196)); g.stroke();
+  const a = 9 * k;
+  g.beginPath();
+  g.moveTo(X(198), Y(0)); g.lineTo(X(198) - a, Y(0) - a * 0.55); g.lineTo(X(198) - a, Y(0) + a * 0.55); g.closePath();
+  g.moveTo(X(0), Y(198)); g.lineTo(X(0) - a * 0.55, Y(198) + a); g.lineTo(X(0) + a * 0.55, Y(198) + a); g.closePath();
+  g.fill();
+  g.font = `600 ${fs}px JetBrains Mono, ui-monospace, monospace`;
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let v = -150; v <= 150; v += 50) {
+    if (!v) continue;
+    g.beginPath(); g.moveTo(X(v), Y(-5)); g.lineTo(X(v), Y(5)); g.moveTo(X(-5), Y(v)); g.lineTo(X(5), Y(v)); g.stroke();
+    g.fillText(String(v), X(v), Y(-17));
+    g.textAlign = 'right'; g.fillText(String(v), X(-9), Y(v)); g.textAlign = 'center';
+  }
+  g.textAlign = 'right'; g.fillText('0', X(-8), Y(-14));
+  g.fillStyle = col.accent;
+  g.font = `700 ${Math.round(22 * k)}px Figtree, system-ui, sans-serif`;
+  g.textAlign = 'left'; g.fillText('x', X(178), Y(18));
+  g.textAlign = 'left'; g.fillText('y', X(10), Y(184));
+  (marks || []).forEach(([mx, my], i) => {
+    g.fillStyle = col.accent; g.strokeStyle = col['wall']; g.lineWidth = Math.max(1, k);
+    g.beginPath(); g.arc(X(mx), Y(my), 5 * k, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.font = `700 ${fs}px JetBrains Mono, ui-monospace, monospace`;
+    g.fillStyle = col.ink; g.textBaseline = 'middle';
+    const t = `(${mx}, ${my})`;
+    if (i === 0) { g.textAlign = 'left'; g.fillText(t, X(mx) - 6 * k, Y(my) + 15 * k); }
+    else { g.textAlign = 'right'; g.fillText(t, X(mx) + 6 * k, Y(my) - 15 * k); }
+  });
+  g.restore();
+}
+function tutoSize() {
+  const dpr = window.devicePixelRatio || 1;
+  tcv.width = tcv.height = Math.round(240 * dpr);
+}
+function tutoRun(silent) {
+  cancelAnimationFrame(tAnim);
+  const s = TUTO[tStep];
+  tInput[tStep] = tIn.value;
+  const res = simulateDraw(tIn.value);
+  tOps = res.ops;
+  const f = $('#tfb');
+  if (res.error) {
+    fbFill(f, 'bad', silent ? [] : [el('h3', '', (KIND[res.error.kind] || 'Erreur') + (res.error.line ? ` · ligne ${res.error.line}` : '')), el('p', '', res.error.message)]);
+  } else if (!tIn.value.trim()) {
+    fbFill(f, 'info', silent ? [] : [el('p', '', "Écris d'abord ton code dans la zone « Ton code », puis clique sur Dessiner.")]);
+  } else {
+    const v = s.check(res);
+    if (v.ok) { tDone[tStep] = true; $('#tdots').children[tStep].classList.add('done'); if (tStep < TUTO.length - 1) $('#tnext').textContent = 'Suivant'; }
+    fbFill(f, v.ok ? 'ok' : 'info', silent && !v.ok ? [] : [el('h3', '', v.ok ? '✓ Réussi' : 'Pas tout à fait'), el('p', '', v.m)]);
+  }
+  if (silent || reduceMotion || !tOps.length) { tutoPaint(tOps.length); return; }
+  const t0 = performance.now();
+  const frame = (now) => {
+    const n = Math.ceil(tOps.length * Math.min(1, (now - t0) / 900));
+    tutoPaint(n);
+    if (n < tOps.length) tAnim = requestAnimationFrame(frame);
+  };
+  tAnim = requestAnimationFrame(frame);
+}
+function tutoShow(i) {
+  cancelAnimationFrame(tAnim);
+  tStep = Math.max(0, Math.min(TUTO.length - 1, i));
+  const s = TUTO[tStep], last = tStep === TUTO.length - 1;
+  $('#ttitle').textContent = s.t;
+  $('#ttext').textContent = s.p;
+  $('#tdemo').hidden = !s.code;
+  $('#tcode').textContent = s.code || '';
+  $('#tdo').textContent = s.todo || '';
+  $('#tdots').replaceChildren(...TUTO.map((_, k) => el('i', (k <= tStep ? 'on ' : '') + (tDone[k] ? 'done' : ''))));
+  $('#tprev').hidden = tStep === 0;
+  $('#tnext').textContent = last ? 'Commencer à dessiner' : (tDone[tStep] ? 'Suivant' : 'Passer cette étape');
+  $('#tskip').hidden = last;
+  fbFill($('#tfb'), 'info', []);
+  if (s.code) {
+    tutoSize();
+    tGuide = simulateDraw(s.code).ops;
+    tIn.value = tInput[tStep] || '';
+    tOps = [];
+    tutoPaint(0);
+    if (tIn.value) tutoRun(true);
+    if (window.matchMedia('(pointer: fine)').matches) tIn.focus({ preventScroll: true });
+  }
+}
+function tutoKey(e) {
+  if (e.key === 'Escape') { e.preventDefault(); closeTuto(); return; }
+  if (e.target && e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowRight') { if (tStep < TUTO.length - 1) tutoShow(tStep + 1); }
+  else if (e.key === 'ArrowLeft') tutoShow(tStep - 1);
+}
+function openTuto(from) {
+  tReturn = from || null;
+  $('#tuto').hidden = false;
+  document.addEventListener('keydown', tutoKey);
+  tutoShow(0);
+  if (!TUTO[0].code || !window.matchMedia('(pointer: fine)').matches) $('#tnext').focus();
+}
+function closeTuto() {
+  cancelAnimationFrame(tAnim);
+  document.removeEventListener('keydown', tutoKey);
+  $('#tuto').hidden = true;
+  mem.tuto = true; save();
+  const f = tReturn || $('#drun');
+  if (f && f.focus) f.focus();
+}
+tIn.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); tutoRun(false); return; }
+  const v = tIn.value, s0 = tIn.selectionStart;
+  if (e.key === 'Tab') { e.preventDefault(); if (!document.execCommand('insertText', false, '    ')) tIn.setRangeText('    ', s0, tIn.selectionEnd, 'end'); }
+  else if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const line = v.slice(v.lastIndexOf('\n', s0 - 1) + 1, s0);
+    const ins = '\n' + /^ */.exec(line)[0] + (line.trimEnd().endsWith(':') ? '    ' : '');
+    if (!document.execCommand('insertText', false, ins)) tIn.setRangeText(ins, s0, tIn.selectionEnd, 'end');
+  }
+});
+$('#trun').addEventListener('click', () => tutoRun(false));
+$('#tfill').addEventListener('click', () => { tIn.value = TUTO[tStep].code; tutoRun(false); tIn.focus({ preventScroll: true }); });
+$('#tnext').addEventListener('click', () => { if (tStep >= TUTO.length - 1) closeTuto(); else tutoShow(tStep + 1); });
+$('#tprev').addEventListener('click', () => tutoShow(tStep - 1));
+$('#tskip').addEventListener('click', closeTuto);
+$('#dtuto').addEventListener('click', (e) => openTuto(e.currentTarget));
+
+// Au démarrage : l'appli s'ouvre sur l'Atelier, avec le tutoriel (passable).
+setMode('draw');
+openTuto();
+
+})();
+</script>
+
+</body>
+</html>
